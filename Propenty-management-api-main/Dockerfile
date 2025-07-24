@@ -1,22 +1,35 @@
-FROM php:8.2-fpm
+# Laravel için PHP + Apache ortamı
+FROM php:8.2-apache
 
-# Sistem bağımlılıkları ve PHP uzantıları
+# Sistemi güncelle ve gerekli paketleri kur
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpq-dev libonig-dev libxml2-dev libzip-dev \
-    && docker-php-ext-install pdo pdo_pgsql mbstring zip exif
+    git \
+    curl \
+    zip \
+    unzip \
+    libpq-dev \
+    libzip-dev \
+    libonig-dev \
+    libxml2-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip
 
-# Composer
+# Composer yükle
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www
-COPY . .
+# Apache ayarları
+COPY . /var/www/html
+WORKDIR /var/www/html
 
-# Laravel izinleri
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage
+RUN chown -R www-data:www-data /var/www/html \
+    && a2enmod rewrite
 
-# Laravel bağımlılıkları
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+# Laravel bağımlılıklarını yükle
+RUN composer install --no-dev --optimize-autoloader \
+    && cp .env.example .env || true \
+    && php artisan key:generate \
+    && php artisan config:cache
 
-# Başlatma komutu
-CMD php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080
+# Port
+EXPOSE 80
+
+CMD ["apache2-foreground"]

@@ -1,20 +1,19 @@
 services:
   - type: web
-    name: house-backend
+    name: laravel-api
     env: docker
+    repo: https://github.com/furkancanisci/house
     branch: main
     rootDir: Propenty-management-api-main
-    dockerfilePath: Propenty-management-api-main/Dockerfile
+    dockerfilePath: ./Dockerfile
     plan: free
     envVars:
       - key: APP_ENV
         value: production
-      - key: APP_DEBUG
-        value: false
       - key: APP_KEY
         generateValue: true
-      - key: LOG_CHANNEL
-        value: stderr
+      - key: APP_DEBUG
+        value: false
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
