@@ -47,3 +47,5 @@ RUN if [ ! -f .env ]; then cp .env.example .env; fi \
 EXPOSE 80
 
 CMD ["apache2-foreground"]
+
+CMD php artisan migrate --force && apache2-foreground
