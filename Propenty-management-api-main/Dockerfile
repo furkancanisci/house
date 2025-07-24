@@ -1,22 +1,24 @@
+# Laravel için basit ve hızlı Dockerfile
 FROM php:8.2-fpm
 
-# Sistem araçları ve PostgreSQL + EXIF desteği
+# Sistem bağımlılıkları
 RUN apt-get update && apt-get install -y \
-    zip unzip curl libpq-dev git \
-    && docker-php-ext-install pdo pdo_pgsql exif
+    git curl zip unzip libpq-dev libonig-dev libxml2-dev libzip-dev \
+    && docker-php-ext-install pdo pdo_pgsql mbstring zip
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Uygulama dizini
+# Uygulama dosyalarını kopyala
 WORKDIR /var/www
 COPY . .
 
-# Laravel bağımlılıkları
-RUN composer install --no-dev --optimize-autoloader
+# Laravel permission fix
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 /var/www/storage
 
-# Port aç
-EXPOSE 8000
+# Bağımlılıkları yükle
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Laravel'i ayağa kaldır
-CMD php artisan key:generate && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+# Laravel key generate (ilk deploydan sonra çalışacak)
+CMD php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080

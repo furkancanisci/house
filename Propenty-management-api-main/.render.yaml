@@ -1,14 +1,20 @@
 services:
   - type: web
-    name: laravel-backend
+    name: house-backend
     env: docker
+    branch: main
+    rootDir: Propenty-management-api-main
+    dockerfilePath: Propenty-management-api-main/Dockerfile
     plan: free
-    region: frankfurt
     envVars:
       - key: APP_ENV
         value: production
+      - key: APP_DEBUG
+        value: false
       - key: APP_KEY
         generateValue: true
+      - key: LOG_CHANNEL
+        value: stderr
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
@@ -22,6 +28,4 @@ services:
       - key: DB_PASSWORD
         value: npg_X2dQ8WyHCUtp
       - key: DB_SSLMODE
-        value: require
-      - key: DB_CHANNEL_BINDING
         value: require
