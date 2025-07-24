@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Property } from '../types';
+import { Property, ExtendedProperty } from '../types';
 import PropertyCard from '../components/PropertyCard';
 import { 
   Plus, 
@@ -37,7 +37,7 @@ const Dashboard: React.FC = () => {
   const { user, properties, favorites } = state;
   const navigate = useNavigate();
   const [userProperties, setUserProperties] = useState<Property[]>([]);
-  const [favoriteProperties, setFavoriteProperties] = useState<Property[]>([]);
+  const [favoriteProperties, setFavoriteProperties] = useState<ExtendedProperty[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -53,7 +53,25 @@ const Dashboard: React.FC = () => {
     setUserProperties(userProps);
 
     // Get favorited properties
-    const favProps = properties.filter(p => favorites.includes(p.id));
+    const favProps = properties
+      .filter(p => favorites.includes(p.id))
+      .map(property => ({
+        ...property,
+        details: {
+          bedrooms: property.bedrooms || 0,
+          bathrooms: property.bathrooms || 0,
+        },
+        slug: (property as any).slug || `property-${property.id}`,
+        property_type: property.propertyType,
+        listing_type: property.listingType,
+        square_feet: property.squareFootage,
+        year_built: (property as any).yearBuilt || new Date().getFullYear(),
+        media: property.images?.map((url, index) => ({
+          id: index,
+          url,
+          type: 'image'
+        })) || []
+      }));
     setFavoriteProperties(favProps);
   }, [user, properties, favorites, navigate]);
 

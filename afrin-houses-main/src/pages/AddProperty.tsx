@@ -199,6 +199,9 @@ const AddProperty: React.FC = () => {
 
       const newProperty = {
         title: data.title,
+        slug: data.title.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, ''), // Generate slug from title
         address: data.address,
         price: data.price,
         listingType: data.listingType,
@@ -227,6 +230,7 @@ const AddProperty: React.FC = () => {
           email: data.contactEmail,
         },
         coordinates,
+        datePosted: new Date().toISOString(),
       };
 
       addProperty(newProperty);
