@@ -1,12 +1,11 @@
 services:
   - type: web
-    name: laravel-api
+    name: laravel-backend
     env: docker
+    plan: free
     repo: https://github.com/furkancanisci/house
-    branch: main
     rootDir: Propenty-management-api-main
     dockerfilePath: ./Dockerfile
-    plan: free
     envVars:
       - key: APP_ENV
         value: production
@@ -14,17 +13,27 @@ services:
         generateValue: true
       - key: APP_DEBUG
         value: false
+      - key: LOG_CHANNEL
+        value: stderr
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: ep-billowing-salad-a97fwrsb-pooler.gwc.azure.neon.tech
+        fromDatabase:
+          name: your-db-name
+          property: host
       - key: DB_PORT
-        value: 5432
+        fromDatabase:
+          name: your-db-name
+          property: port
       - key: DB_DATABASE
-        value: neondb
+        fromDatabase:
+          name: your-db-name
+          property: database
       - key: DB_USERNAME
-        value: neondb_owner
+        fromDatabase:
+          name: your-db-name
+          property: user
       - key: DB_PASSWORD
-        value: npg_X2dQ8WyHCUtp
-      - key: DB_SSLMODE
-        value: require
+        fromDatabase:
+          name: your-db-name
+          property: password
