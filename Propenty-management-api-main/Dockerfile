@@ -1,22 +1,22 @@
 FROM php:8.2-fpm
 
-# Sistem paketleri
+# Sistem araçları ve PostgreSQL + EXIF desteği
 RUN apt-get update && apt-get install -y \
-    git unzip curl libpq-dev zip \
-    && docker-php-ext-install pdo pdo_pgsql
+    zip unzip curl libpq-dev git \
+    && docker-php-ext-install pdo pdo_pgsql exif
 
-# Composer yükle
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Uygulama dosyaları
+# Uygulama dizini
 WORKDIR /var/www
 COPY . .
 
 # Laravel bağımlılıkları
 RUN composer install --no-dev --optimize-autoloader
 
-# .env ayarları vs.
+# Port aç
 EXPOSE 8000
 
-# Laravel’i çalıştır
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+# Laravel'i ayağa kaldır
+CMD php artisan key:generate && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
