@@ -26,7 +26,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html
 WORKDIR /var/www/html
 
-# Apache config ayarı (public klasörüne yönlendirme)
+# Apache için Laravel config ayarı (public klasörüne yönlendirme)
 RUN echo '<Directory /var/www/html/public>\n\
     AllowOverride All\n\
 </Directory>\n\
@@ -39,13 +39,15 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache \
     && composer install --no-dev --optimize-autoloader || true
 
-# .env yoksa kopyala (Render'da varsayılan .env sağlanabilir)
-RUN if [ ! -f .env ]; then cp .env.example .env; fi \
-    && php artisan key:generate || true \
+# .env yoksa oluştur
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
+# Laravel app hazırlıkları
+RUN php artisan key:generate || true \
     && php artisan config:cache || true
 
+# Port aç
 EXPOSE 80
 
-CMD ["apache2-foreground"]
-
+# Migration + Apache başlatma
 CMD php artisan migrate --force && apache2-foreground
