@@ -1,7 +1,6 @@
-# Laravel için PHP + Apache ortamı
 FROM php:8.2-apache
 
-# Sistemi güncelle ve gerekli paketleri kur
+# Gerekli paketleri yükle
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -11,25 +10,31 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libonig-dev \
     libxml2-dev \
-    && docker-php-ext-install pdo pdo_pgsql zip
+    libjpeg-dev \
+    libpng-dev \
+    libexif-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip exif
 
-# Composer yükle
+# Apache rewrite modu
+RUN a2enmod rewrite
+
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Apache ayarları
+# Kodları kopyala
 COPY . /var/www/html
 WORKDIR /var/www/html
 
+# Laravel için izinler
 RUN chown -R www-data:www-data /var/www/html \
-    && a2enmod rewrite
+    && chmod -R 775 storage bootstrap/cache
 
-# Laravel bağımlılıklarını yükle
+# Composer install
 RUN composer install --no-dev --optimize-autoloader \
-    && cp .env.example .env || true \
-    && php artisan key:generate \
+    && php artisan config:clear \
+    && php artisan key:generate || true \
     && php artisan config:cache
 
-# Port
 EXPOSE 80
 
 CMD ["apache2-foreground"]
