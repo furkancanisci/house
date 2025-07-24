@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: laravel-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: ep-billowing-salad-a97fwrsb-pooler.gwc.azure.neon.tech
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        value: neondb
+      - key: DB_USERNAME
+        value: neondb_owner
+      - key: DB_PASSWORD
+        value: npg_X2dQ8WyHCUtp
+      - key: DB_SSLMODE
+        value: require
+      - key: DB_CHANNEL_BINDING
+        value: require
