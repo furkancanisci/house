@@ -22,11 +22,11 @@ RUN a2enmod rewrite
 # Composer yükle
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Laravel kodlarını kopyala
+# Laravel projesini kopyala
 COPY . /var/www/html
 WORKDIR /var/www/html
 
-# Apache için Laravel config ayarı (public klasörüne yönlendirme)
+# Apache ayarları (public dizinine yönlendirme)
 RUN echo '<Directory /var/www/html/public>\n\
     AllowOverride All\n\
 </Directory>\n\
@@ -39,15 +39,14 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache \
     && composer install --no-dev --optimize-autoloader || true
 
-# .env yoksa oluştur
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
-
-# Laravel app hazırlıkları
-RUN php artisan key:generate || true \
+# .env ayarı ve key generate
+RUN if [ ! -f .env ]; then cp .env.example .env; fi \
+    && php artisan key:generate || true \
     && php artisan config:cache || true
 
-# Port aç
 EXPOSE 80
 
-# Migration + Apache başlatma
-CMD php artisan migrate --force && apache2-foreground
+# Migration'ları konteyner başlatıldıktan sonra çalıştır (RUN yerine entrypoint ile)
+ENTRYPOINT ["/var/www/html/docker-entrypoint.sh"]
+
+CMD ["apache2-foreground"]
