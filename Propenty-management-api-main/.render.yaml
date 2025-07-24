@@ -2,7 +2,6 @@ services:
   - type: web
     name: laravel-backend
     env: docker
-    dockerfilePath: Propenty-management-api-main/Dockerfile
     plan: free
     region: frankfurt
     envVars:
