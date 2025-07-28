@@ -98,30 +98,53 @@ class PropertyController extends Controller
      */
     public function store(StorePropertyRequest $request): JsonResponse
     {
-        $property = Property::create(array_merge(
-            $request->validated(),
-            ['user_id' => auth()->id()]
-        ));
+        try {
+            $property = Property::create(array_merge(
+                $request->validated(),
+                ['user_id' => auth()->id()]
+            ));
 
-        // Handle image uploads
-        if ($request->hasFile('main_image')) {
-            $property->addMediaFromRequest('main_image')
-                ->toMediaCollection('main_image');
-        }
-
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $property->addMedia($image)
-                    ->toMediaCollection('images');
+            // Handle image uploads
+            if ($request->hasFile('main_image')) {
+                try {
+                    $property->addMediaFromRequest('main_image')
+                        ->toMediaCollection('main_image');
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'message' => 'Error uploading main image.',
+                        'error' => $e->getMessage()
+                    ], 422);
+                }
             }
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    try {
+                        $property->addMedia($image)
+                            ->toMediaCollection('images');
+                    } catch (\Exception $e) {
+                        // Log the error but continue with other images
+                        \Log::error("Error uploading property image: " . $e->getMessage());
+                        continue;
+                    }
+                }
+            }
+
+            return response()->json([
+                'message' => 'Property created successfully.',
+                'property' => new PropertyResource($property->load(['user', 'media'])),
+            ], 201);
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error("Error creating property: " . $e->getMessage());
+            
+            return response()->json([
+                'message' => 'Error creating property.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Property created successfully.',
-            'property' => new PropertyResource($property->load(['user', 'media'])),
-        ], 201);
     }
-
     /**
      * Display the specified property.
      */
