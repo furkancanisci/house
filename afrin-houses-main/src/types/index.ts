@@ -18,12 +18,17 @@ export interface Property {
   petPolicy?: string;
   parking?: string;
   utilities?: string;
-  lotSize?: string;
+  lotSize?: number;
   garage?: string;
   heating?: string;
   hoaFees?: string;
   building?: string;
   pool?: string;
+  media?: Array<{
+    id: number;
+    url: string;
+    type: string;
+  }>;
   contact: {
     name: string;
     phone: string;
@@ -99,6 +104,10 @@ export interface User {
   avatar?: string;
   properties: string[]; // Property IDs owned by user
   favorites: string[]; // Property IDs favorited by user
+  full_name?: string;
+  is_verified?: boolean;
+  user_type?: string;
+  dateJoined?: string;
 }
 
 export interface SearchFilters {
@@ -130,7 +139,7 @@ export interface PropertyFormData {
   petPolicy?: string;
   parking?: string;
   utilities?: string;
-  lotSize?: string;
+  lotSize?: number;
   garage?: string;
   heating?: string;
   hoaFees?: string;

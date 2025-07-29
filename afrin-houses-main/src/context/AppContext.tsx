@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { Property, User, SearchFilters } from '../types';
 import { useTranslation } from 'react-i18next';
-import {
+import { 
   getProperties, 
-  createProperty, 
+  createProperty as createPropertyAPI, 
   updateProperty as updatePropertyAPI, 
   deleteProperty as deletePropertyAPI,
   toggleFavorite as toggleFavoriteAPI,
-  getFavoriteProperties
+  getFavoriteProperties,
+  getUserProperties
 } from '../services/propertyService';
 import authService from '../services/authService';
 
@@ -45,6 +46,7 @@ type AppAction =
   | { type: 'SET_USER'; payload: User | null }
   | { type: 'ADD_FAVORITE'; payload: string }
   | { type: 'REMOVE_FAVORITE'; payload: string }
+  | { type: 'SET_FAVORITES'; payload: string[] }
   | { type: 'SET_SEARCH_FILTERS'; payload: SearchFilters }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
@@ -77,6 +79,9 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       const updatedFavorites = state.favorites.filter(id => id !== action.payload);
       localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
       return { ...state, favorites: updatedFavorites };
+    case 'SET_FAVORITES':
+      localStorage.setItem('favorites', JSON.stringify(action.payload));
+      return { ...state, favorites: action.payload };
     case 'SET_SEARCH_FILTERS':
       return { ...state, searchFilters: action.payload };
     case 'SET_LOADING':
@@ -267,10 +272,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         longitude: propertyData.coordinates?.lng,
         available_from: propertyData.availableDate,
         parking_type: propertyData.parking || 'none',
-        lot_size: propertyData.lotSize
+        lot_size: propertyData.lotSize || 0
       };
 
-      const response = await createProperty(apiData);
+      const response = await createPropertyAPI(apiData);
       
       // Transform API response back to frontend format
       const newProperty: Property = {
@@ -313,7 +318,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       if (state.user) {
         const updatedUser = {
           ...state.user,
-          properties: [...state.user.properties, newProperty.id]
+          properties: [...(state.user.properties || []), newProperty.id]
         };
         dispatch({ type: 'SET_USER', payload: updatedUser });
       }
@@ -352,7 +357,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         longitude: property.coordinates?.lng,
         available_from: property.availableDate,
         parking_type: property.parking || 'none',
-        lot_size: property.lotSize
+        lot_size: property.lotSize || 0
       };
 
       const response = await updatePropertyAPI(property.id, apiData);
@@ -436,13 +441,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       const response = await toggleFavoriteAPI(id);
       
-      if (response.favorited) {
+      if (response.is_favorited) {
         dispatch({ type: 'ADD_FAVORITE', payload: id });
       } else {
         dispatch({ type: 'REMOVE_FAVORITE', payload: id });
       }
       
-      return response.favorited;
+      return response.is_favorited;
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update favorite' });
@@ -459,21 +464,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // Transform API response to frontend user format
       const user: User = {
         id: response.user.id.toString(),
-        name: response.user.full_name,
+        name: response.user.full_name || response.user.name,
         email: response.user.email,
         phone: response.user.phone || '',
         avatar: response.user.avatar?.url || '',
         properties: [], // Will be loaded separately
         favorites: [], // Will be loaded separately
+        full_name: response.user.full_name,
         dateJoined: response.user.created_at,
-        isVerified: response.user.is_verified,
-        userType: response.user.user_type
+        is_verified: response.user.is_verified,
+        user_type: response.user.user_type
       };
       
       dispatch({ type: 'SET_USER', payload: user });
       
       // Load user's properties and favorites
       await loadProperties();
+      await loadUserProperties();
+      await loadUserFavorites();
       
       return true;
     } catch (error) {
@@ -521,15 +529,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // Transform API response to frontend user format
       const user: User = {
         id: response.user.id.toString(),
-        name: response.user.full_name,
+        name: response.user.full_name || response.user.name,
         email: response.user.email,
         phone: response.user.phone || '',
         avatar: response.user.avatar?.url || '',
         properties: [],
         favorites: [],
+        full_name: response.user.full_name,
         dateJoined: response.user.created_at,
-        isVerified: response.user.is_verified,
-        userType: response.user.user_type
+        is_verified: response.user.is_verified,
+        user_type: response.user.user_type
       };
       
       dispatch({ type: 'SET_USER', payload: user });
@@ -557,6 +566,27 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  // Load user's properties
+  const loadUserProperties = async () => {
+    try {
+      if (!state.user) return;
+      
+      const userProperties = await getUserProperties();
+      const propertyIds = userProperties.map((prop: any) => prop.id.toString());
+      
+      // Update user with their property IDs
+      dispatch({ 
+        type: 'SET_USER', 
+        payload: { 
+          ...state.user, 
+          properties: propertyIds 
+        } 
+      });
+    } catch (error) {
+      console.error('Failed to load user properties:', error);
+    }
+  };
+
   // Initialize app - check for existing session and load data
   useEffect(() => {
     const initializeApp = async () => {
@@ -567,21 +597,23 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           // Transform API response to frontend user format
           const frontendUser: User = {
             id: user.id.toString(),
-            name: user.full_name,
+            name: user.full_name || user.name,
             email: user.email,
             phone: user.phone || '',
             avatar: user.avatar?.url || '',
             properties: [],
             favorites: [],
+            full_name: user.full_name,
             dateJoined: user.created_at,
-            isVerified: user.is_verified,
-            userType: user.user_type
+            is_verified: user.is_verified,
+            user_type: user.user_type
           };
           
           dispatch({ type: 'SET_USER', payload: frontendUser });
           
-          // Load user's favorites
+          // Load user's favorites and properties
           await loadUserFavorites();
+          await loadUserProperties();
         }
         
         // Load properties regardless of authentication status

@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
 
     // Get user's properties
     const userProps = properties.filter(p => 
-      user.properties.includes(p.id) || 
+      (user.properties && user.properties.includes(p.id)) || 
       p.contact.email === user.email
     );
     setUserProperties(userProps);
