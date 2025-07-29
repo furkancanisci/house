@@ -102,30 +102,58 @@ const AddProperty: React.FC = () => {
   }, [user, navigate]);
 
   const availableFeatures = [
-    'Parking',
-    'Pool',
-    'Gym',
-    'Pet Friendly',
-    'Balcony',
-    'Garden',
-    'Fireplace',
-    'Dishwasher',
     'Air Conditioning',
+    'Heating',
+    'Dishwasher',
     'Laundry in Unit',
-    'Elevator',
-    'Garage',
-    'Hardwood Floors',
-    'Walk-in Closets',
+    'Laundry in Building',
+    'Balcony',
     'Patio',
-    'Storage',
+    'Garden',
+    'Roof Deck',
+    'Terrace',
+    'Fireplace',
+    'Hardwood Floors',
+    'Carpet',
+    'Tile Floors',
     'High Ceilings',
+    'Walk-in Closet',
+    'Storage',
+    'Basement',
+    'Attic',
+    'Garage',
+    'Parking',
+    'Elevator',
+    'Doorman',
+    'Concierge',
+    'Security System',
+    'Intercom',
+    'Video Security',
+    'Gym',
+    'Pool',
+    'Hot Tub',
+    'Sauna',
+    'Tennis Court',
+    'Basketball Court',
+    'Playground',
+    'Dog Park',
+    'Pet Friendly',
+    'No Pets',
+    'Furnished',
+    'Unfurnished',
+    'Internet',
+    'Cable TV',
+    'Utilities Included',
+    'Recently Renovated',
+    'New Construction',
+    'Outdoor Kitchen',
+    'Master Suite',
     'Updated Kitchen',
     'Updated Bathroom',
     'Close to Transit',
     'Ocean View',
     'City View',
     'Private Elevator',
-    'Concierge',
     'Spa',
     'Wine Cellar',
     'Smart Home',
@@ -133,17 +161,13 @@ const AddProperty: React.FC = () => {
     'Bay Windows',
     'Crown Molding',
     'Community Pool',
-    'Playground',
     'Washer/Dryer',
     'In-Unit Laundry',
     'Rooftop Deck',
     'Fitness Center',
-    'Outdoor Kitchen',
     'Single Story',
     'Large Backyard',
-    'Master Suite',
     'Desert Landscaping',
-    'Tile Floors',
   ];
 
   const handleFeatureToggle = (feature: string) => {
@@ -233,7 +257,7 @@ const AddProperty: React.FC = () => {
         datePosted: new Date().toISOString(),
       };
 
-      addProperty(newProperty);
+   await addProperty(newProperty);
       toast.success('Property listed successfully!');
       navigate('/dashboard');
     } catch (error) {
@@ -438,10 +462,23 @@ const AddProperty: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="parking">{t('property.details.parking')}</Label>
-                <Input
-                  id="parking"
-                  placeholder={t('forms.parkingPlaceholder')}
-                  {...register('parking')}
+                <Controller
+                  name="parking"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select parking type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Parking</SelectItem>
+                        <SelectItem value="street">Street Parking</SelectItem>
+                        <SelectItem value="garage">Garage</SelectItem>
+                        <SelectItem value="driveway">Driveway</SelectItem>
+                        <SelectItem value="carport">Carport</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
               </div>
 

@@ -5,26 +5,58 @@ export interface Property {
   title: string;
   description: string;
   price: number;
+  price_type?: string;
   property_type: string;
   listing_type: string;
+  street_address: string;
   city: string;
   state: string;
   postal_code: string;
+  country?: string;
   latitude: number;
   longitude: number;
+  neighborhood?: string;
   bedrooms: number;
   bathrooms: number;
   square_feet: number;
+  lot_size?: number;
+  year_built?: number;
+  parking_type?: string;
+  parking_spaces?: number;
   is_featured: boolean;
+  is_available: boolean;
+  available_from?: string;
   status: string;
+  slug: string;
+  amenities?: string[];
+  nearby_places?: Array<{
+    name: string;
+    type: string;
+    distance: number;
+  }>;
   created_at: string;
   updated_at: string;
+  published_at?: string;
   user_id: number;
-  media?: Array<{
+  // Computed attributes
+  full_address?: string;
+  formatted_price?: string;
+  main_image_url?: string;
+  gallery_urls?: Array<{
     id: number;
     url: string;
-    type: string;
+    thumb: string;
+    medium: string;
+    large: string;
   }>;
+  is_favorited_by_auth_user?: boolean;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+    phone?: string;
+    avatar?: string;
+  };
 }
 
 export interface PropertyFilters {
@@ -150,6 +182,96 @@ export const getFeaturedProperties = async (limit = 6) => {
     return response.data.data || [];
   } catch (error) {
     console.error('Error fetching featured properties:', error);
+    throw error;
+  }
+};
+
+export const createProperty = async (propertyData: Partial<Property>) => {
+  try {
+    const response = await api.post('/properties', propertyData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating property:', error);
+    throw error;
+  }
+};
+
+export const updateProperty = async (id: number, propertyData: Partial<Property>) => {
+  try {
+    const response = await api.put(`/properties/${id}`, propertyData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating property:', error);
+    throw error;
+  }
+};
+
+export const deleteProperty = async (id: number) => {
+  try {
+    const response = await api.delete(`/properties/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting property:', error);
+    throw error;
+  }
+};
+
+export const toggleFavorite = async (id: number) => {
+  try {
+    const response = await api.post(`/properties/${id}/favorite`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling favorite:', error);
+    throw error;
+  }
+};
+
+export const getFavoriteProperties = async () => {
+  try {
+    const response = await api.get('/dashboard/favorites');
+    return response.data.data || [];
+  } catch (error) {
+    console.error('Error fetching favorite properties:', error);
+    throw error;
+  }
+};
+
+export const getUserProperties = async () => {
+  try {
+    const response = await api.get('/dashboard/properties');
+    return response.data.data || [];
+  } catch (error) {
+    console.error('Error fetching user properties:', error);
+    throw error;
+  }
+};
+
+export const getPropertyAnalytics = async (id: number) => {
+  try {
+    const response = await api.get(`/properties/${id}/analytics`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching property analytics:', error);
+    throw error;
+  }
+};
+
+export const getSimilarProperties = async (slug: string) => {
+  try {
+    const response = await api.get(`/properties/${slug}/similar`);
+    return response.data.data || [];
+  } catch (error) {
+    console.error('Error fetching similar properties:', error);
+    throw error;
+  }
+};
+
+export const getAmenities = async () => {
+  try {
+    const response = await api.get('/properties/amenities');
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching amenities:', error);
     throw error;
   }
 };

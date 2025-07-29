@@ -218,7 +218,7 @@ const EditProperty: React.FC = () => {
         },
       };
 
-      updateProperty(updatedProperty);
+     await updateProperty(updatedProperty);
       toast.success('Property updated successfully!');
       navigate('/dashboard');
     } catch (error) {
@@ -446,10 +446,23 @@ const EditProperty: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="parking">Parking</Label>
-                  <Input
-                    id="parking"
-                    placeholder="e.g., 2-car garage"
-                    {...register('parking')}
+                  <Controller
+                    name="parking"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select parking type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No Parking</SelectItem>
+                          <SelectItem value="street">Street Parking</SelectItem>
+                          <SelectItem value="garage">Garage</SelectItem>
+                          <SelectItem value="driveway">Driveway</SelectItem>
+                          <SelectItem value="carport">Carport</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
                 </div>
 
