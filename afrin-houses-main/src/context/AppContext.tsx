@@ -1,8 +1,15 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { Property, User, SearchFilters } from '../types';
-
-// Add to the imports
 import { useTranslation } from 'react-i18next';
+import {
+  getProperties, 
+  createProperty, 
+  updateProperty as updatePropertyAPI, 
+  deleteProperty as deletePropertyAPI,
+  toggleFavorite as toggleFavoriteAPI,
+  getFavoriteProperties
+} from '../services/propertyService';
+import authService from '../services/authService';
 
 // First, update the AppState interface to include language property
 interface AppState {
@@ -133,14 +140,47 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const { i18n } = useTranslation();
   
-  // Load properties from JSON file
+  // Load properties from API
   const loadProperties = async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await fetch('/data/properties.json');
-      const properties = await response.json();
+      const response = await getProperties();
+      const properties = response.data.map((property: any) => ({
+        id: property.id.toString(),
+        slug: property.slug,
+        title: property.title,
+        address: property.location.full_address,
+        price: property.price.amount,
+        propertyType: property.property_type,
+        listingType: property.listing_type,
+        bedrooms: property.details.bedrooms,
+        bathrooms: property.details.bathrooms,
+        squareFootage: property.details.square_feet,
+        description: property.description,
+        features: property.amenities || [],
+        images: property.images.gallery?.map((img: any) => img.url) || [],
+        mainImage: property.images.main || '/placeholder-property.jpg',
+        yearBuilt: property.details.year_built,
+        coordinates: {
+          lat: property.location.coordinates.latitude,
+          lng: property.location.coordinates.longitude
+        },
+        contact: {
+          name: property.owner?.full_name || 'Agent',
+          phone: property.owner?.phone || '',
+          email: property.owner?.email || ''
+        },
+        datePosted: property.created_at,
+        availableDate: property.available_from,
+        petPolicy: property.details?.pet_policy,
+        parking: property.details?.parking?.type,
+        lotSize: property.details?.lot_size,
+        garage: property.details?.parking?.type === 'garage' ? 'Yes' : 'No',
+        building: property.details?.building_name
+      }));
       dispatch({ type: 'SET_PROPERTIES', payload: properties });
     } catch (error) {
+      console.error('Failed to load properties:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load properties' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -201,131 +241,359 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: filtered });
   };
 
-  // Add new property
-  const addProperty = (propertyData: Omit<Property, 'id' | 'datePosted'>) => {
-    const newProperty: Property = {
-      ...propertyData,
-      id: Date.now().toString(),
-      datePosted: new Date().toISOString(),
-    };
-    dispatch({ type: 'ADD_PROPERTY', payload: newProperty });
-    
-    // Save to localStorage for persistence
-    const savedProperties = JSON.parse(localStorage.getItem('userProperties') || '[]');
-    savedProperties.push(newProperty);
-    localStorage.setItem('userProperties', JSON.stringify(savedProperties));
-  };
+  // Add property using API
+  const addProperty = async (propertyData: Omit<Property, 'id' | 'datePosted'>) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      // Transform frontend data to API format
+      const apiData = {
+        title: propertyData.title,
+        description: propertyData.description,
+        property_type: propertyData.propertyType,
+        listing_type: propertyData.listingType,
+        price: propertyData.price,
+        street_address: propertyData.address,
+        city: propertyData.address.split(',')[1]?.trim() || 'Default City',
+        state: propertyData.address.split(',')[2]?.trim() || 'Default State',
+        postal_code: propertyData.address.split(',')[3]?.trim() || '00000',
+        country: 'US',
+        bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        square_feet: propertyData.squareFootage,
+        year_built: propertyData.yearBuilt,
+        amenities: propertyData.features,
+        latitude: propertyData.coordinates?.lat,
+        longitude: propertyData.coordinates?.lng,
+        available_from: propertyData.availableDate,
+        parking_type: propertyData.parking || 'none',
+        lot_size: propertyData.lotSize
+      };
 
-  // Update property
-  const updateProperty = (property: Property) => {
-    dispatch({ type: 'UPDATE_PROPERTY', payload: property });
-    
-    // Update in localStorage
-    const savedProperties = JSON.parse(localStorage.getItem('userProperties') || '[]');
-    const updatedProperties = savedProperties.map((p: Property) => 
-      p.id === property.id ? property : p
-    );
-    localStorage.setItem('userProperties', JSON.stringify(updatedProperties));
-  };
+      const response = await createProperty(apiData);
+      
+      // Transform API response back to frontend format
+      const newProperty: Property = {
+        id: response.property.id.toString(),
+        slug: response.property.slug,
+        title: response.property.title,
+        address: response.property.location.full_address,
+        price: response.property.price.amount,
+        propertyType: response.property.property_type,
+        listingType: response.property.listing_type,
+        bedrooms: response.property.details.bedrooms,
+        bathrooms: response.property.details.bathrooms,
+        squareFootage: response.property.details.square_feet,
+        description: response.property.description,
+        features: response.property.amenities || [],
+        images: response.property.images.gallery?.map((img: any) => img.url) || [],
+        mainImage: response.property.images.main || '/placeholder-property.jpg',
+        yearBuilt: response.property.details.year_built,
+        coordinates: {
+          lat: response.property.location.coordinates.latitude,
+          lng: response.property.location.coordinates.longitude
+        },
+        contact: {
+          name: response.property.owner?.full_name || 'Agent',
+          phone: response.property.owner?.phone || '',
+          email: response.property.owner?.email || ''
+        },
+        datePosted: response.property.created_at,
+        availableDate: response.property.available_from,
+        petPolicy: response.property.details?.pet_policy,
+        parking: response.property.details?.parking?.type,
+        lotSize: response.property.details?.lot_size,
+        garage: response.property.details?.parking?.type === 'garage' ? 'Yes' : 'No',
+        building: response.property.details?.building_name
+      };
 
-  // Delete property
-  const deleteProperty = (id: string) => {
-    dispatch({ type: 'DELETE_PROPERTY', payload: id });
-    
-    // Remove from localStorage
-    const savedProperties = JSON.parse(localStorage.getItem('userProperties') || '[]');
-    const filteredProperties = savedProperties.filter((p: Property) => p.id !== id);
-    localStorage.setItem('userProperties', JSON.stringify(filteredProperties));
-  };
-
-  // Toggle favorite
-  const toggleFavorite = (propertyId: string | number) => {
-    const id = propertyId.toString();
-    if (state.user) {
-      if (state.favorites.includes(id)) {
-        dispatch({ type: 'REMOVE_FAVORITE', payload: id });
-      } else {
-        dispatch({ type: 'ADD_FAVORITE', payload: id });
+      dispatch({ type: 'ADD_PROPERTY', payload: newProperty });
+      
+      // Update user's properties list
+      if (state.user) {
+        const updatedUser = {
+          ...state.user,
+          properties: [...state.user.properties, newProperty.id]
+        };
+        dispatch({ type: 'SET_USER', payload: updatedUser });
       }
-    } else {
-      // Redirect to login if user is not logged in
-      // You can add navigation logic here if using react-router
-      console.log('User must be logged in to add favorites');
+    } catch (error) {
+      console.error('Failed to add property:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to add property' });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  // Simple login system (for demo purposes)
+  // Update property using API
+  const updateProperty = async (property: Property) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      // Transform frontend data to API format
+      const apiData = {
+        title: property.title,
+        description: property.description,
+        property_type: property.propertyType,
+        listing_type: property.listingType,
+        price: property.price,
+        street_address: property.address,
+        city: property.address.split(',')[1]?.trim() || 'Default City',
+        state: property.address.split(',')[2]?.trim() || 'Default State',
+        postal_code: property.address.split(',')[3]?.trim() || '00000',
+        country: 'US',
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        square_feet: property.squareFootage,
+        year_built: property.yearBuilt,
+        amenities: property.features,
+        latitude: property.coordinates?.lat,
+        longitude: property.coordinates?.lng,
+        available_from: property.availableDate,
+        parking_type: property.parking || 'none',
+        lot_size: property.lotSize
+      };
+
+      const response = await updatePropertyAPI(property.id, apiData);
+      
+      // Transform API response back to frontend format
+      const updatedProperty: Property = {
+        id: response.property.id.toString(),
+        slug: response.property.slug,
+        title: response.property.title,
+        address: response.property.location.full_address,
+        price: response.property.price.amount,
+        propertyType: response.property.property_type,
+        listingType: response.property.listing_type,
+        bedrooms: response.property.details.bedrooms,
+        bathrooms: response.property.details.bathrooms,
+        squareFootage: response.property.details.square_feet,
+        description: response.property.description,
+        features: response.property.amenities || [],
+        images: response.property.images.gallery?.map((img: any) => img.url) || [],
+        mainImage: response.property.images.main || '/placeholder-property.jpg',
+        yearBuilt: response.property.details.year_built,
+        coordinates: {
+          lat: response.property.location.coordinates.latitude,
+          lng: response.property.location.coordinates.longitude
+        },
+        contact: {
+          name: response.property.owner?.full_name || 'Agent',
+          phone: response.property.owner?.phone || '',
+          email: response.property.owner?.email || ''
+        },
+        datePosted: response.property.created_at,
+        availableDate: response.property.available_from,
+        petPolicy: response.property.details?.pet_policy,
+        parking: response.property.details?.parking?.type,
+        lotSize: response.property.details?.lot_size,
+        garage: response.property.details?.parking?.type === 'garage' ? 'Yes' : 'No',
+        building: response.property.details?.building_name
+      };
+
+      dispatch({ type: 'UPDATE_PROPERTY', payload: updatedProperty });
+    } catch (error) {
+      console.error('Failed to update property:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to update property' });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  // Delete property using API
+  const deleteProperty = async (id: string) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      await deletePropertyAPI(id);
+      dispatch({ type: 'DELETE_PROPERTY', payload: id });
+      
+      // Update user's properties list
+      if (state.user) {
+        const updatedUser = {
+          ...state.user,
+          properties: state.user.properties.filter(propId => propId !== id)
+        };
+        dispatch({ type: 'SET_USER', payload: updatedUser });
+      }
+    } catch (error) {
+      console.error('Failed to delete property:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to delete property' });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  // Toggle favorite using API
+  const toggleFavorite = async (propertyId: string | number) => {
+    try {
+      const id = propertyId.toString();
+      if (!state.user) {
+        throw new Error('User must be logged in to favorite properties');
+      }
+
+      const response = await toggleFavoriteAPI(id);
+      
+      if (response.favorited) {
+        dispatch({ type: 'ADD_FAVORITE', payload: id });
+      } else {
+        dispatch({ type: 'REMOVE_FAVORITE', payload: id });
+      }
+      
+      return response.favorited;
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to update favorite' });
+      throw error;
+    }
+  };
+
+  // Login using API
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // In a real app, this would make an API call
-      // For demo, we'll create a user based on email
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const response = await authService.login({ email, password });
+      
+      // Transform API response to frontend user format
       const user: User = {
-        id: Date.now().toString(),
-        name: email.split('@')[0],
-        email,
-        properties: [],
-        favorites: state.favorites,
+        id: response.user.id.toString(),
+        name: response.user.full_name,
+        email: response.user.email,
+        phone: response.user.phone || '',
+        avatar: response.user.avatar?.url || '',
+        properties: [], // Will be loaded separately
+        favorites: [], // Will be loaded separately
+        dateJoined: response.user.created_at,
+        isVerified: response.user.is_verified,
+        userType: response.user.user_type
       };
       
       dispatch({ type: 'SET_USER', payload: user });
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      
+      // Load user's properties and favorites
+      await loadProperties();
+      
       return true;
     } catch (error) {
+      console.error('Login failed:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
       return false;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  // Logout
-  const logout = () => {
-    dispatch({ type: 'SET_USER', payload: null });
-    localStorage.removeItem('currentUser');
+  // Logout using API
+  const logout = async () => {
+    try {
+      await authService.logout();
+      dispatch({ type: 'SET_USER', payload: null });
+      dispatch({ type: 'SET_PROPERTIES', payload: [] });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still clear local state even if API call fails
+      dispatch({ type: 'SET_USER', payload: null });
+      dispatch({ type: 'SET_PROPERTIES', payload: [] });
+    }
   };
 
-  // Register new user
-  const register = async (userData: Omit<User, 'id' | 'properties' | 'favorites'>): Promise<boolean> => {
+  // Register using API
+  const register = async (userData: {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation?: string;
+    phone?: string;
+  }) => {
     try {
-      const user: User = {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      // Ensure password_confirmation is set
+      const registrationData = {
         ...userData,
-        id: Date.now().toString(),
+        password_confirmation: userData.password_confirmation || userData.password
+      };
+      
+      const response = await authService.register(registrationData);
+      
+      // Transform API response to frontend user format
+      const user: User = {
+        id: response.user.id.toString(),
+        name: response.user.full_name,
+        email: response.user.email,
+        phone: response.user.phone || '',
+        avatar: response.user.avatar?.url || '',
         properties: [],
         favorites: [],
+        dateJoined: response.user.created_at,
+        isVerified: response.user.is_verified,
+        userType: response.user.user_type
       };
       
       dispatch({ type: 'SET_USER', payload: user });
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      
       return true;
     } catch (error) {
+      console.error('Registration failed:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
       return false;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  // Load initial data
+  // Load user's favorites
+  const loadUserFavorites = async () => {
+    try {
+      if (!state.user) return;
+      
+      const favorites = await getFavoriteProperties();
+      const favoriteIds = favorites.map((prop: any) => prop.id.toString());
+      dispatch({ type: 'SET_FAVORITES', payload: favoriteIds });
+    } catch (error) {
+      console.error('Failed to load user favorites:', error);
+    }
+  };
+
+  // Initialize app - check for existing session and load data
   useEffect(() => {
-    loadProperties();
-    
-    // Load user from localStorage
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      dispatch({ type: 'SET_USER', payload: JSON.parse(savedUser) });
-    }
-    
-    // Load favorites from localStorage
-    const savedFavorites = localStorage.getItem('favorites');
-    if (savedFavorites) {
-      const favorites = JSON.parse(savedFavorites);
-      favorites.forEach((id: string) => {
-        dispatch({ type: 'ADD_FAVORITE', payload: id });
-      });
-    }
-    
-    // Load user properties from localStorage
-    const savedProperties = localStorage.getItem('userProperties');
-    if (savedProperties) {
-      const userProperties = JSON.parse(savedProperties);
-      userProperties.forEach((property: Property) => {
-        dispatch({ type: 'ADD_PROPERTY', payload: property });
-      });
-    }
+    const initializeApp = async () => {
+      try {
+        // Check if user is already authenticated
+        const user = await authService.getCurrentUser();
+        if (user) {
+          // Transform API response to frontend user format
+          const frontendUser: User = {
+            id: user.id.toString(),
+            name: user.full_name,
+            email: user.email,
+            phone: user.phone || '',
+            avatar: user.avatar?.url || '',
+            properties: [],
+            favorites: [],
+            dateJoined: user.created_at,
+            isVerified: user.is_verified,
+            userType: user.user_type
+          };
+          
+          dispatch({ type: 'SET_USER', payload: frontendUser });
+          
+          // Load user's favorites
+          await loadUserFavorites();
+        }
+        
+        // Load properties regardless of authentication status
+        await loadProperties();
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+        // Still load properties even if user auth fails
+        await loadProperties();
+      }
+    };
+
+    initializeApp();
   }, []);
 
   // Move changeLanguage function inside the component

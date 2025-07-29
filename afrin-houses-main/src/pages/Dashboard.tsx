@@ -75,9 +75,13 @@ const Dashboard: React.FC = () => {
     setFavoriteProperties(favProps);
   }, [user, properties, favorites, navigate]);
 
-  const handleDeleteProperty = (propertyId: string) => {
-    deleteProperty(propertyId);
-    toast.success('Property deleted successfully');
+  const handleDeleteProperty = async (propertyId: string) => {
+    try {
+      await deleteProperty(propertyId);
+      toast.success('Property deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete property');
+    }
   };
 
   const stats = [

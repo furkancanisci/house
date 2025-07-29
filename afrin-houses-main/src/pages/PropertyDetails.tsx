@@ -171,14 +171,19 @@ const PropertyDetails: React.FC = () => {
     });
   };
 
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = async () => {
     if (!user) {
       toast.error(t('messages.signInToSaveFavorites'));
       navigate('/auth');
       return;
     }
-    toggleFavorite(property.id);
-    toast.success(isFavorite ? t('messages.removedFromFavorites') : t('messages.addedToFavorites'));
+    
+    try {
+      const wasFavorited = await toggleFavorite(property.id);
+      toast.success(wasFavorited ? t('messages.addedToFavorites') : t('messages.removedFromFavorites'));
+    } catch (error) {
+      toast.error('Failed to update favorite');
+    }
   };
 
   const handleShare = async () => {
