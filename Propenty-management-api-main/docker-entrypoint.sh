@@ -1,11 +1,18 @@
 #!/bin/bash
 
-# Önbellekleri temizle
+set -e  # Script hata alırsa durur, güvenli olur
+
+echo "Laravel önbellekler temizleniyor..."
 php artisan config:clear
 php artisan cache:clear
 
-# Migration çalıştır ama sadece hata olmuyorsa
-php artisan migrate --force || true
+echo " Migrationlar çalıştırılıyor..."
+if ! php artisan migrate --force; then
+  echo "❌ Migration sırasında hata oluştu ama devam ediliyor."
+fi
 
-# Apache'yi başlat
+echo "Seeder çalıştırılıyor..."
+php artisan db:seed --force
+
+echo "Apache (veya başka bir process) başlatılıyor..."
 exec "$@"
