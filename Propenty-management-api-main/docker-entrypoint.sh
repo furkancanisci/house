@@ -2,9 +2,6 @@
 
 set -e  # Script hata alırsa durur, güvenli olur
 
-echo "Laravel önbellekler temizleniyor..."
-php artisan config:clear
-php artisan cache:clear
 
 echo " Migrationlar çalıştırılıyor..."
 if ! php artisan migrate --force; then
