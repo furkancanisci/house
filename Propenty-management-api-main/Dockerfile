@@ -39,10 +39,10 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache \
     && composer install --no-dev --optimize-autoloader || true
 
-# .env ayarı ve key generate
-RUN rm -f .env \
-    && php artisan key:generate || true \
+# .env dosyasını dokunma, sadece key ve cache işle
+RUN php artisan key:generate || true \
     && php artisan config:cache || true
+
 
 EXPOSE 80
 
