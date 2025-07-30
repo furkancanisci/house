@@ -40,7 +40,7 @@ RUN chown -R www-data:www-data /var/www/html \
     && composer install --no-dev --optimize-autoloader || true
 
 # .env ayarı ve key generate
-RUN if [ ! -f .env ]; then cp .env.example .env; fi \
+RUN rm -f .env \
     && php artisan key:generate || true \
     && php artisan config:cache || true
 
