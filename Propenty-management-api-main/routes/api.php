@@ -29,7 +29,51 @@ Route::get('/health', function () {
     ]);
 });
 
+Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink']);
+        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+        
+        // Email verification routes
+        Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+            ->name('verification.verify');
+        
+        // User info route - made public for now
+        Route::get('/me', [AuthController::class, 'me']);
+        
+        // Protected authentication routes (only logout operations)
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/logout', [AuthController::class, 'logout']);
+            Route::post('/logout-all', [AuthController::class, 'logoutAll']);
+            Route::post('/refresh', [AuthController::class, 'refresh']);
+            Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail']);
+        });
+
+
+        Route::get('/', [PropertyController::class, 'index']);
+        Route::get('/featured', [PropertyController::class, 'featured']);
+        Route::get('/amenities', [PropertyController::class, 'amenities']);
+        Route::get('/{property:slug}', [PropertyController::class, 'show']);
+        Route::get('/{property:slug}/similar', [PropertyController::class, 'similar']);
+        
+        // Write operations - keeping these for future reference but making them public for now
+        Route::post('/', [PropertyController::class, 'store']);
+        Route::put('/{property}', [PropertyController::class, 'update']);
+        Route::delete('/{property}', [PropertyController::class, 'destroy']);
+        Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite']);
+        Route::get('/{property}/analytics', [PropertyController::class, 'analytics']);
 // API Version 1
+
+Route::get('/overview', [DashboardController::class, 'overview']);
+Route::get('/properties', [DashboardController::class, 'properties']);
+Route::get('/favorites', [DashboardController::class, 'favorites']);
+Route::get('/analytics', [DashboardController::class, 'analytics']);
+
+// Keeping profile and notifications as protected since they're user-specific
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/profile', [DashboardController::class, 'updateProfile']);
+    Route::get('/notifications', [DashboardController::class, 'notifications']);
+});
 Route::prefix('v1')->group(function () {
     
     // Authentication Routes
