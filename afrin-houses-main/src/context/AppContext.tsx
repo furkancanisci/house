@@ -108,6 +108,7 @@ interface AppContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (userData: Omit<User, 'id' | 'properties' | 'favorites'>) => Promise<boolean>;
+  changeLanguage: (lang: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -124,23 +125,6 @@ interface AppProviderProps {
   children: ReactNode;
 }
 
-// Add to the AppContextType interface
-interface AppContextType {
-  state: AppState;
-  dispatch: React.Dispatch<AppAction>;
-  loadProperties: () => Promise<void>;
-  filterProperties: (filters: SearchFilters) => void;
-  addProperty: (property: Omit<Property, 'id' | 'datePosted'>) => void;
-  updateProperty: (property: Property) => void;
-  deleteProperty: (id: string) => void;
-  toggleFavorite: (propertyId: string) => Promise<boolean>;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  register: (userData: Omit<User, 'id' | 'properties' | 'favorites'>) => Promise<boolean>;
-  changeLanguage: (lang: string) => void;
-}
-
-// Add to the AppProvider component
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const { i18n } = useTranslation();
@@ -479,7 +463,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         })() as string | { url: string },
         properties: [], // Will be loaded separately
         favorites: [], // Will be loaded separately
-        is_verified: (response.user as any)?.is_verified || false,
+        is_verified: Boolean((response.user as any)?.is_verified), // Convert to boolean
         user_type: (response.user as any)?.user_type || 'user',
         date_joined: (response.user as any)?.date_joined || (response.user as any)?.created_at || new Date().toISOString(),
         created_at: (response.user as any)?.created_at || new Date().toISOString()
@@ -684,5 +668,3 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-
-// Remove the duplicate changeLanguage function and extra code block at the end of the file
