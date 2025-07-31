@@ -20,6 +20,5 @@ if [ -f /var/www/html/artisan ]; then
     php artisan storage:link
 fi
 
-# Start Apache in the background
-exec apache2-foreground "$@"
-exec "$@"
+# Start Apache in the foreground
+exec apache2-foreground
