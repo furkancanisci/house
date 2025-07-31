@@ -205,12 +205,10 @@ const Home: React.FC = () => {
                       squareFootage: property.square_feet || 0,
                       description: property.description || '',
                       features: (property as any).features || [],
-                      images: Array.isArray(property.media) 
-                        ? property.media.map((m: any) => m.url || '').filter(Boolean)
+                      images: Array.isArray((property as any).gallery_urls) 
+                        ? (property as any).gallery_urls.map((m: any) => m.url || '').filter(Boolean)
                         : [],
-                      mainImage: Array.isArray(property.media) && property.media[0]?.url 
-                        ? property.media[0].url 
-                        : '',
+                      mainImage: (property as any).main_image_url || '',
                       coordinates: {
                         lat: property.latitude || 0,
                         lng: property.longitude || 0
