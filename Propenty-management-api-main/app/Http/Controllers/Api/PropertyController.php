@@ -21,20 +21,27 @@ class PropertyController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:sanctum')->except(['index', 'show', 'featured']);
+        $this->middleware('auth:sanctum')->except(['index', 'show', 'featured', 'test']);
+    }
+    
+    /**
+     * Test endpoint
+     */
+    public function test()
+    {
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'Property Management API is running',
+            'timestamp' => now()->toISOString(),
+            'version' => '1.0.0',
+        ]);
     }
 
     /**
      * Display a listing of properties with filtering and searching.
      */
 
-     public function test()
-    {
-        return response()->json([
-            'message' => 'Test passed',
-        ]);
-    }
-    
+
     public function index(Request $request): PropertyCollection
     {
         $properties = QueryBuilder::for(Property::class)
