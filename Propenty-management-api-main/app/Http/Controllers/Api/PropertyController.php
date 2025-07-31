@@ -87,8 +87,6 @@ class PropertyController extends Controller
                           ->orWhere('neighborhood', 'like', "%{$value}%");
                     });
                 }),
-                AllowedFilter::exact('is_featured'),
-                AllowedFilter::exact('is_available'),
             ])
             ->allowedSorts([
                 'price',
@@ -101,10 +99,8 @@ class PropertyController extends Controller
                 'square_feet',
             ])
             ->where('status', 'active')
-            ->where('is_available', true)
             ->with(['user', 'media'])
             ->paginate($request->get('per_page', 12));
-
         return new PropertyCollection($properties);
     }
 
