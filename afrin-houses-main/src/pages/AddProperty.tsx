@@ -242,7 +242,7 @@ const AddProperty: React.FC = () => {
         petPolicy: data.petPolicy,
         parking: data.parking,
         utilities: data.utilities,
-        lotSize: data.lotSize,
+        lotSize: data.lotSize ? Number(data.lotSize) : undefined, // Ensure lotSize is a number
         garage: data.garage,
         heating: data.heating,
         hoaFees: data.hoaFees,

@@ -99,15 +99,17 @@ export interface ExtendedProperty extends Omit<Property, 'id' | 'address' | 'pri
 export interface User {
   id: string;
   name: string;
+  full_name: string;
   email: string;
-  phone?: string;
-  avatar?: string;
+  phone: string;
+  avatar: string | { url: string };
   properties: string[]; // Property IDs owned by user
   favorites: string[]; // Property IDs favorited by user
-  full_name?: string;
-  is_verified?: boolean;
-  user_type?: string;
-  dateJoined?: string;
+  is_verified: boolean;
+  user_type: string;
+  date_joined: string;
+  created_at: string;
+  [key: string]: any; // Allow additional properties from the API
 }
 
 export interface SearchFilters {
