@@ -1,16 +1,25 @@
 #!/bin/bash
+set -e
 
-set -e  # Script hata alırsa durur, güvenli olur
+# Apache gets grumpy about PID files pre-existing
+rm -f /var/run/apache2/apache2.pid
 
-php artisan config:clear
-php artisan cache:clear
+# Set proper permissions
+chown -R www-data:www-data /var/www/html/storage
+chown -R www-data:www-data /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage
+chmod -R 775 /var/www/html/bootstrap/cache
 
-
-echo " Migrationlar çalıştırılıyor..."
-if ! php artisan migrate --force; then
-  echo "❌ Migration sırasında hata oluştu ama devam ediliyor."
+# Run database migrations
+if [ -f /var/www/html/artisan ]; then
+    cd /var/www/html
+    php artisan config:clear
+    php artisan cache:clear
+    php artisan view:clear
+    php artisan migrate --force
+    php artisan storage:link
 fi
 
-
-echo "Apache (veya başka bir process) başlatılıyor..."
+# Start Apache in the background
+exec apache2-foreground "$@"
 exec "$@"
