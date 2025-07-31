@@ -11,8 +11,6 @@ if ! php artisan migrate --force; then
   echo "❌ Migration sırasında hata oluştu ama devam ediliyor."
 fi
 
-echo "Seeder çalıştırılıyor..."
-php artisan db:seed --force
 
 echo "Apache (veya başka bir process) başlatılıyor..."
 exec "$@"
