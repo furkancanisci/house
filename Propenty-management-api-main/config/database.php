@@ -73,12 +73,10 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public',
+            'schema' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
-            'options'   => extension_loaded('pdo_pgsql') ? array_filter([
-                PDO::PGSQL_ATTR_SSL_MODE => 'require',
-            ]) : [],
         ],
+
 
 
 
