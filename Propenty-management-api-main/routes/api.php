@@ -31,6 +31,15 @@ Route::get('/health', function () {
 
 Route::get('/test', [PropertyController::class, 'test']);
 
+Route::get('/testt', function () {
+    return response()->json([
+        'status' => 'OK',
+        'message' => 'Property Management API is running',
+        'timestamp' => now()->toISOString(),
+        'version' => '1.0.0',
+    ]);
+});
+
 Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink']);
