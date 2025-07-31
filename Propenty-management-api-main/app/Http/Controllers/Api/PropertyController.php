@@ -27,6 +27,14 @@ class PropertyController extends Controller
     /**
      * Display a listing of properties with filtering and searching.
      */
+
+     public function test()
+    {
+        return response()->json([
+            'message' => 'Test passed',
+        ]);
+    }
+    
     public function index(Request $request): PropertyCollection
     {
         $properties = QueryBuilder::for(Property::class)

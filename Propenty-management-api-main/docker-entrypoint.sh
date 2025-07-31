@@ -18,6 +18,7 @@ if [ -f /var/www/html/artisan ]; then
     php artisan view:clear
     php artisan migrate --force
     php artisan storage:link
+    composer dump-autoload
 fi
 
 # Start Apache in the foreground

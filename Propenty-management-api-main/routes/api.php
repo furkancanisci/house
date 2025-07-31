@@ -29,6 +29,8 @@ Route::get('/health', function () {
     ]);
 });
 
+Route::get('/test', [PropertyController::class, 'test']);
+
 Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink']);
