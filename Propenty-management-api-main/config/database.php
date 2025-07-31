@@ -65,7 +65,6 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DATABASE_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'forge'),
@@ -74,9 +73,15 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
-            'schema' => 'public',
+            'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'options' => extension_loaded('pdo_pgsql') ? [
+                PDO::PGSQL_ATTR_SSL_MODE => env('DB_SSLMODE', 'prefer'),
+                // Neon SSL sertifikası zorunlu değilse aşağıdaki satırı yorum satırı yapabilirsin:
+                // PDO::PGSQL_ATTR_SSL_CERT => '/path/to/ca.pem',
+            ] : [],
         ],
+
 
 
         'sqlsrv' => [
