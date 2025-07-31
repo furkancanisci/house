@@ -61,6 +61,16 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     ];
 
     /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $attributes = [
+        'is_verified' => false,
+        'is_active' => true,
+    ];
+
+    /**
      * Define media collections
      */
     public function registerMediaCollections(): void

@@ -41,9 +41,7 @@ class PropertyFavoriteSeeder extends Seeder
         }
 
         // Some property owners might also be looking at properties
-        $propertyOwners = User::where('user_type', 'property_owner')
-            ->where('is_verified', true)
-            ->get();
+        $propertyOwners = User::where('user_type', 'property_owner')->get();
 
         foreach ($propertyOwners as $owner) {
             // 50% chance a property owner favorites other properties
