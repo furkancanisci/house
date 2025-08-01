@@ -37,21 +37,24 @@ import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 
 const propertySchema = z.object({
-  title: z.string().min(1, 'Property title is required'),
+  title: z.string().min(1, 'Property title is required').max(255, 'Title cannot exceed 255 characters'),
   address: z.string().min(1, 'Address is required'),
-  price: z.number().min(1, 'Price must be greater than 0'),
+  city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
+  state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
+  postalCode: z.string().min(1, 'Postal code is required').max(20, 'Postal code cannot exceed 20 characters'),
+  price: z.number().min(0, 'Price must be 0 or greater').max(99999999.99, 'Price is too high'),
   listingType: z.enum(['rent', 'sale']),
-  propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse']),
-  bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater'),
-  bathrooms: z.number().min(0, 'Bathrooms must be 0 or greater'),
-  squareFootage: z.number().min(1, 'Square footage must be greater than 0'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  yearBuilt: z.number().min(1800, 'Year built must be valid').max(new Date().getFullYear(), 'Year built cannot be in the future'),
+  propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
+  bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater').max(20, 'Bedrooms cannot exceed 20'),
+  bathrooms: z.number().min(0, 'Bathrooms must be 0 or greater').max(20, 'Bathrooms cannot exceed 20'),
+  squareFootage: z.number().min(1, 'Square footage must be greater than 0').max(50000, 'Square footage cannot exceed 50,000').optional(),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(5000, 'Description cannot exceed 5000 characters'),
+  yearBuilt: z.number().min(1800, 'Year built must be valid').max(new Date().getFullYear() + 2, 'Year built cannot be in the future').optional(),
   availableDate: z.string().optional(),
   petPolicy: z.string().optional(),
   parking: z.string().optional(),
   utilities: z.string().optional(),
-  lotSize: z.string().optional(),
+  lotSize: z.number().min(1, 'Lot size must be greater than 0').max(1000000, 'Lot size is too large').optional(),
   garage: z.string().optional(),
   heating: z.string().optional(),
   hoaFees: z.string().optional(),
@@ -89,6 +92,7 @@ const AddProperty: React.FC = () => {
       bathrooms: 1,
       squareFootage: 500,
       yearBuilt: 2020,
+      price: 0,
       contactName: user?.name || '',
       contactEmail: user?.email || '',
       contactPhone: user?.phone || '',
@@ -194,7 +198,7 @@ const AddProperty: React.FC = () => {
   const getFieldsForStep = (step: number) => {
     switch (step) {
       case 1:
-        return ['title', 'address', 'listingType', 'propertyType'] as (keyof PropertyFormData)[];
+        return ['title', 'address', 'city', 'state', 'postalCode', 'listingType', 'propertyType'] as (keyof PropertyFormData)[];
       case 2:
         return ['price', 'bedrooms', 'bathrooms', 'squareFootage', 'yearBuilt'] as (keyof PropertyFormData)[];
       case 3:
@@ -208,60 +212,67 @@ const AddProperty: React.FC = () => {
 
   const onSubmit = async (data: PropertyFormData) => {
     try {
-      // Generate sample coordinates (in a real app, you'd geocode the address)
-      const coordinates = {
-        lat: 40.7128 + (Math.random() - 0.5) * 0.1,
-        lng: -74.0060 + (Math.random() - 0.5) * 0.1,
-      };
+      // Parse address into components if not already provided
+      let streetAddress = data.address;
+      let city = data.city || '';
+      let state = data.state || '';
+      let postalCode = data.postalCode || '';
 
-      // Use sample images (in a real app, user would upload images)
-      const sampleImages = [
-        '/images/properties/apartment_luxury_1.jpg',
-        '/images/properties/apartment_interior_1.JPG',
-        '/images/properties/apartment_balcony_1.jpg',
-      ];
+      // If city, state, postalCode are not provided, try to parse from address
+      if (!city || !state || !postalCode) {
+        const addressParts = data.address.split(',').map(part => part.trim());
+        if (addressParts.length >= 3) {
+          streetAddress = addressParts[0];
+          city = city || addressParts[1];
+          const lastPart = addressParts[addressParts.length - 1];
+          const stateZipMatch = lastPart.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
+          if (stateZipMatch) {
+            state = state || stateZipMatch[1];
+            postalCode = postalCode || stateZipMatch[2];
+          }
+        }
+      }
 
       const newProperty = {
         title: data.title,
-        slug: data.title.toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, ''), // Generate slug from title
-        address: data.address,
+        description: data.description,
+        property_type: data.propertyType,
+        listing_type: data.listingType,
         price: data.price,
-        listingType: data.listingType,
-        propertyType: data.propertyType,
+        street_address: streetAddress,
+        city: city,
+        state: state,
+        postal_code: postalCode,
+        country: 'US', // Default to US
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
-        squareFootage: data.squareFootage,
-        description: data.description,
-        features: selectedFeatures,
-        images: sampleImages,
-        mainImage: sampleImages[0],
-        yearBuilt: data.yearBuilt,
-        availableDate: data.availableDate,
-        petPolicy: data.petPolicy,
-        parking: data.parking,
-        utilities: data.utilities,
-        lotSize: data.lotSize,
-        garage: data.garage,
-        heating: data.heating,
-        hoaFees: data.hoaFees,
-        building: data.building,
-        pool: data.pool,
-        contact: {
-          name: data.contactName,
-          phone: data.contactPhone,
-          email: data.contactEmail,
-        },
-        coordinates,
-        datePosted: new Date().toISOString(),
+        square_feet: data.squareFootage,
+        lot_size: data.lotSize,
+        year_built: data.yearBuilt,
+        parking_type: data.parking || 'none',
+        parking_spaces: 0,
+        amenities: selectedFeatures,
+        nearby_places: [],
+        contact_name: data.contactName,
+        contact_phone: data.contactPhone,
+        contact_email: data.contactEmail,
+        available_from: data.availableDate || null,
+        status: 'active',
+        is_featured: false,
+        is_available: true,
+        latitude: 40.7128, // Sample coordinates (NYC)
+        longitude: -74.0060,
       };
 
-   await addProperty(newProperty);
-      toast.success('Property listed successfully!');
+      await addProperty(newProperty);
+      toast.success('Property added successfully!');
       navigate('/dashboard');
-    } catch (error) {
-      toast.error('Failed to create property listing');
+    } catch (error: any) {
+      console.error('Error adding property:', error);
+      const errorMessage = error?.response?.data?.message || 
+                          error?.message || 
+                          'Failed to add property. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
@@ -303,6 +314,47 @@ const AddProperty: React.FC = () => {
               )}
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="city">{t('forms.city')} *</Label>
+                <Input
+                  id="city"
+                  placeholder={t('forms.cityPlaceholder')}
+                  className={errors.city ? 'border-red-500' : ''}
+                  {...register('city')}
+                />
+                {errors.city && (
+                  <p className="text-sm text-red-600 mt-1">{errors.city.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="state">{t('forms.state')} *</Label>
+                <Input
+                  id="state"
+                  placeholder={t('forms.statePlaceholder')}
+                  className={errors.state ? 'border-red-500' : ''}
+                  {...register('state')}
+                />
+                {errors.state && (
+                  <p className="text-sm text-red-600 mt-1">{errors.state.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="postalCode">{t('forms.postalCode')} *</Label>
+                <Input
+                  id="postalCode"
+                  placeholder={t('forms.postalCodePlaceholder')}
+                  className={errors.postalCode ? 'border-red-500' : ''}
+                  {...register('postalCode')}
+                />
+                {errors.postalCode && (
+                  <p className="text-sm text-red-600 mt-1">{errors.postalCode.message}</p>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>{t('filters.listingType')} *</Label>
@@ -338,6 +390,11 @@ const AddProperty: React.FC = () => {
                         <SelectItem value="house">{t('property.types.house')}</SelectItem>
                         <SelectItem value="condo">{t('property.types.condo')}</SelectItem>
                         <SelectItem value="townhouse">{t('property.types.townhouse')}</SelectItem>
+                        <SelectItem value="studio">{t('property.types.studio')}</SelectItem>
+                        <SelectItem value="loft">{t('property.types.loft')}</SelectItem>
+                        <SelectItem value="villa">{t('property.types.villa')}</SelectItem>
+                        <SelectItem value="commercial">{t('property.types.commercial')}</SelectItem>
+                        <SelectItem value="land">{t('property.types.land')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -453,9 +510,16 @@ const AddProperty: React.FC = () => {
                 <Label htmlFor="lotSize">{t('property.details.lotSize')}</Label>
                 <Input
                   id="lotSize"
+                  type="number"
+                  min="1"
+                  max="1000000"
                   placeholder={t('forms.lotSizePlaceholder')}
-                  {...register('lotSize')}
+                  className={errors.lotSize ? 'border-red-500' : ''}
+                  {...register('lotSize', { valueAsNumber: true })}
                 />
+                {errors.lotSize && (
+                  <p className="text-sm text-red-600 mt-1">{errors.lotSize.message}</p>
+                )}
               </div>
             </div>
 

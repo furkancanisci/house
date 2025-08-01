@@ -66,6 +66,11 @@ class StorePropertyRequest extends FormRequest
             'nearby_places.*.type' => 'required_with:nearby_places|string|max:50',
             'nearby_places.*.distance' => 'required_with:nearby_places|numeric|min:0',
             
+            // Contact Information
+            'contact_name' => 'required|string|max:255',
+            'contact_phone' => 'required|string|max:20',
+            'contact_email' => 'required|email|max:255',
+            
             // Media
             'main_image' => 'nullable|image|mimes:jpeg,png,webp|max:5120', // 5MB max
             'images' => 'nullable|array|max:20',
@@ -115,6 +120,13 @@ class StorePropertyRequest extends FormRequest
             'longitude.between' => 'Longitude must be between -180 and 180.',
             'amenities.array' => 'Amenities must be provided as a list.',
             'amenities.*.in' => 'One or more selected amenities are invalid.',
+            'contact_name.required' => 'Contact name is required.',
+            'contact_name.max' => 'Contact name cannot exceed 255 characters.',
+            'contact_phone.required' => 'Contact phone number is required.',
+            'contact_phone.max' => 'Contact phone number cannot exceed 20 characters.',
+            'contact_email.required' => 'Contact email is required.',
+            'contact_email.email' => 'Contact email must be a valid email address.',
+            'contact_email.max' => 'Contact email cannot exceed 255 characters.',
             'main_image.image' => 'Main image must be a valid image file.',
             'main_image.mimes' => 'Main image must be JPEG, PNG, or WebP format.',
             'main_image.max' => 'Main image size cannot exceed 5MB.',
