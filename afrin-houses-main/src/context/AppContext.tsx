@@ -104,10 +104,11 @@ interface AppContextType {
   addProperty: (property: Omit<Property, 'id' | 'datePosted'>) => void;
   updateProperty: (property: Property) => void;
   deleteProperty: (id: string) => void;
-  toggleFavorite: (propertyId: string) => void;
+  toggleFavorite: (propertyId: string) => Promise<boolean>;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (userData: Omit<User, 'id' | 'properties' | 'favorites'>) => Promise<boolean>;
+  changeLanguage: (lang: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -124,23 +125,6 @@ interface AppProviderProps {
   children: ReactNode;
 }
 
-// Add to the AppContextType interface
-interface AppContextType {
-  state: AppState;
-  dispatch: React.Dispatch<AppAction>;
-  loadProperties: () => Promise<void>;
-  filterProperties: (filters: SearchFilters) => void;
-  addProperty: (property: Omit<Property, 'id' | 'datePosted'>) => void;
-  updateProperty: (property: Property) => void;
-  deleteProperty: (id: string) => void;
-  toggleFavorite: (propertyId: string) => void;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  register: (userData: Omit<User, 'id' | 'properties' | 'favorites'>) => Promise<boolean>;
-  changeLanguage: (lang: string) => void;
-}
-
-// Add to the AppProvider component
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const { i18n } = useTranslation();
@@ -205,7 +189,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       
       console.log('DEBUG: Transformed properties:', properties);
       dispatch({ type: 'SET_PROPERTIES', payload: properties });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load properties:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load properties' });
     } finally {
@@ -316,7 +300,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       if (state.user) {
         await loadUserProperties();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add property:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add property' });
       throw error;
@@ -331,30 +315,33 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       
       // Transform frontend data to API format
-      const apiData = {
+      const apiData: Partial<import('../services/propertyService').Property> = {
         title: property.title,
         description: property.description,
+        price: property.price,
         property_type: property.propertyType,
         listing_type: property.listingType,
-        price: property.price,
-        street_address: property.address,
-        city: property.address.split(',')[1]?.trim() || 'Default City',
-        state: property.address.split(',')[2]?.trim() || 'Default State',
+        street_address: property.address.split(',')[0]?.trim() || property.address,
+        city: property.address.split(',')[1]?.trim() || 'Unknown',
+        state: property.address.split(',')[2]?.trim() || 'Unknown',
         postal_code: property.address.split(',')[3]?.trim() || '00000',
-        country: 'US',
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
         square_feet: property.squareFootage,
         year_built: property.yearBuilt,
+        lot_size: property.lotSize,
         amenities: property.features,
-        latitude: property.coordinates?.lat,
-        longitude: property.coordinates?.lng,
+        latitude: property.coordinates.lat,
+        longitude: property.coordinates.lng,
         available_from: property.availableDate,
-        parking_type: property.parking || 'none',
-        lot_size: property.lotSize || 0
+        parking_type: property.parking,
+        is_available: true,
+        status: 'published',
+        is_featured: false, // Add required field
+        slug: property.slug // Add required field
       };
 
-      const response = await updatePropertyAPI(property.id, apiData);
+      const response = await updatePropertyAPI(Number(property.id), apiData);
       
       // Transform API response back to frontend format
       const updatedProperty: Property = {
@@ -392,7 +379,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       };
 
       dispatch({ type: 'UPDATE_PROPERTY', payload: updatedProperty });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update property:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update property' });
       throw error;
@@ -405,7 +392,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const deleteProperty = async (id: string) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      await deletePropertyAPI(id);
+      await deletePropertyAPI(Number(id));
       dispatch({ type: 'DELETE_PROPERTY', payload: id });
       
       // Update user's properties list
@@ -416,7 +403,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         };
         dispatch({ type: 'SET_USER', payload: updatedUser });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete property:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete property' });
       throw error;
@@ -433,7 +420,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         throw new Error('User must be logged in to favorite properties');
       }
 
-      const response = await toggleFavoriteAPI(id);
+      const response = await toggleFavoriteAPI(Number(propertyId));
       
       if (response.is_favorited) {
         dispatch({ type: 'ADD_FAVORITE', payload: id });
@@ -442,7 +429,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       }
       
       return response.is_favorited;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to toggle favorite:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update favorite' });
       throw error;
@@ -460,18 +447,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       
       // Transform API response to frontend user format
       const user: User = {
-        id: response.user.id.toString(),
-        name: response.user.full_name || response.user.name,
-        email: response.user.email,
-        phone: response.user.phone || '',
-        avatar: response.user.avatar?.url || '',
+        id: response.user?.id?.toString() || '',
+        name: (response.user?.name || (response.user as any)?.full_name || '').toString(),
+        full_name: ((response.user as any)?.full_name || response.user?.name || '').toString(),
+        email: response.user?.email || '',
+        phone: response.user?.phone || '',
+        avatar: (() => {
+          if (!response.user?.avatar) return '';
+          return typeof response.user.avatar === 'string' 
+            ? response.user.avatar 
+            : (response.user.avatar as any)?.url || '';
+        })() as string | { url: string },
         properties: [], // Will be loaded separately
         favorites: [], // Will be loaded separately
-        full_name: response.user.full_name,
-        dateJoined: response.user.created_at,
-        is_verified: response.user.is_verified,
-        user_type: response.user.user_type
-      };
+        is_verified: Boolean((response.user as any)?.is_verified), // Convert to boolean
+        user_type: (response.user as any)?.user_type || 'user',
+        date_joined: (response.user as any)?.date_joined || (response.user as any)?.created_at || new Date().toISOString(),
+        created_at: (response.user as any)?.created_at || new Date().toISOString()
+      } as User;
       
       console.log('DEBUG: Setting user in state:', user);
       dispatch({ type: 'SET_USER', payload: user });
@@ -486,7 +479,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       console.log('DEBUG: Login process completed');
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
       return false;
@@ -501,7 +494,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       await authService.logout();
       dispatch({ type: 'SET_USER', payload: null });
       dispatch({ type: 'SET_PROPERTIES', payload: [] });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logout failed:', error);
       // Still clear local state even if API call fails
       dispatch({ type: 'SET_USER', payload: null });
@@ -523,30 +516,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // Ensure password_confirmation is set
       const registrationData = {
         ...userData,
-        password_confirmation: userData.password_confirmation || userData.password
+        password_confirmation: userData.password_confirmation || userData.password,
+        full_name: userData.name // Map name to full_name for the API
       };
-      
+
       const response = await authService.register(registrationData);
       
-      // Transform API response to frontend user format
-      const user: User = {
-        id: response.user.id.toString(),
-        name: response.user.full_name || response.user.name,
-        email: response.user.email,
-        phone: response.user.phone || '',
-        avatar: response.user.avatar?.url || '',
-        properties: [],
-        favorites: [],
-        full_name: response.user.full_name,
-        dateJoined: response.user.created_at,
-        is_verified: response.user.is_verified,
-        user_type: response.user.user_type
-      };
+      if (response?.user) {
+        const user: User = {
+          id: response.user?.id?.toString() || '',
+          name: (response.user?.name || (response.user as any)?.full_name || '').toString(),
+          full_name: ((response.user as any)?.full_name || response.user?.name || '').toString(),
+          email: response.user?.email || '',
+          phone: response.user?.phone || '',
+          avatar: (() => {
+            if (!response.user?.avatar) return '';
+            return typeof response.user.avatar === 'string' 
+              ? response.user.avatar 
+              : (response.user.avatar as any)?.url || '';
+          })() as string | { url: string },
+          properties: [],
+          favorites: [],
+          is_verified: (response.user as any)?.is_verified || false,
+          user_type: (response.user as any)?.user_type || 'user',
+          date_joined: (response.user as any)?.date_joined || (response.user as any)?.created_at || new Date().toISOString(),
+          created_at: (response.user as any)?.created_at || new Date().toISOString()
+        } as User;
+        
+        dispatch({ type: 'SET_USER', payload: user });
+        return true;
+      }
       
-      dispatch({ type: 'SET_USER', payload: user });
-      
-      return true;
-    } catch (error) {
+      return false;
+    } catch (error: any) {
       console.error('Registration failed:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
       return false;
@@ -563,7 +565,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const favorites = await getFavoriteProperties();
       const favoriteIds = favorites.map((prop: any) => prop.id.toString());
       dispatch({ type: 'SET_FAVORITES', payload: favoriteIds });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load user favorites:', error);
     }
   };
@@ -639,7 +641,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         type: 'SET_USER', 
         payload: updatedUser
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load user properties:', error);
     }
   };
@@ -655,18 +657,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           console.log('DEBUG: Found authenticated user:', user);
           // Transform API response to frontend user format
           const frontendUser: User = {
-            id: user.id.toString(),
-            name: user.full_name || user.name,
-            email: user.email,
+            id: user.id?.toString() || '',
+            name: (user.name || (user as any)?.full_name || '').toString(),
+            full_name: ((user as any)?.full_name || user.name || '').toString(),
+            email: user.email || '',
             phone: user.phone || '',
-            avatar: user.avatar?.url || '',
+            avatar: (() => {
+              if (!user.avatar) return '';
+              return typeof user.avatar === 'string' 
+                ? user.avatar 
+                : (user.avatar as any)?.url || '';
+            })() as string | { url: string },
             properties: [],
             favorites: [],
-            full_name: user.full_name,
-            dateJoined: user.created_at,
-            is_verified: user.is_verified,
-            user_type: user.user_type
-          };
+            is_verified: (user as any)?.is_verified || false,
+            user_type: (user as any)?.user_type || 'user',
+            date_joined: (user as any)?.date_joined || (user as any)?.created_at || new Date().toISOString(),
+            created_at: (user as any)?.created_at || new Date().toISOString()
+          } as User;
           
           console.log('DEBUG: Setting authenticated user in state:', frontendUser);
           dispatch({ type: 'SET_USER', payload: frontendUser });
@@ -726,5 +734,3 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-
-// Remove the duplicate changeLanguage function and extra code block at the end of the file

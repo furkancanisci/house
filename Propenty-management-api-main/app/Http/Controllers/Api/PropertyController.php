@@ -21,12 +21,27 @@ class PropertyController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:sanctum')->except(['index', 'show', 'featured']);
+        $this->middleware('auth:sanctum')->except(['index', 'show', 'featured', 'test']);
+    }
+    
+    /**
+     * Test endpoint
+     */
+    public function test()
+    {
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'Property Management API is running',
+            'timestamp' => now()->toISOString(),
+            'version' => '1.0.0',
+        ]);
     }
 
     /**
      * Display a listing of properties with filtering and searching.
      */
+
+
     public function index(Request $request): PropertyCollection
     {
         $properties = QueryBuilder::for(Property::class)
@@ -72,8 +87,6 @@ class PropertyController extends Controller
                           ->orWhere('neighborhood', 'like', "%{$value}%");
                     });
                 }),
-                AllowedFilter::exact('is_featured'),
-                AllowedFilter::exact('is_available'),
             ])
             ->allowedSorts([
                 'price',
@@ -86,10 +99,8 @@ class PropertyController extends Controller
                 'square_feet',
             ])
             ->where('status', 'active')
-            ->where('is_available', true)
             ->with(['user', 'media'])
             ->paginate($request->get('per_page', 12));
-
         return new PropertyCollection($properties);
     }
 

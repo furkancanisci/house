@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class Cors
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
+    public function handle($request, Closure $next)
+    {
+        $allowedOrigins = [
+            'https://house-1-3rtj.onrender.com',
+            'http://localhost:5173',
+            'http://localhost:3000',
+            'https://afrin-houses.vercel.app'
+        ];
+
+        $origin = $request->header('Origin');
+        
+        // If the origin is in our allowed list, use it, otherwise use the first allowed origin
+        $origin = in_array($origin, $allowedOrigins) ? $origin : $allowedOrigins[0];
+
+        $headers = [
+            'Access-Control-Allow-Origin'      => $origin,
+            'Access-Control-Allow-Methods'     => 'POST, GET, OPTIONS, PUT, DELETE',
+            'Access-Control-Allow-Headers'     => 'Content-Type, X-Auth-Token, Origin, Authorization, X-Requested-With, Accept, X-CSRF-TOKEN',
+            'Access-Control-Allow-Credentials' => 'true',
+            'Access-Control-Max-Age'           => '86400',
+            'Access-Control-Expose-Headers'    => 'Authorization',
+            'Vary'                             => 'Origin',
+        ];
+
+        if ($request->isMethod('OPTIONS')) {
+            return response()->json(['method' => 'OPTIONS'], 200, $headers);
+        }
+
+        $response = $next($request);
+        
+        foreach ($headers as $key => $value) {
+            $response->headers->set($key, $value);
+        }
+
+        return $response;
+    }
+}

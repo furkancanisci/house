@@ -14,12 +14,11 @@ class PropertySeeder extends Seeder
      */
     public function run(): void
     {
-        // Get property owners
-        $propertyOwners = User::where('user_type', 'property_owner')
-            ->where('is_verified', true)
-            ->get();
-
+        // Get all property owners
+        $propertyOwners = User::where('user_type', 'property_owner')->get();
+        
         if ($propertyOwners->isEmpty()) {
+            $this->command->info('No property owners found. Please run UserSeeder first.');
             return;
         }
 
@@ -46,9 +45,7 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'garage',
                 'parking_spaces' => 1,
                 'amenities' => ['Air Conditioning', 'Dishwasher', 'Laundry in Unit', 'Balcony', 'Hardwood Floors', 'High Ceilings', 'Elevator', 'Gym', 'Roof Deck', 'Internet'],
-                'status' => 'active',
-                'is_featured' => true,
-                'is_available' => true,
+                'status' => 'active'
             ],
             [
                 'title' => 'Luxury Family Villa',
@@ -72,9 +69,7 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'garage',
                 'parking_spaces' => 3,
                 'amenities' => ['Air Conditioning', 'Heating', 'Dishwasher', 'Garden', 'Fireplace', 'Hardwood Floors', 'Walk-in Closet', 'Storage', 'Garage', 'Pool', 'Security System'],
-                'status' => 'active',
-                'is_featured' => true,
-                'is_available' => true,
+                'status' => 'active'
             ],
             [
                 'title' => 'Cozy Studio Loft',
@@ -97,9 +92,7 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'street',
                 'parking_spaces' => 0,
                 'amenities' => ['Air Conditioning', 'Hardwood Floors', 'High Ceilings', 'Internet', 'Recently Renovated'],
-                'status' => 'active',
-                'is_featured' => false,
-                'is_available' => true,
+                'status' => 'active'
             ],
             [
                 'title' => 'Suburban Family Home',
@@ -123,9 +116,7 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'driveway',
                 'parking_spaces' => 2,
                 'amenities' => ['Air Conditioning', 'Heating', 'Dishwasher', 'Garden', 'Fireplace', 'Carpet', 'Storage', 'Pet Friendly'],
-                'status' => 'active',
-                'is_featured' => false,
-                'is_available' => true,
+                'status' => 'active'
             ],
             [
                 'title' => 'Waterfront Condo',
@@ -148,9 +139,7 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'garage',
                 'parking_spaces' => 1,
                 'amenities' => ['Air Conditioning', 'Dishwasher', 'Balcony', 'Hardwood Floors', 'High Ceilings', 'Elevator', 'Doorman', 'Concierge', 'Pool', 'Internet'],
-                'status' => 'active',
-                'is_featured' => true,
-                'is_available' => true,
+                'status' => 'active'
             ],
             [
                 'title' => 'Historic Townhouse',
@@ -174,8 +163,6 @@ class PropertySeeder extends Seeder
                 'parking_spaces' => 0,
                 'amenities' => ['Heating', 'Fireplace', 'Hardwood Floors', 'High Ceilings', 'Storage', 'Recently Renovated'],
                 'status' => 'active',
-                'is_featured' => false,
-                'is_available' => true,
             ],
             [
                 'title' => 'Modern Loft Space',
@@ -199,8 +186,6 @@ class PropertySeeder extends Seeder
                 'parking_spaces' => 1,
                 'amenities' => ['Air Conditioning', 'High Ceilings', 'Storage', 'Internet', 'New Construction'],
                 'status' => 'active',
-                'is_featured' => false,
-                'is_available' => true,
             ],
             [
                 'title' => 'Commercial Office Space',
@@ -224,35 +209,44 @@ class PropertySeeder extends Seeder
                 'parking_spaces' => 4,
                 'amenities' => ['Air Conditioning', 'Heating', 'Elevator', 'Security System', 'Internet'],
                 'status' => 'active',
-                'is_featured' => false,
-                'is_available' => true,
             ],
         ];
 
-        // Create properties and assign to random property owners
-        foreach ($properties as $index => $propertyData) {
-            $property = Property::create(array_merge($propertyData, [
-                'user_id' => $propertyOwners->random()->id,
-                'slug' => Str::slug($propertyData['title']) . '-' . ($index + 1),
-                'published_at' => now()->subDays(rand(1, 30)),
-                'views_count' => rand(0, 500),
-            ]));
-
-            // Add some nearby places
-            $nearbyPlaces = [
+        // Create properties using raw SQL with proper boolean values
+        foreach ($properties as $index => $data) {
+            $userId = $propertyOwners->random()->id;
+            $slug = Str::slug($data['title']) . '-' . ($index + 1);
+            $publishedAt = now()->subDays(rand(1, 30));
+            $viewsCount = rand(0, 500);
+            
+            // Prepare data with proper boolean values
+            $data['user_id'] = $userId;
+            $data['slug'] = $slug;
+            $data['published_at'] = $publishedAt;
+            $data['views_count'] = $viewsCount;
+            $data['amenities'] = json_encode($data['amenities']);
+            $data['nearby_places'] = json_encode([
                 ['name' => 'Starbucks', 'type' => 'cafe', 'distance' => 0.2],
                 ['name' => 'Metro Station', 'type' => 'transport', 'distance' => 0.3],
                 ['name' => 'Whole Foods', 'type' => 'grocery', 'distance' => 0.5],
                 ['name' => 'Central Park', 'type' => 'park', 'distance' => 0.8],
                 ['name' => 'ABC Elementary', 'type' => 'school', 'distance' => 1.2],
-            ];
-
-            $property->update([
-                'nearby_places' => array_slice($nearbyPlaces, 0, rand(2, 4))
             ]);
+            
+  
+            
+            // Build and execute raw SQL
+            $columns = implode(', ', array_keys($data));
+            $placeholders = implode(', ', array_fill(0, count($data), '?'));
+            $values = array_values($data);
+            
+            $sql = "INSERT INTO properties ($columns, created_at, updated_at) 
+                    VALUES ($placeholders, NOW(), NOW())";
+                    
+            \DB::insert($sql, $values);
         }
 
-        // Create some draft properties
+        // Create some draft properties using raw SQL
         $draftProperties = [
             [
                 'title' => 'Draft Property - Luxury Penthouse',
@@ -261,7 +255,6 @@ class PropertySeeder extends Seeder
                 'listing_type' => 'sale',
                 'price' => 1200000.00,
                 'status' => 'draft',
-                'is_available' => false,
             ],
             [
                 'title' => 'Draft Property - Country Cottage',
@@ -270,24 +263,31 @@ class PropertySeeder extends Seeder
                 'listing_type' => 'rent',
                 'price' => 1500.00,
                 'status' => 'draft',
-                'is_available' => false,
             ],
         ];
 
-        foreach ($draftProperties as $index => $propertyData) {
-            Property::create(array_merge($propertyData, [
-                'user_id' => $propertyOwners->random()->id,
-                'slug' => Str::slug($propertyData['title']) . '-draft-' . ($index + 1),
-                'street_address' => '123 Draft Street',
-                'city' => 'Draft City',
-                'state' => 'CA',
-                'postal_code' => '90000',
-                'bedrooms' => 2,
-                'bathrooms' => 1,
-                'square_feet' => 1000,
-                'year_built' => 2020,
-                'amenities' => ['Air Conditioning', 'Heating'],
-            ]));
+        foreach ($draftProperties as $index => $data) {
+            $data['user_id'] = $propertyOwners->random()->id;
+            $data['slug'] = Str::slug($data['title']) . '-draft-' . ($index + 1);
+            $data['street_address'] = '123 Draft Street';
+            $data['city'] = 'Draft City';
+            $data['state'] = 'CA';
+            $data['postal_code'] = '90000';
+            $data['bedrooms'] = 2;
+            $data['bathrooms'] = 1;
+            $data['square_feet'] = 1000;
+            $data['year_built'] = 2020;
+            $data['amenities'] = json_encode(['Air Conditioning', 'Heating']);
+            
+            // Build and execute raw SQL
+            $columns = implode(', ', array_keys($data));
+            $placeholders = implode(', ', array_fill(0, count($data), '?'));
+            $values = array_values($data);
+            
+            $sql = "INSERT INTO properties ($columns, created_at, updated_at) 
+                    VALUES ($placeholders, NOW(), NOW())";
+                    
+            \DB::insert($sql, $values);
         }
     }
 }

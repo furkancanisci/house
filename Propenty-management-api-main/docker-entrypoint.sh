@@ -1,11 +1,25 @@
 #!/bin/bash
+set -e
 
-# Önbellekleri temizle
-php artisan config:clear
-php artisan cache:clear
+# Apache gets grumpy about PID files pre-existing
+rm -f /var/run/apache2/apache2.pid
 
-# Migration çalıştır ama sadece hata olmuyorsa
-php artisan migrate --force || true
+# Set proper permissions
+chown -R www-data:www-data /var/www/html/storage
+chown -R www-data:www-data /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage
+chmod -R 775 /var/www/html/bootstrap/cache
 
-# Apache'yi başlat
-exec "$@"
+# Run database migrations
+if [ -f /var/www/html/artisan ]; then
+    cd /var/www/html
+    php artisan config:clear
+    php artisan cache:clear
+    php artisan view:clear
+    php artisan migrate --force
+    php artisan storage:link
+    composer dump-autoload
+fi
+
+# Start Apache in the foreground
+exec apache2-foreground

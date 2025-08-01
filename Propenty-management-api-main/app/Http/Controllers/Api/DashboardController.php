@@ -137,8 +137,7 @@ class DashboardController extends Controller
         $query = $request->user()
             ->favoriteProperties()
             ->with(['user', 'media'])
-            ->where('status', 'active')
-            ->where('is_available', true);
+            ->where('status', 'active');
 
         // Search functionality
         if ($request->has('search')) {

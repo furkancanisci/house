@@ -18,7 +18,7 @@ class PropertyViewSeeder extends Seeder
         $activeProperties = Property::where('status', 'active')->get();
         
         // Get all users
-        $users = User::where('is_active', true)->get();
+        $users = User::all();
 
         if ($activeProperties->isEmpty()) {
             return;

@@ -47,7 +47,6 @@ class StatsController extends Controller
                     ->take(5)
                     ->get(['id', 'title', 'price', 'listing_type', 'property_type', 'created_at']),
                 'featured_properties' => Property::where('status', 'active')
-                    ->where('is_featured', true)
                     ->orderBy('created_at', 'desc')
                     ->take(5)
                     ->get(['id', 'title', 'price', 'listing_type', 'property_type', 'is_featured'])
