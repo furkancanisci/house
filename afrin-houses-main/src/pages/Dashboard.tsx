@@ -46,10 +46,13 @@ const Dashboard: React.FC = () => {
     }
 
     // Get user's properties
-    const userProps = properties.filter(p => 
-      (user.properties && user.properties.includes(p.id)) || 
-      p.contact.email === user.email
-    );
+    const userProps = properties.filter(p => {
+      const hasPropertyId = user.properties && user.properties.includes(p.id);
+      const hasMatchingEmail = p.contact.email === user.email;
+      
+      return hasPropertyId || hasMatchingEmail;
+    });
+    
     setUserProperties(userProps);
 
     // Get favorited properties
@@ -132,12 +135,14 @@ const Dashboard: React.FC = () => {
               Manage your properties and track your favorites
             </p>
           </div>
-          <Link to="/add-property">
-            <Button size="lg" className="mt-4 md:mt-0">
-              <Plus className="h-5 w-5 mr-2" />
-              Add New Property
-            </Button>
-          </Link>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <Link to="/add-property">
+              <Button size="lg">
+                <Plus className="h-5 w-5 mr-2" />
+                Add New Property
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -227,17 +232,17 @@ const Dashboard: React.FC = () => {
                                   For {property.listingType === 'rent' ? 'Rent' : 'Sale'}
                                 </Badge>
                                 <span className="text-xl font-bold text-blue-600">
-                                  ${property.price.toLocaleString()}
+                                  ${property.price?.toLocaleString() || '0'}
                                   {property.listingType === 'rent' && '/month'}
                                 </span>
                               </div>
                             </div>
                             <div className="flex items-center text-sm text-gray-600 mb-4">
-                              <span>{property.bedrooms} beds</span>
+                              <span>{property.bedrooms || 0} beds</span>
                               <span className="mx-2">•</span>
-                              <span>{property.bathrooms} baths</span>
+                              <span>{property.bathrooms || 0} baths</span>
                               <span className="mx-2">•</span>
-                              <span>{property.squareFootage.toLocaleString()} sq ft</span>
+                              <span>{property.squareFootage?.toLocaleString() || 'N/A'} sq ft</span>
                             </div>
                             <div className="flex space-x-2">
                               <Link to={`/property/${property.id}`}>

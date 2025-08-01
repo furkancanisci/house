@@ -49,6 +49,9 @@ class Property extends Model implements HasMedia
         'slug',
         'amenities',
         'nearby_places',
+        'contact_name',
+        'contact_phone',
+        'contact_email',
         'published_at',
     ];
 

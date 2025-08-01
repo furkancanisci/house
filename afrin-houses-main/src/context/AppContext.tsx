@@ -133,40 +133,61 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const loadProperties = async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
+      console.log('DEBUG: Fetching properties from API...');
+      
       const response = await getProperties();
-      const properties = response.data.map((property: any) => ({
+      console.log('DEBUG: Properties API response:', response);
+      
+      // Handle different response structures safely
+      let propertiesData = [];
+      if (Array.isArray(response)) {
+        propertiesData = response;
+      } else if (response && Array.isArray(response.data)) {
+        propertiesData = response.data;
+      } else if (response && response.data && Array.isArray(response.data.data)) {
+        propertiesData = response.data.data;
+      } else {
+        console.warn('Unexpected properties API response structure:', response);
+        propertiesData = [];
+      }
+      
+      console.log('DEBUG: Extracted properties data:', propertiesData);
+      
+      const properties = propertiesData.map((property: any) => ({
         id: property.id.toString(),
         slug: property.slug,
         title: property.title,
-        address: property.location.full_address,
-        price: property.price.amount,
+        address: property.location?.full_address || `${property.street_address || ''}, ${property.city || ''}, ${property.state || ''} ${property.postal_code || ''}`,
+        price: property.price?.amount || property.price || 0,
         propertyType: property.property_type,
         listingType: property.listing_type,
-        bedrooms: property.details.bedrooms,
-        bathrooms: property.details.bathrooms,
-        squareFootage: property.details.square_feet,
-        description: property.description,
+        bedrooms: property.details?.bedrooms || property.bedrooms || 0,
+        bathrooms: property.details?.bathrooms || property.bathrooms || 0,
+        squareFootage: property.details?.square_feet || property.square_feet || 0,
+        description: property.description || '',
         features: property.amenities || [],
-        images: property.images.gallery?.map((img: any) => img.url) || [],
-        mainImage: property.images.main || '/placeholder-property.jpg',
-        yearBuilt: property.details.year_built,
+        images: property.images?.gallery?.map((img: any) => img.url) || [],
+        mainImage: property.images?.main || property.main_image || '/placeholder-property.jpg',
+        yearBuilt: property.details?.year_built || property.year_built,
         coordinates: {
-          lat: property.location.coordinates.latitude,
-          lng: property.location.coordinates.longitude
+          lat: property.location?.coordinates?.latitude || property.latitude || 0,
+          lng: property.location?.coordinates?.longitude || property.longitude || 0
         },
         contact: {
-          name: property.owner?.full_name || 'Agent',
-          phone: property.owner?.phone || '',
-          email: property.owner?.email || ''
+          name: property.owner?.full_name || property.contact_name || 'Agent',
+          phone: property.owner?.phone || property.contact_phone || '',
+          email: property.owner?.email || property.contact_email || ''
         },
         datePosted: property.created_at,
         availableDate: property.available_from,
-        petPolicy: property.details?.pet_policy,
-        parking: property.details?.parking?.type,
-        lotSize: property.details?.lot_size,
-        garage: property.details?.parking?.type === 'garage' ? 'Yes' : 'No',
-        building: property.details?.building_name
+        petPolicy: property.details?.pet_policy || property.pet_policy,
+        parking: property.details?.parking?.type || property.parking_type,
+        lotSize: property.details?.lot_size || property.lot_size,
+        garage: (property.details?.parking?.type === 'garage' || property.parking_type === 'garage') ? 'Yes' : 'No',
+        building: property.details?.building_name || property.building_name
       }));
+      
+      console.log('DEBUG: Transformed properties:', properties);
       dispatch({ type: 'SET_PROPERTIES', payload: properties });
     } catch (error: any) {
       console.error('Failed to load properties:', error);
@@ -231,80 +252,53 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   // Add property using API
-  const addProperty = async (propertyData: Omit<Property, 'id' | 'datePosted'>) => {
+  const addProperty = async (propertyData: any) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      // Transform frontend data to API format
-      const apiData = {
-        title: propertyData.title,
-        description: propertyData.description,
-        property_type: propertyData.propertyType,
-        listing_type: propertyData.listingType,
-        price: propertyData.price,
-        street_address: propertyData.address,
-        city: propertyData.address.split(',')[1]?.trim() || 'Default City',
-        state: propertyData.address.split(',')[2]?.trim() || 'Default State',
-        postal_code: propertyData.address.split(',')[3]?.trim() || '00000',
-        country: 'US',
-        bedrooms: propertyData.bedrooms,
-        bathrooms: propertyData.bathrooms,
-        square_feet: propertyData.squareFootage,
-        year_built: propertyData.yearBuilt,
-        amenities: propertyData.features,
-        latitude: propertyData.coordinates?.lat,
-        longitude: propertyData.coordinates?.lng,
-        available_from: propertyData.availableDate,
-        parking_type: propertyData.parking || 'none',
-        lot_size: propertyData.lotSize || 0
-      };
-
-      const response = await createPropertyAPI(apiData);
+      // The propertyData is already in the correct API format from AddProperty.tsx
+      const response = await createPropertyAPI(propertyData);
       
       // Transform API response back to frontend format
       const newProperty: Property = {
         id: response.property.id.toString(),
         slug: response.property.slug,
         title: response.property.title,
-        address: response.property.location.full_address,
-        price: response.property.price.amount,
+        address: response.property.location?.full_address || `${response.property.street_address}, ${response.property.city}, ${response.property.state} ${response.property.postal_code}`,
+        price: response.property.price,
         propertyType: response.property.property_type,
         listingType: response.property.listing_type,
-        bedrooms: response.property.details.bedrooms,
-        bathrooms: response.property.details.bathrooms,
-        squareFootage: response.property.details.square_feet,
+        bedrooms: response.property.bedrooms,
+        bathrooms: response.property.bathrooms,
+        squareFootage: response.property.square_feet,
         description: response.property.description,
         features: response.property.amenities || [],
-        images: response.property.images.gallery?.map((img: any) => img.url) || [],
-        mainImage: response.property.images.main || '/placeholder-property.jpg',
-        yearBuilt: response.property.details.year_built,
+        images: response.property.images?.gallery?.map((img: any) => img.url) || [],
+        mainImage: response.property.images?.main || '/placeholder-property.jpg',
+        yearBuilt: response.property.year_built,
         coordinates: {
-          lat: response.property.location.coordinates.latitude,
-          lng: response.property.location.coordinates.longitude
+          lat: response.property.latitude || 0,
+          lng: response.property.longitude || 0
         },
         contact: {
-          name: response.property.owner?.full_name || 'Agent',
-          phone: response.property.owner?.phone || '',
-          email: response.property.owner?.email || ''
+          name: response.property.contact_name || 'Agent',
+          phone: response.property.contact_phone || '',
+          email: response.property.contact_email || ''
         },
         datePosted: response.property.created_at,
         availableDate: response.property.available_from,
-        petPolicy: response.property.details?.pet_policy,
-        parking: response.property.details?.parking?.type,
-        lotSize: response.property.details?.lot_size,
-        garage: response.property.details?.parking?.type === 'garage' ? 'Yes' : 'No',
-        building: response.property.details?.building_name
+        petPolicy: response.property.pet_policy,
+        parking: response.property.parking_type,
+        lotSize: response.property.lot_size,
+        garage: response.property.parking_type === 'garage' ? 'Yes' : 'No',
+        building: response.property.building_name
       };
 
       dispatch({ type: 'ADD_PROPERTY', payload: newProperty });
       
-      // Update user's properties list
+      // Reload user properties from backend to ensure synchronization
       if (state.user) {
-        const updatedUser = {
-          ...state.user,
-          properties: [...(state.user.properties || []), newProperty.id]
-        };
-        dispatch({ type: 'SET_USER', payload: updatedUser });
+        await loadUserProperties();
       }
     } catch (error: any) {
       console.error('Failed to add property:', error);
@@ -446,7 +440,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
+      console.log('DEBUG: Starting login process for:', email);
+      
       const response = await authService.login({ email, password });
+      console.log('DEBUG: Login response received:', response);
       
       // Transform API response to frontend user format
       const user: User = {
@@ -469,12 +466,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         created_at: (response.user as any)?.created_at || new Date().toISOString()
       } as User;
       
+      console.log('DEBUG: Setting user in state:', user);
       dispatch({ type: 'SET_USER', payload: user });
       
       // Load user's properties and favorites
+      console.log('DEBUG: Loading properties...');
       await loadProperties();
+      console.log('DEBUG: Loading user properties...');
       await loadUserProperties();
+      console.log('DEBUG: Loading user favorites...');
       await loadUserFavorites();
+      console.log('DEBUG: Login process completed');
       
       return true;
     } catch (error: any) {
@@ -571,18 +573,73 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // Load user's properties
   const loadUserProperties = async () => {
     try {
-      if (!state.user) return;
+      if (!state.user) {
+        console.log('DEBUG: No user found, skipping loadUserProperties');
+        return;
+      }
       
+      console.log('DEBUG: Loading user properties for user:', state.user.id);
       const userProperties = await getUserProperties();
-      const propertyIds = userProperties.map((prop: any) => prop.id.toString());
+      console.log('DEBUG: Received user properties from API:', userProperties);
+      
+      // Transform user properties to frontend format
+      const transformedUserProperties = userProperties.map((property: any) => ({
+        id: property.id.toString(),
+        slug: property.slug,
+        title: property.title,
+        address: property.location?.full_address || `${property.street_address || ''}, ${property.city || ''}, ${property.state || ''} ${property.postal_code || ''}`,
+        price: property.price?.amount || property.price || 0,
+        propertyType: property.property_type,
+        listingType: property.listing_type,
+        bedrooms: property.details?.bedrooms || property.bedrooms || 0,
+        bathrooms: property.details?.bathrooms || property.bathrooms || 0,
+        squareFootage: property.details?.square_feet || property.square_feet || 0,
+        description: property.description || '',
+        features: property.amenities || [],
+        images: property.images?.gallery?.map((img: any) => img.url) || [],
+        mainImage: property.images?.main || property.main_image || '/placeholder-property.jpg',
+        yearBuilt: property.details?.year_built || property.year_built,
+        coordinates: {
+          lat: property.location?.coordinates?.latitude || property.latitude || 0,
+          lng: property.location?.coordinates?.longitude || property.longitude || 0
+        },
+        contact: {
+          name: property.owner?.full_name || property.contact_name || 'Agent',
+          phone: property.owner?.phone || property.contact_phone || '',
+          email: property.owner?.email || property.contact_email || ''
+        },
+        datePosted: property.created_at,
+        availableDate: property.available_from,
+        petPolicy: property.details?.pet_policy || property.pet_policy,
+        parking: property.details?.parking?.type || property.parking_type,
+        lotSize: property.details?.lot_size || property.lot_size,
+        garage: (property.details?.parking?.type === 'garage' || property.parking_type === 'garage') ? 'Yes' : 'No',
+        building: property.details?.building_name || property.building_name
+      }));
+      
+      const propertyIds = transformedUserProperties.map((prop: any) => prop.id.toString());
+      console.log('DEBUG: Extracted property IDs:', propertyIds);
+      
+      // Add user properties to main properties array if they don't exist
+      const existingPropertyIds = state.properties.map(p => p.id);
+      const newProperties = transformedUserProperties.filter(prop => !existingPropertyIds.includes(prop.id));
+      
+      if (newProperties.length > 0) {
+        console.log('DEBUG: Adding new user properties to main array:', newProperties);
+        const updatedProperties = [...state.properties, ...newProperties];
+        dispatch({ type: 'SET_PROPERTIES', payload: updatedProperties });
+      }
       
       // Update user with their property IDs
+      const updatedUser = { 
+        ...state.user, 
+        properties: propertyIds 
+      };
+      
+      console.log('DEBUG: Updating user with properties:', updatedUser);
       dispatch({ 
         type: 'SET_USER', 
-        payload: { 
-          ...state.user, 
-          properties: propertyIds 
-        } 
+        payload: updatedUser
       });
     } catch (error: any) {
       console.error('Failed to load user properties:', error);
@@ -593,9 +650,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log('DEBUG: Initializing app...');
         // Check if user is already authenticated
         const user = await authService.getCurrentUser();
         if (user) {
+          console.log('DEBUG: Found authenticated user:', user);
           // Transform API response to frontend user format
           const frontendUser: User = {
             id: user.id?.toString() || '',
@@ -617,16 +676,23 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             created_at: (user as any)?.created_at || new Date().toISOString()
           } as User;
           
+          console.log('DEBUG: Setting authenticated user in state:', frontendUser);
           dispatch({ type: 'SET_USER', payload: frontendUser });
           
           // Load user's favorites and properties
+          console.log('DEBUG: Loading user favorites...');
           await loadUserFavorites();
+          console.log('DEBUG: Loading user properties...');
           await loadUserProperties();
+        } else {
+          console.log('DEBUG: No authenticated user found');
         }
         
         // Load properties regardless of authentication status
+        console.log('DEBUG: Loading all properties...');
         await loadProperties();
-      } catch (error: any) {
+        console.log('DEBUG: App initialization completed');
+      } catch (error) {
         console.error('Failed to initialize app:', error);
         // Still load properties even if user auth fails
         await loadProperties();
