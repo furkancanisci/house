@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Property, SearchFilters } from '../types';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
@@ -233,36 +234,43 @@ const AddProperty: React.FC = () => {
         }
       }
 
-      const newProperty = {
+      const newProperty: Omit<Property, 'id' | 'datePosted'> = {
+        slug: data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         title: data.title,
-        description: data.description,
-        property_type: data.propertyType,
-        listing_type: data.listingType,
-        price: data.price,
-        street_address: streetAddress,
-        city: city,
-        state: state,
-        postal_code: postalCode,
-        country: 'US', // Default to US
+        address: `${data.address}, ${data.city}, ${data.state} ${data.postalCode}, US`,
+        price: parseFloat(data.price.toString()),
+        listingType: data.listingType,
+        propertyType: (['apartment', 'house', 'condo', 'townhouse'] as const)[data.propertyType],
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
-        square_feet: data.squareFootage,
-        lot_size: data.lotSize,
-        year_built: data.yearBuilt,
-        parking_type: data.parking || 'none',
-        parking_spaces: 0,
-        amenities: selectedFeatures,
-        nearby_places: [],
-        contact_name: data.contactName,
-        contact_phone: data.contactPhone,
-        contact_email: data.contactEmail,
-        available_from: data.availableDate || null,
-        status: 'active',
-        is_featured: false,
-        is_available: true,
-        latitude: 40.7128, // Sample coordinates (NYC)
-        longitude: -74.0060,
+        squareFootage: data.squareFootage || 0,
+        description: data.description,
+        features: selectedFeatures,
+        images: [], // You'll need to handle image uploads separately
+        mainImage: '', // Set this after uploading images
+        yearBuilt: data.yearBuilt,
+        availableDate: data.availableDate,
+        petPolicy: data.petPolicy,
+        parking: data.parking,
+        utilities: data.utilities,
+        lotSize: data.lotSize,
+        garage: data.garage,
+        heating: data.heating,
+        hoaFees: data.hoaFees,
+        building: data.building,
+        pool: data.pool,
+        contact: {
+          name: data.contactName,
+          phone: data.contactPhone,
+          email: data.contactEmail
+        },
+        coordinates: {
+          lat: 40.7128, // Sample coordinates (NYC)
+          lng: -74.0060
+        }
       };
+      
+      await addProperty(newProperty);
 
       await addProperty(newProperty);
       toast.success('Property added successfully!');
