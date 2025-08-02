@@ -12,7 +12,7 @@ import {
 } from '../services/propertyService';
 import authService from '../services/authService';
 
-// First, update the AppState interface to include language property
+// Update the AppState interface to use the correct User type
 interface AppState {
   properties: Property[];
   filteredProperties: Property[];
@@ -21,7 +21,7 @@ interface AppState {
   searchFilters: SearchFilters;
   loading: boolean;
   error: string | null;
-  language: string; // Add this line
+  language: string;
 }
 
 // Update the initialState to include language
@@ -33,7 +33,7 @@ const initialState: AppState = {
   searchFilters: {},
   loading: false,
   error: null,
-  language: 'ar', // Add this line with default language
+  language: 'ar', 
 };
 
 // Add SET_LANGUAGE to AppAction type
@@ -50,7 +50,7 @@ type AppAction =
   | { type: 'SET_SEARCH_FILTERS'; payload: SearchFilters }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'SET_LANGUAGE'; payload: string }; // Add this line
+  | { type: 'SET_LANGUAGE'; payload: string };
 
 const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
@@ -109,6 +109,7 @@ interface AppContextType {
   logout: () => void;
   register: (userData: Omit<User, 'id' | 'properties' | 'favorites'>) => Promise<boolean>;
   changeLanguage: (lang: string) => void;
+  updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -337,8 +338,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         parking_type: property.parking,
         is_available: true,
         status: 'published',
-        is_featured: false, // Add required field
-        slug: property.slug // Add required field
+        is_featured: false, 
+        slug: property.slug 
       };
 
       const response = await updatePropertyAPI(Number(property.id), apiData);
@@ -449,7 +450,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const user: User = {
         id: response.user?.id?.toString() || '',
         name: (response.user?.name || (response.user as any)?.full_name || '').toString(),
-        full_name: ((response.user as any)?.full_name || response.user?.name || '').toString(),
+        first_name: (response.user as any)?.first_name || response.user?.name?.split(' ')[0] || '',
+        last_name: (response.user as any)?.last_name || response.user?.name?.split(' ').slice(1).join(' ') || '',
         email: response.user?.email || '',
         phone: response.user?.phone || '',
         avatar: (() => {
@@ -458,13 +460,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             ? response.user.avatar 
             : (response.user.avatar as any)?.url || '';
         })() as string | { url: string },
-        properties: [], // Will be loaded separately
-        favorites: [], // Will be loaded separately
-        is_verified: Boolean((response.user as any)?.is_verified), // Convert to boolean
+        properties: [], 
+        favorites: [], 
+        is_verified: Boolean((response.user as any)?.is_verified), 
         user_type: (response.user as any)?.user_type || 'user',
         date_joined: (response.user as any)?.date_joined || (response.user as any)?.created_at || new Date().toISOString(),
-        created_at: (response.user as any)?.created_at || new Date().toISOString()
-      } as User;
+        created_at: (response.user as any)?.created_at || new Date().toISOString(),
+        updated_at: (response.user as any)?.updated_at || new Date().toISOString()
+      };
       
       console.log('DEBUG: Setting user in state:', user);
       dispatch({ type: 'SET_USER', payload: user });
@@ -504,29 +507,43 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   // Register using API
   const register = async (userData: {
-    name: string;
+    first_name: string;
+    last_name: string;
     email: string;
     password: string;
     password_confirmation?: string;
     phone?: string;
+    terms_accepted: boolean;
   }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      // Ensure password_confirmation is set
+      // Debug: Log the incoming userData
+      console.log('Registration form data:', userData);
+      
+      // Ensure password_confirmation is set and include terms_accepted
       const registrationData = {
-        ...userData,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        email: userData.email,
+        phone: userData.phone || '',
+        password: userData.password,
         password_confirmation: userData.password_confirmation || userData.password,
-        full_name: userData.name // Map name to full_name for the API
+        terms_accepted: userData.terms_accepted
       };
+      
+      // Debug: Log the registration data being sent
+      console.log('Registration data being sent:', registrationData);
 
       const response = await authService.register(registrationData);
       
       if (response?.user) {
+        const fullName = `${userData.first_name} ${userData.last_name}`.trim();
         const user: User = {
           id: response.user?.id?.toString() || '',
-          name: (response.user?.name || (response.user as any)?.full_name || '').toString(),
-          full_name: ((response.user as any)?.full_name || response.user?.name || '').toString(),
+          name: fullName,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
           email: response.user?.email || '',
           phone: response.user?.phone || '',
           avatar: (() => {
@@ -648,44 +665,108 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   // Initialize app - check for existing session and load data
   useEffect(() => {
+    let isMounted = true;
+    
     const initializeApp = async () => {
       try {
         console.log('DEBUG: Initializing app...');
-        // Check if user is already authenticated
-        const user = await authService.getCurrentUser();
-        if (user) {
-          console.log('DEBUG: Found authenticated user:', user);
-          // Transform API response to frontend user format
-          const frontendUser: User = {
-            id: user.id?.toString() || '',
-            name: (user.name || (user as any)?.full_name || '').toString(),
-            full_name: ((user as any)?.full_name || user.name || '').toString(),
-            email: user.email || '',
-            phone: user.phone || '',
+        
+        // Set initial loading state
+        if (isMounted) {
+          dispatch({ type: 'SET_LOADING', payload: true });
+        }
+        
+        // First check if we have a stored user in localStorage
+        const storedUser = authService.getStoredUser();
+        const token = authService.getToken();
+        
+        if (token && storedUser) {
+          // Immediately set the stored user to prevent flash of unauthenticated content
+          console.log('DEBUG: Found stored user, setting initial state');
+          const initialUser: User = {
+            id: storedUser.id?.toString() || '',
+            name: (storedUser.name || `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim() || 'User').toString(),
+            first_name: storedUser.first_name || storedUser.name?.split(' ')[0] || '',
+            last_name: storedUser.last_name || storedUser.name?.split(' ').slice(1).join(' ') || '',
+            email: storedUser.email || '',
+            phone: storedUser.phone || '',
             avatar: (() => {
-              if (!user.avatar) return '';
-              return typeof user.avatar === 'string' 
-                ? user.avatar 
-                : (user.avatar as any)?.url || '';
+              if (!storedUser.avatar) return '';
+              return typeof storedUser.avatar === 'string' 
+                ? storedUser.avatar 
+                : (storedUser.avatar as any)?.url || '';
             })() as string | { url: string },
             properties: [],
             favorites: [],
-            is_verified: (user as any)?.is_verified || false,
-            user_type: (user as any)?.user_type || 'user',
-            date_joined: (user as any)?.date_joined || (user as any)?.created_at || new Date().toISOString(),
-            created_at: (user as any)?.created_at || new Date().toISOString()
-          } as User;
+            is_verified: storedUser.is_verified || false,
+            user_type: storedUser.user_type || 'user',
+            date_joined: storedUser.date_joined || storedUser.created_at || new Date().toISOString(),
+            created_at: storedUser.created_at || new Date().toISOString(),
+            updated_at: storedUser.updated_at || new Date().toISOString()
+          };
           
-          console.log('DEBUG: Setting authenticated user in state:', frontendUser);
-          dispatch({ type: 'SET_USER', payload: frontendUser });
-          
-          // Load user's favorites and properties
-          console.log('DEBUG: Loading user favorites...');
-          await loadUserFavorites();
-          console.log('DEBUG: Loading user properties...');
-          await loadUserProperties();
+          dispatch({ 
+            type: 'SET_USER', 
+            payload: initialUser
+          });
+        }
+        
+        // Then try to refresh the session
+        if (token) {
+          try {
+            console.log('DEBUG: Refreshing user session...');
+            const user = await authService.getCurrentUser();
+            
+            if (user) {
+              console.log('DEBUG: Successfully refreshed user session');
+              // Transform API response to frontend user format
+              const frontendUser: User = {
+                id: user.id?.toString() || '',
+                name: (user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User').toString(),
+                first_name: user.first_name || user.name?.split(' ')[0] || '',
+                last_name: user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                avatar: (() => {
+                  if (!user.avatar) return '';
+                  return typeof user.avatar === 'string' 
+                    ? user.avatar 
+                    : (user.avatar as any)?.url || '';
+                })() as string | { url: string },
+                properties: [],
+                favorites: [],
+                is_verified: user.is_verified || false,
+                user_type: user.user_type || 'user',
+                date_joined: user.date_joined || user.created_at || new Date().toISOString(),
+                created_at: user.created_at || new Date().toISOString()
+              };
+              
+              console.log('DEBUG: Setting authenticated user in state:', frontendUser);
+              dispatch({ type: 'SET_USER', payload: frontendUser });
+              
+              // Load user's favorites and properties in parallel
+              console.log('DEBUG: Loading user data...');
+              await Promise.all([
+                loadUserFavorites(),
+                loadUserProperties()
+              ]);
+            } else {
+              console.log('DEBUG: No user data found, clearing auth data');
+              authService.clearAuthData();
+              dispatch({ type: 'SET_USER', payload: null });
+            }
+          } catch (error) {
+            console.error('Error during session refresh:', error);
+            // If we get a 401, clear the invalid token
+            if ((error as any)?.response?.status === 401) {
+              console.log('DEBUG: Invalid token, clearing auth data');
+              authService.clearAuthData();
+              dispatch({ type: 'SET_USER', payload: null });
+            }
+          }
         } else {
-          console.log('DEBUG: No authenticated user found');
+          console.log('DEBUG: No authentication token found');
+          dispatch({ type: 'SET_USER', payload: null });
         }
         
         // Load properties regardless of authentication status
@@ -695,11 +776,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('Failed to initialize app:', error);
         // Still load properties even if user auth fails
-        await loadProperties();
+        if (isMounted) {
+          await loadProperties();
+        }
+      } finally {
+        if (isMounted) {
+          dispatch({ type: 'SET_LOADING', payload: false });
+        }
       }
     };
 
     initializeApp();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Move changeLanguage function inside the component
@@ -717,6 +809,29 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     changeLanguage(savedLanguage);
   }, []);
 
+  const updateUser = async (userData: Partial<User>) => {
+    try {
+      if (!state.user) {
+        throw new Error('User must be logged in to update profile');
+      }
+
+      const response = await authService.updateUser(userData);
+      
+      if (response.user) {
+        const updatedUser: User = {
+          ...state.user,
+          ...userData
+        };
+        
+        dispatch({ type: 'SET_USER', payload: updatedUser });
+      }
+    } catch (error: any) {
+      console.error('Failed to update user:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to update user' });
+      throw error;
+    }
+  };
+
   const value: AppContextType = {
     state,
     dispatch,
@@ -729,7 +844,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     login,
     logout,
     register,
-    changeLanguage, // Add this line
+    changeLanguage,
+    updateUser
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

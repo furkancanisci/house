@@ -53,7 +53,20 @@ const Search: React.FC = () => {
 
   const haveFiltersChanged = useCallback((newFilters: PropertyFilters): boolean => {
     if (!previousFilters.current) return true;
-    return JSON.stringify(newFilters) !== JSON.stringify(previousFilters.current);
+    
+    // Create copies of the filters to compare, excluding the sort-related fields
+    const { sortBy: _, sortOrder: __, ...currentFilters } = previousFilters.current;
+    const { sortBy: ___, sortOrder: ____, ...newFiltersWithoutSort } = newFilters;
+    
+    // Check if non-sort filters have changed
+    const nonSortFiltersChanged = JSON.stringify(currentFilters) !== JSON.stringify(newFiltersWithoutSort);
+    
+    // Check if sort filters have changed
+    const sortChanged = 
+      (newFilters.sortBy && newFilters.sortBy !== previousFilters.current.sortBy) ||
+      (newFilters.sortOrder && newFilters.sortOrder !== previousFilters.current.sortOrder);
+    
+    return nonSortFiltersChanged || sortChanged;
   }, []);
 
   const updateURL = useCallback((filters: PropertyFilters) => {
@@ -123,19 +136,61 @@ const Search: React.FC = () => {
     }
   }, []);
 
+  // Handle filter changes
   const handleFilterChange = useCallback((newFilters: PropertyFilters) => {
-    if (haveFiltersChanged(newFilters)) {
-      updateURL(newFilters);
-    }
-  }, [updateURL, haveFiltersChanged]);
+    // Create updated filters by merging new filters with existing ones
+    const updatedFilters = {
+      ...filtersFromParams,
+      ...newFilters,
+      // Reset pagination when filters change
+      page: 1,
+      perPage: filtersFromParams.perPage || 12
+    };
+    
+    // Clean up filters - remove undefined values
+    const cleanFilters = Object.fromEntries(
+      Object.entries(updatedFilters).filter(([_, v]) => v !== undefined && v !== '')
+    ) as PropertyFilters;
+    
+    // Update URL with the new filters
+    updateURL(cleanFilters);
+  }, [filtersFromParams, updateURL]);
 
+  // Fetch data when component mounts or URL changes
   useEffect(() => {
-    if (isInitialMount.current || haveFiltersChanged(filtersFromParams)) {
-      fetchProperties(filtersFromParams);
-      previousFilters.current = { ...filtersFromParams };
-      isInitialMount.current = false;
-    }
-  }, [filtersFromParams, fetchProperties, haveFiltersChanged]);
+    let isMounted = true;
+    
+    const fetchData = async () => {
+      if (!isMounted) return;
+      
+      try {
+        setLoading(true);
+        const propertiesData = await getProperties(filtersFromParams);
+        
+        if (isMounted) {
+          setProperties(propertiesData);
+          setError(null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          const errorMsg = err instanceof Error ? err.message : 'Failed to load properties. Please try again.';
+          console.error('Error fetching properties:', err);
+          setError(errorMsg);
+          setProperties([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchData();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [filtersFromParams]);
 
   if (loading) {
     return (
@@ -235,6 +290,14 @@ const Search: React.FC = () => {
                     ? Number((property.price as any)?.amount) || 0
                     : Number(property.price) || 0;
 
+                  // Get square footage from various possible locations in the API response
+                  const squareFootage = 
+                    property.square_feet || 
+                    (property as any).details?.square_feet || 
+                    (property as any).square_footage || 
+                    (property as any).details?.square_footage || 
+                    0;
+
                   const mappedProperty: ExtendedProperty = {
                     ...property,
                     id: property.id,
@@ -249,8 +312,9 @@ const Search: React.FC = () => {
                     details: {
                       bedrooms: (property as any).details?.bedrooms || 0,
                       bathrooms: (property as any).details?.bathrooms || 0,
+                      square_feet: squareFootage, // Ensure square footage is included in details
                     },
-                    squareFootage: property.square_feet || 0,
+                    squareFootage: squareFootage,
                     yearBuilt: (property as any).year_built || new Date().getFullYear(),
                     mainImage: Array.isArray(property.media) && property.media[0]?.url
                       ? property.media[0].url

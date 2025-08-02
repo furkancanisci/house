@@ -44,63 +44,94 @@ class PropertyController extends Controller
 
     public function index(Request $request): PropertyCollection
     {
-        $properties = QueryBuilder::for(Property::class)
-            ->allowedFilters([
-                AllowedFilter::exact('property_type'),
-                AllowedFilter::exact('listing_type'),
-                AllowedFilter::exact('status'),
-                AllowedFilter::exact('city'),
-                AllowedFilter::exact('state'),
-                AllowedFilter::callback('price_min', function ($query, $value) {
-                    $query->where('price', '>=', $value);
-                }),
-                AllowedFilter::callback('price_max', function ($query, $value) {
-                    $query->where('price', '<=', $value);
-                }),
-                AllowedFilter::callback('bedrooms', function ($query, $value) {
-                    if ($value === '4+') {
-                        $query->where('bedrooms', '>=', 4);
-                    } else {
-                        $query->where('bedrooms', $value);
-                    }
-                }),
-                AllowedFilter::callback('bathrooms', function ($query, $value) {
-                    if ($value === '3+') {
-                        $query->where('bathrooms', '>=', 3);
-                    } else {
-                        $query->where('bathrooms', $value);
-                    }
-                }),
-                AllowedFilter::callback('amenities', function ($query, $value) {
-                    $amenities = is_array($value) ? $value : [$value];
-                    foreach ($amenities as $amenity) {
-                        $query->whereJsonContains('amenities', $amenity);
-                    }
-                }),
-                AllowedFilter::callback('search', function ($query, $value) {
-                    $query->where(function ($q) use ($value) {
-                        $q->where('title', 'like', "%{$value}%")
-                          ->orWhere('description', 'like', "%{$value}%")
-                          ->orWhere('street_address', 'like', "%{$value}%")
-                          ->orWhere('city', 'like', "%{$value}%")
-                          ->orWhere('state', 'like', "%{$value}%")
-                          ->orWhere('neighborhood', 'like', "%{$value}%");
-                    });
-                }),
-            ])
-            ->allowedSorts([
-                'price',
-                'created_at',
-                'updated_at',
-                'views_count',
-                'title',
-                'bedrooms',
-                'bathrooms',
-                'square_feet',
-            ])
-            ->where('status', 'active')
-            ->with(['user', 'media'])
-            ->paginate($request->get('per_page', 12));
+        // Get the filters from the request
+        $filters = $request->all();
+        
+        // Log the received filters for debugging
+        \Log::info('Received request with filters:', [
+            'url' => $request->fullUrl(),
+            'query_params' => $request->query(),
+            'all_params' => $filters
+        ]);
+        
+        // Start building the query
+        $query = Property::query();
+        
+        // Apply listing type filter if present
+        if ($request->has('listing_type') && in_array($request->listing_type, ['rent', 'sale'])) {
+            $query->where('listing_type', $request->listing_type);
+        }
+
+        // Apply price range filters
+        if ($request->has('price_min') && is_numeric($request->price_min)) {
+            $query->where('price', '>=', (float)$request->price_min);
+        }
+        if ($request->has('price_max') && is_numeric($request->price_max)) {
+            $query->where('price', '<=', (float)$request->price_max);
+        }
+
+        // Apply bedroom filter
+        if ($request->has('bedrooms')) {
+            if ($request->bedrooms === '4+') {
+                $query->where('bedrooms', '>=', 4);
+            } elseif (is_numeric($request->bedrooms)) {
+                $query->where('bedrooms', '>=', (int)$request->bedrooms);
+            }
+        }
+
+        // Apply bathroom filter
+        if ($request->has('bathrooms')) {
+            if ($request->bathrooms === '3+') {
+                $query->where('bathrooms', '>=', 3);
+            } elseif (is_numeric($request->bathrooms)) {
+                $query->where('bathrooms', '>=', (float)$request->bathrooms);
+            }
+        }
+
+        // Apply property type filter if present
+        if ($request->has('property_type') && !empty($request->property_type)) {
+            $query->where('property_type', $request->property_type);
+        }
+
+        // Apply search query if present
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = '%' . $request->search . '%';
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'LIKE', $searchTerm)
+                  ->orWhere('description', 'LIKE', $searchTerm)
+                  ->orWhere('street_address', 'LIKE', $searchTerm)
+                  ->orWhere('city', 'LIKE', $searchTerm)
+                  ->orWhere('state', 'LIKE', $searchTerm)
+                  ->orWhere('postal_code', 'LIKE', $searchTerm);
+            });
+        }
+
+        // Apply sorting
+        $sortField = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
+        
+        if (in_array($sortField, ['price', 'bedrooms', 'bathrooms', 'square_feet', 'created_at'])) {
+            $query->orderBy($sortField, $sortDirection === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
+
+        // Log the final SQL query
+        \Log::info('Final SQL Query:', [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings()
+        ]);
+
+        // Ensure only active properties are returned
+        $query->where('status', 'active');
+
+        // Eager load relationships
+        $query->with(['user', 'media']);
+
+        // Paginate the results
+        $perPage = $request->input('per_page', 12);
+        $properties = $query->paginate($perPage);
+
         return new PropertyCollection($properties);
     }
 
@@ -243,13 +274,13 @@ class PropertyController extends Controller
     public function featured(Request $request): PropertyCollection
     {
         $limit = $request->get('limit', 6);
-        $properties = Property::featured()
-            ->active()
-            ->with(['user', 'media'])
-            ->paginate($limit);
-
+    
+        $properties = Property::with(['user', 'media']) // önce ilişkileri dahil et
+            ->paginate($limit); // sonra pagination yap
+    
         return new PropertyCollection($properties);
     }
+    
 
     /**
      * Get similar properties.

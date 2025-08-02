@@ -16,9 +16,20 @@ import {
   Phone
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,13 +42,34 @@ import {
   AlertDialogTrigger,
 } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
+import dashboardService, { DashboardStats, UserProfile } from '../services/dashboardService';
 
 const Dashboard: React.FC = () => {
-  const { state, deleteProperty } = useApp();
+  const { state, deleteProperty, updateUser } = useApp();
   const { user, properties, favorites } = state;
   const navigate = useNavigate();
   const [userProperties, setUserProperties] = useState<Property[]>([]);
   const [favoriteProperties, setFavoriteProperties] = useState<ExtendedProperty[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState<Partial<UserProfile>>({
+    name: '',
+    email: '',
+    phone: '',
+    bio: ''
+  });
+
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        bio: user.bio || ''
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -45,73 +77,91 @@ const Dashboard: React.FC = () => {
       return;
     }
 
-    // Get user's properties
-    const userProps = properties.filter(p => {
-      const hasPropertyId = user.properties && user.properties.includes(p.id);
-      const hasMatchingEmail = p.contact.email === user.email;
-      
-      return hasPropertyId || hasMatchingEmail;
-    });
-    
-    setUserProperties(userProps);
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        // Fetch dashboard stats
+        const statsData = await dashboardService.getDashboardStats();
+        setStats(statsData);
 
-    // Get favorited properties
-    const favProps = properties
-      .filter(p => favorites.includes(p.id))
-      .map(property => ({
-        ...property,
-        details: {
-          bedrooms: property.bedrooms || 0,
-          bathrooms: property.bathrooms || 0,
-        },
-        slug: (property as any).slug || `property-${property.id}`,
-        property_type: property.propertyType,
-        listing_type: property.listingType,
-        square_feet: property.squareFootage,
-        year_built: (property as any).yearBuilt || new Date().getFullYear(),
-        media: property.images?.map((url, index) => ({
-          id: index,
-          url,
-          type: 'image'
-        })) || []
-      }));
-    setFavoriteProperties(favProps);
-  }, [user, properties, favorites, navigate]);
+        // Fetch user's properties
+        const userProps = await dashboardService.getDashboardStatsRaw();
+
+        // Fetch favorite properties
+        const favProps = await dashboardService.getFavoriteProperties();
+        setFavoriteProperties(favProps);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user, navigate]);
 
   const handleDeleteProperty = async (propertyId: string) => {
     try {
       await deleteProperty(propertyId);
+      // Update the local state to remove the deleted property
+      setUserProperties(prev => prev.filter(p => p.id !== propertyId));
+      setFavoriteProperties(prev => prev.filter(p => p.id !== propertyId));
       toast.success('Property deleted successfully');
     } catch (error) {
+      console.error('Error deleting property:', error);
       toast.error('Failed to delete property');
     }
   };
 
-  const stats = [
+  const handleProfileInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setProfileData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    try {
+      const updatedProfile = await dashboardService.updateProfile(profileData);
+      updateUser(updatedProfile);
+      toast.success('Profile updated successfully');
+      setIsEditingProfile(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    }
+  };
+
+  const statsCards = [
     {
       title: 'Total Properties',
-      value: userProperties.length,
+      value: stats?.totalProperties || 0,
       icon: HomeIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'For Rent',
-      value: userProperties.filter(p => p.listingType === 'rent').length,
+      value: stats?.forRent || 0,
       icon: TrendingUp,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
     },
     {
       title: 'For Sale',
-      value: userProperties.filter(p => p.listingType === 'sale').length,
+      value: stats?.forSale || 0,
       icon: TrendingUp,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
     },
     {
       title: 'Favorites',
-      value: favoriteProperties.length,
+      value: stats?.favoriteProperties || 0,
       icon: Heart,
       color: 'text-red-600',
       bgColor: 'bg-red-100',
@@ -120,6 +170,17 @@ const Dashboard: React.FC = () => {
 
   if (!user) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -147,22 +208,18 @@ const Dashboard: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <Card key={index}>
-              <CardContent className="p-6">
+          {statsCards.map((stat, index) => (
+            <Card key={index} className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">
-                      {stat.title}
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {stat.value}
-                    </p>
-                  </div>
-                  <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  <p className="text-sm font-medium text-gray-500">{stat.title}</p>
+                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
                   </div>
                 </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">{stat.value}</p>
               </CardContent>
             </Card>
           ))}
@@ -332,80 +389,130 @@ const Dashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
+                <CardDescription>
+                  Update your account's profile information and email address.
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User className="h-8 w-8 text-blue-600" />
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Name</Label>
+                      <Input 
+                        id="name" 
+                        name="name" 
+                        value={profileData.name || ''} 
+                        disabled 
+                      />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{user.name}</h3>
-                      <p className="text-gray-600">Property Owner</p>
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email" 
+                        name="email" 
+                        type="email" 
+                        value={profileData.email || ''} 
+                        disabled 
+                      />
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Full Name</label>
-                        <div className="mt-1 flex items-center space-x-2">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-900">{user.name}</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Email Address</label>
-                        <div className="mt-1 flex items-center space-x-2">
-                          <Mail className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-900">{user.email}</span>
-                        </div>
-                      </div>
-
-                      {user.phone && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Phone Number</label>
-                          <div className="mt-1 flex items-center space-x-2">
-                            <Phone className="h-4 w-4 text-gray-400" />
-                            <span className="text-gray-900">{user.phone}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Account Statistics</label>
-                        <div className="mt-2 space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Properties Listed</span>
-                            <span className="font-semibold">{userProperties.length}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Favorite Properties</span>
-                            <span className="font-semibold">{favoriteProperties.length}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Member Since</span>
-                            <span className="font-semibold">
-                              {new Date().toLocaleDateString('en-US', { 
-                                year: 'numeric', 
-                                month: 'long' 
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input 
+                      id="phone" 
+                      name="phone" 
+                      value={profileData.phone || ''} 
+                      disabled 
+                    />
                   </div>
+                  <div>
+                    <Label htmlFor="bio">Bio</Label>
+                    <textarea
+                      id="bio"
+                      name="bio"
+                      rows={4}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={profileData.bio || ''}
+                      disabled
+                    />
+                  </div>
+                </div>
 
-                  <div className="pt-6 border-t">
+                <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
+                  <DialogTrigger asChild>
                     <Button variant="outline">
                       Edit Profile
                     </Button>
-                  </div>
-                </div>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <form onSubmit={handleProfileSubmit}>
+                      <DialogHeader>
+                        <DialogTitle>Edit Profile</DialogTitle>
+                        <DialogDescription>
+                          Make changes to your profile here. Click save when you're done.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">
+                            Name
+                          </Label>
+                          <Input
+                            id="name"
+                            name="name"
+                            value={profileData.name || ''}
+                            onChange={handleProfileInputChange}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="email" className="text-right">
+                            Email
+                          </Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={profileData.email || ''}
+                            onChange={handleProfileInputChange}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="phone" className="text-right">
+                            Phone
+                          </Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            value={profileData.phone || ''}
+                            onChange={handleProfileInputChange}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="bio" className="text-right">
+                            Bio
+                          </Label>
+                          <textarea
+                            id="bio"
+                            name="bio"
+                            rows={4}
+                            className="col-span-3 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={profileData.bio || ''}
+                            onChange={handleProfileInputChange}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsEditingProfile(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">Save changes</Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>

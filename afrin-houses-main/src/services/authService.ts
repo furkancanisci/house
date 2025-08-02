@@ -1,17 +1,5 @@
 import api from './api';
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  email_verified_at?: string;
-  phone?: string;
-  bio?: string;
-  avatar?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { User } from '../types';
 
 export interface LoginCredentials {
   email: string;
@@ -19,11 +7,13 @@ export interface LoginCredentials {
 }
 
 export interface RegisterData {
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
+  phone?: string;
   password: string;
   password_confirmation: string;
-  phone?: string;
+  terms_accepted: boolean;
 }
 
 export interface AuthResponse {
@@ -32,7 +22,22 @@ export interface AuthResponse {
   message: string;
 }
 
-export const authService = {
+interface AuthService {
+  login(credentials: LoginCredentials): Promise<AuthResponse>;
+  register(userData: RegisterData): Promise<AuthResponse>;
+  logout(): Promise<void>;
+  isAuthenticated(): boolean;
+  getToken(): string | null;
+  getCurrentUser(): Promise<User | null>;
+  getStoredUser(): User | null;
+  clearAuthData(): void;
+  forgotPassword(email: string): Promise<{ message: string }>;
+  resetPassword(data: { token: string; email: string; password: string; password_confirmation: string }): Promise<{ message: string }>;
+  isTokenValid(userData: any): boolean;
+  updateUser(userData: Partial<User>): Promise<{ user: User; message: string }>;
+}
+
+export const authService: AuthService = {
   // Login user
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
@@ -84,37 +89,111 @@ export const authService = {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      this.clearAuthData();
     }
   },
-
-  // Get current user
-  async getCurrentUser(): Promise<User> {
-    try {
-      const response = await api.get('/auth/me');
-      return response.data.user;
-    } catch (error) {
-      console.error('Get current user error:', error);
-      throw error;
-    }
-  },
-
-  // Check if user is authenticated
-  isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
-  },
-
-  // Get stored user data
+  
+  // Get stored user data from localStorage
   getStoredUser(): User | null {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
+  },
+  
+  // Clear authentication data
+  clearAuthData(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
+  
+  // Check if user is authenticated
+  isAuthenticated(): boolean {
+    return !!this.getToken();
   },
 
   // Get stored token
   getToken(): string | null {
     return localStorage.getItem('token');
   },
+
+  // Get current user from backend with proper token handling
+  async getCurrentUser(): Promise<User | null> {
+    const token = this.getToken();
+    
+    // If no token exists, ensure we're logged out
+    if (!token) {
+      this.clearAuthData();
+      return null;
+    }
+
+    try {
+      // Make sure to include the token in the request
+      const response = await api.get('/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        withCredentials: true // Important for sending cookies
+      });
+
+      // If we get a successful response but no user data, clear auth
+      if (!response.data?.user) {
+        console.warn('No user data in response');
+        this.clearAuthData();
+        return null;
+      }
+
+      // Update the stored user data
+      const userData = response.data.user;
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Also ensure the token is still valid
+      if (!this.isTokenValid(userData)) {
+        console.warn('Token is no longer valid');
+        this.clearAuthData();
+        return null;
+      }
+
+      return userData;
+      
+    } catch (error: any) {
+      console.error('Failed to fetch current user:', error);
+      
+      // Handle different types of errors
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        
+        // Clear auth data for authentication errors
+        if ([401, 403, 419].includes(error.response.status)) {
+          console.warn('Authentication error, clearing auth data');
+          this.clearAuthData();
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received from server');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error setting up request:', error.message);
+      }
+      
+      return null;
+    }
+  },
+  
+  // Helper method to check if token is still valid
+  isTokenValid(userData: any): boolean {
+    if (!userData) return false;
+    
+    // You can add additional token validation logic here
+    // For example, check if token is expired based on its claims
+    
+    return true; // Default to true if no specific validation fails
+  },
+  
 
   // Forgot password
   async forgotPassword(email: string): Promise<{ message: string }> {
@@ -139,6 +218,25 @@ export const authService = {
       return response.data;
     } catch (error) {
       console.error('Reset password error:', error);
+      throw error;
+    }
+  },
+
+  // Update user profile
+  async updateUser(userData: Partial<User>): Promise<{ user: User; message: string }> {
+    try {
+      const response = await api.put('/user/profile', userData);
+      
+      // Update the stored user data in localStorage
+      const currentUser = this.getStoredUser();
+      if (currentUser) {
+        const updatedUser = { ...currentUser, ...userData };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Update user error:', error);
       throw error;
     }
   },

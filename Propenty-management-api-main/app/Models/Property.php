@@ -138,7 +138,7 @@ class Property extends Model implements HasMedia
     /**
      * Define media conversions
      */
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->width(300)

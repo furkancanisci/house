@@ -21,6 +21,43 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      *
      * @var array<int, string>
      */
+   
+    
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'email_verified_at',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        // Add any other sensitive or unnecessary fields
+    ];
+    
+    protected $with = []; // Ensure no relationships are automatically loaded
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+ 
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+   
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'first_name',
         'last_name',
@@ -31,19 +68,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'gender',
         'bio',
         'user_type',
-        'is_verified',
-        'is_active',
         'last_login_at',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
     ];
 
     /**
@@ -55,9 +80,9 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'email_verified_at' => 'datetime',
         'date_of_birth' => 'date',
         'last_login_at' => 'datetime',
+        'password' => 'hashed',
         'is_verified' => 'boolean',
         'is_active' => 'boolean',
-        'password' => 'hashed',
     ];
 
     /**
@@ -68,6 +93,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     protected $attributes = [
         'is_verified' => false,
         'is_active' => true,
+        'user_type' => 'general_user',
     ];
 
     /**
@@ -83,7 +109,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     /**
      * Define media conversions
      */
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->width(150)

@@ -19,6 +19,42 @@ class DashboardController extends Controller
         $this->middleware('auth:sanctum');
     }
 
+    // In DashboardController.php
+public function statsRaw()
+{
+    try {
+        $userId = auth('sanctum')->id() ?? 1; // Fallback to 1 for testing
+        
+        $stats = \DB::selectOne("
+            SELECT
+                (SELECT COUNT(*) FROM properties WHERE user_id = ?) as totalProperties,
+                (SELECT COUNT(*) FROM properties WHERE user_id = ? AND listing_type = 'rent') as forRent,
+                (SELECT COUNT(*) FROM properties WHERE user_id = ? AND listing_type = 'sale') as forSale,
+                (SELECT COUNT(*) FROM property_favorites WHERE user_id = ?) as favoriteProperties
+        ", [$userId, $userId, $userId, $userId]);
+
+        if (!$stats) {
+            throw new \Exception('Failed to fetch statistics');
+        }
+
+        // Return a plain array, not an object
+        return [
+            'totalProperties' => (int)$stats->totalProperties,
+            'forRent' => (int)$stats->forRent,
+            'forSale' => (int)$stats->forSale,
+            'favoriteProperties' => (int)$stats->favoriteProperties,
+            'myProperties' => (int)$stats->totalProperties
+        ];
+
+    } catch (\Exception $e) {
+        \Log::error('Error in stats endpoint: ' . $e->getMessage());
+        return response()->json([
+            'error' => 'An error occurred while fetching statistics',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
     /**
      * Get dashboard overview data.
      */
@@ -96,6 +132,43 @@ class DashboardController extends Controller
             'chart_data' => $chartData,
         ]);
     }
+
+    /**
+     * Get dashboard statistics
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function stats(Request $request)
+{
+    try {
+        $userId = 1;
+        
+        // Use DB::selectOne to get a single row
+        $stats = \DB::selectOne("
+            SELECT
+                (SELECT COUNT(*) FROM properties WHERE user_id = ?) as totalProperties,
+                (SELECT COUNT(*) FROM properties WHERE user_id = ? AND listing_type = 'rent') as forRent,
+                (SELECT COUNT(*) FROM properties WHERE user_id = ? AND listing_type = 'sale') as forSale,
+                (SELECT COUNT(*) FROM property_favorites WHERE user_id = ?) as favoriteProperties
+        ", [$userId, $userId, $userId, $userId]);
+
+        return response()->json([
+            'totalProperties' => (int)$stats->totalProperties,
+            'forRent' => (int)$stats->forRent,
+            'forSale' => (int)$stats->forSale,
+            'favoriteProperties' => (int)$stats->favoriteProperties,
+            'myProperties' => (int)$stats->totalProperties
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Error in stats endpoint: ' . $e->getMessage());
+        return response()->json([
+            'error' => 'An error occurred while fetching statistics',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
 
     /**
      * Get user's properties.

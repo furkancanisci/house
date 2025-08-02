@@ -33,13 +33,17 @@ class UserResource extends JsonResource
                 'url' => $this->avatar_url,
                 'thumbnail' => $this->avatar_thumbnail_url,
             ],
-            'stats' => $this->when($this->relationLoaded('properties'), function () {
-                return [
+
+            // ✅ Sonsuz döngüyü engelleyen güvenli stats bloğu
+            'stats' => isset($this->properties)
+                ? [
                     'properties_count' => $this->properties->count(),
                     'active_properties_count' => $this->properties->where('status', 'active')->count(),
-                    'favorites_count' => $this->favoriteProperties()->count(),
-                ];
-            }),
+                    // 🛑 Dikkat: favoriteProperties() yerine önceden yüklenmişse geç
+                    'favorites_count' => $this->whenLoaded('favoriteProperties', fn () => $this->favoriteProperties->count()),
+                ]
+                : null,
+
             'permissions' => [
                 'can_create_property' => $this->isPropertyOwner(),
                 'can_view_analytics' => $this->isPropertyOwner(),

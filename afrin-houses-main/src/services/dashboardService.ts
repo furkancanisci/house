@@ -1,4 +1,5 @@
 import api from './api';
+import { User } from '../types';
 
 export interface DashboardOverview {
   total_properties: number;
@@ -15,24 +16,14 @@ export interface DashboardOverview {
 }
 
 export interface DashboardStats {
-  properties_count: number;
-  favorites_count: number;
-  views_count: number;
-  inquiries_count: number;
+  totalProperties: number;
+  forRent: number;
+  forSale: number;
+  favoriteProperties: number;
+  myProperties: number;
 }
 
-export interface UserProfile {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  bio?: string;
-  avatar?: string;
-  is_active: boolean;
-  email_verified_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+export type UserProfile = Partial<Omit<User, 'properties' | 'favorites'>>;
 
 export const dashboardService = {
   // Get dashboard overview
@@ -46,21 +37,43 @@ export const dashboardService = {
     }
   },
 
-  // Get dashboard analytics
-  async getAnalytics(): Promise<any> {
+  // Get dashboard statistics
+  async getDashboardStats(): Promise<DashboardStats> {
     try {
-      const response = await api.get('/dashboard/analytics');
+      const response = await api.get('/dashboard/stats');
       return response.data;
     } catch (error) {
-      console.error('Error fetching dashboard analytics:', error);
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
+  },
+
+  // Get user's properties
+  async getDashboardStatsRaw(): Promise<DashboardStats> {
+      try {
+          const response = await api.get('/dashboard/stats-raw');
+          return response.data;
+      } catch (error) {
+          console.error('Error fetching dashboard stats:', error);
+          throw error;
+      }
+  },
+
+  // Get user's favorite properties
+  async getFavoriteProperties(): Promise<any[]> {
+    try {
+      const response = await api.get('/dashboard/favorites');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching favorite properties:', error);
       throw error;
     }
   },
 
   // Update user profile
-  async updateProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
+  async updateProfile(profileData: UserProfile): Promise<User> {
     try {
-      const response = await api.post('/dashboard/profile', profileData);
+      const response = await api.put('/user/profile', profileData);
       return response.data.user;
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -71,13 +84,13 @@ export const dashboardService = {
   // Get notifications
   async getNotifications(): Promise<any[]> {
     try {
-      const response = await api.get('/dashboard/notifications');
-      return response.data.data || [];
+      const response = await api.get('/notifications');
+      return response.data;
     } catch (error) {
       console.error('Error fetching notifications:', error);
       throw error;
     }
-  },
+  }
 };
 
 export default dashboardService;

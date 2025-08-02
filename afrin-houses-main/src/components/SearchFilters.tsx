@@ -36,28 +36,43 @@ import { useTranslation } from 'react-i18next';
 
 interface SearchFiltersProps {
   onFiltersChange?: (filters: SearchFiltersType) => void;
+  onApplyFilters?: (filters: SearchFiltersType) => void;
   showAdvanced?: boolean;
   initialFilters?: Partial<SearchFiltersType>;
 }
 
-const SearchFilters: React.FC<SearchFiltersProps> = ({ 
-  onFiltersChange, 
-  showAdvanced = true,
-  initialFilters = {}
-}) => {
+const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
+  // Destructure props with defaults
+  const { 
+    onFiltersChange, 
+    onApplyFilters,
+    showAdvanced = true,
+    initialFilters = {}
+  } = props;
   const { t } = useTranslation();
-  const [filters, setFilters] = useState<SearchFiltersType>(() => ({
+  // Local form state that only updates when Apply is clicked
+  const [formValues, setFormValues] = useState<SearchFiltersType>(() => ({
     listingType: initialFilters?.listingType || 'all',
     propertyType: initialFilters?.propertyType || '',
     location: initialFilters?.location || '',
-    minPrice: initialFilters?.minPrice ? Number(initialFilters.minPrice) : undefined,
-    maxPrice: initialFilters?.maxPrice ? Number(initialFilters.maxPrice) : undefined,
-    bedrooms: initialFilters?.bedrooms ? Number(initialFilters.bedrooms) : undefined,
-    bathrooms: initialFilters?.bathrooms ? Number(initialFilters.bathrooms) : undefined,
-    minSquareFootage: initialFilters?.minSquareFootage ? Number(initialFilters.minSquareFootage) : undefined,
-    maxSquareFootage: initialFilters?.maxSquareFootage ? Number(initialFilters.maxSquareFootage) : undefined,
+    minPrice: initialFilters?.minPrice !== undefined ? Number(initialFilters.minPrice) : undefined,
+    maxPrice: initialFilters?.maxPrice !== undefined ? Number(initialFilters.maxPrice) : undefined,
+    bedrooms: initialFilters?.bedrooms !== undefined ? Number(initialFilters.bedrooms) : undefined,
+    bathrooms: initialFilters?.bathrooms !== undefined ? Number(initialFilters.bathrooms) : undefined,
+    minSquareFootage: initialFilters?.minSquareFootage !== undefined ? Number(initialFilters.minSquareFootage) : undefined,
+    maxSquareFootage: initialFilters?.maxSquareFootage !== undefined ? Number(initialFilters.maxSquareFootage) : undefined,
     features: initialFilters?.features || []
   }));
+  
+  // Local state for input values that update as user types
+  const [localValues, setLocalValues] = useState<{
+    minPrice: string;
+    maxPrice: string;
+    [key: string]: any;
+  }>({
+    minPrice: initialFilters?.minPrice !== undefined ? initialFilters.minPrice.toString() : '',
+    maxPrice: initialFilters?.maxPrice !== undefined ? initialFilters.maxPrice.toString() : ''
+  });
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
   const propertyTypes = [
@@ -101,15 +116,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     'Hardwood Floors',
   ];
 
-  useEffect(() => {
-    if (onFiltersChange) {
-      onFiltersChange(filters);
-    }
-  }, [filters, onFiltersChange]);
-
+  // Update form values when initialFilters change
   useEffect(() => {
     if (initialFilters) {
-      setFilters(prev => ({
+      setFormValues(prev => ({
         ...prev,
         ...initialFilters,
         minPrice: initialFilters.minPrice ? Number(initialFilters.minPrice) : undefined,
@@ -119,29 +129,141 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         minSquareFootage: initialFilters.minSquareFootage ? Number(initialFilters.minSquareFootage) : undefined,
         maxSquareFootage: initialFilters.maxSquareFootage ? Number(initialFilters.maxSquareFootage) : undefined,
       }));
+      
+      // Update local price inputs
+      setLocalValues({
+        minPrice: initialFilters.minPrice ? initialFilters.minPrice.toString() : '',
+        maxPrice: initialFilters.maxPrice ? initialFilters.maxPrice.toString() : ''
+      });
     }
   }, [initialFilters]);
 
-  const handleFilterChange = (key: keyof SearchFiltersType, value: any) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
+  // Handle price input changes - only update local state
+  const handlePriceChange = (type: 'min' | 'max', value: string) => {
+    // Only allow numbers and empty string
+    if (value === '' || /^\d*$/.test(value)) {
+      setLocalValues(prev => ({
+        ...prev,
+        [`${type}Price`]: value
+      }));
+    }
+  };
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Create a copy of form values
+    const newFilters = { ...formValues };
+    
+    // Process price inputs
+    const minPrice = localValues.minPrice ? parseInt(localValues.minPrice, 10) : undefined;
+    const maxPrice = localValues.maxPrice ? parseInt(localValues.maxPrice, 10) : undefined;
+    
+    // Update filters with processed price values
+    if (minPrice !== undefined) newFilters.minPrice = minPrice;
+    if (maxPrice !== undefined) newFilters.maxPrice = maxPrice;
+    
+    // Call the appropriate callback
+    if (onApplyFilters) {
+      onApplyFilters(newFilters);
+    } else if (onFiltersChange) {
+      onFiltersChange(newFilters);
+    }
+  };
+  
+  // Handle reset filters
+  const handleReset = () => {
+    const resetFilters: SearchFiltersType = {
+      listingType: 'all',
+      propertyType: '',
+      location: '',
+      minPrice: undefined,
+      maxPrice: undefined,
+      bedrooms: undefined,
+      bathrooms: undefined,
+      minSquareFootage: undefined,
+      maxSquareFootage: undefined,
+      features: [],
+    };
+    
+    // Reset form values
+    setFormValues(resetFilters);
+    setLocalValues({ minPrice: '', maxPrice: '' });
+    
+    // Call the appropriate callback
+    if (onApplyFilters) {
+      onApplyFilters(resetFilters);
+    } else if (onFiltersChange) {
+      onFiltersChange(resetFilters);
+    }
   };
 
+  // Handle filter changes - update local form values
+  const handleFilterChange = (key: keyof SearchFiltersType, value: any) => {
+    // Skip if this is a price change (handled by handlePriceChange)
+    if (key === 'minPrice' || key === 'maxPrice') return;
+    
+    // Update local form values
+    setFormValues(prev => {
+      const newValues = { ...prev };
+      
+      // Handle different filter types
+      if (value === 'any' || value === 'all' || value === '') {
+        // Remove the filter if 'any', 'all' or empty string is selected
+        delete newValues[key as keyof SearchFiltersType];
+      } else {
+        // Otherwise, update the filter value with proper type casting
+        if (key === 'listingType' && (value === 'rent' || value === 'sale')) {
+          newValues.listingType = value;
+        } else if (key === 'bedrooms' || key === 'bathrooms') {
+          (newValues as any)[key] = Number(value);
+        } else if (key === 'minSquareFootage' || key === 'maxSquareFootage') {
+          const numValue = Number(value);
+          if (!isNaN(numValue)) {
+            (newValues as any)[key] = numValue;
+          }
+        } else if (key === 'propertyType' && typeof value === 'string') {
+          newValues.propertyType = value;
+        } else if (key === 'location' && typeof value === 'string') {
+          newValues.location = value;
+        } else if (key === 'features' && Array.isArray(value)) {
+          newValues.features = value;
+        }
+      }
+      
+      // Special handling for listing type
+      if (key === 'listingType') {
+        if (value === 'all') {
+          delete newValues.listingType;
+        } else {
+          newValues.listingType = value as 'rent' | 'sale';
+        }
+      }
+      
+      return newValues;
+    });
+  };
+
+  // Toggle feature in form values
   const handleFeatureToggle = (feature: string) => {
-    setFilters(prev => ({
-      ...prev,
-      features: prev.features?.includes(feature)
-        ? prev.features.filter(f => f !== feature)
-        : [...(prev.features || []), feature],
-    }));
+    setFormValues(prev => {
+      const currentFeatures = prev.features || [];
+      const newFeatures = currentFeatures.includes(feature)
+        ? currentFeatures.filter(f => f !== feature)
+        : [...currentFeatures, feature];
+      
+      return {
+        ...prev,
+        features: newFeatures
+      };
+    });
   };
 
   const clearFilters = () => {
-    setFilters({
+    const defaultFilters: SearchFiltersType = {
       listingType: 'all',
-      propertyType: 'all',
+      propertyType: '',
       minPrice: undefined,
       maxPrice: undefined,
       bedrooms: undefined,
@@ -150,10 +272,21 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       maxSquareFootage: undefined,
       features: [],
       location: '',
+    };
+    
+    setFormValues(defaultFilters);
+    setLocalValues({
+      minPrice: '',
+      maxPrice: ''
     });
+    
+    // Notify parent component of changes
+    if (onFiltersChange) {
+      onFiltersChange(defaultFilters);
+    }
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => {
+  const hasActiveFilters = Object.values(formValues).some(value => {
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === 'string') return value !== '' && value !== 'all' && value !== 'any';
     return value !== undefined;
@@ -185,7 +318,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             <Input
               id="location"
               placeholder={t('filters.enterLocation')}
-              value={filters.location}
+              value={formValues.location || ''}
               onChange={(e) => handleFilterChange('location', e.target.value)}
               className="pl-10"
             />
@@ -196,7 +329,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         <div className="space-y-2">
           <Label>{t('filters.listingType')}</Label>
           <Select
-            value={filters.listingType}
+            value={formValues.listingType || 'all'}
             onValueChange={(value) => handleFilterChange('listingType', value)}
           >
             <SelectTrigger>
@@ -214,11 +347,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         <div className="space-y-2">
           <Label>{t('filters.propertyType')}</Label>
           <Select
-            value={filters.propertyType}
+            value={formValues.propertyType || ''}
             onValueChange={(value) => handleFilterChange('propertyType', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder={t('filters.propertyType')} />
+              <SelectValue placeholder={t('filters.propertyType')}>
+                {formValues.propertyType ? 
+                  propertyTypes.find(t => t.value === formValues.propertyType)?.label : 
+                  t('filters.propertyType')}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {propertyTypes.map((type) => (
@@ -238,9 +375,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="number"
+                min="0"
                 placeholder={t('filters.minPrice')}
-                value={filters.minPrice || ''}
-                onChange={(e) => handleFilterChange('minPrice', e.target.value ? Number(e.target.value) : undefined)}
+                value={localValues.minPrice}
+                onChange={(e) => handlePriceChange('min', e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -248,9 +386,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="number"
+                min="0"
                 placeholder={t('filters.maxPrice')}
-                value={filters.maxPrice || ''}
-                onChange={(e) => handleFilterChange('maxPrice', e.target.value ? Number(e.target.value) : undefined)}
+                value={localValues.maxPrice}
+                onChange={(e) => handlePriceChange('max', e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -262,11 +401,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           <div className="space-y-2">
             <Label>{t('filters.bedrooms')}</Label>
             <Select
-              value={filters.bedrooms?.toString() || 'any'}
+              value={formValues.bedrooms?.toString() || 'any'}
               onValueChange={(value) => handleFilterChange('bedrooms', value === 'any' ? undefined : Number(value))}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('filters.any')} />
+                <SelectValue placeholder={t('filters.any')}>
+                  {formValues.bedrooms ? `${formValues.bedrooms}+` : t('filters.any')}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {bedroomOptions.map((option) => (
@@ -281,7 +422,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           <div className="space-y-2">
             <Label>{t('filters.bathrooms')}</Label>
             <Select
-              value={filters.bathrooms?.toString() || 'any'}
+              value={formValues.bathrooms?.toString() || 'any'}
               onValueChange={(value) => handleFilterChange('bathrooms', value === 'any' ? undefined : Number(value))}
             >
               <SelectTrigger>
@@ -318,7 +459,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     <Input
                       type="number"
                       placeholder={t('property.minSqFt')}
-                      value={filters.minSquareFootage || ''}
+                      value={formValues.minSquareFootage || ''}
                       onChange={(e) => handleFilterChange('minSquareFootage', e.target.value ? Number(e.target.value) : undefined)}
                       className="pl-10"
                     />
@@ -328,7 +469,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     <Input
                       type="number"
                       placeholder={t('property.maxSqFt')}
-                      value={filters.maxSquareFootage || ''}
+                      value={formValues.maxSquareFootage || ''}
                       onChange={(e) => handleFilterChange('maxSquareFootage', e.target.value ? Number(e.target.value) : undefined)}
                       className="pl-10"
                     />
@@ -344,7 +485,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     <div key={feature} className="flex items-center space-x-2">
                       <Checkbox
                         id={feature}
-                        checked={filters.features?.includes(feature) || false}
+                        checked={formValues.features?.includes(feature) || false}
                         onCheckedChange={() => handleFeatureToggle(feature)}
                       />
                       <Label htmlFor={feature} className="text-sm">
@@ -357,6 +498,23 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             </CollapsibleContent>
           </Collapsible>
         )}
+        
+        {/* Apply Filters Button */}
+        <div className="mt-6 flex justify-end space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={handleReset}
+            className="px-4 py-2"
+          >
+            Reset
+          </Button>
+          <Button 
+            onClick={handleSubmit}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Apply Filters
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -17,6 +17,7 @@ import {
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Checkbox } from '../components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
@@ -27,11 +28,16 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  first_name: z.string().min(1, 'First name is required'),
+  last_name: z.string().min(1, 'Last name is required'),
   email: z.string().email('Please enter a valid email address'),
   phone: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
+  terms_accepted: z.boolean()
+    .refine(val => val === true, {
+      message: 'You must accept the terms and conditions',
+    }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -62,11 +68,13 @@ const Auth: React.FC = () => {
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
+      first_name: '',
+      last_name: '',
       email: '',
       phone: '',
       password: '',
       confirmPassword: '',
+      terms_accepted: false,
     },
   });
 
@@ -87,13 +95,17 @@ const Auth: React.FC = () => {
     }
   };
 
-  const onRegister = async (data: RegisterFormData) => {
+  const onRegisterSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
+    console.log('Form data:', data); // Debug log
     try {
       const success = await register({
-        name: data.name,
+        first_name: data.first_name,
+        last_name: data.last_name,
         email: data.email,
-        phone: data.phone,
+        phone: data.phone || '',
+        password: data.password,
+        terms_accepted: data.terms_accepted,
       });
       if (success) {
         toast.success('Account created successfully!');
@@ -234,24 +246,44 @@ const Auth: React.FC = () => {
                 </TabsContent>
 
                 <TabsContent value="register">
-                  <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="register-name">Full Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="register-name"
-                          type="text"
-                          placeholder="Enter your full name"
-                          className="pl-10"
-                          {...registerForm.register('name')}
-                        />
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="register-first-name">First Name</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="register-first-name"
+                            type="text"
+                            placeholder="First name"
+                            className="pl-10"
+                            {...registerForm.register('first_name')}
+                          />
+                        </div>
+                        {registerForm.formState.errors.first_name && (
+                          <p className="text-sm text-red-600">
+                            {registerForm.formState.errors.first_name.message}
+                          </p>
+                        )}
                       </div>
-                      {registerForm.formState.errors.name && (
-                        <p className="text-sm text-red-600">
-                          {registerForm.formState.errors.name.message}
-                        </p>
-                      )}
+                      <div className="space-y-2">
+                        <Label htmlFor="register-last-name">Last Name</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="register-last-name"
+                            type="text"
+                            placeholder="Last name"
+                            className="pl-10"
+                            {...registerForm.register('last_name')}
+                          />
+                        </div>
+                        {registerForm.formState.errors.last_name && (
+                          <p className="text-sm text-red-600">
+                            {registerForm.formState.errors.last_name.message}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -339,13 +371,37 @@ const Auth: React.FC = () => {
                       )}
                     </div>
 
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Creating Account...' : 'Create Account'}
-                    </Button>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="terms" 
+                          checked={registerForm.watch('terms_accepted')}
+                          onCheckedChange={(checked) => registerForm.setValue('terms_accepted', !!checked)}
+                        />
+                        <Label htmlFor="terms" className="text-sm">
+                          I accept the{' '}
+                          <a href="/terms" className="text-blue-600 hover:underline">
+                            Terms of Service
+                          </a>{' '}
+                          and{' '}
+                          <a href="/privacy" className="text-blue-600 hover:underline">
+                            Privacy Policy
+                          </a>
+                        </Label>
+                      </div>
+                      {registerForm.formState.errors.terms_accepted && (
+                        <p className="text-sm text-red-600">
+                          {registerForm.formState.errors.terms_accepted.message}
+                        </p>
+                      )}
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Creating Account...' : 'Create Account'}
+                      </Button>
+                    </div>
                   </form>
                 </TabsContent>
               </Tabs>

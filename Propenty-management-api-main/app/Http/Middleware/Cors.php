@@ -21,6 +21,7 @@ class Cors
             'https://house-1-3rtj.onrender.com',
             'http://localhost:5173',
             'http://localhost:3000',
+            'http://localhost:5175',
             'https://afrin-houses.vercel.app'
         ];
 

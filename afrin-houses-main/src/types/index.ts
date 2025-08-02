@@ -64,6 +64,8 @@ export interface ExtendedProperty extends Omit<Property, 'id' | 'address' | 'pri
   details: {
     bedrooms: number;
     bathrooms: number;
+    square_feet?: number;
+    [key: string]: any;
   };
 
   // Additional fields
@@ -98,8 +100,9 @@ export interface ExtendedProperty extends Omit<Property, 'id' | 'address' | 'pri
 
 export interface User {
   id: string;
-  name: string;
-  full_name: string;
+  name: string; // For backward compatibility
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   avatar: string | { url: string };
