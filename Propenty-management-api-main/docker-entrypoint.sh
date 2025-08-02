@@ -19,6 +19,9 @@ if [ -f /var/www/html/artisan ]; then
     php artisan migrate --force
     php artisan storage:link
     composer dump-autoload
+    composer clear-cache
+    composer update --no-scripts
+    composer install --no-dev --optimize-autoloader
 fi
 
 # Start Apache in the foreground
