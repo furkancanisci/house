@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Property } from '../services/propertyService';
+import { ExtendedProperty } from '../types';
 import PropertyCard from '../components/PropertyCard';
 import { 
   Search, 
@@ -183,26 +184,47 @@ const Home: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {featuredProperties.map((property) => {
                     // Safely extract price, handling both number and object formats
-                    const price = typeof property.price === 'object' 
-                      ? (property.price as any)?.amount || 0 
-                      : Number(property.price) || 0;
+                    const price = typeof property.price === 'object' && property.price !== null
+                      ? (property as any).price?.amount || (property as any).price
+                      : property.price;
                     
                     // Map property to ExtendedProperty interface
-                    const extendedProperty = {
-                      id: property.id,
-                      slug: (property as any).slug || `property-${property.id}`,
-                      title: property.title || 'No Title',
-                      address: (property as any).address || `${property.city || ''} ${property.state || ''}`.trim(),
+                    const listingType = (property.listing_type === 'sale' || property.listing_type === 'rent') 
+                      ? property.listing_type 
+                      : 'sale';
+                    
+                    // Extract values from property and details object
+                    const propertyAny = property as any; // Type assertion to access dynamic properties
+                    const details = propertyAny.details || {};
+                    
+                    // Get values with fallbacks - ensure we're getting numbers
+                    const bedrooms = Number(propertyAny.bedrooms || details.bedrooms || 0);
+                    const bathrooms = Number(propertyAny.bathrooms || details.bathrooms || 0);
+                    const squareFeet = Number(propertyAny.square_feet || details.square_feet || propertyAny.squareFootage || 0);
+                    const yearBuilt = Number(propertyAny.year_built || details.year_built || new Date().getFullYear());
+                    
+                    // Create the extended property object with all required fields
+                    const extendedProperty: ExtendedProperty = {
+                      ...propertyAny,
+                      id: propertyAny.id?.toString() || '',
+                      slug: propertyAny.slug || `property-${propertyAny.id || ''}`,
+                      address: propertyAny.street_address || propertyAny.address || '',
                       price: price,
-                      listingType: (property.listing_type === 'rent' || property.listing_type === 'sale' 
-                        ? property.listing_type 
-                        : 'sale') as 'rent' | 'sale',
-                      propertyType: property.property_type || 'apartment',
+                      listingType: listingType,
+                      listing_type: listingType,
+                      propertyType: propertyAny.property_type || 'apartment',
+                      bedrooms: bedrooms,
+                      bathrooms: bathrooms,
+                      square_feet: squareFeet,
+                      squareFootage: squareFeet,
+                      year_built: yearBuilt,
                       details: {
-                        bedrooms: property.bedrooms || 0,
-                        bathrooms: property.bathrooms || 0
+                        ...details,
+                        bedrooms: bedrooms,
+                        bathrooms: bathrooms,
+                        square_feet: squareFeet,
+                        year_built: yearBuilt
                       },
-                      squareFootage: property.square_feet || 0,
                       description: property.description || '',
                       features: (property as any).features || [],
                       images: Array.isArray((property as any).gallery_urls) 

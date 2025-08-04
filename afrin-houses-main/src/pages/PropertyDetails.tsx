@@ -425,15 +425,27 @@ const PropertyDetails: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {(property.features || []).map((feature) => {
-                    const Icon = getFeatureIcon(feature);
-                    return (
-                      <div key={feature} className="flex items-center space-x-2">
-                        <Icon className="h-5 w-5 text-green-600" />
-                        <span className="text-gray-700">{t(`property.features.${feature.toLowerCase().replace(' ', '')}`)}</span>
-                      </div>
-                    );
-                  })}
+                  {(property.features || [])
+                    .filter(feature => {
+                      // Skip empty or null features
+                      if (!feature) return false;
+                      // Check if translation exists for this feature
+                      const featureKey = feature.toLowerCase().replace(/\s+/g, '');
+                      const translation = t(`property.features.${featureKey}`, {defaultValue: ''});
+                      return translation !== '';
+                    })
+                    .map((feature) => {
+                      const featureKey = feature.toLowerCase().replace(/\s+/g, '');
+                      const Icon = getFeatureIcon(feature);
+                      const translation = t(`property.features.${featureKey}`);
+                      
+                      return (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Icon className="h-5 w-5 text-green-600" />
+                          <span className="text-gray-700">{translation}</span>
+                        </div>
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>
@@ -441,7 +453,7 @@ const PropertyDetails: React.FC = () => {
             {/* Property Details */}
             <Card>
               <CardHeader>
-                <CardTitle>{t('property.details')}</CardTitle>
+                <CardTitle>{t('property.propertyDetails')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

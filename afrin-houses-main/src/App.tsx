@@ -11,6 +11,8 @@ import AddProperty from './pages/AddProperty';
 import EditProperty from './pages/EditProperty';
 import Favorites from './pages/Favorites';
 import Auth from './pages/Auth';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
 import './App.css';
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
               <Route path="/edit-property/:id" element={<EditProperty />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/contact" element={<ContactUs />} />
             </Routes>
           </Layout>
           <Toaster position="top-right" />

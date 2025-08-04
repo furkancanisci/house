@@ -46,7 +46,6 @@ class PropertyController extends Controller
     {
         // Get the filters from the request
         $filters = $request->all();
-        
         // Log the received filters for debugging
         \Log::info('Received request with filters:', [
             'url' => $request->fullUrl(),
@@ -95,16 +94,19 @@ class PropertyController extends Controller
 
         // Apply search query if present
         if ($request->has('search') && !empty($request->search)) {
-            $searchTerm = '%' . $request->search . '%';
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('title', 'LIKE', $searchTerm)
-                  ->orWhere('description', 'LIKE', $searchTerm)
-                  ->orWhere('street_address', 'LIKE', $searchTerm)
-                  ->orWhere('city', 'LIKE', $searchTerm)
-                  ->orWhere('state', 'LIKE', $searchTerm)
-                  ->orWhere('postal_code', 'LIKE', $searchTerm);
+            $searchTerm = $request->search;
+            
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('description', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('property_type', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('city', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('state', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('street_address', 'LIKE', '%' . $searchTerm . '%');
             });
         }
+
+        
 
         // Apply sorting
         $sortField = $request->input('sort', 'created_at');

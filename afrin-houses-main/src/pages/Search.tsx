@@ -24,17 +24,23 @@ const Search: React.FC = () => {
 
   const filtersFromParams = useMemo(() => {
     const params = Object.fromEntries(searchParams.entries());
+    
+    // Get the search query from either 'q' or 'search' parameter
+    const searchQuery = params.q || params.search || '';
+    
     const filters: PropertyFilters = {
       listingType: (params.listingType as 'rent' | 'sale' | 'all') || 'all',
       propertyType: params.propertyType || '',
       location: params.location || '',
+      // Pass the search query to the backend
+      search: searchQuery,
       minPrice: params.minPrice ? Number(params.minPrice) : undefined,
       maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
       bedrooms: params.bedrooms ? Number(params.bedrooms) : undefined,
       bathrooms: params.bathrooms ? Number(params.bathrooms) : undefined,
       minSquareFootage: params.minSquareFootage ? Number(params.minSquareFootage) : undefined,
       maxSquareFootage: params.maxSquareFootage ? Number(params.maxSquareFootage) : undefined,
-      features: params.features ? params.features.split(',') : [],
+      features: params.features ? params.features.split(',').filter(Boolean) : [],
       sortBy: (() => {
         const sort = params.sort;
         if (sort === 'price-asc' || sort === 'price-desc') return 'price';
@@ -70,39 +76,33 @@ const Search: React.FC = () => {
   }, []);
 
   const updateURL = useCallback((filters: PropertyFilters) => {
-    if (!haveFiltersChanged(filters)) return;
-
     const params = new URLSearchParams();
-    const setIfDefined = (key: string, value: any) => {
+    
+    // Add all non-empty filters to URL params
+    Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== '' && value !== null) {
         if (Array.isArray(value)) {
           if (value.length > 0) {
             params.set(key, value.join(','));
           }
+        } else if (key === 'search') {
+          // Special handling for search to use 'q' in URL for better UX
+          params.set('q', String(value));
         } else {
           params.set(key, String(value));
         }
       }
-    };
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (key !== 'features' || (Array.isArray(value) && value.length > 0)) {
-        setIfDefined(key, value);
-      }
     });
-
-    const sortParam =
-      filters.sortBy && filters.sortOrder
-        ? `${filters.sortBy === 'created_at' ? 'date' : filters.sortBy}-${filters.sortOrder}`
-        : null;
-
-    if (sortParam) {
+    
+    // Handle sorting
+    if (filters.sortBy && filters.sortOrder) {
+      const sortParam = `${filters.sortBy === 'created_at' ? 'date' : filters.sortBy}-${filters.sortOrder}`;
       params.set('sort', sortParam);
     }
 
-    navigate(`/search?${params.toString()}`, { replace: true });
-    previousFilters.current = { ...filters };
-  }, [navigate, haveFiltersChanged]);
+    // Update URL without causing a page reload
+    navigate(`?${params.toString()}`, { replace: true });
+  }, [navigate]);
 
   const fetchProperties = useCallback(async (filters: PropertyFilters) => {
     try {

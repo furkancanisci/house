@@ -70,6 +70,8 @@ export interface ExtendedProperty extends Omit<Property, 'id' | 'address' | 'pri
 
   // Additional fields
   slug: string;
+  bedrooms: number;
+  bathrooms: number;
   // Backend fields (snake_case)
   property_type?: string;
   listing_type?: 'rent' | 'sale';

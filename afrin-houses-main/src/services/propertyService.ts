@@ -92,8 +92,12 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       params.property_type = filters.propertyType;
     }
     
+    // Map search query (from search input)
+    if (filters.search) {
+      params.search = filters.search;
+    }
     // Map location (search by city, state, or address)
-    if (filters.location) {
+    else if (filters.location) {
       params.search = filters.location;
     }
     

@@ -29,11 +29,34 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid' }) 
   const propertySlug = property.slug || property.id.toString();
   const isFavorite = favorites.includes(property.id.toString());
 
-  const formatPrice = (price: number, listingType: string = 'sale') => {
-    if (listingType === 'rent') {
-      return `$${price.toLocaleString()}/${t('property.perMonth')}`;
+  const formatPrice = (price: any, listingType: string = 'sale') => {
+    try {
+      let priceValue = 0;
+      
+      // Handle different price formats
+      if (price === null || price === undefined) {
+        priceValue = 0;
+      } else if (typeof price === 'number') {
+        priceValue = price;
+      } else if (typeof price === 'object' && price !== null) {
+        // Handle price object with amount property
+        priceValue = Number(price.amount) || 0;
+      } else if (typeof price === 'string') {
+        // Handle string price (remove any non-numeric characters except decimal point)
+        const numericString = price.toString().replace(/[^0-9.]/g, '');
+        priceValue = parseFloat(numericString) || 0;
+      }
+      
+      const formattedPrice = Math.round(priceValue).toLocaleString();
+      
+      if (listingType === 'rent') {
+        return `$${formattedPrice}/${t('property.perMonth')}`;
+      }
+      return `$${formattedPrice}`;
+    } catch (error) {
+      console.error('Error formatting price:', error, price);
+      return listingType === 'rent' ? `$0/${t('property.perMonth')}` : '$0';
     }
-    return `$${price.toLocaleString()}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -72,19 +95,28 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid' }) 
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center space-x-4 text-sm text-gray-600">
-                <span className="flex items-center">
-                  <Bed className="h-4 w-4 mr-1" />
-                  {t('property.details.bedrooms', { count: property.details?.bedrooms || property.details.bedrooms || property.beds || 0 })}
-                </span>
-                <span className="flex items-center">
-                  <Bath className="h-4 w-4 mr-1" />
-                  {t('property.details.bathrooms', { count: property.details?.bathrooms || property.details.bathrooms || property.baths || 0 })}
-                </span>
-                <span className="flex items-center">
-                  <Square className="h-4 w-4 mr-1" />
-                  {(property.squareFootage || property.sqft || 0).toLocaleString()} {t('property.sqft')}
-                </span>
+              <div className="mt-4 flex items-center space-x-6 text-sm text-gray-700">
+                <div className="flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                  <Bed className="h-4 w-4 mr-2 text-primary" />
+                  <span className="font-medium">
+                    {Number(property.bedrooms ?? property.details?.bedrooms ?? 0) || 0} 
+                    <span className="ml-1 text-gray-600">{t('property.details.bedrooms')}</span>
+                  </span>
+                </div>
+                <div className="flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                  <Bath className="h-4 w-4 mr-2 text-primary" />
+                  <span className="font-medium">
+                    {Number(property.bathrooms ?? property.details?.bathrooms ?? 0) || 0} 
+                    <span className="ml-1 text-gray-600">{t('property.details.bathrooms')}</span>
+                  </span>
+                </div>
+                <div className="hidden sm:flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                  <Square className="h-4 w-4 mr-2 text-primary" />
+                  <span className="font-medium">
+                    {(Number(property.square_feet ?? property.squareFootage ?? property.sqft ?? property.details?.square_feet ?? 0) || 0).toLocaleString()}
+                    <span className="ml-1 text-gray-600">{t('property.sqft')}</span>
+                  </span>
+                </div>
               </div>
 
               <p className="mt-3 text-gray-600 line-clamp-2">
