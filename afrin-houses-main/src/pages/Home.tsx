@@ -189,8 +189,9 @@ const Home: React.FC = () => {
                       : property.price;
                     
                     // Map property to ExtendedProperty interface
-                    const listingType = (property.listing_type === 'sale' || property.listing_type === 'rent') 
-                      ? property.listing_type 
+                    const listingType = (property.listingType === 'sale' || property.listingType === 'rent' || 
+                                      (property as any).listing_type === 'sale' || (property as any).listing_type === 'rent')
+                      ? (property.listingType || (property as any).listing_type || 'sale') as 'sale' | 'rent'
                       : 'sale';
                     
                     // Extract values from property and details object
@@ -240,7 +241,7 @@ const Home: React.FC = () => {
                         phone: '',
                         email: ''
                       },
-                      datePosted: property.created_at || new Date().toISOString(),
+                      datePosted: (property as any).created_at || new Date().toISOString(),
                       // Add any other fields required by ExtendedProperty
                       yearBuilt: (property as any).year_built || new Date().getFullYear(),
                       availableDate: (property as any).available_date || '',

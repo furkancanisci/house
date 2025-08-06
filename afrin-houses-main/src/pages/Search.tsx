@@ -1,83 +1,90 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { getProperties, PropertyFilters } from '../services/propertyService';
+import { getProperties } from '../services/propertyService';
 import PropertyCard from '../components/PropertyCard';
 import SearchFilters from '../components/SearchFilters';
 import { useTranslation } from 'react-i18next';
-import { ExtendedProperty } from '../types';
+import { ExtendedProperty, SearchFilters as SearchFiltersType } from '../types';
 import { Button } from '../components/ui/button';
-import { LayoutGrid, List, Loader2 } from 'lucide-react';
+import { LayoutGrid, List, Loader2, X } from 'lucide-react';
+
+interface SearchParams extends Record<string, string | undefined> {
+  q?: string;
+  search?: string;
+  listingType?: string;
+  propertyType?: string;
+  location?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  bedrooms?: string;
+  bathrooms?: string;
+  minSquareFootage?: string;
+  maxSquareFootage?: string;
+  features?: string;
+  sort?: string;
+  page?: string;
+  perPage?: string;
+}
 
 type ViewMode = 'grid' | 'list';
 
 const Search: React.FC = () => {
-  const [properties, setProperties] = useState<ExtendedProperty[]>([]);
-  console.log(properties);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [properties, setProperties] = useState<ExtendedProperty[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const previousFilters = useRef<SearchFiltersType | null>(null);
   const isInitialMount = useRef(true);
-  const previousFilters = useRef<PropertyFilters | null>(null);
 
-  const filtersFromParams = useMemo(() => {
-    const params = Object.fromEntries(searchParams.entries());
-    
-    // Get the search query from either 'q' or 'search' parameter
-    const searchQuery = params.q || params.search || '';
-    
-    const filters: PropertyFilters = {
-      listingType: (params.listingType as 'rent' | 'sale' | 'all') || 'all',
-      propertyType: params.propertyType || '',
-      location: params.location || '',
-      // Pass the search query to the backend
-      search: searchQuery,
-      minPrice: params.minPrice ? Number(params.minPrice) : undefined,
-      maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
-      bedrooms: params.bedrooms ? Number(params.bedrooms) : undefined,
-      bathrooms: params.bathrooms ? Number(params.bathrooms) : undefined,
-      minSquareFootage: params.minSquareFootage ? Number(params.minSquareFootage) : undefined,
-      maxSquareFootage: params.maxSquareFootage ? Number(params.maxSquareFootage) : undefined,
-      features: params.features ? params.features.split(',').filter(Boolean) : [],
-      sortBy: (() => {
-        const sort = params.sort;
-        if (sort === 'price-asc' || sort === 'price-desc') return 'price';
-        if (sort === 'date-asc' || sort === 'date-desc') return 'created_at';
-        if (sort === 'sqft-asc' || sort === 'sqft-desc') return 'square_feet';
-        return undefined;
-      })(),
-      sortOrder: (() => {
-        if (params.sort?.endsWith('asc')) return 'asc';
-        if (params.sort?.endsWith('desc')) return 'desc';
-        return undefined;
-      })(),
-    };
-    return filters;
+  // Get search params from URL
+  const [searchParams] = useSearchParams();
+  const filtersFromParams = useMemo<SearchFiltersType>(() => {
+    const filters: any = {}; // Use any here to bypass TypeScript errors for dynamic properties
+
+    // Parse filters from URL params
+    searchParams.forEach((value, key) => {
+      if (key === 'q') {
+        // Handle search query
+        filters.searchQuery = value;
+      } else if (['minPrice', 'maxPrice', 'bedrooms', 'bathrooms', 'minSquareFootage', 'maxSquareFootage'].includes(key)) {
+        // Handle numeric filters
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue)) {
+          filters[key] = numValue;
+        }
+      } else if (key === 'features' && value) {
+        // Handle features array
+        filters.features = value.split(',').filter(Boolean);
+      } else if (key === 'propertyType' || key === 'listingType' || key === 'location') {
+        // Handle string filters
+        filters[key] = value;
+      }
+    });
+
+    return filters as SearchFiltersType;
   }, [searchParams]);
 
-  const haveFiltersChanged = useCallback((newFilters: PropertyFilters): boolean => {
+  const haveFiltersChanged = useCallback((newFilters: SearchFiltersType): boolean => {
     if (!previousFilters.current) return true;
-    
-    // Create copies of the filters to compare, excluding the sort-related fields
-    const { sortBy: _, sortOrder: __, ...currentFilters } = previousFilters.current;
-    const { sortBy: ___, sortOrder: ____, ...newFiltersWithoutSort } = newFilters;
-    
-    // Check if non-sort filters have changed
-    const nonSortFiltersChanged = JSON.stringify(currentFilters) !== JSON.stringify(newFiltersWithoutSort);
-    
-    // Check if sort filters have changed
-    const sortChanged = 
-      (newFilters.sortBy && newFilters.sortBy !== previousFilters.current.sortBy) ||
-      (newFilters.sortOrder && newFilters.sortOrder !== previousFilters.current.sortOrder);
-    
-    return nonSortFiltersChanged || sortChanged;
+
+    // Check if any filter values have changed
+    return Object.keys(newFilters).some(key => {
+      const currentValue = newFilters[key as keyof SearchFiltersType];
+      const previousValue = previousFilters.current?.[key as keyof SearchFiltersType];
+
+      // Special handling for arrays to compare their stringified versions
+      if (Array.isArray(currentValue)) {
+        return JSON.stringify(currentValue) !== JSON.stringify(previousValue);
+      }
+      return currentValue !== previousValue;
+    });
   }, []);
 
-  const updateURL = useCallback((filters: PropertyFilters) => {
+  const updateURL = useCallback((filters: SearchFiltersType) => {
     const params = new URLSearchParams();
-    
+
     // Add all non-empty filters to URL params
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== '' && value !== null) {
@@ -93,7 +100,7 @@ const Search: React.FC = () => {
         }
       }
     });
-    
+
     // Handle sorting
     if (filters.sortBy && filters.sortOrder) {
       const sortParam = `${filters.sortBy === 'created_at' ? 'date' : filters.sortBy}-${filters.sortOrder}`;
@@ -104,21 +111,28 @@ const Search: React.FC = () => {
     navigate(`?${params.toString()}`, { replace: true });
   }, [navigate]);
 
-  const fetchProperties = useCallback(async (filters: PropertyFilters) => {
+  const fetchProperties = useCallback(async (filters: SearchFiltersType, page = 1) => {
     try {
       setLoading(true);
       setError(null);
 
-      const params: PropertyFilters = {
+      // Create a new object with only defined properties
+      const queryParams: Record<string, any> = {
         ...filters,
-        page: 1,
-        perPage: 12,
+        page,
+        perPage: 10
       };
 
-      const response = await getProperties(params);
+      // Remove undefined values
+      Object.keys(queryParams).forEach(key =>
+        queryParams[key] === undefined && delete queryParams[key]
+      );
+
+      const response = await getProperties(queryParams as SearchFiltersType);
+
       if (!response) throw new Error('No response received from server');
 
-      let propertiesData: any[] = [];
+      let propertiesData: ExtendedProperty[] = [];
       if (Array.isArray(response)) {
         propertiesData = response;
       } else if (response?.data?.data && Array.isArray(response.data.data)) {
@@ -127,9 +141,8 @@ const Search: React.FC = () => {
 
       setProperties(propertiesData);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to load properties. Please try again.';
       console.error('Error fetching properties:', err);
-      setError(errorMsg);
+      setError('Failed to fetch properties. Please try again.');
       setProperties([]);
     } finally {
       setLoading(false);
@@ -137,77 +150,62 @@ const Search: React.FC = () => {
   }, []);
 
   // Handle filter changes
-  const handleFilterChange = useCallback((newFilters: PropertyFilters) => {
-    // Create updated filters by merging new filters with existing ones
-    const updatedFilters = {
+  const handleFilterChange = useCallback((newFilters: SearchFiltersType) => {
+    const updatedFilters: SearchFiltersType = {
       ...filtersFromParams,
-      ...newFilters,
-      // Reset pagination when filters change
-      page: 1,
-      perPage: filtersFromParams.perPage || 12
+      ...newFilters
     };
-    
-    // Clean up filters - remove undefined values
-    const cleanFilters = Object.fromEntries(
-      Object.entries(updatedFilters).filter(([_, v]) => v !== undefined && v !== '')
-    ) as PropertyFilters;
-    
-    // Update URL with the new filters
-    updateURL(cleanFilters);
+
+    // Only update if filters have actually changed
+    if (haveFiltersChanged(updatedFilters)) {
+      previousFilters.current = updatedFilters;
+      fetchProperties(updatedFilters);
+    }
+  }, [filtersFromParams, fetchProperties, haveFiltersChanged]);
+
+  // Handle pagination
+  const handlePageChange = useCallback((page: number) => {
+    fetchProperties(filtersFromParams, page);
+  }, [filtersFromParams, fetchProperties]);
+
+  // Update URL when filters change
+  useEffect(() => {
+    if (Object.keys(filtersFromParams).length > 0) {
+      updateURL(filtersFromParams);
+    }
   }, [filtersFromParams, updateURL]);
 
-  // Fetch data when component mounts or URL changes
+  // Initial data fetch
   useEffect(() => {
-    let isMounted = true;
-    
-    const fetchData = async () => {
-      if (!isMounted) return;
-      
-      try {
-        setLoading(true);
-        const propertiesData = await getProperties(filtersFromParams);
-        
-        if (isMounted) {
-          setProperties(propertiesData);
-          setError(null);
-        }
-      } catch (err) {
-        if (isMounted) {
-          const errorMsg = err instanceof Error ? err.message : 'Failed to load properties. Please try again.';
-          console.error('Error fetching properties:', err);
-          setError(errorMsg);
-          setProperties([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+
+      // Only fetch if we have filters to apply
+      if (Object.keys(filtersFromParams).length > 0) {
+        fetchProperties(filtersFromParams);
       }
-    };
-    
-    fetchData();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [filtersFromParams]);
+    }
+  }, [filtersFromParams, fetchProperties]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <p>{t('common.loading') || 'Loading...'}</p>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-2">Loading properties...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          <p>{error}</p>
+      <div className="bg-red-50 border-l-4 border-red-400 p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <X className="h-5 w-5 text-red-400" />
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
         </div>
       </div>
     );

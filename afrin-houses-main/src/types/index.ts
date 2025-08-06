@@ -128,6 +128,8 @@ export interface SearchFilters {
   maxSquareFootage?: number;
   features?: string[];
   location?: string;
+  sortBy?: 'price' | 'date' | 'created_at';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface PropertyFormData {
