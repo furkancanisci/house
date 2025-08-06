@@ -30,6 +30,7 @@ import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { toast } from 'sonner';
 import { getProperty } from '../services/propertyService';
+import FixedImage from '../components/FixedImage';
 
 const PropertyDetails: React.FC = () => {
   const { t } = useTranslation();
@@ -86,7 +87,23 @@ const PropertyDetails: React.FC = () => {
           squareFootage: Number(propertyData.details?.square_feet) || 0,
           description: propertyData.description || '',
           features: Array.isArray(propertyData.amenities) ? propertyData.amenities : [],
-          images: propertyData.images?.gallery?.map((img: any) => img.url).filter(Boolean) || [],
+          images: (() => {
+            const galleryImages = propertyData.images?.gallery?.map((img: any) => img.url).filter(Boolean) || [];
+            const mainImage = propertyData.images?.main;
+            
+            // If we have gallery images, use them
+            if (galleryImages.length > 0) {
+              return galleryImages;
+            }
+            
+            // If no gallery images but we have a main image, use it
+            if (mainImage) {
+              return [mainImage];
+            }
+            
+            // Fallback to placeholder
+            return ['/placeholder-property.jpg'];
+          })(),
           mainImage: propertyData.images?.main || '/placeholder-property.jpg',
           yearBuilt: Number(propertyData.details?.year_built) || new Date().getFullYear(),
           coordinates: {
@@ -268,7 +285,7 @@ const PropertyDetails: React.FC = () => {
             {/* Image Gallery */}
             <Card className="overflow-hidden">
               <div className="relative">
-                <img
+                <FixedImage
                   src={property.images[currentImageIndex]}
                   alt={property.title}
                   className="w-full h-96 object-cover"
@@ -354,7 +371,7 @@ const PropertyDetails: React.FC = () => {
                         index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
                       }`}
                     >
-                      <img
+                      <FixedImage
                         src={image}
                         alt={`View ${index + 1}`}
                         className="w-full h-full object-cover"

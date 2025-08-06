@@ -70,10 +70,17 @@ class UpdatePropertyRequest extends FormRequest
             'nearby_places.*.type' => 'required_with:nearby_places|string|max:50',
             'nearby_places.*.distance' => 'required_with:nearby_places|numeric|min:0',
             
+            // Contact Information
+            'contactName' => 'sometimes|required|string|max:100',
+            'contactPhone' => 'sometimes|required|string|max:20',
+            'contactEmail' => 'sometimes|required|email|max:100',
+            
             // Media
-            'main_image' => 'sometimes|nullable|image|mimes:jpeg,png,webp|max:5120', // 5MB max
+            'main_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
             'images' => 'sometimes|nullable|array|max:20',
-            'images.*' => 'image|mimes:jpeg,png,webp|max:5120', // 5MB max per image
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max per image
+            'base64_images' => 'sometimes|nullable|array|max:20',
+            'base64_images.*' => 'string', // Base64 encoded images
             'remove_images' => 'sometimes|nullable|array',
             'remove_images.*' => 'integer|exists:media,id',
         ];
@@ -121,6 +128,15 @@ class UpdatePropertyRequest extends FormRequest
             'longitude.between' => 'Longitude must be between -180 and 180.',
             'amenities.array' => 'Amenities must be provided as a list.',
             'amenities.*.in' => 'One or more selected amenities are invalid.',
+            'contactName.required' => 'Contact name is required.',
+            'contactName.string' => 'Contact name must be a valid string.',
+            'contactName.max' => 'Contact name cannot exceed 100 characters.',
+            'contactPhone.required' => 'Contact phone is required.',
+            'contactPhone.string' => 'Contact phone must be a valid string.',
+            'contactPhone.max' => 'Contact phone cannot exceed 20 characters.',
+            'contactEmail.required' => 'Contact email is required.',
+            'contactEmail.email' => 'Contact email must be a valid email address.',
+            'contactEmail.max' => 'Contact email cannot exceed 100 characters.',
             'main_image.image' => 'Main image must be a valid image file.',
             'main_image.mimes' => 'Main image must be JPEG, PNG, or WebP format.',
             'main_image.max' => 'Main image size cannot exceed 5MB.',

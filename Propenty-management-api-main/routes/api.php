@@ -95,6 +95,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/', [PropertyController::class, 'store']);
         Route::put('/{property}', [PropertyController::class, 'update']);
         Route::delete('/{property}', [PropertyController::class, 'destroy']);
+        Route::delete('/{property}/images/{mediaId}', [PropertyController::class, 'deleteImage']);
         Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite']);
         Route::get('/{property}/analytics', [PropertyController::class, 'analytics']);
     });

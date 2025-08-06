@@ -1,5 +1,37 @@
 import api from './api';
 
+// Utility function to fix image URLs
+const fixImageUrl = (url: string | null): string => {
+  if (!url) return '/placeholder-property.jpg';
+  
+  // Replace localhost URLs with localhost:8000
+  if (url.startsWith('http://localhost/')) {
+    return url.replace('http://localhost/', 'http://localhost:8000/');
+  }
+  
+  return url;
+};
+
+// Utility function to fix image objects
+const fixImageObject = (imageObj: any): any => {
+  if (!imageObj) return null;
+  
+  if (typeof imageObj === 'string') {
+    return fixImageUrl(imageObj);
+  }
+  
+  if (typeof imageObj === 'object') {
+    const fixed = { ...imageObj };
+    if (fixed.url) fixed.url = fixImageUrl(fixed.url);
+    if (fixed.thumb) fixed.thumb = fixImageUrl(fixed.thumb);
+    if (fixed.medium) fixed.medium = fixImageUrl(fixed.medium);
+    if (fixed.large) fixed.large = fixImageUrl(fixed.large);
+    return fixed;
+  }
+  
+  return imageObj;
+};
+
 export interface Property {
   id?: number;
   title: string;
@@ -141,16 +173,38 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       return [];
     }
     
-    // Handle different response structures
+    // Handle different response structures and fix image URLs
+    let properties = [];
     if (Array.isArray(response.data)) {
-      return response.data;
+      properties = response.data;
     } else if (response.data.data && Array.isArray(response.data.data)) {
       // Handle Laravel paginated response
-      return response.data.data;
+      properties = response.data.data;
+    } else {
+      console.warn('Unexpected API response structure:', response.data);
+      return [];
     }
     
-    console.warn('Unexpected API response structure:', response.data);
-    return [];
+    // Fix image URLs in all properties
+    return properties.map((property: any) => {
+      if (property.images) {
+        const fixedImages = { ...property.images };
+        
+        // Fix main image URL
+        if (fixedImages.main) {
+          fixedImages.main = fixImageUrl(fixedImages.main);
+        }
+        
+        // Fix gallery image URLs
+        if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
+          fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
+        }
+        
+        property.images = fixedImages;
+      }
+      
+      return property;
+    });
   } catch (error) {
     console.error('Error fetching properties:', error);
     throw error;
@@ -160,7 +214,26 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
 export const getProperty = async (slug: string) => {
   try {
     const response = await api.get(`/properties/${slug}`);
-    return response.data;
+    const property = response.data;
+    
+    // Fix image URLs in the property
+    if (property && property.images) {
+      const fixedImages = { ...property.images };
+      
+      // Fix main image URL
+      if (fixedImages.main) {
+        fixedImages.main = fixImageUrl(fixedImages.main);
+      }
+      
+      // Fix gallery image URLs
+      if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
+        fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
+      }
+      
+      property.images = fixedImages;
+    }
+    
+    return property;
   } catch (error) {
     console.error(`Error fetching property ${slug}:`, error);
     throw error;
@@ -171,7 +244,28 @@ export const getFeaturedProperties = async (limit = 6) => {
   try {
     const response = await api.get('/properties/featured', { params: { limit } });
     // The backend returns a paginated response with data in response.data.data
-    return response.data.data || [];
+    const properties = response.data.data || [];
+    
+    // Fix image URLs in all featured properties
+    return properties.map((property: any) => {
+      if (property.images) {
+        const fixedImages = { ...property.images };
+        
+        // Fix main image URL
+        if (fixedImages.main) {
+          fixedImages.main = fixImageUrl(fixedImages.main);
+        }
+        
+        // Fix gallery image URLs
+        if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
+          fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
+        }
+        
+        property.images = fixedImages;
+      }
+      
+      return property;
+    });
   } catch (error) {
     console.error('Error fetching featured properties:', error);
     throw error;
@@ -180,15 +274,34 @@ export const getFeaturedProperties = async (limit = 6) => {
 
 export const createProperty = async (propertyData: any) => {
   try {
-    // Ensure we're sending the correct parameter names to the backend
-    const formattedData = {
-      ...propertyData,
-      // Add any transformations needed here
-      amenities: propertyData.amenities || [],
-    };
+    const formData = new FormData();
     
-    console.log('Sending property data to API:', formattedData);
-    const response = await api.post('/properties', formattedData);
+    // Add all property data to FormData
+    Object.keys(propertyData).forEach(key => {
+      if (key === 'amenities' && Array.isArray(propertyData[key])) {
+        // Handle amenities array
+        propertyData[key].forEach((amenity: string, index: number) => {
+          formData.append(`amenities[${index}]`, amenity);
+        });
+      } else if (key === 'images' && Array.isArray(propertyData[key])) {
+        // Handle image files
+        propertyData[key].forEach((file: File) => {
+          formData.append('images[]', file);
+        });
+      } else if (key === 'mainImage' && propertyData[key] instanceof File) {
+        // Handle main image file
+        formData.append('main_image', propertyData[key]);
+      } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
+        formData.append(key, propertyData[key].toString());
+      }
+    });
+    
+    console.log('Sending property data to API with FormData');
+    const response = await api.post('/properties', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating property:', error);
@@ -198,15 +311,39 @@ export const createProperty = async (propertyData: any) => {
 
 export const updateProperty = async (id: number, propertyData: any) => {
   try {
-    // Ensure we're sending the correct parameter names to the backend
-    const formattedData = {
-      ...propertyData,
-      // Add any transformations needed here
-      amenities: propertyData.amenities || [],
-    };
+    const formData = new FormData();
     
-    console.log('Sending property update data to API:', formattedData);
-    const response = await api.put(`/properties/${id}`, formattedData);
+    // Add all property data to FormData
+    Object.keys(propertyData).forEach(key => {
+      if (key === 'amenities' && Array.isArray(propertyData[key])) {
+        // Handle amenities array
+        propertyData[key].forEach((amenity: string, index: number) => {
+          formData.append(`amenities[${index}]`, amenity);
+        });
+      } else if (key === 'images' && Array.isArray(propertyData[key])) {
+        // Handle new image files
+        propertyData[key].forEach((file: File) => {
+          formData.append('images[]', file);
+        });
+      } else if (key === 'mainImage' && propertyData[key] instanceof File) {
+        // Handle main image file
+        formData.append('main_image', propertyData[key]);
+      } else if (key === 'imagesToRemove' && Array.isArray(propertyData[key])) {
+        // Handle images to remove
+        propertyData[key].forEach((imageId: string, index: number) => {
+          formData.append(`remove_images[${index}]`, imageId);
+        });
+      } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
+        formData.append(key, propertyData[key].toString());
+      }
+    });
+    
+    console.log('Sending property update data to API with FormData');
+    const response = await api.put(`/properties/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating property:', error);
@@ -237,7 +374,28 @@ export const toggleFavorite = async (id: number) => {
 export const getFavoriteProperties = async () => {
   try {
     const response = await api.get('/dashboard/favorites');
-    return response.data.data || [];
+    const properties = response.data.data || [];
+    
+    // Fix image URLs in all favorite properties
+    return properties.map((property: any) => {
+      if (property.images) {
+        const fixedImages = { ...property.images };
+        
+        // Fix main image URL
+        if (fixedImages.main) {
+          fixedImages.main = fixImageUrl(fixedImages.main);
+        }
+        
+        // Fix gallery image URLs
+        if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
+          fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
+        }
+        
+        property.images = fixedImages;
+      }
+      
+      return property;
+    });
   } catch (error) {
     console.error('Error fetching favorite properties:', error);
     throw error;
@@ -247,7 +405,28 @@ export const getFavoriteProperties = async () => {
 export const getUserProperties = async () => {
   try {
     const response = await api.get('/dashboard/properties');
-    return response.data.data || [];
+    const properties = response.data.data || [];
+    
+    // Fix image URLs in all user properties
+    return properties.map((property: any) => {
+      if (property.images) {
+        const fixedImages = { ...property.images };
+        
+        // Fix main image URL
+        if (fixedImages.main) {
+          fixedImages.main = fixImageUrl(fixedImages.main);
+        }
+        
+        // Fix gallery image URLs
+        if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
+          fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
+        }
+        
+        property.images = fixedImages;
+      }
+      
+      return property;
+    });
   } catch (error) {
     console.error('Error fetching user properties:', error);
     throw error;
@@ -267,7 +446,28 @@ export const getPropertyAnalytics = async (id: number) => {
 export const getSimilarProperties = async (slug: string) => {
   try {
     const response = await api.get(`/properties/${slug}/similar`);
-    return response.data.data || [];
+    const properties = response.data.data || [];
+    
+    // Fix image URLs in all similar properties
+    return properties.map((property: any) => {
+      if (property.images) {
+        const fixedImages = { ...property.images };
+        
+        // Fix main image URL
+        if (fixedImages.main) {
+          fixedImages.main = fixImageUrl(fixedImages.main);
+        }
+        
+        // Fix gallery image URLs
+        if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
+          fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
+        }
+        
+        property.images = fixedImages;
+      }
+      
+      return property;
+    });
   } catch (error) {
     console.error('Error fetching similar properties:', error);
     throw error;
