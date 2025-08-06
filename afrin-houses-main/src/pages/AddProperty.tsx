@@ -45,7 +45,7 @@ const propertySchema = z.object({
   postalCode: z.string().min(1, 'Postal code is required').max(20, 'Postal code cannot exceed 20 characters'),
   price: z.number().min(0, 'Price must be 0 or greater').max(99999999.99, 'Price is too high'),
   listingType: z.enum(['rent', 'sale']),
-  propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
+  propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse']),
   bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater').max(20, 'Bedrooms cannot exceed 20'),
   bathrooms: z.number().min(0, 'Bathrooms must be 0 or greater').max(20, 'Bathrooms cannot exceed 20'),
   squareFootage: z.number().min(1, 'Square footage must be greater than 0').max(50000, 'Square footage cannot exceed 50,000').optional(),
@@ -233,14 +233,11 @@ const AddProperty: React.FC = () => {
         }
       }
 
-      // Construct the property object with camelCase parameter names to match backend
+      // Construct the property object matching the Property type
       const newProperty = {
         slug: data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         title: data.title,
         address: street,
-        city: city,
-        state: state,
-        postalCode: postalCode,
         price: parseFloat(data.price.toString()),
         listingType: data.listingType,
         propertyType: data.propertyType,
@@ -248,9 +245,9 @@ const AddProperty: React.FC = () => {
         bathrooms: Number(data.bathrooms),
         squareFootage: Number(data.squareFootage || 0),
         description: data.description,
-        amenities: selectedFeatures, // Backend expects 'amenities' instead of 'features'
-        images: [], // You'll need to handle image uploads separately
-        mainImage: '', // Set this after uploading images
+        features: selectedFeatures,
+        images: [],
+        mainImage: '',
         yearBuilt: Number(data.yearBuilt),
         availableDate: data.availableDate,
         petPolicy: data.petPolicy,
@@ -262,11 +259,16 @@ const AddProperty: React.FC = () => {
         hoaFees: data.hoaFees,
         building: data.building,
         pool: data.pool,
-        contactName: data.contactName,
-        contactPhone: data.contactPhone,
-        contactEmail: data.contactEmail,
-        latitude: 40.7128, // Sample coordinates (NYC)
-        longitude: -74.0060
+        contact: {
+          name: data.contactName || '',
+          phone: data.contactPhone || '',
+          email: data.contactEmail || ''
+        },
+        coordinates: {
+          lat: 40.7128, // Sample coordinates (NYC)
+          lng: -74.0060
+        },
+        datePosted: new Date().toISOString()
       };
       
       console.log('Submitting property data:', newProperty);

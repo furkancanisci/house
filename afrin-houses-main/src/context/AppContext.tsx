@@ -316,12 +316,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       
       // Transform frontend data to API format
-      const apiData: Partial<import('../services/propertyService').Property> = {
+      const apiData: any = {
         title: property.title,
         description: property.description,
         price: property.price,
-        property_type: property.propertyType,
-        listing_type: property.listingType,
+        propertyType: property.propertyType,
+        listingType: property.listingType,
         street_address: property.address.split(',')[0]?.trim() || property.address,
         city: property.address.split(',')[1]?.trim() || 'Unknown',
         state: property.address.split(',')[2]?.trim() || 'Unknown',
