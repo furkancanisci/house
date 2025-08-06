@@ -15,6 +15,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardFooter } from './ui/card';
 import { Badge } from './ui/badge';
 import { useTranslation } from 'react-i18next';
+import FixedImage from './FixedImage';
 
 interface PropertyCardProps {
   property: ExtendedProperty;
@@ -68,7 +69,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid' }) 
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <div className="md:flex">
           <div className="md:flex-shrink-0">
-            <img
+            <FixedImage
               className="h-48 w-full object-cover md:w-48"
               src={property.mainImage || '/placeholder-property.jpg'}
               alt={property.title}
@@ -160,7 +161,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid' }) 
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <Link to={`/property/${propertySlug}`}>
         <div className="relative">
-          <img
+          <FixedImage
             src={property.mainImage || '/placeholder-property.jpg'}
             alt={property.title}
             className="h-48 w-full object-cover"

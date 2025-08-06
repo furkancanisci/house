@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building, Home, MapPin, Phone, Mail, Clock } from 'lucide-react';
+import FixedImage from '../components/FixedImage';
 
 const AboutUs: React.FC = () => {
   return (
@@ -32,7 +33,7 @@ const AboutUs: React.FC = () => {
               </p>
             </div>
             <div className="bg-gray-200 h-64 rounded-lg overflow-hidden">
-              <img 
+              <FixedImage 
                 src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80" 
                 alt="Our Office" 
                 className="w-full h-full object-cover"
@@ -52,7 +53,7 @@ const AboutUs: React.FC = () => {
             ].map((member, index) => (
               <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="h-64 bg-gray-200">
-                  <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                  <FixedImage src={member.image} alt={member.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold text-gray-900">{member.name}</h3>

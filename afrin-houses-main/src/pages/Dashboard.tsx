@@ -43,6 +43,7 @@ import {
 } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
 import dashboardService, { DashboardStats, UserProfile } from '../services/dashboardService';
+import FixedImage from '../components/FixedImage';
 
 const Dashboard: React.FC = () => {
   const { state, deleteProperty, updateUser } = useApp();
@@ -270,7 +271,7 @@ const Dashboard: React.FC = () => {
                       <div key={property.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex flex-col md:flex-row gap-4">
                           <div className="md:w-1/4">
-                            <img
+                            <FixedImage
                               src={property.mainImage}
                               alt={property.title}
                               className="w-full h-32 object-cover rounded-lg"

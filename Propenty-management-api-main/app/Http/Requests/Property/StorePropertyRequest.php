@@ -57,9 +57,11 @@ class StorePropertyRequest extends FormRequest
             'contactName' => 'required|string|max:100',
             'contactPhone' => 'required|string|max:20',
             'contactEmail' => 'required|email|max:100',
-            'main_image' => 'nullable|image|max:5120', // 5MB max
+            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
             'images' => 'nullable|array',
-            'images.*' => 'image|max:5120', // 5MB max per image
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max per image
+            'base64_images' => 'nullable|array',
+            'base64_images.*' => 'string', // Base64 encoded images
         ];
     }
 }

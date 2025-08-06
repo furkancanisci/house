@@ -241,18 +241,54 @@ class PropertyController extends Controller
             // Create the property
             $property = Property::create($mappedData);
             
-            // Handle image uploads if present
+            // Handle main image upload
             if ($request->hasFile('main_image')) {
-                $property->addMedia($request->file('main_image'))
+                $mainImage = $request->file('main_image');
+                $property->addMedia($mainImage)
+                    ->usingName($mainImage->getClientOriginalName())
+                    ->usingFileName(time() . '_main_' . $mainImage->getClientOriginalName())
                     ->withResponsiveImages()
                     ->toMediaCollection('main_image');
             }
             
+            // Handle multiple image uploads
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
+                foreach ($request->file('images') as $index => $image) {
                     $property->addMedia($image)
+                        ->usingName($image->getClientOriginalName())
+                        ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
                         ->withResponsiveImages()
                         ->toMediaCollection('images');
+                }
+            }
+            
+            // Handle base64 image uploads if present
+            if ($request->has('base64_images')) {
+                foreach ($request->base64_images as $index => $base64Image) {
+                    if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                        $data = substr($base64Image, strpos($base64Image, ',') + 1);
+                        $data = base64_decode($data);
+                        $extension = strtolower($type[1]);
+                        
+                        $fileName = time() . '_base64_' . $index . '.' . $extension;
+                        $tempPath = storage_path('app/temp/' . $fileName);
+                        
+                        // Ensure temp directory exists
+                        if (!file_exists(dirname($tempPath))) {
+                            mkdir(dirname($tempPath), 0755, true);
+                        }
+                        
+                        file_put_contents($tempPath, $data);
+                        
+                        $property->addMedia($tempPath)
+                            ->usingName('Property Image ' . ($index + 1))
+                            ->usingFileName($fileName)
+                            ->withResponsiveImages()
+                            ->toMediaCollection('images');
+                            
+                        // Clean up temp file
+                        unlink($tempPath);
+                    }
                 }
             }
             
@@ -268,7 +304,8 @@ class PropertyController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error creating property',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
             ], 500);
         }
     }
@@ -291,50 +328,97 @@ class PropertyController extends Controller
      */
     public function update(UpdatePropertyRequest $request, Property $property): JsonResponse
     {
-        // Check if user owns the property
-        if ($property->user_id !== auth()->id()) {
-            return response()->json([
-                'message' => 'Unauthorized. You can only update your own properties.',
-            ], 403);
-        }
-
-        // Map camelCase field names to snake_case database column names
-        $mappedData = $this->mapFieldNames($request->validated());
-        
-        $property->update($mappedData);
-
-        // Handle image uploads
-        if ($request->hasFile('main_image')) {
-            $property->clearMediaCollection('main_image');
-            $property->addMediaFromRequest('main_image')
-                ->toMediaCollection('main_image');
-        }
-
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $property->addMedia($image)
-                    ->toMediaCollection('images');
+        try {
+            // Check if user owns the property
+            if ($property->user_id !== auth()->id()) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only update your own properties.',
+                ], 403);
             }
-        }
 
-        // Remove images if specified
-        if ($request->has('remove_images')) {
-            $removeImages = is_array($request->remove_images) 
-                ? $request->remove_images 
-                : [$request->remove_images];
+            // Map camelCase field names to snake_case database column names
+            $mappedData = $this->mapFieldNames($request->validated());
             
-            foreach ($removeImages as $mediaId) {
-                $media = $property->media()->find($mediaId);
-                if ($media) {
-                    $media->delete();
+            $property->update($mappedData);
+
+            // Handle main image upload
+            if ($request->hasFile('main_image')) {
+                $property->clearMediaCollection('main_image');
+                $mainImage = $request->file('main_image');
+                $property->addMedia($mainImage)
+                    ->usingName($mainImage->getClientOriginalName())
+                    ->usingFileName(time() . '_main_' . $mainImage->getClientOriginalName())
+                    ->withResponsiveImages()
+                    ->toMediaCollection('main_image');
+            }
+
+            // Remove specific images if specified
+            if ($request->has('remove_images')) {
+                $removeImages = is_array($request->remove_images) 
+                    ? $request->remove_images 
+                    : [$request->remove_images];
+                
+                foreach ($removeImages as $mediaId) {
+                    $media = $property->media()->find($mediaId);
+                    if ($media) {
+                        $media->delete();
+                    }
                 }
             }
-        }
 
-        return response()->json([
-            'message' => 'Property updated successfully.',
-            'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers'])),
-        ]);
+            // Handle new image uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+                    $property->addMedia($image)
+                        ->usingName($image->getClientOriginalName())
+                        ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
+                        ->withResponsiveImages()
+                        ->toMediaCollection('images');
+                }
+            }
+
+            // Handle base64 image uploads if present
+            if ($request->has('base64_images')) {
+                foreach ($request->base64_images as $index => $base64Image) {
+                    if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                        $data = substr($base64Image, strpos($base64Image, ',') + 1);
+                        $data = base64_decode($data);
+                        $extension = strtolower($type[1]);
+                        
+                        $fileName = time() . '_base64_' . $index . '.' . $extension;
+                        $tempPath = storage_path('app/temp/' . $fileName);
+                        
+                        // Ensure temp directory exists
+                        if (!file_exists(dirname($tempPath))) {
+                            mkdir(dirname($tempPath), 0755, true);
+                        }
+                        
+                        file_put_contents($tempPath, $data);
+                        
+                        $property->addMedia($tempPath)
+                            ->usingName('Property Image ' . ($index + 1))
+                            ->usingFileName($fileName)
+                            ->withResponsiveImages()
+                            ->toMediaCollection('images');
+                            
+                        // Clean up temp file
+                        unlink($tempPath);
+                    }
+                }
+            }
+
+            return response()->json([
+                'message' => 'Property updated successfully.',
+                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers'])),
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating property',
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
+        }
     }
 
     /**
@@ -408,6 +492,44 @@ class PropertyController extends Controller
             'message' => $message,
             'is_favorited' => $is_favorited,
         ]);
+    }
+
+    /**
+     * Delete a specific property image.
+     */
+    public function deleteImage(Property $property, $mediaId): JsonResponse
+    {
+        try {
+            // Check if user owns the property
+            if ($property->user_id !== auth()->id()) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only delete images from your own properties.',
+                ], 403);
+            }
+
+            // Find the media item
+            $media = $property->media()->find($mediaId);
+            
+            if (!$media) {
+                return response()->json([
+                    'message' => 'Image not found.',
+                ], 404);
+            }
+
+            // Delete the media item
+            $media->delete();
+
+            return response()->json([
+                'message' => 'Image deleted successfully.',
+                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers'])),
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error deleting image',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

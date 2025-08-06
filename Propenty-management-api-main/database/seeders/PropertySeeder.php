@@ -6,9 +6,21 @@ use App\Models\Property;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 
 class PropertySeeder extends Seeder
 {
+    /**
+     * Available sample images for seeding
+     */
+    private $sampleImages = [
+        'house1.svg',
+        'apartment1.svg',
+        'villa1.svg',
+        'condo1.svg',
+        'studio1.svg'
+    ];
+
     /**
      * Run the database seeds.
      */
@@ -244,6 +256,12 @@ class PropertySeeder extends Seeder
                     VALUES ($placeholders, NOW(), NOW())";
                     
             \DB::insert($sql, $values);
+            
+            // Get the created property ID
+            $propertyId = \DB::getPdo()->lastInsertId();
+            
+            // Add images to the property
+            $this->addImagesToProperty($propertyId);
         }
 
         // Create some draft properties using raw SQL
@@ -289,5 +307,68 @@ class PropertySeeder extends Seeder
                     
             \DB::insert($sql, $values);
         }
+    }
+
+    /**
+     * Add fake images to a property
+     */
+    private function addImagesToProperty($propertyId): void
+    {
+        $property = Property::find($propertyId);
+        if (!$property) {
+            return;
+        }
+
+        $imagesPath = database_path('seeders/images');
+        
+        // Check if images directory exists
+        if (!File::exists($imagesPath)) {
+            $this->command->warn("Images directory not found at: $imagesPath");
+            return;
+        }
+
+        // Get random number of images (3-5)
+        $imageCount = rand(3, 5);
+        $selectedImages = collect($this->sampleImages)->random($imageCount);
+        
+        $isFirstImage = true;
+        
+        foreach ($selectedImages as $imageName) {
+            $imagePath = $imagesPath . DIRECTORY_SEPARATOR . $imageName;
+            
+            if (File::exists($imagePath)) {
+                try {
+                    // Create a temporary copy of the image with a unique name
+                    $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid() . '_' . $imageName;
+                    File::copy($imagePath, $tempPath);
+                    
+                    // Add to appropriate collection
+                    if ($isFirstImage) {
+                        // First image goes to main_image collection
+                        $property->addMedia($tempPath)
+                            ->usingName("Main image for {$property->title}")
+                            ->usingFileName(uniqid() . '_main_' . $imageName)
+                            ->toMediaCollection('main_image');
+                        $isFirstImage = false;
+                    } else {
+                        // Rest go to images collection
+                        $property->addMedia($tempPath)
+                            ->usingName("Gallery image for {$property->title}")
+                            ->usingFileName(uniqid() . '_gallery_' . $imageName)
+                            ->toMediaCollection('images');
+                    }
+                    
+                    // Clean up temporary file
+                    if (File::exists($tempPath)) {
+                        File::delete($tempPath);
+                    }
+                    
+                } catch (\Exception $e) {
+                    $this->command->warn("Failed to add image $imageName to property {$property->id}: " . $e->getMessage());
+                }
+            }
+        }
+        
+        $this->command->info("Added {$imageCount} images to property: {$property->title}");
     }
 }

@@ -91,6 +91,13 @@ class PropertyResource extends JsonResource
                 }),
             ],
             
+            // Contact information (only for property owner or when viewing property details)
+            'contact' => [
+                'name' => $this->contact_name,
+                'phone' => $this->contact_phone,
+                'email' => $this->contact_email,
+            ],
+            
             // Owner information
             'owner' => $this->when($this->relationLoaded('user'), function () {
                 return new UserResource($this->user);

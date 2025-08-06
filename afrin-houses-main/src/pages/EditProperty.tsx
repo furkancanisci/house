@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Property } from '../types';
+import { updateProperty } from '../services/propertyService';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,7 +17,10 @@ import {
   Calendar,
   Phone,
   Mail,
-  User
+  User,
+  Upload,
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -32,6 +36,7 @@ import {
 } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
+import FixedImage from '../components/FixedImage';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required'),
@@ -68,6 +73,10 @@ const EditProperty: React.FC = () => {
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<any[]>([]);
+  const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
 
   const {
     register,
@@ -143,6 +152,15 @@ const EditProperty: React.FC = () => {
         setProperty(foundProperty);
         setSelectedFeatures(foundProperty.features);
         
+        // Load existing images
+        if (foundProperty.images) {
+          if (foundProperty.images.gallery) {
+            setExistingImages(foundProperty.images.gallery);
+          } else if (Array.isArray(foundProperty.images)) {
+            setExistingImages(foundProperty.images);
+          }
+        }
+        
         // Reset form with property data
         reset({
           title: foundProperty.title,
@@ -184,12 +202,45 @@ const EditProperty: React.FC = () => {
     );
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const totalImages = existingImages.length + selectedImages.length + files.length - imagesToRemove.length;
+    
+    if (totalImages > 10) {
+      toast.error('Maximum 10 images allowed');
+      return;
+    }
+
+    setSelectedImages(prev => [...prev, ...files]);
+    
+    // Create preview URLs
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreviewUrls(prev => [...prev, e.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeNewImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (imageId: string) => {
+    setImagesToRemove(prev => [...prev, imageId]);
+  };
+
+  const restoreExistingImage = (imageId: string) => {
+    setImagesToRemove(prev => prev.filter(id => id !== imageId));
+  };
+
   const onSubmit = async (data: PropertyFormData) => {
     if (!property) return;
 
     try {
-      const updatedProperty: Property = {
-        ...property,
+      const updatedProperty: any = {
         title: data.title,
         address: data.address,
         price: data.price,
@@ -199,26 +250,23 @@ const EditProperty: React.FC = () => {
         bathrooms: data.bathrooms,
         squareFootage: data.squareFootage,
         description: data.description,
-        features: selectedFeatures,
+        amenities: selectedFeatures,
         yearBuilt: data.yearBuilt,
         availableDate: data.availableDate,
         petPolicy: data.petPolicy,
         parking: data.parking,
         utilities: data.utilities,
         lotSize: data.lotSize ? Number(data.lotSize) : undefined,
-        garage: data.garage,
-        heating: data.heating,
         hoaFees: data.hoaFees,
-        building: data.building,
-        pool: data.pool,
-        contact: {
-          name: data.contactName,
-          phone: data.contactPhone,
-          email: data.contactEmail,
-        },
+        contactName: data.contactName,
+        contactPhone: data.contactPhone,
+        contactEmail: data.contactEmail,
+        // Image handling
+        images: selectedImages, // New images to upload
+        imagesToRemove: imagesToRemove, // Existing images to remove
       };
 
-     await updateProperty(updatedProperty);
+      await updateProperty(property.id!, updatedProperty);
       toast.success('Property updated successfully!');
       navigate('/dashboard');
     } catch (error) {
@@ -540,6 +588,111 @@ const EditProperty: React.FC = () => {
                     {...register('hoaFees')}
                   />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Image Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Images</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Existing Images */}
+              {existingImages.length > 0 && (
+                <div>
+                  <Label>Current Images</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-3">
+                    {existingImages.map((image, index) => (
+                      <div key={image.id || index} className="relative group">
+                        <FixedImage
+                          src={image.url || image.original_url}
+                          alt={`Property image ${index + 1}`}
+                          className={`w-full h-32 object-cover rounded-lg border ${
+                            imagesToRemove.includes(image.id) ? 'opacity-50 grayscale' : ''
+                          }`}
+                        />
+                        {!imagesToRemove.includes(image.id) ? (
+                          <button
+                            type="button"
+                            onClick={() => removeExistingImage(image.id)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => restoreExistingImage(image.id)}
+                            className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1 opacity-100"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </button>
+                        )}
+                        {index === 0 && !imagesToRemove.includes(image.id) && (
+                          <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                            Main Photo
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload New Images */}
+              <div>
+                <Label>Add New Images</Label>
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload additional high-quality images of your property (Max 10 total images).
+                </p>
+                
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-lg font-medium text-gray-900 mb-2">
+                      Click to upload images
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      PNG, JPG, GIF up to 10MB each
+                    </p>
+                  </label>
+                </div>
+
+                {/* New Images Preview */}
+                {selectedImages.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="font-medium text-gray-900 mb-3">
+                      New Images ({selectedImages.length})
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {imagePreviewUrls.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={url}
+                            alt={`New image ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeNewImage(index)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

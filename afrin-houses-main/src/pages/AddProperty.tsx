@@ -20,7 +20,8 @@ import {
   User,
   Upload,
   X,
-  Plus
+  Plus,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -36,6 +37,7 @@ import {
 } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
+import FixedImage from '../components/FixedImage';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required').max(255, 'Title cannot exceed 255 characters'),
@@ -74,8 +76,10 @@ const AddProperty: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation(); // Add this line
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const {
     register,
@@ -196,6 +200,30 @@ const AddProperty: React.FC = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length + selectedImages.length > 10) {
+      toast.error('Maximum 10 images allowed');
+      return;
+    }
+
+    setSelectedImages(prev => [...prev, ...files]);
+    
+    // Create preview URLs
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreviewUrls(prev => [...prev, e.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   const getFieldsForStep = (step: number) => {
     switch (step) {
       case 1:
@@ -203,8 +231,10 @@ const AddProperty: React.FC = () => {
       case 2:
         return ['price', 'bedrooms', 'bathrooms', 'squareFootage', 'yearBuilt'] as (keyof PropertyFormData)[];
       case 3:
-        return ['description'] as (keyof PropertyFormData)[];
+        return [] as (keyof PropertyFormData)[]; // Image upload step - no form validation needed
       case 4:
+        return ['description'] as (keyof PropertyFormData)[];
+      case 5:
         return ['contactName', 'contactPhone', 'contactEmail'] as (keyof PropertyFormData)[];
       default:
         return [];
@@ -249,8 +279,8 @@ const AddProperty: React.FC = () => {
         squareFootage: Number(data.squareFootage || 0),
         description: data.description,
         amenities: selectedFeatures, // Backend expects 'amenities' instead of 'features'
-        images: [], // You'll need to handle image uploads separately
-        mainImage: '', // Set this after uploading images
+        images: selectedImages.slice(1), // All images except the first one
+        mainImage: selectedImages[0] || null, // First image as main image
         yearBuilt: Number(data.yearBuilt),
         availableDate: data.availableDate,
         petPolicy: data.petPolicy,
@@ -569,6 +599,69 @@ const AddProperty: React.FC = () => {
         return (
           <div className="space-y-6">
             <div>
+              <Label>Property Images</Label>
+              <p className="text-sm text-gray-600 mb-4">
+                Upload up to 10 high-quality images of your property. The first image will be used as the main photo.
+              </p>
+              
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label htmlFor="image-upload" className="cursor-pointer">
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-lg font-medium text-gray-900 mb-2">
+                    Click to upload images
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    PNG, JPG, GIF up to 10MB each (Max 10 images)
+                  </p>
+                </label>
+              </div>
+
+              {selectedImages.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-medium text-gray-900 mb-3">
+                    Selected Images ({selectedImages.length}/10)
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {imagePreviewUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <FixedImage
+                          src={url}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                        {index === 0 && (
+                          <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                            Main Photo
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div>
               <Label htmlFor="description">{t('forms.propertyDescription')} *</Label>
               <Textarea
                 id="description"
@@ -628,7 +721,7 @@ const AddProperty: React.FC = () => {
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <div>
@@ -690,7 +783,7 @@ const AddProperty: React.FC = () => {
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-900 mb-2">{t('forms.note')}</h4>
               <p className="text-blue-800 text-sm">
-                {t('forms.demoImagesNote')}
+                Property listing will be created with the uploaded images.
               </p>
             </div>
           </div>
@@ -745,8 +838,9 @@ const AddProperty: React.FC = () => {
               <CardTitle>
                 {currentStep === 1 && t('steps.basicInformation')}
                 {currentStep === 2 && t('steps.propertyDetails')}
-                {currentStep === 3 && t('steps.features')}
-                {currentStep === 4 && t('steps.contactInformation')}
+                {currentStep === 3 && 'Property Images'}
+                {currentStep === 4 && t('steps.features')}
+                {currentStep === 5 && t('steps.contactInformation')}
               </CardTitle>
             </CardHeader>
             <CardContent>{renderStep()}</CardContent>
