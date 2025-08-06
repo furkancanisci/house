@@ -34,15 +34,12 @@ class UserResource extends JsonResource
                 'thumbnail' => $this->avatar_thumbnail_url,
             ],
 
-            // ✅ Sonsuz döngüyü engelleyen güvenli stats bloğu
-            'stats' => isset($this->properties)
-                ? [
-                    'properties_count' => $this->properties->count(),
-                    'active_properties_count' => $this->properties->where('status', 'active')->count(),
-                    // 🛑 Dikkat: favoriteProperties() yerine önceden yüklenmişse geç
-                    'favorites_count' => $this->whenLoaded('favoriteProperties', fn () => $this->favoriteProperties->count()),
-                ]
-                : null,
+            // Safe stats block to prevent infinite loops and N+1 queries
+            'stats' => [
+                'properties_count' => $this->whenLoaded('properties', fn () => $this->properties->count(), 0),
+                'active_properties_count' => $this->whenLoaded('properties', fn () => $this->properties->where('status', 'active')->count(), 0),
+                'favorites_count' => $this->whenLoaded('favoriteProperties', fn () => $this->favoriteProperties->count(), 0),
+            ],
 
             'permissions' => [
                 'can_create_property' => $this->isPropertyOwner(),

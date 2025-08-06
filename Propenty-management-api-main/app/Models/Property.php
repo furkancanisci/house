@@ -82,7 +82,6 @@ class Property extends Model implements HasMedia
         'formatted_price',
         'main_image_url',
         'gallery_urls',
-        'is_favorited_by_auth_user',
     ];
 
     /**
@@ -93,13 +92,11 @@ class Property extends Model implements HasMedia
         parent::boot();
 
         static::creating(function ($property) {
-            if (empty($property->slug)) {
-                $property->slug = $property->generateSlug();
-            }
+            $property->slug = $property->generateSlug();
         });
 
         static::updating(function ($property) {
-            if ($property->isDirty('title') && empty($property->slug)) {
+            if ($property->isDirty('title')) {
                 $property->slug = $property->generateSlug();
             }
         });

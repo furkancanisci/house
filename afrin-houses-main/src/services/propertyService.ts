@@ -1,149 +1,139 @@
 import api from './api';
 
 export interface Property {
-  id: number;
+  id?: number;
   title: string;
   description: string;
   price: number;
-  price_type?: string;
-  property_type: string;
-  listing_type: string;
-  street_address: string;
+  propertyType: string;
+  listingType: string;
+  address: string;
   city: string;
   state: string;
-  postal_code: string;
-  country?: string;
-  latitude: number;
-  longitude: number;
-  neighborhood?: string;
+  postalCode: string;
   bedrooms: number;
   bathrooms: number;
-  square_feet: number;
-  lot_size?: number;
-  year_built?: number;
-  parking_type?: string;
-  parking_spaces?: number;
-  is_featured: boolean;
-  is_available: boolean;
-  available_from?: string;
-  status: string;
-  slug: string;
+  squareFootage: number;
+  yearBuilt: number;
   amenities?: string[];
-  nearby_places?: Array<{
-    name: string;
-    type: string;
-    distance: number;
-  }>;
-  created_at: string;
-  updated_at: string;
-  published_at?: string;
-  user_id: number;
-  // Computed attributes
-  full_address?: string;
-  formatted_price?: string;
-  main_image_url?: string;
-  gallery_urls?: Array<{
-    id: number;
-    url: string;
-    thumb: string;
-    medium: string;
-    large: string;
-  }>;
-  is_favorited_by_auth_user?: boolean;
-  user?: {
-    id: number;
-    name: string;
-    email: string;
-    phone?: string;
-    avatar?: string;
-  };
+  images?: any;
+  contactName?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  latitude?: number;
+  longitude?: number;
+  availableDate?: string;
+  petPolicy?: string;
+  parking?: string;
+  lotSize?: string;
+  isAvailable?: boolean;
+  status?: string;
+  isFeatured?: boolean;
+  slug?: string;
 }
 
 export interface PropertyFilters {
-  listingType?: 'rent' | 'sale' | 'all';
+  listingType?: string;
   propertyType?: string;
-  location?: string;
   minPrice?: number;
   maxPrice?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  minSquareFootage?: number;
-  maxSquareFootage?: number;
+  minBeds?: number;
+  maxBeds?: number;
+  minBaths?: number;
+  maxBaths?: number;
+  minSquareFeet?: number;
+  maxSquareFeet?: number;
   features?: string[];
-  search?: string;
-  page?: number;
-  perPage?: number;
+  location?: string;
+  radius?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }
 
 export const getProperties = async (filters: PropertyFilters = {}) => {
   try {
-    // Map frontend filter names to backend API parameter names
+    // Map frontend filters to backend API parameters
     const params: Record<string, any> = {};
     
-    // Map listing type
+    // Basic filters
     if (filters.listingType && filters.listingType !== 'all') {
-      params.listing_type = filters.listingType;
+      params.listingType = filters.listingType;
     }
     
-    // Map property type
-    if (filters.propertyType) {
-      params.property_type = filters.propertyType;
+    if (filters.propertyType && filters.propertyType !== 'all') {
+      params.propertyType = filters.propertyType;
     }
     
-    // Map search query (from search input)
-    if (filters.search) {
-      params.search = filters.search;
-    }
-    // Map location (search by city, state, or address)
-    else if (filters.location) {
-      params.search = filters.location;
+    if (filters.location) {
+      params.location = filters.location;
     }
     
-    // Map price range
+    // Price range
     if (filters.minPrice !== undefined) {
-      params.price_min = filters.minPrice;
+      params.minPrice = filters.minPrice;
     }
+    
     if (filters.maxPrice !== undefined) {
-      params.price_max = filters.maxPrice;
+      params.maxPrice = filters.maxPrice;
     }
     
-    // Map bedrooms and bathrooms
-    if (filters.bedrooms !== undefined) {
-      params.bedrooms = filters.bedrooms;
-    }
-    if (filters.bathrooms !== undefined) {
-      params.bathrooms = filters.bathrooms;
+    // Bedrooms
+    if (filters.minBeds !== undefined) {
+      params.minBedrooms = filters.minBeds;
     }
     
-    // Map square footage
-    if (filters.minSquareFootage !== undefined) {
-      params.square_footage_min = filters.minSquareFootage;
-    }
-    if (filters.maxSquareFootage !== undefined) {
-      params.square_footage_max = filters.maxSquareFootage;
+    if (filters.maxBeds !== undefined) {
+      params.maxBedrooms = filters.maxBeds;
     }
     
-    // Map features/amenities
+    // Bathrooms
+    if (filters.minBaths !== undefined) {
+      params.minBathrooms = filters.minBaths;
+    }
+    
+    if (filters.maxBaths !== undefined) {
+      params.maxBathrooms = filters.maxBaths;
+    }
+    
+    // Square footage
+    if (filters.minSquareFeet !== undefined) {
+      params.minSquareFootage = filters.minSquareFeet;
+    }
+    
+    if (filters.maxSquareFeet !== undefined) {
+      params.maxSquareFootage = filters.maxSquareFeet;
+    }
+    
+    // Features/amenities
     if (filters.features && filters.features.length > 0) {
       params.amenities = filters.features.join(',');
     }
     
-    // Map pagination
+    // Radius for location search
+    if (filters.radius) {
+      params.radius = filters.radius;
+    }
+    
+    // Pagination
     if (filters.page) {
       params.page = filters.page;
     }
-    if (filters.perPage) {
-      params.per_page = filters.perPage;
+    
+    if (filters.limit) {
+      params.limit = filters.limit;
     }
     
-    // Map sorting
+    // Sorting
     if (filters.sortBy) {
-      const order = filters.sortOrder === 'desc' ? '-' : '';
-      params.sort = `${order}${filters.sortBy}`;
+      params.sortBy = filters.sortBy;
+      if (filters.sortOrder) {
+        params.sortOrder = filters.sortOrder;
+      }
     }
     
+    console.log('Sending property filters to API:', params);
     const response = await api.get('/properties', { params });
     
     // Ensure we always return a consistent response structure
@@ -157,8 +147,6 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     } else if (response.data.data && Array.isArray(response.data.data)) {
       // Handle Laravel paginated response
       return response.data.data;
-    } else if (Array.isArray(response.data)) {
-      return response.data;
     }
     
     console.warn('Unexpected API response structure:', response.data);
@@ -190,9 +178,17 @@ export const getFeaturedProperties = async (limit = 6) => {
   }
 };
 
-export const createProperty = async (propertyData: Partial<Property>) => {
+export const createProperty = async (propertyData: any) => {
   try {
-    const response = await api.post('/properties', propertyData);
+    // Ensure we're sending the correct parameter names to the backend
+    const formattedData = {
+      ...propertyData,
+      // Add any transformations needed here
+      amenities: propertyData.amenities || [],
+    };
+    
+    console.log('Sending property data to API:', formattedData);
+    const response = await api.post('/properties', formattedData);
     return response.data;
   } catch (error) {
     console.error('Error creating property:', error);
@@ -200,9 +196,17 @@ export const createProperty = async (propertyData: Partial<Property>) => {
   }
 };
 
-export const updateProperty = async (id: number, propertyData: Partial<Property>) => {
+export const updateProperty = async (id: number, propertyData: any) => {
   try {
-    const response = await api.put(`/properties/${id}`, propertyData);
+    // Ensure we're sending the correct parameter names to the backend
+    const formattedData = {
+      ...propertyData,
+      // Add any transformations needed here
+      amenities: propertyData.amenities || [],
+    };
+    
+    console.log('Sending property update data to API:', formattedData);
+    const response = await api.put(`/properties/${id}`, formattedData);
     return response.data;
   } catch (error) {
     console.error('Error updating property:', error);

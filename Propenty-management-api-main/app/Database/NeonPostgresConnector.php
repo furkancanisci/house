@@ -25,10 +25,17 @@ class NeonPostgresConnector extends PostgresConnector
         $endpoint = '';
         
         if (str_contains($host, 'neon.tech')) {
-            // Extract endpoint ID from hostname like "ep-dawn-hall-a9gz4on6-pooler.gwc.azure.neon.tech"
-            $parts = explode('-', explode('.', $host)[0]);
-            if (count($parts) >= 4) {
-                $endpoint = implode('-', array_slice($parts, 0, 4));
+            // Extract endpoint ID from hostname like "ep-holy-tooth-a2z7soba-pooler.eu-central-1.aws.neon.tech"
+            $hostPart = explode('.', $host)[0];
+            if (str_ends_with($hostPart, '-pooler')) {
+                // For pooler endpoints, use the full hostname part as the endpoint
+                $endpoint = $hostPart;
+            } else {
+                // For direct endpoints, extract the first 4 parts
+                $parts = explode('-', $hostPart);
+                if (count($parts) >= 4) {
+                    $endpoint = implode('-', array_slice($parts, 0, 4));
+                }
             }
         }
 

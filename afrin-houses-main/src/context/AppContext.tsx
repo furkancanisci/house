@@ -257,7 +257,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      // The propertyData is already in the correct API format from AddProperty.tsx
+      console.log('Sending property data to API service:', propertyData);
       const response = await createPropertyAPI(propertyData);
       
       // Transform API response back to frontend format
@@ -265,34 +265,34 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         id: response.property.id.toString(),
         slug: response.property.slug,
         title: response.property.title,
-        address: response.property.location?.full_address || `${response.property.street_address}, ${response.property.city}, ${response.property.state} ${response.property.postal_code}`,
+        address: response.property.location?.full_address || `${response.property.address}, ${response.property.city}, ${response.property.state} ${response.property.postalCode}`,
         price: response.property.price,
-        propertyType: response.property.property_type,
-        listingType: response.property.listing_type,
+        propertyType: response.property.propertyType,
+        listingType: response.property.listingType,
         bedrooms: response.property.bedrooms,
         bathrooms: response.property.bathrooms,
-        squareFootage: response.property.square_feet,
+        squareFootage: response.property.squareFootage,
         description: response.property.description,
         features: response.property.amenities || [],
         images: response.property.images?.gallery?.map((img: any) => img.url) || [],
         mainImage: response.property.images?.main || '/placeholder-property.jpg',
-        yearBuilt: response.property.year_built,
+        yearBuilt: response.property.yearBuilt,
         coordinates: {
           lat: response.property.latitude || 0,
           lng: response.property.longitude || 0
         },
         contact: {
-          name: response.property.contact_name || 'Agent',
-          phone: response.property.contact_phone || '',
-          email: response.property.contact_email || ''
+          name: response.property.contactName || 'Agent',
+          phone: response.property.contactPhone || '',
+          email: response.property.contactEmail || ''
         },
         datePosted: response.property.created_at,
-        availableDate: response.property.available_from,
-        petPolicy: response.property.pet_policy,
-        parking: response.property.parking_type,
-        lotSize: response.property.lot_size,
-        garage: response.property.parking_type === 'garage' ? 'Yes' : 'No',
-        building: response.property.building_name
+        availableDate: response.property.availableDate,
+        petPolicy: response.property.petPolicy,
+        parking: response.property.parking,
+        lotSize: response.property.lotSize,
+        garage: response.property.parking === 'garage' ? 'Yes' : 'No',
+        building: response.property.building
       };
 
       dispatch({ type: 'ADD_PROPERTY', payload: newProperty });
