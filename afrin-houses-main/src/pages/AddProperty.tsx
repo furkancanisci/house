@@ -213,17 +213,16 @@ const AddProperty: React.FC = () => {
 
   const onSubmit = async (data: PropertyFormData) => {
     try {
-      // Parse address into components if not already provided
-      let streetAddress = data.address;
-      let city = data.city || '';
+      // Parse address components
+      const addressParts = data.address.split(',').map(part => part.trim());
+      const street = addressParts[0] || '';
+      let city = data.city || addressParts[1] || '';
       let state = data.state || '';
       let postalCode = data.postalCode || '';
-
+      
       // If city, state, postalCode are not provided, try to parse from address
       if (!city || !state || !postalCode) {
-        const addressParts = data.address.split(',').map(part => part.trim());
         if (addressParts.length >= 3) {
-          streetAddress = addressParts[0];
           city = city || addressParts[1];
           const lastPart = addressParts[addressParts.length - 1];
           const stateZipMatch = lastPart.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
@@ -234,44 +233,44 @@ const AddProperty: React.FC = () => {
         }
       }
 
-      const newProperty: Omit<Property, 'id' | 'datePosted'> = {
+      // Construct the property object with camelCase parameter names to match backend
+      const newProperty = {
         slug: data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         title: data.title,
-        address: `${data.address}, ${data.city}, ${data.state} ${data.postalCode}, US`,
+        address: street,
+        city: city,
+        state: state,
+        postalCode: postalCode,
         price: parseFloat(data.price.toString()),
         listingType: data.listingType,
-        propertyType: (['apartment', 'house', 'condo', 'townhouse'] as const)[data.propertyType],
-        bedrooms: data.bedrooms,
-        bathrooms: data.bathrooms,
-        squareFootage: data.squareFootage || 0,
+        propertyType: data.propertyType,
+        bedrooms: Number(data.bedrooms),
+        bathrooms: Number(data.bathrooms),
+        squareFootage: Number(data.squareFootage || 0),
         description: data.description,
-        features: selectedFeatures,
+        amenities: selectedFeatures, // Backend expects 'amenities' instead of 'features'
         images: [], // You'll need to handle image uploads separately
         mainImage: '', // Set this after uploading images
-        yearBuilt: data.yearBuilt,
+        yearBuilt: Number(data.yearBuilt),
         availableDate: data.availableDate,
         petPolicy: data.petPolicy,
         parking: data.parking,
         utilities: data.utilities,
-        lotSize: data.lotSize,
+        lotSize: Number(data.lotSize || 0),
         garage: data.garage,
         heating: data.heating,
         hoaFees: data.hoaFees,
         building: data.building,
         pool: data.pool,
-        contact: {
-          name: data.contactName,
-          phone: data.contactPhone,
-          email: data.contactEmail
-        },
-        coordinates: {
-          lat: 40.7128, // Sample coordinates (NYC)
-          lng: -74.0060
-        }
+        contactName: data.contactName,
+        contactPhone: data.contactPhone,
+        contactEmail: data.contactEmail,
+        latitude: 40.7128, // Sample coordinates (NYC)
+        longitude: -74.0060
       };
       
-      await addProperty(newProperty);
-
+      console.log('Submitting property data:', newProperty);
+      
       await addProperty(newProperty);
       toast.success('Property added successfully!');
       navigate('/dashboard');

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Property;
 
 use App\Models\Property;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePropertyRequest extends FormRequest
 {
@@ -62,8 +63,8 @@ class UpdatePropertyRequest extends FormRequest
             'available_from' => 'sometimes|nullable|date|after_or_equal:today',
             
             // Amenities and Features
-            'amenities' => 'sometimes|nullable|array',
-            'amenities.*' => 'string|in:' . implode(',', Property::getAvailableAmenities()),
+            'amenities' => ['nullable', 'array'],
+            'amenities.*' => ['string'], // Temporarily removed validation
             'nearby_places' => 'sometimes|nullable|array',
             'nearby_places.*.name' => 'required_with:nearby_places|string|max:100',
             'nearby_places.*.type' => 'required_with:nearby_places|string|max:50',

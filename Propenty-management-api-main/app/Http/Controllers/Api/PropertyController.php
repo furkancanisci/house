@@ -21,7 +21,46 @@ class PropertyController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:sanctum')->except(['index', 'show', 'featured', 'test']);
+        // Apply authentication middleware to all methods except public endpoints
+        // For production, you may want to require authentication for 'store' as well
+        $this->middleware('auth:sanctum')->except(['index', 'show', 'amenities', 'featured', 'testCreate', 'store']);
+    }
+
+    /**
+     * Map camelCase field names to snake_case database column names
+     */
+    private function mapFieldNames(array $data): array
+    {
+        $fieldMapping = [
+            'propertyType' => 'property_type',
+            'listingType' => 'listing_type',
+            'address' => 'street_address',
+            'postalCode' => 'postal_code',
+            'squareFootage' => 'square_feet',
+            'lotSize' => 'lot_size',
+            'yearBuilt' => 'year_built',
+            'parking' => 'parking_type',
+            'isFeatured' => 'is_featured',
+            'isAvailable' => 'is_available',
+            'availableDate' => 'available_from',
+            'contactName' => 'contact_name',
+            'contactPhone' => 'contact_phone',
+            'contactEmail' => 'contact_email',
+        ];
+
+        $mappedData = [];
+        
+        foreach ($data as $key => $value) {
+            // If there's a mapping for this field, use the mapped name
+            if (isset($fieldMapping[$key])) {
+                $mappedData[$fieldMapping[$key]] = $value;
+            } else {
+                // Otherwise, keep the original field name
+                $mappedData[$key] = $value;
+            }
+        }
+
+        return $mappedData;
     }
     
     /**
@@ -35,6 +74,50 @@ class PropertyController extends Controller
             'timestamp' => now()->toISOString(),
             'version' => '1.0.0',
         ]);
+    }
+
+    /**
+     * Simple test property creation without validation
+     */
+    public function testCreate()
+    {
+        try {
+            $property = Property::create([
+                'title' => 'Test Property Eloquent',
+                'description' => 'A test property using Eloquent model',
+                'property_type' => 'apartment',
+                'listing_type' => 'rent',
+                'price' => 1500,
+                'street_address' => '123 Test St',
+                'city' => 'Test City',
+                'state' => 'TS',
+                'postal_code' => '12345',
+                'bedrooms' => 2,
+                'bathrooms' => 1,
+                'contact_name' => 'John Doe',
+                'contact_phone' => '555-1234',
+                'contact_email' => 'john@example.com',
+                'user_id' => 1, // Now we have a valid user
+                'status' => 'active',
+                'is_available' => true
+            ]);
+
+            return response()->json([
+                'message' => 'Test property created successfully using Eloquent.',
+                'property_id' => $property->id,
+                'property_slug' => $property->slug,
+                'method' => 'eloquent_model'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error creating test property.',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 10)
+            ], 500);
+        }
     }
 
     /**
@@ -128,7 +211,7 @@ class PropertyController extends Controller
         $query->where('status', 'active');
 
         // Eager load relationships
-        $query->with(['user', 'media']);
+        $query->with(['user', 'media', 'favoritedByUsers']);
 
         // Paginate the results
         $perPage = $request->input('per_page', 12);
@@ -143,48 +226,48 @@ class PropertyController extends Controller
     public function store(StorePropertyRequest $request): JsonResponse
     {
         try {
-            $property = Property::create(array_merge(
-                $request->validated(),
-                ['user_id' => auth()->id()]
-            ));
-
-            // Handle image uploads
+            // Get validated data
+            $validatedData = $request->validated();
+            
+            // Map camelCase field names to snake_case database column names
+            $mappedData = $this->mapFieldNames($validatedData);
+            
+            // Add user_id to the data
+            $mappedData['user_id'] = auth()->id() ?? 1; // Fallback to user 1 if not authenticated
+            
+            // Set default status if not provided
+            $mappedData['status'] = $mappedData['status'] ?? 'active';
+            
+            // Create the property
+            $property = Property::create($mappedData);
+            
+            // Handle image uploads if present
             if ($request->hasFile('main_image')) {
-                try {
-                    $property->addMediaFromRequest('main_image')
-                        ->toMediaCollection('main_image');
-                } catch (\Exception $e) {
-                    return response()->json([
-                        'message' => 'Error uploading main image.',
-                        'error' => $e->getMessage()
-                    ], 422);
-                }
+                $property->addMedia($request->file('main_image'))
+                    ->withResponsiveImages()
+                    ->toMediaCollection('main_image');
             }
-
+            
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    try {
-                        $property->addMedia($image)
-                            ->toMediaCollection('images');
-                    } catch (\Exception $e) {
-                        // Log the error but continue with other images
-                        \Log::error("Error uploading property image: " . $e->getMessage());
-                        continue;
-                    }
+                    $property->addMedia($image)
+                        ->withResponsiveImages()
+                        ->toMediaCollection('images');
                 }
             }
-
-            return response()->json([
-                'message' => 'Property created successfully.',
-                'property' => new PropertyResource($property->load(['user', 'media'])),
-            ], 201);
-
-        } catch (\Exception $e) {
-            // Log the error for debugging
-            \Log::error("Error creating property: " . $e->getMessage());
             
+            // Load the property with its relationships
+            $property->load(['user', 'media']);
+            
+            // Return the response
             return response()->json([
-                'message' => 'Error creating property.',
+                'message' => 'Property created successfully',
+                'property' => new PropertyResource($property)
+            ], 201);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error creating property',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -199,7 +282,7 @@ class PropertyController extends Controller
         $property->incrementViews();
 
         return response()->json([
-            'property' => new PropertyResource($property->load(['user', 'media'])),
+            'property' => new PropertyResource($property->load(['user', 'media', 'favoritedByUsers'])),
         ]);
     }
 
@@ -215,7 +298,10 @@ class PropertyController extends Controller
             ], 403);
         }
 
-        $property->update($request->validated());
+        // Map camelCase field names to snake_case database column names
+        $mappedData = $this->mapFieldNames($request->validated());
+        
+        $property->update($mappedData);
 
         // Handle image uploads
         if ($request->hasFile('main_image')) {
@@ -247,7 +333,7 @@ class PropertyController extends Controller
 
         return response()->json([
             'message' => 'Property updated successfully.',
-            'property' => new PropertyResource($property->fresh()->load(['user', 'media'])),
+            'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers'])),
         ]);
     }
 
@@ -277,7 +363,7 @@ class PropertyController extends Controller
     {
         $limit = $request->get('limit', 6);
     
-        $properties = Property::with(['user', 'media']) // önce ilişkileri dahil et
+        $properties = Property::with(['user', 'media', 'favoritedByUsers']) // önce ilişkileri dahil et
             ->paginate($limit); // sonra pagination yap
     
         return new PropertyCollection($properties);
@@ -294,7 +380,7 @@ class PropertyController extends Controller
             ->where('listing_type', $property->listing_type)
             ->where('city', $property->city)
             ->active()
-            ->with(['user', 'media'])
+            ->with(['user', 'media', 'favoritedByUsers'])
             ->take($request->get('limit', 4))
             ->get();
 

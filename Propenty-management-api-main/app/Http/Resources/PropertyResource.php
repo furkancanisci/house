@@ -79,9 +79,15 @@ class PropertyResource extends JsonResource
             // Statistics
             'stats' => [
                 'views_count' => $this->views_count,
-                'favorites_count' => $this->favoritedByUsers()->count(),
+                'favorites_count' => $this->whenLoaded('favoritedByUsers', function () {
+                    return $this->favoritedByUsers->count();
+                }, 0),
                 'is_favorited' => $this->when(auth()->check(), function () {
-                    return $this->is_favorited_by_auth_user;
+                    // Use loaded relationship if available, otherwise return false to avoid query
+                    if ($this->relationLoaded('favoritedByUsers')) {
+                        return $this->favoritedByUsers->contains('id', auth()->id());
+                    }
+                    return false;
                 }),
             ],
             
