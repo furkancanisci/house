@@ -43,7 +43,7 @@ const propertySchema = z.object({
   address: z.string().min(1, 'Address is required'),
   price: z.number().min(1, 'Price must be greater than 0'),
   listingType: z.enum(['rent', 'sale']),
-  propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse']),
+  propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
   bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater'),
   bathrooms: z.number().min(0, 'Bathrooms must be 0 or greater'),
   squareFootage: z.number().min(1, 'Square footage must be greater than 0'),
@@ -376,6 +376,11 @@ const EditProperty: React.FC = () => {
                           <SelectItem value="house">House</SelectItem>
                           <SelectItem value="condo">Condo</SelectItem>
                           <SelectItem value="townhouse">Townhouse</SelectItem>
+                          <SelectItem value="studio">Studio</SelectItem>
+                          <SelectItem value="loft">Loft</SelectItem>
+                          <SelectItem value="villa">Villa</SelectItem>
+                          <SelectItem value="commercial">Commercial</SelectItem>
+                          <SelectItem value="land">Land</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -608,9 +613,10 @@ const EditProperty: React.FC = () => {
                         <FixedImage
                           src={image.url || image.original_url}
                           alt={`Property image ${index + 1}`}
-                          className={`w-full h-32 object-cover rounded-lg border ${
+                          className={`w-full h-32 object-cover rounded-lg border shadow-sm ${
                             imagesToRemove.includes(image.id) ? 'opacity-50 grayscale' : ''
                           }`}
+                          showLoadingSpinner={true}
                         />
                         {!imagesToRemove.includes(image.id) ? (
                           <button
@@ -676,10 +682,11 @@ const EditProperty: React.FC = () => {
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {imagePreviewUrls.map((url, index) => (
                         <div key={index} className="relative group">
-                          <img
+                          <FixedImage
                             src={url}
                             alt={`New image ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg border"
+                            className="w-full h-32 object-cover rounded-lg border shadow-sm"
+                            showLoadingSpinner={true}
                           />
                           <button
                             type="button"

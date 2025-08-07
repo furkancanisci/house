@@ -16,19 +16,25 @@ import { Card, CardContent, CardFooter } from './ui/card';
 import { Badge } from './ui/badge';
 import { useTranslation } from 'react-i18next';
 import FixedImage from './FixedImage';
+import PropertyImageGallery from './PropertyImageGallery';
+import { processPropertyImages } from '../lib/imageUtils';
 
 interface PropertyCardProps {
   property: ExtendedProperty;
   view?: 'grid' | 'list';
+  useGallery?: boolean; // Whether to use gallery for multiple images
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid' }) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', useGallery = false }) => {
   const { t } = useTranslation();
   const { state, toggleFavorite } = useApp();
   const { favorites, user } = state;
   // Ensure we use the slug for the property link
   const propertySlug = property.slug || property.id.toString();
   const isFavorite = favorites.includes(property.id.toString());
+  
+  // Process property images to ensure we have proper images
+  const { mainImage, images } = processPropertyImages(property, property.propertyType || property.property_type);
 
   const formatPrice = (price: any, listingType: string = 'sale') => {
     try {
@@ -71,7 +77,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid' }) 
           <div className="md:flex-shrink-0">
             <FixedImage
               className="h-48 w-full object-cover md:w-48"
-              src={property.mainImage || '/placeholder-property.jpg'}
+              src={mainImage}
               alt={property.title}
             />
           </div>
@@ -161,11 +167,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid' }) 
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <Link to={`/property/${propertySlug}`}>
         <div className="relative">
-          <FixedImage
-            src={property.mainImage || '/placeholder-property.jpg'}
-            alt={property.title}
-            className="h-48 w-full object-cover"
-          />
+          {useGallery && images.length > 1 ? (
+            <PropertyImageGallery
+              images={images}
+              alt={property.title}
+              className="h-48 w-full object-cover"
+              showThumbnails={false}
+            />
+          ) : (
+            <FixedImage
+              src={mainImage}
+              alt={property.title}
+              className="h-48 w-full object-cover"
+            />
+          )}
           <Badge 
             className={`absolute top-2 left-2 ${
               property.listingType === 'rent' ? 'bg-green-500' : 'bg-blue-500'

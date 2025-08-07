@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { ExtendedProperty, SearchFilters as SearchFiltersType } from '../types';
 import { Button } from '../components/ui/button';
 import { LayoutGrid, List, Loader2, X } from 'lucide-react';
+import { processPropertyImages } from '../lib/imageUtils';
 
 interface SearchParams extends Record<string, string | undefined> {
   q?: string;
@@ -296,6 +297,9 @@ const Search: React.FC = () => {
                     (property as any).details?.square_footage || 
                     0;
 
+                  // Process images to ensure we have proper images
+                  const { mainImage, images } = processPropertyImages(property, property.property_type || 'apartment');
+
                   const mappedProperty: ExtendedProperty = {
                     ...property,
                     id: property.id,
@@ -314,12 +318,8 @@ const Search: React.FC = () => {
                     },
                     squareFootage: squareFootage,
                     yearBuilt: (property as any).year_built || new Date().getFullYear(),
-                    mainImage: Array.isArray(property.media) && property.media[0]?.url
-                      ? property.media[0].url
-                      : '/placeholder-property.jpg',
-                    images: Array.isArray(property.media)
-                      ? property.media.map((m: any) => m?.url).filter(Boolean)
-                      : [],
+                    mainImage: mainImage,
+                    images: images,
                     features: (property as any).features || [],
                     address: (property as any).address || `${property.city || ''} ${property.state || ''}`.trim(),
                     coordinates: {
@@ -353,6 +353,7 @@ const Search: React.FC = () => {
                       key={mappedProperty.id.toString()}
                       property={mappedProperty}
                       view={viewMode}
+                      useGallery={true}
                     />
                   );
                 })}
