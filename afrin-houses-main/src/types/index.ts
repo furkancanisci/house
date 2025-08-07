@@ -5,7 +5,7 @@ export interface Property {
   address: string;
   price: number;
   listingType: 'rent' | 'sale';
-  propertyType: 'apartment' | 'house' | 'condo' | 'townhouse';
+  propertyType: 'apartment' | 'house' | 'condo' | 'townhouse' | 'studio' | 'loft' | 'villa' | 'commercial' | 'land';
   bedrooms: number;
   bathrooms: number;
   squareFootage: number;
@@ -137,7 +137,7 @@ export interface PropertyFormData {
   address: string;
   price: number;
   listingType: 'rent' | 'sale';
-  propertyType: 'apartment' | 'house' | 'condo' | 'townhouse';
+  propertyType: 'apartment' | 'house' | 'condo' | 'townhouse' | 'studio' | 'loft' | 'villa' | 'commercial' | 'land';
   bedrooms: number;
   bathrooms: number;
   squareFootage: number;
