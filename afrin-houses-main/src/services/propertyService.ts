@@ -82,12 +82,24 @@ export interface PropertyFilters {
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
+  search?: string;
+  searchQuery?: string;
 }
 
 export const getProperties = async (filters: PropertyFilters = {}) => {
   try {
     // Map frontend filters to backend API parameters
     const params: Record<string, any> = {};
+    
+    // Handle search query - use 'search' parameter to match backend expectation
+    const searchQuery = filters.searchQuery || filters.search;
+    if (searchQuery) {
+      console.log('Search query found:', searchQuery);
+      // Use 'search' parameter to match backend expectation
+      params.search = searchQuery;
+      // Also include 'q' parameter for backward compatibility
+      params.q = searchQuery;
+    }
     
     // Basic filters
     if (filters.listingType && filters.listingType !== 'all') {
@@ -168,22 +180,37 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     console.log('Sending property filters to API:', params);
     const response = await api.get('/properties', { params });
     
+    // Log the full response for debugging
+    console.log('API Response:', response);
+    
     // Ensure we always return a consistent response structure
     if (!response || !response.data) {
+      console.warn('No data in API response');
       return [];
     }
     
     // Handle different response structures and fix image URLs
     let properties = [];
-    if (Array.isArray(response.data)) {
-      properties = response.data;
-    } else if (response.data.data && Array.isArray(response.data.data)) {
-      // Handle Laravel paginated response
+    
+    // Check if the response has a data property that contains the array of properties
+    if (response.data.data && Array.isArray(response.data.data)) {
+      // Handle paginated response (Laravel default)
+      console.log('Found properties in response.data.data');
       properties = response.data.data;
+    } else if (Array.isArray(response.data)) {
+      // Handle direct array response
+      console.log('Found properties directly in response.data');
+      properties = response.data;
+    } else if (response.data.properties && Array.isArray(response.data.properties)) {
+      // Handle response with properties key (alternative format)
+      console.log('Found properties in response.data.properties');
+      properties = response.data.properties;
     } else {
-      console.warn('Unexpected API response structure:', response.data);
+      console.warn('Unexpected API response structure. Response data:', response.data);
       return [];
     }
+    
+    console.log(`Found ${properties.length} properties in API response`);
     
     // Fix image URLs in all properties
     return properties.map((property: any) => {

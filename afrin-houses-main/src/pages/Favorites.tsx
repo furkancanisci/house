@@ -41,12 +41,28 @@ const Favorites: React.FC = () => {
 
     // Get favorited properties
     let favProps = properties
-      .filter(p => favorites.includes(p.id))
+      .filter(p => favorites.includes(p.id.toString()))
       .map(property => ({
         ...property,
+        propertyType: property.property_type,
+        listingType: property.listing_type,
+        squareFootage: property.square_feet || 0,
+        zipCode: property.zip_code || '',
+        formattedPrice: typeof property.price === 'number' ? `$${property.price.toLocaleString()}` : property.price,
+        formattedBeds: property.bedrooms ? `${property.bedrooms} ${property.bedrooms === 1 ? 'bed' : 'beds'}` : '0 beds',
+        formattedBaths: property.bathrooms ? `${property.bathrooms} ${property.bathrooms === 1 ? 'bath' : 'baths'}` : '0 baths',
+        formattedSquareFootage: property.square_feet ? `${property.square_feet.toLocaleString()} sq ft` : '0 sq ft',
+        formattedAddress: [property.address, property.city, property.state, property.zip_code].filter(Boolean).join(', '),
+        formattedPropertyType: property.property_type || 'Property',
+        formattedDate: property.created_at ? new Date(property.created_at).toLocaleDateString() : 'N/A',
+        isFavorite: true,
+        images: property.media ? property.media.map(m => m.url) : [],
+        mainImage: property.media?.find(m => m.is_featured)?.url || (property.media?.[0]?.url || ''),
         details: {
           bedrooms: property.bedrooms || 0,
           bathrooms: property.bathrooms || 0,
+          squareFootage: property.square_feet || 0,
+          yearBuilt: property.year_built,
         },
         slug: (property as any).slug || `property-${property.id}`,
         property_type: property.propertyType,
@@ -68,19 +84,31 @@ const Favorites: React.FC = () => {
     // Apply sort
     switch (sortBy) {
       case 'price-asc':
-        favProps.sort((a, b) => a.price - b.price);
+        favProps.sort((a, b) => {
+          const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price as string) || 0;
+          const priceB = typeof b.price === 'number' ? b.price : parseFloat(b.price as string) || 0;
+          return priceA - priceB;
+        });
         break;
       case 'price-desc':
-        favProps.sort((a, b) => b.price - a.price);
+        favProps.sort((a, b) => {
+          const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price as string) || 0;
+          const priceB = typeof b.price === 'number' ? b.price : parseFloat(b.price as string) || 0;
+          return priceB - priceA;
+        });
         break;
       case 'title-asc':
-        favProps.sort((a, b) => a.title.localeCompare(b.title));
+        favProps.sort((a, b) => (a.title || '').toString().localeCompare((b.title || '').toString()));
         break;
       case 'date-added':
       default:
         // Sort by when they were added to favorites (most recent first)
-        // For demo purposes, we'll sort by date posted
-        favProps.sort((a, b) => new Date(b.datePosted).getTime() - new Date(a.datePosted).getTime());
+        // Fallback to current date if created_at is not available
+        favProps.sort((a, b) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA;
+        });
         break;
     }
 

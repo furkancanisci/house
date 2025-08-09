@@ -210,14 +210,23 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       
       // Handle different filter types
       if (value === 'any' || value === 'all' || value === '') {
-        // Remove the filter if 'any', 'all' or empty string is selected
-        delete newValues[key as keyof SearchFiltersType];
+        // Set to undefined instead of deleting to maintain form state
+        if (key === 'bedrooms' || key === 'bathrooms') {
+          newValues[key] = undefined;
+        } else if (key === 'listingType') {
+          newValues.listingType = 'all';
+        } else if (key in newValues) {
+          delete newValues[key as keyof SearchFiltersType];
+        }
       } else {
-        // Otherwise, update the filter value with proper type casting
-        if (key === 'listingType' && (value === 'rent' || value === 'sale')) {
-          newValues.listingType = value;
+        // Update the filter value with proper type casting
+        if (key === 'listingType' && (value === 'rent' || value === 'sale' || value === 'all')) {
+          newValues.listingType = value === 'all' ? undefined : value;
         } else if (key === 'bedrooms' || key === 'bathrooms') {
-          (newValues as any)[key] = Number(value);
+          const numValue = Number(value);
+          if (!isNaN(numValue)) {
+            (newValues as any)[key] = numValue;
+          }
         } else if (key === 'minSquareFootage' || key === 'maxSquareFootage') {
           const numValue = Number(value);
           if (!isNaN(numValue)) {
@@ -229,15 +238,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           newValues.location = value;
         } else if (key === 'features' && Array.isArray(value)) {
           newValues.features = value;
-        }
-      }
-      
-      // Special handling for listing type
-      if (key === 'listingType') {
-        if (value === 'all') {
-          delete newValues.listingType;
-        } else {
-          newValues.listingType = value as 'rent' | 'sale';
         }
       }
       
@@ -402,12 +402,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
             <Label>{t('filters.bedrooms')}</Label>
             <Select
               value={formValues.bedrooms?.toString() || 'any'}
-              onValueChange={(value) => handleFilterChange('bedrooms', value === 'any' ? undefined : Number(value))}
+              onValueChange={(value) => handleFilterChange('bedrooms', value === 'any' ? '' : value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('filters.any')}>
-                  {formValues.bedrooms ? `${formValues.bedrooms}+` : t('filters.any')}
-                </SelectValue>
+                <SelectValue>{formValues.bedrooms ? `${formValues.bedrooms}+` : t('filters.any')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {bedroomOptions.map((option) => (
@@ -418,15 +416,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
               </SelectContent>
             </Select>
           </div>
-          
           <div className="space-y-2">
             <Label>{t('filters.bathrooms')}</Label>
             <Select
               value={formValues.bathrooms?.toString() || 'any'}
-              onValueChange={(value) => handleFilterChange('bathrooms', value === 'any' ? undefined : Number(value))}
+              onValueChange={(value) => handleFilterChange('bathrooms', value === 'any' ? '' : value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('filters.any')} />
+                <SelectValue>{formValues.bathrooms ? `${formValues.bathrooms}+` : t('filters.any')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {bathroomOptions.map((option) => (

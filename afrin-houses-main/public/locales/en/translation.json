@@ -48,6 +48,8 @@
     "title": "Search Results",
     "propertiesFound": "{{count}} property found",
     "propertiesFoundPlural": "{{count}} properties found",
+    "debugInfo": "Showing {{count}} properties",
+    "tryAdjustingFilters": "Try adjusting your search filters",
     "matchingCriteria": "matching your criteria",
     "filters": "Filters",
     "clearAll": "Clear All",

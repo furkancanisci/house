@@ -136,6 +136,13 @@ class PropertyController extends Controller
             'all_params' => $filters
         ]);
         
+        // Debug: Log all request headers
+        \Log::info('Request Headers:', [
+            'headers' => $request->headers->all(),
+            'token' => $request->bearerToken(),
+            'has_token' => $request->bearerToken() ? 'yes' : 'no'
+        ]);
+        
         // Start building the query
         $query = Property::query();
         
@@ -175,18 +182,33 @@ class PropertyController extends Controller
             $query->where('property_type', $request->property_type);
         }
 
-        // Apply search query if present
-        if ($request->has('search') && !empty($request->search)) {
-            $searchTerm = $request->search;
+        // Apply search query if present - check both 'search' and 'q' parameters
+        $searchTerm = $request->input('search', $request->input('q'));
+        if (!empty($searchTerm)) {
+            \Log::info('Searching for term:', ['term' => $searchTerm, 'all_params' => $request->all()]);
+            
+            // Make search case-insensitive and trim whitespace
+            $searchTerm = strtolower(trim($searchTerm));
+            $searchTerm = "%$searchTerm%";
             
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'LIKE', '%' . $searchTerm . '%')
-                  ->orWhere('description', 'LIKE', '%' . $searchTerm . '%')
-                  ->orWhere('property_type', 'LIKE', '%' . $searchTerm . '%')
-                  ->orWhere('city', 'LIKE', '%' . $searchTerm . '%')
-                  ->orWhere('state', 'LIKE', '%' . $searchTerm . '%')
-                  ->orWhere('street_address', 'LIKE', '%' . $searchTerm . '%');
+                $q->whereRaw('LOWER(title) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(description) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(property_type) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(city) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(state) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(street_address) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(neighborhood) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(landmark) LIKE ?', [$searchTerm])
+                  ->orWhereRaw('LOWER(amenities) LIKE ?', [$searchTerm]);
             });
+            
+            // Debug: Log the final SQL query
+            \Log::info('Final Search Query:', [
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings(),
+                'search_term' => $searchTerm
+            ]);
         }
 
         
@@ -201,11 +223,24 @@ class PropertyController extends Controller
             $query->latest();
         }
 
-        // Log the final SQL query
-        \Log::info('Final SQL Query:', [
+        // Log the final SQL query and result count
+        $resultCount = $query->count();
+        \Log::info('Final SQL Query and Result Count:', [
             'sql' => $query->toSql(),
-            'bindings' => $query->getBindings()
+            'bindings' => $query->getBindings(),
+            'result_count' => $resultCount,
+            'status_filter' => $query->where('status', 'active')->count()
         ]);
+        
+        if ($resultCount === 0) {
+            \Log::info('No properties found with current filters. Total properties in DB: ' . \App\Models\Property::count());
+            \Log::info('Sample property titles: ', 
+                \App\Models\Property::select('id', 'title', 'status')
+                    ->limit(5)
+                    ->get()
+                    ->toArray()
+            );
+        }
 
         // Ensure only active properties are returned
         $query->where('status', 'active');
@@ -216,7 +251,6 @@ class PropertyController extends Controller
         // Paginate the results
         $perPage = $request->input('per_page', 12);
         $properties = $query->paginate($perPage);
-
         return new PropertyCollection($properties);
     }
 

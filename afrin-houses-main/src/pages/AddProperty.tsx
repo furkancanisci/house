@@ -271,24 +271,29 @@ const AddProperty: React.FC = () => {
         price: parseFloat(data.price.toString()),
         listingType: data.listingType,
         propertyType: data.propertyType,
-        bedrooms: Number(data.bedrooms),
-        bathrooms: Number(data.bathrooms),
+        bedrooms: Number(data.bedrooms || 0),
+        bathrooms: Number(data.bathrooms || 0),
         squareFootage: Number(data.squareFootage || 0),
-        description: data.description,
-        amenities: selectedFeatures, // Backend expects 'amenities' instead of 'features'
-        images: selectedImages.slice(1), // All images except the first one
-        mainImage: selectedImages[0] || null, // First image as main image
-        yearBuilt: Number(data.yearBuilt),
-        availableDate: data.availableDate,
-        petPolicy: data.petPolicy,
-        parking: data.parking,
-        utilities: data.utilities,
+        description: data.description || '',
+        // Ensure features is included as an array of strings
+        features: Array.isArray(selectedFeatures) ? selectedFeatures : [],
+        amenities: Array.isArray(selectedFeatures) ? selectedFeatures : [],
+        // Convert File objects to strings for the Property type
+        images: selectedImages.map(file => file.name), // Using file names as placeholders
+        // The actual file upload is handled by the API service
+        imageFiles: selectedImages, // Keep the actual files for upload
+        mainImage: selectedImages[0]?.name || '', // First image as main image
+        yearBuilt: Number(data.yearBuilt || new Date().getFullYear()),
+        availableDate: data.availableDate || new Date().toISOString(),
+        petPolicy: data.petPolicy || '',
+        parking: data.parking || '',
+        utilities: data.utilities || '',
         lotSize: Number(data.lotSize || 0),
-        garage: data.garage,
-        heating: data.heating,
-        hoaFees: data.hoaFees,
-        building: data.building,
-        pool: data.pool,
+        garage: data.garage || '',
+        heating: data.heating || '',
+        hoaFees: data.hoaFees || '',
+        building: data.building || '',
+        pool: data.pool || '',
         contact: {
           name: data.contactName || '',
           phone: data.contactPhone || '',

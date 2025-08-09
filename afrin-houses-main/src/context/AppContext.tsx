@@ -139,54 +139,86 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const response = await getProperties();
       console.log('DEBUG: Properties API response:', response);
       
-      // Handle different response structures safely
-      let propertiesData = [];
+      // Handle different response structures safely with proper type checking
+      let propertiesData: any[] = [];
+      
+      // Check if response is an array
       if (Array.isArray(response)) {
         propertiesData = response;
-      } else if (response && Array.isArray(response.data)) {
-        propertiesData = response.data;
-      } else if (response && response.data && Array.isArray(response.data.data)) {
-        propertiesData = response.data.data;
-      } else {
+      } 
+      // Check if response has a data property that is an array
+      else if (response && typeof response === 'object' && 'data' in response && Array.isArray((response as any).data)) {
+        propertiesData = (response as any).data;
+      } 
+      // Check if response has a nested data.data array (pagination structure)
+      else if (response && typeof response === 'object' && 'data' in response && 
+               (response as any).data && typeof (response as any).data === 'object' && 
+               'data' in (response as any).data && Array.isArray((response as any).data.data)) {
+        propertiesData = (response as any).data.data;
+      } 
+      // Handle unexpected response structure
+      else {
         console.warn('Unexpected properties API response structure:', response);
         propertiesData = [];
       }
       
       console.log('DEBUG: Extracted properties data:', propertiesData);
       
-      const properties = propertiesData.map((property: any) => ({
-        id: property.id.toString(),
-        slug: property.slug,
-        title: property.title,
-        address: property.location?.full_address || `${property.street_address || ''}, ${property.city || ''}, ${property.state || ''} ${property.postal_code || ''}`,
-        price: property.price?.amount || property.price || 0,
-        propertyType: property.property_type,
-        listingType: property.listing_type,
-        bedrooms: property.details?.bedrooms || property.bedrooms || 0,
-        bathrooms: property.details?.bathrooms || property.bathrooms || 0,
-        squareFootage: property.details?.square_feet || property.square_feet || 0,
-        description: property.description || '',
-        features: property.amenities || [],
-        images: property.images?.gallery?.map((img: any) => img.url) || [],
-        mainImage: property.images?.main || property.main_image || '/placeholder-property.jpg',
-        yearBuilt: property.details?.year_built || property.year_built,
-        coordinates: {
-          lat: property.location?.coordinates?.latitude || property.latitude || 0,
-          lng: property.location?.coordinates?.longitude || property.longitude || 0
-        },
-        contact: {
-          name: property.owner?.full_name || property.contact_name || 'Agent',
-          phone: property.owner?.phone || property.contact_phone || '',
-          email: property.owner?.email || property.contact_email || ''
-        },
-        datePosted: property.created_at,
-        availableDate: property.available_from,
-        petPolicy: property.details?.pet_policy || property.pet_policy,
-        parking: property.details?.parking?.type || property.parking_type,
-        lotSize: property.details?.lot_size || property.lot_size,
-        garage: (property.details?.parking?.type === 'garage' || property.parking_type === 'garage') ? 'Yes' : 'No',
-        building: property.details?.building_name || property.building_name
-      }));
+      const properties: Property[] = propertiesData.map((property: any) => {
+        // Extract address components
+        const streetAddress = property.street_address || '';
+        const city = property.city || '';
+        const state = property.state || '';
+        const zipCode = property.postal_code || property.zip_code || '';
+        const country = property.country || '';
+        const fullAddress = property.location?.full_address || 
+          [streetAddress, city, state, zipCode].filter(Boolean).join(', ');
+        
+        return {
+          // Required fields
+          id: property.id.toString(),
+          title: property.title || 'Untitled Property',
+          description: property.description || '',
+          price: property.price?.amount || property.price || 0,
+          address: fullAddress,
+          city: city,
+          state: state,
+          zip_code: zipCode,
+          country: country,
+          property_type: property.property_type || 'house',
+          listing_type: property.listing_type || 'sale',
+          
+          // Optional fields with defaults
+          bedrooms: property.details?.bedrooms || property.bedrooms || 0,
+          bathrooms: property.details?.bathrooms || property.bathrooms || 0,
+          square_feet: property.details?.square_feet || property.square_feet || 0,
+          year_built: property.details?.year_built || property.year_built,
+          
+          // Status and metadata
+          status: property.status || 'available',
+          is_featured: property.is_featured || false,
+          created_at: property.created_at || new Date().toISOString(),
+          updated_at: property.updated_at || new Date().toISOString(),
+          user_id: property.user_id || null,
+          
+          // Media
+          media: (property.images?.gallery || []).map((img: any, index: number) => ({
+            id: img.id || index,
+            url: img.url || img,
+            type: 'image',
+            is_featured: img.is_featured || false
+          })),
+          
+          // Additional fields
+          slug: property.slug || `property-${property.id}`,
+          features: property.amenities || property.features || [],
+          latitude: property.location?.coordinates?.latitude || property.latitude,
+          longitude: property.location?.coordinates?.longitude || property.longitude,
+          
+          // Extended fields (will be ignored by TypeScript but kept for backward compatibility)
+          ...(property as any)
+        } as Property;
+      });
       
       console.log('DEBUG: Transformed properties:', properties);
       dispatch({ type: 'SET_PROPERTIES', payload: properties });
@@ -204,6 +236,35 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     
     let filtered = [...state.properties];
 
+    // Handle search query - check both search and searchQuery for maximum compatibility
+    const searchQuery = filters.search || filters.searchQuery;
+    if (searchQuery) {
+      const query = searchQuery.toString().toLowerCase().trim();
+      if (query) {
+        filtered = filtered.filter(property => {
+          // Check various fields for matches
+          const searchableFields = [
+            property.title,
+            property.description,
+            property.property_type,
+            property.propertyType,
+            property.address,
+            property.city,
+            property.state,
+            property.postalCode,
+            property.country,
+            // Check if any feature matches
+            ...(property.features || [])
+          ];
+
+          // Check if any field includes the search query
+          return searchableFields.some(field => 
+            field && field.toString().toLowerCase().includes(query)
+          );
+        });
+      }
+    }
+
     if (filters.listingType && filters.listingType !== 'all') {
       filtered = filtered.filter(p => p.listingType === filters.listingType);
     }
@@ -213,19 +274,25 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     if (filters.minPrice !== undefined) {
-      filtered = filtered.filter(p => p.price >= filters.minPrice!);
+      filtered = filtered.filter(p => {
+        const price = typeof p.price === 'string' ? parseFloat(p.price) || 0 : p.price || 0;
+        return price >= (filters.minPrice || 0);
+      });
     }
 
     if (filters.maxPrice !== undefined) {
-      filtered = filtered.filter(p => p.price <= filters.maxPrice!);
+      filtered = filtered.filter(p => {
+        const price = typeof p.price === 'string' ? parseFloat(p.price) || 0 : p.price || 0;
+        return price <= (filters.maxPrice || Number.MAX_SAFE_INTEGER);
+      });
     }
 
     if (filters.bedrooms !== undefined) {
-      filtered = filtered.filter(p => p.bedrooms >= filters.bedrooms!);
+      filtered = filtered.filter(p => (p.bedrooms || 0) >= (filters.bedrooms || 0));
     }
 
     if (filters.bathrooms !== undefined) {
-      filtered = filtered.filter(p => p.bathrooms >= filters.bathrooms!);
+      filtered = filtered.filter(p => (p.bathrooms || 0) >= (filters.bathrooms || 0));
     }
 
     if (filters.minSquareFootage !== undefined) {
@@ -257,6 +324,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
+      // Extract imageFiles if they exist
+      const { imageFiles, ...propertyDataWithoutFiles } = propertyData;
+      
+      // If we have image files, we'll handle them in the API service
+      if (imageFiles && Array.isArray(imageFiles)) {
+        propertyData.images = imageFiles;
+      }
+      
       console.log('Sending property data to API service:', propertyData);
       const response = await createPropertyAPI(propertyData);
       
@@ -265,17 +340,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         id: response.property.id.toString(),
         slug: response.property.slug,
         title: response.property.title,
-        address: response.property.location?.full_address || `${response.property.address}, ${response.property.city}, ${response.property.state} ${response.property.postalCode}`,
+        description: response.property.description || '',
+        address: response.property.location?.full_address || `${response.property.address || ''}`,
+        city: response.property.city || '',
+        state: response.property.state || '',
+        zip_code: response.property.postalCode || response.property.zip_code || '',
+        country: response.property.country || '',
         price: response.property.price,
-        propertyType: response.property.propertyType,
-        listingType: response.property.listingType,
+        property_type: response.property.propertyType || response.property.property_type || '',
+        listing_type: response.property.listingType || 'sale',
         bedrooms: response.property.bedrooms,
         bathrooms: response.property.bathrooms,
-        squareFootage: response.property.squareFootage,
-        description: response.property.description,
-        features: response.property.amenities || [],
-        images: response.property.images?.gallery?.map((img: any) => img.url) || [],
-        mainImage: response.property.images?.main || '/placeholder-property.jpg',
+        square_feet: response.property.squareFootage || response.property.square_feet,
+        features: response.property.amenities || response.property.features || [],
+        images: response.property.images?.gallery?.map((img: any) => img.url) || 
+               (Array.isArray(response.property.images) ? response.property.images : []) || [],
+        mainImage: response.property.images?.main || 
+                 (Array.isArray(response.property.images) && response.property.images[0]) || 
+                 '/placeholder-property.jpg',
         yearBuilt: response.property.yearBuilt,
         coordinates: {
           lat: response.property.latitude || 0,
@@ -344,27 +426,50 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       const response = await updatePropertyAPI(Number(property.id), apiData);
       
-      // Transform API response back to frontend format
+      // Transform API response back to frontend format with all required fields
       const updatedProperty: Property = {
+        // Required fields
         id: response.property.id.toString(),
-        slug: response.property.slug,
-        title: response.property.title,
-        address: response.property.location.full_address,
-        price: response.property.price.amount,
-        propertyType: response.property.property_type,
-        listingType: response.property.listing_type,
-        bedrooms: response.property.details.bedrooms,
-        bathrooms: response.property.details.bathrooms,
-        squareFootage: response.property.details.square_feet,
-        description: response.property.description,
-        features: response.property.amenities || [],
-        images: response.property.images.gallery?.map((img: any) => img.url) || [],
-        mainImage: response.property.images.main || '/placeholder-property.jpg',
-        yearBuilt: response.property.details.year_built,
-        coordinates: {
-          lat: response.property.location.coordinates.latitude,
-          lng: response.property.location.coordinates.longitude
-        },
+        title: response.property.title || 'Untitled Property',
+        description: response.property.description || '',
+        price: response.property.price?.amount || response.property.price || 0,
+        address: response.property.location?.full_address || '',
+        city: response.property.location?.city || response.property.city || '',
+        state: response.property.location?.state || response.property.state || '',
+        zip_code: response.property.location?.postal_code || response.property.postal_code || response.property.zip_code || '',
+        country: response.property.location?.country || response.property.country || '',
+        property_type: response.property.property_type || 'house',
+        listing_type: response.property.listing_type || 'sale',
+        
+        // Optional fields with defaults
+        bedrooms: response.property.details?.bedrooms || response.property.bedrooms || 0,
+        bathrooms: response.property.details?.bathrooms || response.property.bathrooms || 0,
+        square_feet: response.property.details?.square_feet || response.property.square_feet || 0,
+        year_built: response.property.details?.year_built || response.property.year_built,
+        
+        // Status and metadata
+        status: response.property.status || 'available',
+        is_featured: response.property.is_featured || false,
+        created_at: response.property.created_at || new Date().toISOString(),
+        updated_at: response.property.updated_at || new Date().toISOString(),
+        user_id: response.property.user_id || null,
+        
+        // Media
+        media: (response.property.images?.gallery || []).map((img: any, index: number) => ({
+          id: img.id || index,
+          url: typeof img === 'string' ? img : (img.url || ''),
+          type: 'image',
+          is_featured: img.is_featured || false
+        })),
+        
+        // Additional fields
+        slug: response.property.slug || `property-${response.property.id}`,
+        features: response.property.amenities || response.property.features || [],
+        latitude: response.property.location?.coordinates?.latitude || response.property.latitude,
+        longitude: response.property.location?.coordinates?.longitude || response.property.longitude,
+        
+        // Include all other properties from the response for backward compatibility
+        ...(response.property as any),
         contact: {
           name: response.property.owner?.full_name || 'Agent',
           phone: response.property.owner?.phone || '',

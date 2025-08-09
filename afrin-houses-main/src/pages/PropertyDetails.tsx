@@ -78,31 +78,45 @@ const PropertyDetails: React.FC = () => {
           id: propertyData.id?.toString() || '',
           slug: propertyData.slug || `property-${propertyData.id || ''}`,
           title: propertyData.title || 'No Title',
-          address: propertyData.location?.street_address || '',
-          price: Number(propertyData.price?.amount) || 0,
-          propertyType: propertyData.property_type || 'apartment',
-          listingType: propertyData.listing_type || 'sale',
-          bedrooms: Number(propertyData.details?.bedrooms) || 0,
-          bathrooms: Number(propertyData.details?.bathrooms) || 0,
-          squareFootage: Number(propertyData.details?.square_feet) || 0,
+          address: propertyData.address || propertyData.location?.street_address || '',
+          city: propertyData.city || '',
+          state: propertyData.state || '',
+          zip_code: propertyData.zip_code || propertyData.zipCode || '',
+          country: propertyData.country || '',
+          price: propertyData.price || 0,
+          property_type: propertyData.property_type || propertyData.propertyType || 'apartment',
+          listing_type: propertyData.listing_type || propertyData.listingType || 'sale',
+          bedrooms: propertyData.bedrooms || Number(propertyData.details?.bedrooms) || 0,
+          bathrooms: propertyData.bathrooms || Number(propertyData.details?.bathrooms) || 0,
+          square_feet: propertyData.square_feet || propertyData.squareFootage || Number(propertyData.details?.square_feet) || 0,
+          year_built: propertyData.year_built || propertyData.yearBuilt,
           description: propertyData.description || '',
-          features: Array.isArray(propertyData.amenities) ? propertyData.amenities : [],
-          images: (() => {
-            const galleryImages = propertyData.images?.gallery?.map((img: any) => img.url).filter(Boolean) || [];
-            const mainImage = propertyData.images?.main;
-            
-            // If we have gallery images, use them
-            if (galleryImages.length > 0) {
-              return galleryImages;
+          features: propertyData.features || (Array.isArray(propertyData.amenities) ? propertyData.amenities : []),
+          media: (() => {
+            // Handle both the old format (images.gallery) and new format (media array)
+            if (propertyData.media && Array.isArray(propertyData.media)) {
+              return propertyData.media;
             }
             
-            // If no gallery images but we have a main image, use it
+            // Fallback to the old image format if media is not available
+            const galleryImages = propertyData.images?.gallery?.map((img: any) => ({
+              id: img.id || Math.random().toString(36).substr(2, 9),
+              url: img.url || img,
+              type: 'image',
+              is_featured: img.is_featured || false
+            })) || [];
+            
+            const mainImage = propertyData.images?.main || propertyData.mainImage;
             if (mainImage) {
-              return [mainImage];
+              galleryImages.unshift({
+                id: 'main',
+                url: typeof mainImage === 'string' ? mainImage : mainImage.url,
+                type: 'image',
+                is_featured: true
+              });
             }
             
-            // Fallback to placeholder
-            return ['/placeholder-property.jpg'];
+            return galleryImages.length > 0 ? galleryImages : ['/placeholder-property.jpg'];
           })(),
           mainImage: propertyData.images?.main || '/placeholder-property.jpg',
           yearBuilt: Number(propertyData.details?.year_built) || new Date().getFullYear(),
@@ -170,10 +184,13 @@ const PropertyDetails: React.FC = () => {
     );
   }
 
-  const isFavorite = favorites.includes(property.id);
+  // Ensure property.id is treated as a string for favorites comparison
+  const propertyId = String(property.id);
+  const isFavorite = favorites.includes(propertyId);
 
-  const formatPrice = (price: number | undefined, listingType: string) => {
-    const priceValue = price || 0;
+  const formatPrice = (price: number | string | undefined, listingType: string) => {
+    // Handle both string and number prices safely
+    const priceValue = typeof price === 'string' ? parseFloat(price) || 0 : price || 0;
     if (listingType === 'rent') {
       return `$${priceValue.toLocaleString()}/month`;
     }
@@ -196,7 +213,8 @@ const PropertyDetails: React.FC = () => {
     }
     
     try {
-      const wasFavorited = await toggleFavorite(property.id);
+      // Ensure property.id is passed as a string
+      const wasFavorited = await toggleFavorite(propertyId);
       toast.success(wasFavorited ? t('messages.addedToFavorites') : t('messages.removedFromFavorites'));
     } catch (error) {
       toast.error('Failed to update favorite');

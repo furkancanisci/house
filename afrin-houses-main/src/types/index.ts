@@ -1,103 +1,79 @@
 export interface Property {
-  id: string;
-  slug: string;
+  // Core property fields
+  id: string | number;
   title: string;
-  address: string;
-  price: number;
-  listingType: 'rent' | 'sale';
-  propertyType: 'apartment' | 'house' | 'condo' | 'townhouse';
-  bedrooms: number;
-  bathrooms: number;
-  squareFootage: number;
   description: string;
-  features: string[];
-  images: string[];
-  mainImage: string;
-  yearBuilt: number;
-  availableDate?: string;
-  petPolicy?: string;
-  parking?: string;
-  utilities?: string;
-  lotSize?: number;
-  garage?: string;
-  heating?: string;
-  hoaFees?: string;
-  building?: string;
-  pool?: string;
+  price: string | number;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  country: string;
+  
+  // Property details
+  property_type: string;
+  listing_type: 'rent' | 'sale';
+  bedrooms?: number;
+  bathrooms?: number;
+  square_feet?: number;
+  year_built?: number;
+  
+  // Status and metadata
+  status?: 'available' | 'pending' | 'sold' | 'rented';
+  is_featured?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string | number;
+  
+  // Media
   media?: Array<{
     id: number;
     url: string;
     type: string;
+    is_featured?: boolean;
   }>;
-  contact: {
-    name: string;
-    phone: string;
-    email: string;
-  };
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  datePosted: string;
+  
+  // Additional fields
+  slug?: string;
+  features?: string[];
+  latitude?: number | string;
+  longitude?: number | string;
+  
+  // For type safety with dynamic properties
+  [key: string]: any;
 }
 
-// Extended property type with all possible fields
-export interface ExtendedProperty extends Omit<Property, 'id' | 'address' | 'price' | 'propertyType' | 'listingType' | 'bedrooms' | 'bathrooms' | 'squareFootage' | 'features' | 'images' | 'mainImage' | 'contact' | 'datePosted'> {
-  id: string | number;  // Allow both string and number IDs
-  // Required fields from Property
-  address: string;
-  price: number;
+export interface ExtendedProperty extends Omit<Property, 'property_type' | 'listing_type' | 'square_feet' | 'zip_code' | 'created_at'> {
+  // Original property fields with overrides for consistent naming
   propertyType: string;
   listingType: 'rent' | 'sale';
   squareFootage: number;
-  features: string[];
-  images: string[];
-  mainImage: string;
-  contact: {
-    name: string;
-    phone: string;
-    email: string;
-  };
-  datePosted: string;  // Now required to match base Property interface
+  zipCode: string;
   
-  // Details object
+  // Formatted display values
+  formattedPrice: string;
+  formattedBeds: string;
+  formattedBaths: string;
+  formattedSquareFootage: string;
+  formattedAddress: string;
+  formattedPropertyType: string;
+  formattedDate: string;
+  
+  // UI state
+  isFavorite: boolean;
+  
+  // Additional display properties
+  mainImage?: string;
+  images: string[];
+  
+  // Details object for additional property information
   details: {
     bedrooms: number;
     bathrooms: number;
-    square_feet?: number;
+    squareFootage: number;
+    yearBuilt?: number;
     [key: string]: any;
   };
-
-  // Additional fields
-  slug: string;
-  bedrooms: number;
-  bathrooms: number;
-  // Backend fields (snake_case)
-  property_type?: string;
-  listing_type?: 'rent' | 'sale';
-  square_feet?: number;
-  year_built?: number;
-  is_featured?: boolean;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
-  user_id?: number;
-  media?: Array<{
-    id: number;
-    url: string;
-    type: string;
-  }>;
-  
-  // Aliases and computed fields
-  beds?: number;
-  baths?: number;
-  sqft?: number;
-  type?: string;
-  city?: string;
-  state?: string;
-  postal_code?: string;
-  latitude?: number;
-  longitude?: number;
 }
 
 export interface User {
@@ -130,6 +106,11 @@ export interface SearchFilters {
   location?: string;
   sortBy?: 'price' | 'date' | 'created_at';
   sortOrder?: 'asc' | 'desc';
+  searchQuery?: string; // Added to support search functionality
+  search?: string; // For API compatibility
+  // Pagination support
+  page?: number;
+  perPage?: number;
 }
 
 export interface PropertyFormData {

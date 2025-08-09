@@ -152,12 +152,20 @@ const EditProperty: React.FC = () => {
         setProperty(foundProperty);
         setSelectedFeatures(foundProperty.features);
         
-        // Load existing images
+        // Load existing images - handle different image formats safely
         if (foundProperty.images) {
-          if (foundProperty.images.gallery) {
-            setExistingImages(foundProperty.images.gallery);
-          } else if (Array.isArray(foundProperty.images)) {
+          // Handle case where images is an object with gallery property
+          if (foundProperty.images && typeof foundProperty.images === 'object' && 'gallery' in foundProperty.images) {
+            const gallery = (foundProperty.images as any).gallery;
+            setExistingImages(Array.isArray(gallery) ? gallery : []);
+          } 
+          // Handle case where images is directly an array
+          else if (Array.isArray(foundProperty.images)) {
             setExistingImages(foundProperty.images);
+          }
+          // Handle case where images is a string (single image URL)
+          else if (typeof foundProperty.images === 'string') {
+            setExistingImages([foundProperty.images]);
           }
         }
         
@@ -266,7 +274,11 @@ const EditProperty: React.FC = () => {
         imagesToRemove: imagesToRemove, // Existing images to remove
       };
 
-      await updateProperty(property.id!, updatedProperty);
+      // Update the property with a single object containing id and other properties
+      await updateProperty({
+        id: Number(property.id),
+        ...updatedProperty
+      });
       toast.success('Property updated successfully!');
       navigate('/dashboard');
     } catch (error) {
