@@ -102,12 +102,14 @@ const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, [user, navigate]);
 
-  const handleDeleteProperty = async (propertyId: string) => {
+  const handleDeleteProperty = async (propertyId: string | number) => {
     try {
-      await deleteProperty(propertyId);
+      // Convert propertyId to string for consistent comparison
+      const propertyIdStr = propertyId.toString();
+      await deleteProperty(propertyIdStr);
       // Update the local state to remove the deleted property
-      setUserProperties(prev => prev.filter(p => p.id !== propertyId));
-      setFavoriteProperties(prev => prev.filter(p => p.id !== propertyId));
+      setUserProperties(prev => prev.filter(p => p.id.toString() !== propertyIdStr));
+      setFavoriteProperties(prev => prev.filter(p => p.id.toString() !== propertyIdStr));
       toast.success('Property deleted successfully');
     } catch (error) {
       console.error('Error deleting property:', error);

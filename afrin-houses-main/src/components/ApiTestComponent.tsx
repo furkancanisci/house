@@ -22,7 +22,11 @@ const ApiTestComponent: React.FC = () => {
   const loadProperties = async () => {
     setLoading(true);
     try {
-      const data = await getProperties({ page: 1, perPage: 5 });
+      const data = await getProperties({ 
+        page: 1, 
+        limit: 5, // Use 'limit' instead of 'perPage' to match PropertyFilters interface
+        search: '' // Add required search property
+      });
       setProperties(data);
       console.log('Loaded properties:', data);
     } catch (error) {
@@ -35,7 +39,7 @@ const ApiTestComponent: React.FC = () => {
   const loadFeaturedProperties = async () => {
     setLoading(true);
     try {
-      const data = await getFeaturedProperties(3);
+      const data = await getFeaturedProperties({ limit: 3 });
       setProperties(data);
       console.log('Loaded featured properties:', data);
     } catch (error) {

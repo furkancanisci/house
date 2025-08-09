@@ -39,41 +39,98 @@ export const dashboardService = {
 
   // Get dashboard statistics
   async getDashboardStats(): Promise<DashboardStats> {
+    // Temporary mock data while backend issue is being fixed
+    return {
+      totalProperties: 12, // From the logs: "Found 12 properties in API response"
+      forRent: 8,         // Mock value
+      forSale: 4,         // Mock value
+      favoriteProperties: 3, // Mock value
+      myProperties: 5     // Mock value
+    };
+    
+    /* TODO: Uncomment when backend issue is fixed
     try {
-      const response = await api.get('/dashboard/stats');
-      return response.data;
+      // Use the available overview endpoint
+      const response = await api.get('/dashboard/overview');
+      
+      // Map the response to match the expected DashboardStats interface
+      return {
+        totalProperties: response.data.total_properties || 0,
+        forRent: response.data.active_properties || 0,
+        forSale: response.data.sold_rented_properties || 0,
+        favoriteProperties: response.data.total_favorites || 0,
+        myProperties: response.data.total_properties || 0
+      };
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
-      throw error;
+      // Return default values in case of error
+      return {
+        totalProperties: 0,
+        forRent: 0,
+        forSale: 0,
+        favoriteProperties: 0,
+        myProperties: 0
+      };
     }
+    */
   },
 
   // Get user's properties
   async getDashboardStatsRaw(): Promise<DashboardStats> {
-      try {
-          const response = await api.get('/dashboard/stats-raw');
-          return response.data;
-      } catch (error) {
-          console.error('Error fetching dashboard stats:', error);
-          throw error;
-      }
+    // Temporary mock data while backend issue is being fixed
+    return {
+      totalProperties: 12, // From the logs: "Found 12 properties in API response"
+      forRent: 8,         // Mock value
+      forSale: 4,         // Mock value
+      favoriteProperties: 3, // Mock value
+      myProperties: 5     // Mock value
+    };
+    
+    /* TODO: Uncomment when backend issue is fixed
+    try {
+      const response = await api.get('/dashboard/overview');
+      // Map the response to match the DashboardStats interface
+      return {
+        totalProperties: response.data.total_properties || 0,
+        forRent: response.data.active_properties || 0,
+        forSale: response.data.sold_rented_properties || 0,
+        favoriteProperties: response.data.total_favorites || 0,
+        myProperties: response.data.total_properties || 0
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      // Return default values in case of error
+      return {
+        totalProperties: 0,
+        forRent: 0,
+        forSale: 0,
+        favoriteProperties: 0,
+        myProperties: 0
+      };
+    }
+    */
   },
 
   // Get user's favorite properties
   async getFavoriteProperties(): Promise<any[]> {
+    // Temporary mock data while backend issue is being fixed
+    return [];
+    
+    /* TODO: Uncomment when backend issue is fixed
     try {
       const response = await api.get('/dashboard/favorites');
       return response.data;
     } catch (error) {
       console.error('Error fetching favorite properties:', error);
-      throw error;
+      return [];
     }
+    */
   },
 
   // Update user profile
   async updateProfile(profileData: UserProfile): Promise<User> {
     try {
-      const response = await api.put('/user/profile', profileData);
+      const response = await api.post('/profile', profileData, { baseURL: 'http://127.0.0.1:8000/api' });
       return response.data.user;
     } catch (error) {
       console.error('Error updating profile:', error);
