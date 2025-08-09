@@ -3,6 +3,8 @@
   "navigation": {
     "home": "Home",
     "search": "Search", 
+    "housesForRent": "Houses for Rent",
+    "housesForSale": "Houses for Sale",
     "favorites": "Favorites",
     "listProperty": "List Property",
     "dashboard": "Dashboard",

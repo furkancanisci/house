@@ -6,6 +6,8 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
+import HousesForRent from './pages/HousesForRent';
+import HousesForSale from './pages/HousesForSale';
 import Dashboard from './pages/Dashboard';
 import AddProperty from './pages/AddProperty';
 import EditProperty from './pages/EditProperty';
@@ -24,6 +26,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/search" element={<Search />} />
+              <Route path="/houses-for-rent" element={<HousesForRent />} />
+              <Route path="/houses-for-sale" element={<HousesForSale />} />
               <Route path="/property/:id" element={<PropertyDetails />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/add-property" element={<AddProperty />} />

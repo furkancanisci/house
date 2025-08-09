@@ -10,7 +10,9 @@ import {
   LogOut, 
   Menu, 
   X,
-  Building
+  Building,
+  Key,
+  DollarSign
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -42,6 +44,8 @@ const Header: React.FC = () => {
   const navItems = [
     { path: '/', label: t('navigation.home'), icon: Home },
     { path: '/search', label: t('navigation.search'), icon: Search },
+    { path: '/houses-for-rent', label: t('navigation.housesForRent'), icon: Key },
+    { path: '/houses-for-sale', label: t('navigation.housesForSale'), icon: DollarSign },
     ...(user ? [{ path: '/favorites', label: t('navigation.favorites'), icon: Heart }] : []),
   ];
 

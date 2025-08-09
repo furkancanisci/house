@@ -3,6 +3,8 @@
   "navigation": {
     "home": "الرئيسية",
     "search": "بحث", 
+    "housesForRent": "بيوت للإيجار",
+    "housesForSale": "بيوت للبيع",
     "favorites": "المفضلة",
     "listProperty": "إضافة عقار",
     "dashboard": "لوحة التحكم",

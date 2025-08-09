@@ -39,6 +39,7 @@ interface SearchFiltersProps {
   onApplyFilters?: (filters: SearchFiltersType) => void;
   showAdvanced?: boolean;
   initialFilters?: Partial<SearchFiltersType>;
+  hideListingType?: boolean;
 }
 
 const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
@@ -47,7 +48,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     onFiltersChange, 
     onApplyFilters,
     showAdvanced = true,
-    initialFilters = {}
+    initialFilters = {},
+    hideListingType = false
   } = props;
   const { t } = useTranslation();
   // Local form state that only updates when Apply is clicked
@@ -315,6 +317,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       </CardHeader>
       
       <CardContent className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
         {/* Location Search */}
         <div className="space-y-2">
           <Label htmlFor="location">{t('filters.location')}</Label>
@@ -330,27 +333,29 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           </div>
         </div>
 
-        {/* Listing Type */}
-        <div className="space-y-2">
-          <Label>{t('filters.listingType')}</Label>
-          <Select
-            value={formValues.listingType || 'all'}
-            onValueChange={(value) => handleFilterChange('listingType', value === 'all' ? '' : value)}
-          >
-            <SelectTrigger>
-              <SelectValue>
-                {formValues.listingType === 'rent' ? t('property.listingTypes.forRent') : 
-                 formValues.listingType === 'sale' ? t('property.listingTypes.forSale') : 
-                 t('property.listingTypes.all')}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('property.listingTypes.all')}</SelectItem>
-              <SelectItem value="rent">{t('property.listingTypes.forRent')}</SelectItem>
-              <SelectItem value="sale">{t('property.listingTypes.forSale')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Listing Type - conditionally hidden */}
+        {!hideListingType && (
+          <div className="space-y-2">
+            <Label>{t('filters.listingType')}</Label>
+            <Select
+              value={formValues.listingType || 'all'}
+              onValueChange={(value) => handleFilterChange('listingType', value === 'all' ? '' : value)}
+            >
+              <SelectTrigger>
+                <SelectValue>
+                  {formValues.listingType === 'rent' ? t('property.listingTypes.forRent') : 
+                   formValues.listingType === 'sale' ? t('property.listingTypes.forSale') : 
+                   t('property.listingTypes.all')}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('property.listingTypes.all')}</SelectItem>
+                <SelectItem value="rent">{t('property.listingTypes.forRent')}</SelectItem>
+                <SelectItem value="sale">{t('property.listingTypes.forSale')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Property Type */}
         <div className="space-y-2">
@@ -507,22 +512,24 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           </Collapsible>
         )}
         
-        {/* Apply Filters Button */}
-        <div className="mt-6 flex justify-end space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={handleReset}
-            className="px-4 py-2"
-          >
-            Reset
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Apply Filters
-          </Button>
-        </div>
+          {/* Apply Filters Button */}
+          <div className="mt-6 flex justify-end space-x-2">
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={handleReset}
+              className="px-4 py-2"
+            >
+              Reset
+            </Button>
+            <Button 
+              type="submit"
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Apply Filters
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

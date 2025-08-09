@@ -5,7 +5,7 @@ import 'yet-another-react-lightbox/styles.css';
 import { getRandomPropertyImage } from '../lib/imageUtils';
 
 interface PropertyImageGalleryProps {
-  images: string[];
+  images?: string[];
   alt: string;
   className?: string;
   containerClassName?: string;
@@ -48,8 +48,8 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [imageLoadStates, setImageLoadStates] = useState<Record<number, { loaded: boolean; error: boolean; loading: boolean }>>({});
 
-  // Process images to ensure they're valid
-  const processedImages = images.length > 0 
+  // Process images to ensure they're valid - handle undefined/null images
+  const processedImages = (images && Array.isArray(images) && images.length > 0) 
     ? images.map(img => fixImageUrl(img))
     : [getRandomPropertyImage()];
 
