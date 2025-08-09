@@ -274,7 +274,8 @@ const Dashboard: React.FC = () => {
                             <FixedImage
                               src={property.mainImage}
                               alt={property.title}
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full h-32 object-cover rounded-lg shadow-sm border border-gray-200"
+                              showLoadingSpinner={true}
                             />
                           </div>
                           <div className="flex-1">
@@ -377,7 +378,7 @@ const Dashboard: React.FC = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {favoriteProperties.map((property) => (
-                      <PropertyCard key={property.id} property={property} />
+                      <PropertyCard key={property.id} property={property} useGallery={true} />
                     ))}
                   </div>
                 )}

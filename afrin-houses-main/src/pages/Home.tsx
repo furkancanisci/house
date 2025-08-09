@@ -18,6 +18,7 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { getProperties, getFeaturedProperties } from '../services/propertyService';
+import { processPropertyImages } from '../lib/imageUtils';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -204,6 +205,9 @@ const Home: React.FC = () => {
                     const squareFeet = Number(propertyAny.square_feet || details.square_feet || propertyAny.squareFootage || 0);
                     const yearBuilt = Number(propertyAny.year_built || details.year_built || new Date().getFullYear());
                     
+                    // Process images to ensure we have proper images
+                    const { mainImage, images } = processPropertyImages(propertyAny, propertyAny.property_type || 'apartment');
+                    
                     // Create the extended property object with all required fields
                     const extendedProperty: ExtendedProperty = {
                       ...propertyAny,
@@ -228,10 +232,8 @@ const Home: React.FC = () => {
                       },
                       description: property.description || '',
                       features: (property as any).features || [],
-                      images: Array.isArray((property as any).gallery_urls) 
-                        ? (property as any).gallery_urls.map((m: any) => m.url || '').filter(Boolean)
-                        : [],
-                      mainImage: (property as any).main_image_url || '',
+                      images: images,
+                      mainImage: mainImage,
                       coordinates: {
                         lat: property.latitude || 0,
                         lng: property.longitude || 0
@@ -260,7 +262,8 @@ const Home: React.FC = () => {
                       <PropertyCard 
                         key={property.id} 
                         property={extendedProperty}
-                        view="grid" 
+                        view="grid"
+                        useGallery={true}
                       />
                     );
                   })}

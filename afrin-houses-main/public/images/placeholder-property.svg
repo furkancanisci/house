@@ -1,0 +1,17 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f3f4f6"/>
+  <rect x="50" y="80" width="300" height="140" fill="#e5e7eb" stroke="#d1d5db" stroke-width="2"/>
+  <polygon points="50,80 200,30 350,80" fill="#9ca3af" stroke="#6b7280" stroke-width="2"/>
+  <rect x="80" y="120" width="60" height="80" fill="#6b7280"/>
+  <rect x="90" y="130" width="40" height="50" fill="#374151"/>
+  <circle cx="110" cy="140" r="3" fill="#f9fafb"/>
+  <rect x="180" y="120" width="40" height="40" fill="#60a5fa"/>
+  <rect x="185" y="125" width="30" h="30" fill="#3b82f6"/>
+  <rect x="260" y="120" width="40" height="40" fill="#60a5fa"/>
+  <rect x="265" y="125" width="30" height="30" fill="#3b82f6"/>
+  <rect x="320" y="140" width="20" height="60" fill="#6b7280"/>
+  <rect x="325" y="145" width="10" height="40" fill="#374151"/>
+  <circle cx="330" cy="155" r="1" fill="#f9fafb"/>
+  <text x="200" y="250" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="16" font-weight="500">Property Image</text>
+  <text x="200" y="270" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="12">No image available</text>
+</svg>

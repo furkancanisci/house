@@ -89,6 +89,11 @@
       "house": "House",
       "condo": "Condo",
       "townhouse": "Townhouse",
+      "studio": "Studio",
+      "loft": "Loft",
+      "villa": "Villa",
+      "commercial": "Commercial",
+      "land": "Land",
       "description": "Description"
     },
     "listingTypes": {

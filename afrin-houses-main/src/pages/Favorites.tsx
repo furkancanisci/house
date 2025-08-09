@@ -241,6 +241,7 @@ const Favorites: React.FC = () => {
                   key={property.id} 
                   property={property} 
                   view={viewMode}
+                  useGallery={true}
                 />
               ))}
             </div>

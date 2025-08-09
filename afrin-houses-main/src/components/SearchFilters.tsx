@@ -81,6 +81,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     { value: 'house', label: t('property.types.house') },
     { value: 'condo', label: t('property.types.condo') },
     { value: 'townhouse', label: t('property.types.townhouse') },
+    { value: 'studio', label: t('property.types.studio') },
+    { value: 'loft', label: t('property.types.loft') },
+    { value: 'villa', label: t('property.types.villa') },
+    { value: 'commercial', label: t('property.types.commercial') },
+    { value: 'land', label: t('property.types.land') },
   ];
 
   const bedroomOptions = [

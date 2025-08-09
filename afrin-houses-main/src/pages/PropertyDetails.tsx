@@ -16,8 +16,6 @@ import {
   Mail, 
   User,
   ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
   CheckCircle,
   Home,
   Car,
@@ -31,6 +29,7 @@ import { Separator } from '../components/ui/separator';
 import { toast } from 'sonner';
 import { getProperty } from '../services/propertyService';
 import FixedImage from '../components/FixedImage';
+import PropertyImageGallery from '../components/PropertyImageGallery';
 
 const PropertyDetails: React.FC = () => {
   const { t } = useTranslation();
@@ -41,7 +40,7 @@ const PropertyDetails: React.FC = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   const [showMap, setShowMap] = useState(false);
 
   const GOOGLE_MAPS_API_KEY = 'AIzaSyCO0kKndUNlmQi3B5mxy4dblg_8WYcuKuk';
@@ -248,17 +247,7 @@ const PropertyDetails: React.FC = () => {
     toast.success(t('messages.contactInfoDisplayed'));
   };
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === property.images.length - 1 ? 0 : prev + 1
-    );
-  };
 
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? property.images.length - 1 : prev - 1
-    );
-  };
 
   const mapContainerStyle = {
     width: '100%',
@@ -303,46 +292,11 @@ const PropertyDetails: React.FC = () => {
             {/* Image Gallery */}
             <Card className="overflow-hidden">
               <div className="relative">
-                <FixedImage
-                  src={property.images[currentImageIndex]}
+                <PropertyImageGallery
+                  images={property.images}
                   alt={property.title}
-                  className="w-full h-96 object-cover"
+                  className="w-full h-96"
                 />
-                
-                {/* Image Navigation */}
-                {property.images.length > 1 && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={prevImage}
-                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white hover:bg-opacity-70"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={nextImage}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white hover:bg-opacity-70"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </Button>
-                    
-                    {/* Image Indicators */}
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                      {property.images.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setCurrentImageIndex(index)}
-                          className={`w-2 h-2 rounded-full ${
-                            index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
 
                 {/* Badges */}
                 <Badge 
@@ -377,27 +331,6 @@ const PropertyDetails: React.FC = () => {
                   </Button>
                 </div>
               </div>
-
-              {/* Thumbnail Gallery */}
-              {property.images.length > 1 && (
-                <div className="p-4 flex space-x-2 overflow-x-auto">
-                  {property.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 ${
-                        index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
-                      }`}
-                    >
-                      <FixedImage
-                        src={image}
-                        alt={`View ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
             </Card>
 
             {/* Property Overview */}

@@ -2,6 +2,13 @@ export interface Property {
   // Core property fields
   id: string | number;
   title: string;
+  address: string;
+  price: number;
+  listingType: 'rent' | 'sale';
+  propertyType: 'apartment' | 'house' | 'condo' | 'townhouse' | 'studio' | 'loft' | 'villa' | 'commercial' | 'land';
+  bedrooms: number;
+  bathrooms: number;
+  squareFootage: number;
   description: string;
   price: string | number;
   address: string;
@@ -118,7 +125,7 @@ export interface PropertyFormData {
   address: string;
   price: number;
   listingType: 'rent' | 'sale';
-  propertyType: 'apartment' | 'house' | 'condo' | 'townhouse';
+  propertyType: 'apartment' | 'house' | 'condo' | 'townhouse' | 'studio' | 'loft' | 'villa' | 'commercial' | 'land';
   bedrooms: number;
   bathrooms: number;
   squareFootage: number;
