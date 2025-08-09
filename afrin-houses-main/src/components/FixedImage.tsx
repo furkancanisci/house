@@ -11,11 +11,12 @@ interface FixedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   containerClassName?: string;
   showLoadingSpinner?: boolean;
   fallbackClassName?: string;
+  propertyId?: string | number;
 }
 
 // Utility function to fix image URLs
-const fixImageUrl = (url: string | undefined): string => {
-  if (!url) return getRandomPropertyImage();
+const fixImageUrl = (url: string | undefined, propertyId?: string | number): string => {
+  if (!url) return getRandomPropertyImage(propertyId);
   
   // Don't process already processed URLs
   if (url.startsWith('http://localhost:8000/') ||
@@ -41,11 +42,12 @@ const FixedImage: React.FC<FixedImageProps> = ({
   className = '',
   showLoadingSpinner = true,
   fallbackClassName = '',
+  propertyId,
   onClick,
   ...props 
 }) => {
   const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(() => fixImageUrl(src));
+  const [currentSrc, setCurrentSrc] = useState(() => fixImageUrl(src, propertyId));
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,16 +55,16 @@ const FixedImage: React.FC<FixedImageProps> = ({
   // Update src when prop changes
   useEffect(() => {
     if (!hasError) {
-      setCurrentSrc(fixImageUrl(src));
+      setCurrentSrc(fixImageUrl(src, propertyId));
       setImageLoaded(false);
       setIsLoading(true);
     }
-  }, [src, hasError]);
+  }, [src, hasError, propertyId]);
 
   const handleError = () => {
     if (!hasError && !currentSrc.startsWith('/images/properties/')) {
       setHasError(true);
-      setCurrentSrc(getRandomPropertyImage());
+      setCurrentSrc(getRandomPropertyImage(propertyId));
       setImageLoaded(false);
       setIsLoading(true);
     }

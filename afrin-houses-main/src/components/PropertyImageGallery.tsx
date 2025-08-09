@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ImageIcon, Loader2 } from 'lucide-react';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
@@ -12,11 +12,12 @@ interface PropertyImageGalleryProps {
   enableZoom?: boolean;
   showThumbnails?: boolean;
   showLoadingSpinner?: boolean;
+  propertyId?: string | number;
 }
 
 // Utility function to fix image URLs
-const fixImageUrl = (url: string | undefined): string => {
-  if (!url) return getRandomPropertyImage();
+const fixImageUrl = (url: string | undefined, propertyId?: string | number): string => {
+  if (!url) return getRandomPropertyImage(propertyId);
   
   // Don't process already processed URLs
   if (url.startsWith('http://localhost:8000/') ||
@@ -42,6 +43,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   enableZoom = true,
   showThumbnails = true,
   showLoadingSpinner = true,
+  propertyId,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -50,11 +52,25 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
 
   // Process images to ensure they're valid - handle undefined/null images
   const processedImages = (images && Array.isArray(images) && images.length > 0) 
-    ? images.map(img => fixImageUrl(img))
-    : [getRandomPropertyImage()];
+    ? images.map(img => fixImageUrl(img, propertyId))
+    : [getRandomPropertyImage(propertyId)];
 
   const currentImage = processedImages[currentImageIndex];
   const currentImageState = imageLoadStates[currentImageIndex] || { loaded: false, error: false, loading: true };
+
+  // Initialize loading states for all images when component mounts or images change
+  useEffect(() => {
+    const initialStates: Record<number, { loaded: boolean; error: boolean; loading: boolean }> = {};
+    processedImages.forEach((_, index) => {
+      if (!imageLoadStates[index]) {
+        initialStates[index] = { loaded: false, error: false, loading: true };
+      }
+    });
+    
+    if (Object.keys(initialStates).length > 0) {
+      setImageLoadStates(prev => ({ ...prev, ...initialStates }));
+    }
+  }, [processedImages.length]);
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => 
@@ -83,7 +99,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   };
 
   const handleImageClick = () => {
-    if (enableZoom && currentImageState.loaded) {
+    if (enableZoom) {
       setLightboxIndex(currentImageIndex);
       setLightboxOpen(true);
     }
@@ -124,7 +140,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
           src={currentImage}
           alt={alt}
           className={`w-full h-full object-cover transition-all duration-300 ${
-            enableZoom && currentImageState.loaded ? 'cursor-pointer hover:scale-105' : ''
+            enableZoom ? 'cursor-pointer hover:scale-105' : ''
           } ${currentImageState.loading ? 'opacity-0' : 'opacity-100'} ${className}`}
           onLoad={() => handleImageLoad(currentImageIndex)}
           onError={() => handleImageError(currentImageIndex)}

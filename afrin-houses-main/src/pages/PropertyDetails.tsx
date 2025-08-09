@@ -296,6 +296,7 @@ const PropertyDetails: React.FC = () => {
                   images={property.images}
                   alt={property.title}
                   className="w-full h-96"
+                  propertyId={property.id}
                 />
 
                 {/* Badges */}

@@ -173,6 +173,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
               alt={property.title}
               className="h-48 w-full object-cover"
               showThumbnails={false}
+              enableZoom={false}
+              propertyId={property.id}
             />
           ) : (
             <FixedImage

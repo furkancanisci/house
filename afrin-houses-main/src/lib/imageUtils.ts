@@ -188,12 +188,19 @@ export const processPropertyImages = (
 };
 
 /**
- * Get a random property image for demo purposes
+ * Get a consistent property image for demo purposes
  */
-export const getRandomPropertyImage = (): string => {
+export const getRandomPropertyImage = (propertyId?: string | number): string => {
   if (PROPERTY_IMAGES.length === 0) {
     return PLACEHOLDER_IMAGE;
   }
-  const randomIndex = Math.floor(Math.random() * PROPERTY_IMAGES.length);
-  return PROPERTY_IMAGES[randomIndex];
+  
+  // If propertyId is provided, use it to get a consistent image
+  if (propertyId) {
+    const index = Math.abs(Number(propertyId) || 0) % PROPERTY_IMAGES.length;
+    return PROPERTY_IMAGES[index];
+  }
+  
+  // Fallback to first image instead of random
+  return PROPERTY_IMAGES[0];
 };
