@@ -480,9 +480,27 @@ class PropertyController extends Controller
     public function featured(Request $request): PropertyCollection
     {
         $limit = $request->get('limit', 6);
+        $searchTerm = $request->input('search', $request->input('q'));
+        
+        $query = Property::with(['user', 'media', 'favoritedByUsers'])
+            ->where('is_featured', true);
+            
+        // Apply search filter if search term exists
+        if (!empty($searchTerm)) {
+            $searchTerm = strtolower(trim($searchTerm));
+            $likeTerm = "%$searchTerm%";
+            
+            $query->where(function($q) use ($likeTerm) {
+                $q->whereRaw('LOWER(title) LIKE ?', [$likeTerm])
+                  ->orWhereRaw('LOWER(description) LIKE ?', [$likeTerm])
+                  ->orWhereRaw('LOWER(property_type) LIKE ?', [$likeTerm])
+                  ->orWhereRaw('LOWER(city) LIKE ?', [$likeTerm])
+                  ->orWhereRaw('LOWER(state) LIKE ?', [$likeTerm])
+                  ->orWhereRaw('LOWER(street_address) LIKE ?', [$likeTerm]);
+            });
+        }
     
-        $properties = Property::with(['user', 'media', 'favoritedByUsers']) // önce ilişkileri dahil et
-            ->paginate($limit); // sonra pagination yap
+        $properties = $query->paginate($limit);
     
         return new PropertyCollection($properties);
     }

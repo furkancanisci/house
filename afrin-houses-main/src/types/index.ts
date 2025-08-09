@@ -3,25 +3,19 @@ export interface Property {
   id: string | number;
   title: string;
   address: string;
-  price: number;
+  price: number | string;
   listingType: 'rent' | 'sale';
   propertyType: 'apartment' | 'house' | 'condo' | 'townhouse' | 'studio' | 'loft' | 'villa' | 'commercial' | 'land';
   bedrooms: number;
   bathrooms: number;
   squareFootage: number;
   description: string;
-  price: string | number;
-  address: string;
   city: string;
   state: string;
   zip_code: string;
   country: string;
   
-  // Property details
-  property_type: string;
-  listing_type: 'rent' | 'sale';
-  bedrooms?: number;
-  bathrooms?: number;
+  // Optional fields
   square_feet?: number;
   year_built?: number;
   
@@ -57,27 +51,61 @@ export interface ExtendedProperty extends Omit<Property, 'property_type' | 'list
   squareFootage: number;
   zipCode: string;
   
-  // Formatted display values
-  formattedPrice: string;
-  formattedBeds: string;
-  formattedBaths: string;
-  formattedSquareFootage: string;
-  formattedAddress: string;
-  formattedPropertyType: string;
-  formattedDate: string;
+  // Property details
+  property_type?: string;
+  listing_type?: 'rent' | 'sale';
+  square_feet?: number;
+  year_built?: number;
+  price_per_square_foot?: number;
+  lot_size?: number;
+  garage?: boolean;
+  pool?: boolean;
+  air_conditioning?: boolean;
+  heating?: string;
+  hoa_fees?: number;
+  mls_number?: string;
+  virtual_tour_url?: string;
+  featured?: boolean;
+  status?: 'active' | 'available' | 'pending' | 'sold' | 'rented' | 'inactive';
+  created_at?: string;
+  updated_at?: string;
+  
+  // Location details - can be string or number to handle different API responses
+  latitude?: number | string;
+  longitude?: number | string;
+  neighborhood?: string;
+  county?: string;
+  country?: string;
+  
+  // Media
+  media?: any[];
+  main_image?: string;
+  
+  // Relationships
+  user_id?: string | number;
+  user?: User;
+  
+  // UI/Formatted fields
+  formattedPrice?: string;
+  formattedBeds?: string;
+  formattedBaths?: string;
+  formattedSquareFootage?: string;
+  formattedAddress?: string;
+  formattedPropertyType?: string;
+  formattedDate?: string;
   
   // UI state
-  isFavorite: boolean;
+  isFavorite?: boolean;
   
   // Additional display properties
   mainImage?: string;
-  images: string[];
+  images?: string[];
   
   // Details object for additional property information
-  details: {
-    bedrooms: number;
-    bathrooms: number;
-    squareFootage: number;
+  details?: {
+    bedrooms?: number;
+    bathrooms?: number;
+    squareFootage?: number;
     yearBuilt?: number;
     [key: string]: any;
   };

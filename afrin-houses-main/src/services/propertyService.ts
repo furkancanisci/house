@@ -267,9 +267,22 @@ export const getProperty = async (slug: string) => {
   }
 };
 
-export const getFeaturedProperties = async (limit = 6) => {
+interface FeaturedPropertiesParams {
+  limit?: number;
+  search?: string;
+  q?: string;
+}
+
+export const getFeaturedProperties = async (params: FeaturedPropertiesParams = {}) => {
   try {
-    const response = await api.get('/properties/featured', { params: { limit } });
+    const { limit = 6, search, q } = params;
+    const response = await api.get('/properties/featured', { 
+      params: { 
+        limit,
+        search: search || q || undefined // Send search query if provided
+      } 
+    });
+    
     // The backend returns a paginated response with data in response.data.data
     const properties = response.data.data || [];
     

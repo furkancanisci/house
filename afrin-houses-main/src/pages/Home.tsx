@@ -32,7 +32,21 @@ const Home: React.FC = () => {
     const fetchFeaturedProperties = async () => {
       try {
         setLoading(true);
-        const data = await getFeaturedProperties();
+        
+        // Get search query from URL if present
+        const searchParams = new URLSearchParams(window.location.search);
+        const searchQuery = searchParams.get('q') || '';
+        
+        // If there's a search query, update the search input
+        if (searchQuery) {
+          setSearchQuery(searchQuery);
+        }
+        
+        const data = await getFeaturedProperties({ 
+          q: searchQuery,
+          limit: 6
+        });
+        
         console.log('Featured properties response:', data);
         
         if (data && Array.isArray(data)) {

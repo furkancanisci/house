@@ -335,10 +335,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           <Label>{t('filters.listingType')}</Label>
           <Select
             value={formValues.listingType || 'all'}
-            onValueChange={(value) => handleFilterChange('listingType', value)}
+            onValueChange={(value) => handleFilterChange('listingType', value === 'all' ? '' : value)}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue>
+                {formValues.listingType === 'rent' ? t('property.listingTypes.forRent') : 
+                 formValues.listingType === 'sale' ? t('property.listingTypes.forSale') : 
+                 t('property.listingTypes.all')}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('property.listingTypes.all')}</SelectItem>
@@ -413,7 +417,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                 <SelectValue>{formValues.bedrooms ? `${formValues.bedrooms}+` : t('filters.any')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {bedroomOptions.map((option) => (
+                <SelectItem value="any">{t('filters.any')}</SelectItem>
+                {bedroomOptions.filter(opt => opt.value !== 'any').map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -431,7 +436,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                 <SelectValue>{formValues.bathrooms ? `${formValues.bathrooms}+` : t('filters.any')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {bathroomOptions.map((option) => (
+                <SelectItem value="any">{t('filters.any')}</SelectItem>
+                {bathroomOptions.filter(opt => opt.value !== 'any').map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

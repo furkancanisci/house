@@ -8,6 +8,43 @@ import { LayoutGrid, List, Loader2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import PropertyCard from '../components/PropertyCard';
 
+// Define a type for the media item
+interface MediaItem {
+  original_url?: string;
+  url?: string;
+  [key: string]: any;
+}
+
+// Process property images to ensure consistent format
+const processPropertyImages = (property: Partial<Property | ExtendedProperty> & { 
+  images?: string[]; 
+  media?: MediaItem[];
+  mainImage?: string;
+  main_image?: string;
+  [key: string]: any;
+}): string[] => {
+  if (!property) return [];
+  
+  // If property has a main image, use it as the first image
+  const mainImage = property.mainImage || property.main_image || '';
+  
+  // If property has an images array, use it
+  if (Array.isArray(property.images) && property.images.length > 0) {
+    return [mainImage, ...property.images].filter((img): img is string => Boolean(img));
+  }
+  
+  // If property has media array with URLs, extract them
+  if (Array.isArray(property.media)) {
+    const mediaUrls = property.media
+      .filter((item: MediaItem) => item.original_url || item.url)
+      .map((item: MediaItem) => item.original_url || item.url || '');
+    return [mainImage, ...mediaUrls].filter((img): img is string => Boolean(img));
+  }
+  
+  // Fallback to main image if available
+  return mainImage ? [mainImage] : [];
+};
+
 interface SearchParams extends Record<string, string | undefined> {
   q?: string;
   search?: string;
@@ -678,7 +715,8 @@ const Search: React.FC = () => {
                     0;
 
                   // Process images to ensure we have proper images
-                  const { mainImage, images } = processPropertyImages(property, property.property_type || 'apartment');
+                  const images = processPropertyImages(property);
+                  const mainImage = images.length > 0 ? images[0] : '';
 
                   const mappedProperty: ExtendedProperty = {
                     ...property,
