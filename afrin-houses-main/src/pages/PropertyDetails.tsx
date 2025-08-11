@@ -32,7 +32,7 @@ import FixedImage from '../components/FixedImage';
 import PropertyImageGallery from '../components/PropertyImageGallery';
 
 const PropertyDetails: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id: slug } = useParams<{ id: string }>(); 
   const navigate = useNavigate();
   const { state, toggleFavorite } = useApp();
@@ -44,6 +44,19 @@ const PropertyDetails: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
 
   const GOOGLE_MAPS_API_KEY = 'AIzaSyCO0kKndUNlmQi3B5mxy4dblg_8WYcuKuk';
+
+  // Helper function to normalize location fields that might be objects
+  const normalizeName = (val: any): string => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      const locale = i18n.language === 'ar' ? 'ar' : 'en';
+      const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
+      const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
+      return locale === 'ar' ? (ar || en || '') : (en || ar || '');
+    }
+    return String(val);
+  };
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -70,6 +83,17 @@ const PropertyDetails: React.FC = () => {
         console.log('Property Type:', propertyData.property_type);
         console.log('Listing Type:', propertyData.listing_type);
         console.log('All response keys:', Object.keys(propertyData));
+        
+        // Debug image data specifically
+        console.group('Image Data Debug');
+        console.log('propertyData.media:', propertyData.media);
+        console.log('propertyData.images:', propertyData.images);
+        console.log('propertyData.media?.main_image_url:', propertyData.media?.main_image_url);
+        console.log('propertyData.media?.gallery_urls:', propertyData.media?.gallery_urls);
+        console.log('propertyData.images?.main:', propertyData.images?.main);
+        console.log('propertyData.images?.gallery:', propertyData.images?.gallery);
+        console.groupEnd();
+        
         console.groupEnd();
         
         // Transform the property data to match the expected format
@@ -79,10 +103,10 @@ const PropertyDetails: React.FC = () => {
           title: propertyData.title || 'No Title',
           description: propertyData.description || '',
           address: propertyData.address || propertyData.location?.street_address || '',
-          city: propertyData.city || '',
-          state: propertyData.state || '',
+          city: normalizeName(propertyData.city),
+          state: normalizeName(propertyData.state),
           zip_code: propertyData.zip_code || propertyData.zipCode || '',
-          country: propertyData.country || '',
+          country: normalizeName(propertyData.country),
           price: typeof propertyData.price === 'string' ? parseFloat(propertyData.price) : (propertyData.price || 0),
           listingType: propertyData.listing_type === 'rent' ? 'rent' : 'sale',
           propertyType: propertyData.property_type || 'apartment',
@@ -115,7 +139,45 @@ const PropertyDetails: React.FC = () => {
               });
             }
             
-            return galleryImages.length > 0 ? galleryImages : ['/placeholder-property.jpg'];
+            return galleryImages.length > 0 ? galleryImages : [];
+          })(),
+          images: (() => {
+            // Extract image URLs for the PropertyImageGallery component
+            const imageUrls: string[] = [];
+            
+            // First, try to get images from the media.gallery_urls array (new backend format)
+            if (propertyData.media?.gallery_urls && Array.isArray(propertyData.media.gallery_urls)) {
+              imageUrls.push(...propertyData.media.gallery_urls);
+            }
+            
+            // Add main image URL if available
+            if (propertyData.media?.main_image_url) {
+              // Add main image at the beginning if not already included
+              if (!imageUrls.includes(propertyData.media.main_image_url)) {
+                imageUrls.unshift(propertyData.media.main_image_url);
+              }
+            }
+            
+            // Fallback to old format if new format is not available
+            if (imageUrls.length === 0) {
+              // Try old images.gallery format
+              if (propertyData.images?.gallery && Array.isArray(propertyData.images.gallery)) {
+                imageUrls.push(...propertyData.images.gallery.map((img: any) => 
+                  typeof img === 'string' ? img : img.url || img
+                ));
+              }
+              
+              // Add main image from old format
+              const mainImage = propertyData.images?.main || propertyData.mainImage;
+              if (mainImage) {
+                const mainImageUrl = typeof mainImage === 'string' ? mainImage : mainImage.url;
+                if (mainImageUrl && !imageUrls.includes(mainImageUrl)) {
+                  imageUrls.unshift(mainImageUrl);
+                }
+              }
+            }
+            
+            return imageUrls;
           })(),
           mainImage: propertyData.images?.main || '/placeholder-property.jpg',
           yearBuilt: Number(propertyData.details?.year_built) || new Date().getFullYear(),
@@ -145,6 +207,9 @@ const PropertyDetails: React.FC = () => {
         console.log('Bedrooms after transform:', transformedProperty.bedrooms);
         console.log('Bathrooms after transform:', transformedProperty.bathrooms);
         console.log('Square footage after transform:', transformedProperty.squareFootage);
+        console.log('Images array for gallery:', transformedProperty.images);
+        console.log('Media array:', transformedProperty.media);
+        console.log('Main image:', transformedProperty.mainImage);
         console.groupEnd();
         
         setProperty(transformedProperty);
@@ -158,7 +223,7 @@ const PropertyDetails: React.FC = () => {
     };
 
     fetchProperty();
-  }, [slug]);
+  }, [slug, i18n.language]);
 
   if (loading) {
     return (
@@ -406,12 +471,12 @@ const PropertyDetails: React.FC = () => {
                     .map((feature) => {
                       const featureKey = feature.toLowerCase().replace(/\s+/g, '');
                       const Icon = getFeatureIcon(feature);
-                      const translation = t(`property.features.${featureKey}`);
+                      const translation = t(`property.features.${featureKey}`, { defaultValue: feature });
                       
                       return (
                         <div key={feature} className="flex items-center space-x-2">
                           <Icon className="h-5 w-5 text-green-600" />
-                          <span className="text-gray-700">{translation}</span>
+                          <span className="text-gray-700">{typeof translation === 'string' ? translation : feature}</span>
                         </div>
                       );
                     })}

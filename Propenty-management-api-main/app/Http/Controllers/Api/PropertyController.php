@@ -281,7 +281,6 @@ class PropertyController extends Controller
                 $property->addMedia($mainImage)
                     ->usingName($mainImage->getClientOriginalName())
                     ->usingFileName(time() . '_main_' . $mainImage->getClientOriginalName())
-                    ->withResponsiveImages()
                     ->toMediaCollection('main_image');
             }
             
@@ -291,7 +290,6 @@ class PropertyController extends Controller
                     $property->addMedia($image)
                         ->usingName($image->getClientOriginalName())
                         ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
-                        ->withResponsiveImages()
                         ->toMediaCollection('images');
                 }
             }
@@ -317,7 +315,6 @@ class PropertyController extends Controller
                         $property->addMedia($tempPath)
                             ->usingName('Property Image ' . ($index + 1))
                             ->usingFileName($fileName)
-                            ->withResponsiveImages()
                             ->toMediaCollection('images');
                             
                         // Clean up temp file
@@ -382,7 +379,6 @@ class PropertyController extends Controller
                 $property->addMedia($mainImage)
                     ->usingName($mainImage->getClientOriginalName())
                     ->usingFileName(time() . '_main_' . $mainImage->getClientOriginalName())
-                    ->withResponsiveImages()
                     ->toMediaCollection('main_image');
             }
 
@@ -406,7 +402,6 @@ class PropertyController extends Controller
                     $property->addMedia($image)
                         ->usingName($image->getClientOriginalName())
                         ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
-                        ->withResponsiveImages()
                         ->toMediaCollection('images');
                 }
             }
@@ -432,7 +427,6 @@ class PropertyController extends Controller
                         $property->addMedia($tempPath)
                             ->usingName('Property Image ' . ($index + 1))
                             ->usingFileName($fileName)
-                            ->withResponsiveImages()
                             ->toMediaCollection('images');
                             
                         // Clean up temp file

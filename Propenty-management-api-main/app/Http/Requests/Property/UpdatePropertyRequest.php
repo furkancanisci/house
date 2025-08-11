@@ -76,11 +76,11 @@ class UpdatePropertyRequest extends FormRequest
             'contactEmail' => 'sometimes|required|email|max:100',
             
             // Media
-            'main_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
-            'images' => 'sometimes|nullable|array|max:20',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max per image
-            'base64_images' => 'sometimes|nullable|array|max:20',
-            'base64_images.*' => 'string', // Base64 encoded images
+            'main_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:5120|dimensions:min_width=400,min_height=300', // 5MB max, min 400x300
+            'images' => 'sometimes|nullable|array|max:20', // Maximum 20 images
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120|dimensions:min_width=400,min_height=300', // 5MB max per image, min 400x300
+            'base64_images' => 'sometimes|nullable|array|max:20', // Maximum 20 base64 images
+            'base64_images.*' => 'string|regex:/^data:image\/(jpeg|jpg|png|webp);base64,/', // Valid base64 image format
             'remove_images' => 'sometimes|nullable|array',
             'remove_images.*' => 'integer|exists:media,id',
         ];
@@ -140,11 +140,16 @@ class UpdatePropertyRequest extends FormRequest
             'main_image.image' => 'Main image must be a valid image file.',
             'main_image.mimes' => 'Main image must be JPEG, PNG, or WebP format.',
             'main_image.max' => 'Main image size cannot exceed 5MB.',
+            'main_image.dimensions' => 'Main image must be at least 400x300 pixels.',
             'images.array' => 'Images must be provided as a list.',
             'images.max' => 'You cannot upload more than 20 images.',
             'images.*.image' => 'All uploaded files must be valid images.',
             'images.*.mimes' => 'All images must be JPEG, PNG, or WebP format.',
             'images.*.max' => 'Each image size cannot exceed 5MB.',
+            'images.*.dimensions' => 'Each image must be at least 400x300 pixels.',
+            'base64_images.array' => 'Base64 images must be provided as a list.',
+            'base64_images.max' => 'You cannot upload more than 20 base64 images.',
+            'base64_images.*.regex' => 'Invalid base64 image format. Must be JPEG, PNG, or WebP.',
             'remove_images.array' => 'Images to remove must be provided as a list.',
             'remove_images.*.integer' => 'Invalid image ID provided.',
             'remove_images.*.exists' => 'One or more images to remove do not exist.',

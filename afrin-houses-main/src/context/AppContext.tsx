@@ -130,6 +130,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const { i18n } = useTranslation();
   
+  // Helper to normalize values that may be localized objects { name_ar, name_en }
+  const getLocaleName = (val: any): string => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      const locale = i18n.language === 'ar' ? 'ar' : 'en';
+      const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
+      const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
+      return locale === 'ar' ? (ar || en || '') : (en || ar || '');
+    }
+    return String(val);
+  };
+
   // Load properties from API
   const loadProperties = async () => {
     try {
@@ -163,16 +176,29 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       }
       
       console.log('DEBUG: Extracted properties data:', propertiesData);
+
+      // Normalize location fields coming from API (they may be objects with name_ar/name_en)
+      const locale = i18n.language === 'ar' ? 'ar' : 'en';
+      const normalizeName = (val: any): string => {
+        if (!val) return '';
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') {
+          const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
+          const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
+          return locale === 'ar' ? (ar || en || '') : (en || ar || '');
+        }
+        return String(val);
+      };
       
       const properties: Property[] = propertiesData.map((property: any) => {
         // Extract address components
         const streetAddress = property.street_address || '';
-        const city = property.city || '';
-        const state = property.state || '';
+        const city = normalizeName(property.city);
+        const stateVal = normalizeName(property.state);
         const zipCode = property.postal_code || property.zip_code || '';
-        const country = property.country || '';
+        const country = normalizeName(property.country);
         const fullAddress = property.location?.full_address || 
-          [streetAddress, city, state, zipCode].filter(Boolean).join(', ');
+          [streetAddress, city, stateVal, zipCode].filter(Boolean).join(', ');
         
         return {
           // Required fields
@@ -182,7 +208,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           price: property.price?.amount || property.price || 0,
           address: fullAddress,
           city: city,
-          state: state,
+          state: stateVal,
           zip_code: zipCode,
           country: country,
           property_type: property.property_type || 'house',
@@ -324,13 +350,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      // Extract imageFiles if they exist
-      const { imageFiles, ...propertyDataWithoutFiles } = propertyData;
-      
-      // If we have image files, we'll handle them in the API service
-      if (imageFiles && Array.isArray(imageFiles)) {
-        propertyData.images = imageFiles;
-      }
+      // The images and mainImage are already properly structured as File objects
+      // No need to extract imageFiles anymore since AddProperty.tsx now sends the correct structure
       
       console.log('Sending property data to API service:', propertyData);
       const response = await createPropertyAPI(propertyData);
@@ -342,10 +363,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         title: response.property.title,
         description: response.property.description || '',
         address: response.property.location?.full_address || `${response.property.address || ''}`,
-        city: response.property.city || '',
-        state: response.property.state || '',
+        city: getLocaleName(response.property.city),
+        state: getLocaleName(response.property.state),
         zip_code: response.property.postalCode || response.property.zip_code || '',
-        country: response.property.country || '',
+        country: getLocaleName(response.property.country),
         price: response.property.price || 0,
         listingType: (response.property.listing_type as 'rent' | 'sale') || 'sale',
         propertyType: (response.property.property_type as Property['propertyType']) || 'apartment',
@@ -436,11 +457,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         title: response.property.title || 'Untitled Property',
         description: response.property.description || '',
         price: response.property.price?.amount || response.property.price || 0,
-        address: response.property.location?.full_address || '',
-        city: response.property.location?.city || response.property.city || '',
-        state: response.property.location?.state || response.property.state || '',
+        address: response.property.location?.full_address || `${property.street_address || ''}, ${getLocaleName(property.city) || ''}, ${getLocaleName(property.state) || ''} ${property.postal_code || ''}`,
+        city: getLocaleName(response.property.location?.city ?? response.property.city),
+        state: getLocaleName(response.property.location?.state ?? response.property.state),
         zip_code: response.property.location?.postal_code || response.property.postal_code || response.property.zip_code || '',
-        country: response.property.location?.country || response.property.country || '',
+        country: getLocaleName(response.property.location?.country ?? response.property.country),
         property_type: response.property.property_type || 'house',
         listing_type: response.property.listing_type || 'sale',
         
@@ -712,7 +733,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         id: property.id.toString(),
         slug: property.slug,
         title: property.title,
-        address: property.location?.full_address || `${property.street_address || ''}, ${property.city || ''}, ${property.state || ''} ${property.postal_code || ''}`,
+        address: property.location?.full_address || `${property.street_address || ''}, ${getLocaleName(property.city) || ''}, ${getLocaleName(property.state) || ''} ${property.postal_code || ''}`,
         price: property.price?.amount || property.price || 0,
         propertyType: property.property_type,
         listingType: property.listing_type,

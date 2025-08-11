@@ -26,44 +26,50 @@ interface PropertyCardProps {
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', useGallery = false }) => {
-  const { t } = useTranslation();
   const { state, toggleFavorite } = useApp();
-  const { favorites, user } = state;
-  // Ensure we use the slug for the property link
-  const propertySlug = property.slug || property.id.toString();
-  const isFavorite = favorites.includes(property.id.toString());
-  
-  // Process property images to ensure we have proper images
-  const { mainImage, images } = processPropertyImages(property, property.propertyType || property.property_type);
+  const { t, i18n } = useTranslation();
+  const isFavorite = state.favorites.includes(property.id);
+  const user = state.user;
 
-  const formatPrice = (price: any, listingType: string = 'sale') => {
-    try {
-      let priceValue = 0;
-      
-      // Handle different price formats
-      if (price === null || price === undefined) {
-        priceValue = 0;
-      } else if (typeof price === 'number') {
-        priceValue = price;
-      } else if (typeof price === 'object' && price !== null) {
-        // Handle price object with amount property
-        priceValue = Number(price.amount) || 0;
-      } else if (typeof price === 'string') {
-        // Handle string price (remove any non-numeric characters except decimal point)
-        const numericString = price.toString().replace(/[^0-9.]/g, '');
-        priceValue = parseFloat(numericString) || 0;
-      }
-      
-      const formattedPrice = Math.round(priceValue).toLocaleString();
-      
-      if (listingType === 'rent') {
-        return `$${formattedPrice}/${t('property.perMonth')}`;
-      }
-      return `$${formattedPrice}`;
-    } catch (error) {
-      console.error('Error formatting price:', error, price);
-      return listingType === 'rent' ? `$0/${t('property.perMonth')}` : '$0';
+  // Helper to normalize values that may be localized objects { name_ar, name_en }
+  const normalizeName = (val: any): string => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      const locale = i18n.language === 'ar' ? 'ar' : 'en';
+      const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
+      const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
+      return locale === 'ar' ? (ar || en || '') : (en || ar || '');
     }
+    return String(val);
+  };
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await toggleFavorite(property.id);
+  };
+
+  const images = useGallery ? processPropertyImages(property) : [];
+  const mainImage = Array.isArray(images) && images.length > 0 ? images[0] : (property.mainImage || '/placeholder-property.jpg');
+
+  const propertySlug = property.slug || `property-${property.id}`;
+
+  const formatPrice = (price: number | string | { amount?: number } | undefined, type: string = 'sale') => {
+    const numPrice = typeof price === 'object' && price !== null 
+      ? (price as any).amount || 0 
+      : Number(price) || 0;
+    
+    if (numPrice === 0) return type === 'rent' ? t('property.priceOnRequest') : t('property.priceOnRequest');
+    
+    const formattedPrice = new Intl.NumberFormat('ar-SA', {
+      style: 'currency',
+      currency: 'SAR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(numPrice);
+    
+    return type === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
   };
 
   const formatDate = (dateString: string) => {
@@ -92,7 +98,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                   </h3>
                   <p className="mt-1 text-gray-600 flex items-center">
                     <MapPin className="h-4 w-4 mr-1" />
-                    {property.address || `${property.city}, ${property.state}`}
+                    {property.address || `${normalizeName(property.city)}, ${normalizeName(property.state)}`}
                   </p>
                 </div>
                 <div className="text-right">

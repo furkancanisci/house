@@ -1,11 +1,26 @@
 import React, { useState } from 'react';
 import testApiConnection from '../services/apiTest';
 import { getProperties, getFeaturedProperties } from '../services/propertyService';
+import { useTranslation } from 'react-i18next';
 
 const ApiTestComponent: React.FC = () => {
   const [testResults, setTestResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [properties, setProperties] = useState<any[]>([]);
+  const { i18n } = useTranslation();
+
+  // Normalize API values that may be objects like { name, name_ar, name_en }
+  const normalizeName = (val: any): string => {
+    const locale = i18n.language === 'ar' ? 'ar' : 'en';
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
+      const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
+      return locale === 'ar' ? (ar || en || '') : (en || ar || '');
+    }
+    return String(val);
+  };
 
   const runTests = async () => {
     setLoading(true);
@@ -110,7 +125,7 @@ const ApiTestComponent: React.FC = () => {
                 <h3 className="font-medium">{property.title}</h3>
                 <p className="text-sm text-gray-600">
                   {property.formatted_price || `$${property.price?.toLocaleString()}`} • 
-                  {property.city}, {property.state} • 
+                  {normalizeName(property.city)}, {normalizeName(property.state)} • 
                   {property.bedrooms} bed, {property.bathrooms} bath
                 </p>
                 <p className="text-xs text-gray-500">

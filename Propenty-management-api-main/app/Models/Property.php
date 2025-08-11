@@ -133,23 +133,48 @@ class Property extends Model implements HasMedia
     }
 
     /**
-     * Define media conversions
+     * Define media conversions with optimized settings for property photos
      */
     public function registerMediaConversions(?Media $media = null): void
     {
-        $this->addMediaConversion('thumb')
+        // Small thumbnail - 300x200 (3:2 ratio)
+        $this->addMediaConversion('small')
             ->width(300)
             ->height(200)
+            ->quality(70)
+            ->format('webp')
             ->performOnCollections('images', 'main_image');
 
+        // Standard thumbnail - 400x300 (4:3 ratio)
+        $this->addMediaConversion('thumbnail')
+            ->width(400)
+            ->height(300)
+            ->quality(70)
+            ->format('webp')
+            ->performOnCollections('images', 'main_image');
+
+        // Medium size - 600x400 (3:2 ratio)
         $this->addMediaConversion('medium')
             ->width(600)
             ->height(400)
+            ->quality(75)
+            ->format('webp')
             ->performOnCollections('images', 'main_image');
 
+        // Large size - 800x533 (3:2 ratio)
         $this->addMediaConversion('large')
+            ->width(800)
+            ->height(533)
+            ->quality(80)
+            ->format('webp')
+            ->performOnCollections('images', 'main_image');
+
+        // Full size - 1200x800 (3:2 ratio) - optimal for property photos
+        $this->addMediaConversion('full')
             ->width(1200)
             ->height(800)
+            ->quality(85)
+            ->format('webp')
             ->performOnCollections('images', 'main_image');
     }
 
@@ -228,17 +253,22 @@ class Property extends Model implements HasMedia
     }
 
     /**
-     * Get gallery image URLs.
+     * Get gallery image URLs with all size variants.
      */
     public function getGalleryUrlsAttribute(): array
     {
         return $this->getMedia('images')->map(function ($media) {
             return [
                 'id' => $media->id,
-                'url' => $media->getUrl(),
-                'thumb' => $media->getUrl('thumb'),
-                'medium' => $media->getUrl('medium'),
+                'original' => $media->getUrl(),
+                'full' => $media->getUrl('full'),
                 'large' => $media->getUrl('large'),
+                'medium' => $media->getUrl('medium'),
+                'thumbnail' => $media->getUrl('thumbnail'),
+                'small' => $media->getUrl('small'),
+                'alt_text' => $media->name ?? 'Property Image',
+                'file_size' => $media->size,
+                'mime_type' => $media->mime_type,
             ];
         })->toArray();
     }

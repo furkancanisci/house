@@ -8,6 +8,7 @@ import { Property, SearchFilters } from '../types';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
+  ArrowRight,
   Home, 
   MapPin, 
   DollarSign, 
@@ -21,7 +22,13 @@ import {
   Upload,
   X,
   Plus,
-  Image as ImageIcon
+  Image as ImageIcon,
+  FileText,
+  Building,
+  Camera,
+  Star,
+  CheckCircle,
+  Car
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -38,6 +45,7 @@ import {
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import FixedImage from '../components/FixedImage';
+import LocationSelector from '../components/LocationSelector';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required').max(255, 'Title cannot exceed 255 characters'),
@@ -55,7 +63,7 @@ const propertySchema = z.object({
   yearBuilt: z.number().min(1800, 'Year built must be valid').max(new Date().getFullYear() + 2, 'Year built cannot be in the future').optional(),
   availableDate: z.string().optional(),
   petPolicy: z.string().optional(),
-  parking: z.string().optional(),
+  parking: z.string().min(1, 'Parking type is required'),
   utilities: z.string().optional(),
   lotSize: z.number().min(1, 'Lot size must be greater than 0').max(1000000, 'Lot size is too large').optional(),
   garage: z.string().optional(),
@@ -76,10 +84,15 @@ const AddProperty: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation(); // Add this line
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [selectedUtilities, setSelectedUtilities] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
+  
+  // Location state
+  const [selectedCity, setSelectedCity] = useState<string>('');
+  const [selectedState, setSelectedState] = useState<string>('');
 
   const {
     register,
@@ -88,6 +101,7 @@ const AddProperty: React.FC = () => {
     formState: { errors, isSubmitting },
     watch,
     trigger,
+    setValue,
   } = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
@@ -104,6 +118,7 @@ const AddProperty: React.FC = () => {
       yearBuilt: 2020,
       price: 0,
       description: '',
+      parking: 'none',
       contactName: user?.name || '',
       contactEmail: user?.email || '',
       contactPhone: user?.phone || '',
@@ -185,12 +200,62 @@ const AddProperty: React.FC = () => {
     'Desert Landscaping',
   ];
 
+  const availableUtilities = [
+    'Electricity',
+    'Water',
+    'Gas',
+    'Internet',
+    'Cable TV',
+    'Trash Collection',
+    'Sewer',
+    'Heat',
+    'Air Conditioning',
+    'Hot Water',
+    'Electricity Included',
+    'Water Included',
+    'Gas Included',
+    'Internet Included',
+    'Cable TV Included',
+    'All Utilities Included',
+  ];
+
   const handleFeatureToggle = (feature: string) => {
     setSelectedFeatures(prev =>
       prev.includes(feature)
         ? prev.filter(f => f !== feature)
         : [...prev, feature]
     );
+  };
+
+  const handleUtilityToggle = (utility: string) => {
+    setSelectedUtilities(prev =>
+      prev.includes(utility)
+        ? prev.filter(u => u !== utility)
+        : [...prev, utility]
+    );
+  };
+
+  const handleLocationChange = (location: { country?: string; state?: string; city?: string }) => {
+    if (location.city) {
+      setSelectedCity(location.city);
+      setValue('city', location.city); // Update form field for validation
+    }
+    if (location.state) {
+      setSelectedState(location.state);
+      setValue('state', location.state); // Update form field for validation
+    }
+  };
+
+  // Helper function to get feature translation with fallback
+  const getFeatureTranslation = (feature: string): string => {
+    // Convert feature name to translation key format
+    const translationKey = feature.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+    
+    // Try to get translation, fallback to original feature name if not found
+    const translation = t(`property.features.${translationKey}`, { defaultValue: feature });
+    
+    // Ensure we always return a string
+    return typeof translation === 'string' ? translation : feature;
   };
 
   const nextStep = async () => {
@@ -250,7 +315,7 @@ const AddProperty: React.FC = () => {
       case 1:
         return ['title', 'address', 'city', 'state', 'postalCode', 'listingType', 'propertyType'] as (keyof PropertyFormData)[];
       case 2:
-        return ['price', 'bedrooms', 'bathrooms', 'squareFootage', 'yearBuilt'] as (keyof PropertyFormData)[];
+        return ['price', 'bedrooms', 'bathrooms', 'squareFootage', 'yearBuilt', 'parking'] as (keyof PropertyFormData)[];
       case 3:
         return [] as (keyof PropertyFormData)[]; // Image upload step - no form validation needed
       case 4:
@@ -267,8 +332,8 @@ const AddProperty: React.FC = () => {
       // Parse address components
       const addressParts = data.address.split(',').map(part => part.trim());
       const street = addressParts[0] || '';
-      let city = data.city || addressParts[1] || '';
-      let state = data.state || '';
+      let city = selectedCity || data.city || addressParts[1] || '';
+      let state = selectedState || data.state || '';
       let postalCode = data.postalCode || '';
       
       // If city, state, postalCode are not provided, try to parse from address
@@ -302,16 +367,14 @@ const AddProperty: React.FC = () => {
         // Ensure features is included as an array of strings
         features: Array.isArray(selectedFeatures) ? selectedFeatures : [],
         amenities: Array.isArray(selectedFeatures) ? selectedFeatures : [],
-        // Convert File objects to strings for the Property type
-        images: selectedImages.map(file => file.name), // Using file names as placeholders
-        // The actual file upload is handled by the API service
-        imageFiles: selectedImages, // Keep the actual files for upload
-        mainImage: selectedImages[0]?.name || '', // First image as main image
+        // Send actual File objects for upload
+        images: selectedImages.slice(1), // Gallery images (excluding the first one which is main)
+        mainImage: selectedImages[0] || null, // First image as main image (File object)
         yearBuilt: Number(data.yearBuilt || new Date().getFullYear()),
         availableDate: data.availableDate || new Date().toISOString(),
         petPolicy: data.petPolicy || '',
-        parking: data.parking || '',
-        utilities: data.utilities || '',
+        parking_type: data.parking || 'none',
+        utilities: selectedUtilities.join(', ') || '',
         lotSize: Number(data.lotSize || 0),
         garage: data.garage || '',
         heating: data.heating || '',
@@ -352,121 +415,215 @@ const AddProperty: React.FC = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="title">{t('forms.propertyTitle')} *</Label>
-              <Input
-                id="title"
-                placeholder={t('forms.propertyTitlePlaceholder')}
-                {...register('title')}
-                className={errors.title ? 'border-red-500' : ''}
-              />
-              {errors.title && (
-                <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="address">{t('forms.address')} *</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="address"
-                  placeholder={t('forms.addressPlaceholder')}
-                  className={`pl-10 ${errors.address ? 'border-red-500' : ''}`}
-                  {...register('address')}
-                />
-              </div>
-              {errors.address && (
-                <p className="text-sm text-red-600 mt-1">{errors.address.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-8">
+            {/* Property Title Section */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <Home className="h-5 w-5 text-blue-600" />
+                عنوان العقار
+              </h3>
               <div>
-                <Label htmlFor="city">{t('forms.city')} *</Label>
-                <Input
-                  id="city"
-                  placeholder={t('forms.cityPlaceholder')}
-                  className={errors.city ? 'border-red-500' : ''}
-                  {...register('city')}
-                />
-                {errors.city && (
-                  <p className="text-sm text-red-600 mt-1">{errors.city.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="state">{t('forms.state')} *</Label>
-                <Input
-                  id="state"
-                  placeholder={t('forms.statePlaceholder')}
-                  className={errors.state ? 'border-red-500' : ''}
-                  {...register('state')}
-                />
-                {errors.state && (
-                  <p className="text-sm text-red-600 mt-1">{errors.state.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="postalCode">{t('forms.postalCode')} *</Label>
-                <Input
-                  id="postalCode"
-                  placeholder={t('forms.postalCodePlaceholder')}
-                  className={errors.postalCode ? 'border-red-500' : ''}
-                  {...register('postalCode')}
-                />
-                {errors.postalCode && (
-                  <p className="text-sm text-red-600 mt-1">{errors.postalCode.message}</p>
+                <Label htmlFor="title" className="text-sm font-medium text-gray-700 mb-2 block">
+                  {t('forms.propertyTitle')} <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <FileText className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="title"
+                    placeholder={t('forms.propertyTitlePlaceholder')}
+                    className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-100 hover:border-blue-300 ${
+                      errors.title ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
+                    }`}
+                    {...register('title')}
+                  />
+                </div>
+                {errors.title && (
+                  <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                    <X className="h-4 w-4" />
+                    {errors.title.message}
+                  </p>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>{t('filters.listingType')} *</Label>
-                <Controller
-                  name="listingType"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="rent">{t('property.listingTypes.forRent')}</SelectItem>
-                        <SelectItem value="sale">{t('property.listingTypes.forSale')}</SelectItem>
-                      </SelectContent>
-                    </Select>
+            {/* Address Section */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <MapPin className="h-5 w-5 text-green-600" />
+                العنوان والموقع
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="address" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('forms.address')} <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <MapPin className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="address"
+                      placeholder={t('forms.addressPlaceholder')}
+                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-green-100 hover:border-green-300 ${
+                        errors.address ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-green-500'
+                      }`}
+                      {...register('address')}
+                    />
+                  </div>
+                  {errors.address && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.address.message}
+                    </p>
                   )}
-                />
-              </div>
+                </div>
 
-              <div>
-                <Label>{t('filters.propertyType')} *</Label>
-                <Controller
-                  name="propertyType"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="apartment">{t('property.types.apartment')}</SelectItem>
-                        <SelectItem value="house">{t('property.types.house')}</SelectItem>
-                        <SelectItem value="condo">{t('property.types.condo')}</SelectItem>
-                        <SelectItem value="townhouse">{t('property.types.townhouse')}</SelectItem>
-                        <SelectItem value="studio">{t('property.types.studio')}</SelectItem>
-                        <SelectItem value="loft">{t('property.types.loft')}</SelectItem>
-                        <SelectItem value="villa">{t('property.types.villa')}</SelectItem>
-                        <SelectItem value="commercial">{t('property.types.commercial')}</SelectItem>
-                        <SelectItem value="land">{t('property.types.land')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <LocationSelector
+                      onLocationChange={handleLocationChange}
+                      selectedCity={selectedCity}
+                      selectedState={selectedState}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="postalCode" className="text-sm font-medium text-gray-700 mb-2 block">
+                      {t('forms.postalCode')} <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="postalCode"
+                      placeholder={t('forms.postalCodePlaceholder')}
+                      className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-green-100 hover:border-green-300 ${
+                        errors.postalCode ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-green-500'
+                      }`}
+                      {...register('postalCode')}
+                    />
+                    {errors.postalCode && (
+                      <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                        <X className="h-4 w-4" />
+                        {errors.postalCode.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Property Type Section */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <Building className="h-5 w-5 text-purple-600" />
+                نوع العقار والإعلان
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                    {t('filters.listingType')} <span className="text-red-500">*</span>
+                  </Label>
+                  <Controller
+                    name="listingType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="h-12 text-lg border-2 rounded-xl hover:border-purple-300 focus:ring-4 focus:ring-purple-100">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-purple-600" />
+                            <SelectValue placeholder="اختر نوع الإعلان" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="rent" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              {t('property.listingTypes.forRent')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="sale" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              {t('property.listingTypes.forSale')}
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                    {t('filters.propertyType')} <span className="text-red-500">*</span>
+                  </Label>
+                  <Controller
+                    name="propertyType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="h-12 text-lg border-2 rounded-xl hover:border-purple-300 focus:ring-4 focus:ring-purple-100">
+                          <div className="flex items-center gap-2">
+                            <Home className="h-4 w-4 text-purple-600" />
+                            <SelectValue placeholder="اختر نوع العقار" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="apartment" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-blue-600" />
+                              {t('property.types.apartment')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="house" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Home className="h-4 w-4 text-green-600" />
+                              {t('property.types.house')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="villa" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Star className="h-4 w-4 text-yellow-600" />
+                              {t('property.types.villa')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="condo" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-purple-600" />
+                              {t('property.types.condo')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="townhouse" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Home className="h-4 w-4 text-indigo-600" />
+                              {t('property.types.townhouse')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="studio" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Square className="h-4 w-4 text-orange-600" />
+                              {t('property.types.studio')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="loft" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-red-600" />
+                              {t('property.types.loft')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="commercial" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-gray-600" />
+                              {t('property.types.commercial')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="land" className="text-lg py-3">
+                            <div className="flex items-center gap-2">
+                              <Square className="h-4 w-4 text-brown-600" />
+                              {t('property.types.land')}
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -474,152 +631,253 @@ const AddProperty: React.FC = () => {
 
       case 2:
         return (
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="price">{t('forms.price')} *</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="price"
-                  type="number"
-                  placeholder={watch('listingType') === 'rent' ? t('forms.monthlyRent') : t('forms.salePrice')}
-                  className={`pl-10 ${errors.price ? 'border-red-500' : ''}`}
-                  {...register('price', { valueAsNumber: true })}
-                />
+          <div className="space-y-8">
+            {/* Price Section */}
+            <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-6 border border-emerald-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <DollarSign className="h-5 w-5 text-emerald-600" />
+                السعر والتكلفة
+              </h3>
+              <div>
+                <Label htmlFor="price" className="text-sm font-medium text-gray-700 mb-2 block">
+                  {t('forms.price')} <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <DollarSign className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="price"
+                    type="number"
+                    placeholder={watch('listingType') === 'rent' ? t('forms.monthlyRent') : t('forms.salePrice')}
+                    className={`pr-12 h-14 text-xl border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-emerald-100 hover:border-emerald-300 ${
+                      errors.price ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'
+                    }`}
+                    {...register('price', { valueAsNumber: true })}
+                  />
+                </div>
+                {errors.price && (
+                  <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                    <X className="h-4 w-4" />
+                    {errors.price.message}
+                  </p>
+                )}
               </div>
-              {errors.price && (
-                <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
-              )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="bedrooms">{t('property.details.bedrooms')} *</Label>
-                <div className="relative">
-                  <Bed className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            {/* Property Specifications */}
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <Building className="h-5 w-5 text-blue-600" />
+                مواصفات العقار
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <Label htmlFor="bedrooms" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.bedrooms')} <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Bed className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="bedrooms"
+                      type="number"
+                      min="0"
+                      placeholder="عدد الغرف"
+                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-100 hover:border-blue-300 ${
+                        errors.bedrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
+                      }`}
+                      {...register('bedrooms', { valueAsNumber: true })}
+                    />
+                  </div>
+                  {errors.bedrooms && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.bedrooms.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="bathrooms" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.bathrooms')} <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Bath className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="bathrooms"
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      placeholder="عدد الحمامات"
+                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-100 hover:border-blue-300 ${
+                        errors.bathrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
+                      }`}
+                      {...register('bathrooms', { valueAsNumber: true })}
+                    />
+                  </div>
+                  {errors.bathrooms && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.bathrooms.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="squareFootage" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.squareFootage')} <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Square className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="squareFootage"
+                      type="number"
+                      min="1"
+                      placeholder="المساحة (م²)"
+                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-100 hover:border-blue-300 ${
+                        errors.squareFootage ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
+                      }`}
+                      {...register('squareFootage', { valueAsNumber: true })}
+                    />
+                  </div>
+                  {errors.squareFootage && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.squareFootage.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Details */}
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <Calendar className="h-5 w-5 text-orange-600" />
+                تفاصيل إضافية
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="yearBuilt" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.yearBuilt')} <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Calendar className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="yearBuilt"
+                      type="number"
+                      min="1800"
+                      max={new Date().getFullYear()}
+                      placeholder="سنة البناء"
+                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-orange-100 hover:border-orange-300 ${
+                        errors.yearBuilt ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-orange-500'
+                      }`}
+                      {...register('yearBuilt', { valueAsNumber: true })}
+                    />
+                  </div>
+                  {errors.yearBuilt && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.yearBuilt.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="availableDate" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.availableDate')}
+                  </Label>
                   <Input
-                    id="bedrooms"
-                    type="number"
-                    min="0"
-                    className={`pl-10 ${errors.bedrooms ? 'border-red-500' : ''}`}
-                    {...register('bedrooms', { valueAsNumber: true })}
+                    id="availableDate"
+                    type="date"
+                    className="h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-orange-100 hover:border-orange-300 border-gray-200 focus:border-orange-500"
+                    {...register('availableDate')}
                   />
                 </div>
-                {errors.bedrooms && (
-                  <p className="text-sm text-red-600 mt-1">{errors.bedrooms.message}</p>
-                )}
-              </div>
 
-              <div>
-                <Label htmlFor="bathrooms">{t('property.details.bathrooms')} *</Label>
-                <div className="relative">
-                  <Bath className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <div>
+                  <Label htmlFor="lotSize" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.lotSize')}
+                  </Label>
                   <Input
-                    id="bathrooms"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    className={`pl-10 ${errors.bathrooms ? 'border-red-500' : ''}`}
-                    {...register('bathrooms', { valueAsNumber: true })}
-                  />
-                </div>
-                {errors.bathrooms && (
-                  <p className="text-sm text-red-600 mt-1">{errors.bathrooms.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="squareFootage">{t('property.details.squareFootage')} *</Label>
-                <div className="relative">
-                  <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="squareFootage"
+                    id="lotSize"
                     type="number"
                     min="1"
-                    className={`pl-10 ${errors.squareFootage ? 'border-red-500' : ''}`}
-                    {...register('squareFootage', { valueAsNumber: true })}
+                    max="1000000"
+                    placeholder={t('forms.lotSizePlaceholder')}
+                    className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-orange-100 hover:border-orange-300 ${
+                      errors.lotSize ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-orange-500'
+                    }`}
+                    {...register('lotSize', { valueAsNumber: true })}
+                  />
+                  {errors.lotSize && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.lotSize.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="petPolicy" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.petPolicy')}
+                  </Label>
+                  <Input
+                    id="petPolicy"
+                    placeholder={t('forms.petPolicyPlaceholder')}
+                    className="h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-orange-100 hover:border-orange-300 border-gray-200 focus:border-orange-500"
+                    {...register('petPolicy')}
                   />
                 </div>
-                {errors.squareFootage && (
-                  <p className="text-sm text-red-600 mt-1">{errors.squareFootage.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="yearBuilt">{t('property.details.yearBuilt')} *</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="yearBuilt"
-                  type="number"
-                  min="1800"
-                  max={new Date().getFullYear()}
-                  className={`pl-10 ${errors.yearBuilt ? 'border-red-500' : ''}`}
-                  {...register('yearBuilt', { valueAsNumber: true })}
-                />
-              </div>
-              {errors.yearBuilt && (
-                <p className="text-sm text-red-600 mt-1">{errors.yearBuilt.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="availableDate">{t('property.details.availableDate')}</Label>
-                <Input
-                  id="availableDate"
-                  type="date"
-                  {...register('availableDate')}
-                />
               </div>
 
-              <div>
-                <Label htmlFor="lotSize">{t('property.details.lotSize')}</Label>
-                <Input
-                  id="lotSize"
-                  type="number"
-                  min="1"
-                  max="1000000"
-                  placeholder={t('forms.lotSizePlaceholder')}
-                  className={errors.lotSize ? 'border-red-500' : ''}
-                  {...register('lotSize', { valueAsNumber: true })}
-                />
-                {errors.lotSize && (
-                  <p className="text-sm text-red-600 mt-1">{errors.lotSize.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="parking">{t('property.details.parking')}</Label>
+              <div className="mt-6">
+                <Label htmlFor="parking" className="text-sm font-medium text-gray-700 mb-3 block">
+                  {t('property.details.parking')}
+                </Label>
                 <Controller
                   name="parking"
                   control={control}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select parking type" />
+                      <SelectTrigger className="h-12 text-lg border-2 rounded-xl hover:border-orange-300 focus:ring-4 focus:ring-orange-100">
+                        <div className="flex items-center gap-2">
+                          <Car className="h-4 w-4 text-orange-600" />
+                          <SelectValue placeholder="اختر نوع المواقف" />
+                        </div>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">No Parking</SelectItem>
-                        <SelectItem value="street">Street Parking</SelectItem>
-                        <SelectItem value="garage">Garage</SelectItem>
-                        <SelectItem value="driveway">Driveway</SelectItem>
-                        <SelectItem value="carport">Carport</SelectItem>
+                        <SelectItem value="none" className="text-lg py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            لا يوجد مواقف
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="street" className="text-lg py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                            مواقف في الشارع
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="garage" className="text-lg py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            جراج مغلق
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="driveway" className="text-lg py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            ممر خاص
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="carport" className="text-lg py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            مظلة سيارات
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="petPolicy">{t('property.details.petPolicy')}</Label>
-                <Input
-                  id="petPolicy"
-                  placeholder={t('forms.petPolicyPlaceholder')}
-                  {...register('petPolicy')}
                 />
               </div>
             </div>
@@ -628,14 +886,18 @@ const AddProperty: React.FC = () => {
 
       case 3:
         return (
-          <div className="space-y-6">
-            <div>
-              <Label>Property Images</Label>
-              <p className="text-sm text-gray-600 mb-4">
-                Upload up to 10 high-quality images of your property. The first image will be used as the main photo.
+          <div className="space-y-8">
+            {/* Image Upload Section */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <Camera className="h-5 w-5 text-purple-600" />
+                صور العقار
+              </h3>
+              <p className="text-sm text-gray-600 mb-6 font-['Cairo',_'Tajawal',_sans-serif]">
+                ارفع حتى 10 صور عالية الجودة للعقار. الصورة الأولى ستكون الصورة الرئيسية.
               </p>
               
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50 transition-all duration-300 bg-white/50">
                 <input
                   type="file"
                   multiple
@@ -644,45 +906,86 @@ const AddProperty: React.FC = () => {
                   className="hidden"
                   id="image-upload"
                 />
-                <label htmlFor="image-upload" className="cursor-pointer">
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-lg font-medium text-gray-900 mb-2">
-                    Click to upload images
+                <label htmlFor="image-upload" className="cursor-pointer block">
+                  <div className="bg-purple-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 hover:bg-purple-200 transition-colors">
+                    <Upload className="h-10 w-10 text-purple-600" />
+                  </div>
+                  <p className="text-xl font-semibold text-gray-900 mb-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                    اضغط لرفع الصور
                   </p>
-                  <p className="text-sm text-gray-500">
-                    PNG, JPG, GIF up to 10MB each (Max 10 images)
+                  <p className="text-sm text-gray-500 font-['Cairo',_'Tajawal',_sans-serif]">
+                    PNG, JPG, GIF حتى 10 ميجابايت لكل صورة (حد أقصى 10 صور)
                   </p>
                 </label>
               </div>
 
               {selectedImages.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="font-medium text-gray-900 mb-3">
-                    Selected Images ({selectedImages.length}/10)
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="mt-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                      <ImageIcon className="h-5 w-5 text-purple-600" />
+                      الصور المختارة ({selectedImages.length}/10)
+                    </h4>
+                    <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                      {selectedImages.length} من 10
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {imagePreviewUrls.map((url, index) => (
                       <div key={index} className="relative group">
-                        <FixedImage
-                          src={url}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg border shadow-sm"
-                          showLoadingSpinner={true}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                        {index === 0 && (
-                          <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                            Main Photo
+                        <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow-md">
+                          <FixedImage
+                            src={url}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-40 object-cover"
+                            showLoadingSpinner={true}
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200"></div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          {index === 0 && (
+                            <div className="absolute bottom-3 left-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-lg flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-current" />
+                              الصورة الرئيسية
+                            </div>
+                          )}
+                          <div className="absolute top-3 left-3 bg-white/90 text-gray-700 text-xs px-2 py-1 rounded-full font-medium">
+                            {index + 1}
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
+                    
+                    {/* Add more images placeholder */}
+                    {selectedImages.length < 10 && (
+                      <div className="relative">
+                        <label htmlFor="image-upload" className="cursor-pointer block">
+                          <div className="w-full h-40 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-purple-400 hover:bg-purple-50 transition-all duration-200">
+                            <Plus className="h-8 w-8 text-gray-400 mb-2" />
+                            <span className="text-sm text-gray-500 font-medium">إضافة المزيد</span>
+                          </div>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Image Upload Tips */}
+                  <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h5 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                      <Camera className="h-4 w-4" />
+                      نصائح للحصول على أفضل النتائج
+                    </h5>
+                    <ul className="text-blue-800 text-sm space-y-1 font-['Cairo',_'Tajawal',_sans-serif]">
+                      <li>• استخدم إضاءة طبيعية جيدة</li>
+                      <li>• التقط صور من زوايا مختلفة</li>
+                      <li>• أظهر المميزات الرئيسية للعقار</li>
+                      <li>• تأكد من وضوح الصور وجودتها العالية</li>
+                    </ul>
                   </div>
                 </div>
               )}
@@ -721,7 +1024,7 @@ const AddProperty: React.FC = () => {
                       onCheckedChange={() => handleFeatureToggle(feature)}
                     />
                     <Label htmlFor={feature} className="text-sm">
-                      {t(`property.features.${feature}`)}
+                      {getFeatureTranslation(feature)}
                     </Label>
                   </div>
                 ))}
@@ -731,24 +1034,40 @@ const AddProperty: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="utilities">{t('property.details.utilities')}</Label>
-                <Input
-                  id="utilities"
-                  placeholder={t('forms.utilitiesPlaceholder')}
-                  {...register('utilities')}
-                />
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-4 block">
+                {t('property.details.utilities')}
+              </Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+                {availableUtilities.map((utility) => (
+                  <div key={utility} className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <Checkbox
+                      id={`utility-${utility}`}
+                      checked={selectedUtilities.includes(utility)}
+                      onCheckedChange={() => handleUtilityToggle(utility)}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    />
+                    <Label
+                      htmlFor={`utility-${utility}`}
+                      className="text-sm font-medium text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                    >
+                      {utility}
+                    </Label>
+                  </div>
+                ))}
               </div>
+              <p className="text-sm text-gray-500 mt-2">
+                {t('forms.selectedUtilities', { defaultValue: 'Selected utilities' })}: {selectedUtilities.length}
+              </p>
+            </div>
 
-              <div>
-                <Label htmlFor="hoaFees">{t('property.details.hoaFees')}</Label>
-                <Input
-                  id="hoaFees"
-                  placeholder={t('forms.hoaFeesPlaceholder')}
-                  {...register('hoaFees')}
-                />
-              </div>
+            <div>
+              <Label htmlFor="hoaFees">{t('property.details.hoaFees')}</Label>
+              <Input
+                id="hoaFees"
+                placeholder={t('forms.hoaFeesPlaceholder')}
+                {...register('hoaFees')}
+              />
             </div>
           </div>
         );
@@ -827,76 +1146,181 @@ const AddProperty: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50"></div>
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.15) 1px, transparent 0)`,
+          backgroundSize: '20px 20px'
+        }}></div>
+      </div>
+      
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Enhanced Header */}
+        <div className="flex items-center justify-between mb-10">
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className="flex items-center"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-white/60 transition-all duration-200 rounded-xl px-4 py-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {t('dashboard.myProperties')}
+            <ArrowLeft className="h-5 w-5" />
+            <span className="font-medium">{t('dashboard.myProperties')}</span>
           </Button>
-          <div className="flex items-center space-x-2">
-            <Home className="h-6 w-6 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">{t('navigation.listProperty')}</h1>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+              <Home className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 font-['Cairo',_'Tajawal',_sans-serif]">
+                {t('navigation.listProperty')}
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">أضف عقارك الجديد بسهولة</p>
+            </div>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              {t('forms.step')} {currentStep} {t('forms.of')} {totalSteps}
-            </span>
-            <span className="text-sm text-gray-500">
-              {Math.round((currentStep / totalSteps) * 100)}% {t('forms.complete')}
-            </span>
+        {/* Enhanced Progress Bar with Step Indicators */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-semibold text-gray-800 font-['Cairo',_'Tajawal',_sans-serif]">
+                {t('forms.step')} {currentStep} {t('forms.of')} {totalSteps}
+              </span>
+              <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                {Math.round((currentStep / totalSteps) * 100)}% {t('forms.complete')}
+              </div>
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          
+          {/* Step Indicators */}
+          <div className="flex items-center justify-between mb-4">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div key={step} className="flex flex-col items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                  step <= currentStep 
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg' 
+                    : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {step <= currentStep ? (
+                    step < currentStep ? '✓' : step
+                  ) : step}
+                </div>
+                <span className={`text-xs mt-2 font-medium ${
+                  step <= currentStep ? 'text-blue-600' : 'text-gray-400'
+                }`}>
+                  {step === 1 && 'أساسي'}
+                  {step === 2 && 'تفاصيل'}
+                  {step === 3 && 'صور'}
+                  {step === 4 && 'مميزات'}
+                  {step === 5 && 'تواصل'}
+                </span>
+              </div>
+            ))}
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500 ease-out shadow-sm relative overflow-hidden"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-            />
+            >
+              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+            </div>
           </div>
         </div>
 
-        {/* Form */}
+        {/* Enhanced Form */}
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {currentStep === 1 && t('steps.basicInformation')}
-                {currentStep === 2 && t('steps.propertyDetails')}
-                {currentStep === 3 && 'Property Images'}
-                {currentStep === 4 && t('steps.features')}
-                {currentStep === 5 && t('steps.contactInformation')}
-              </CardTitle>
+          <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100/50 pb-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg">
+                  {currentStep === 1 && <FileText className="h-5 w-5 text-white" />}
+                  {currentStep === 2 && <Building className="h-5 w-5 text-white" />}
+                  {currentStep === 3 && <Camera className="h-5 w-5 text-white" />}
+                  {currentStep === 4 && <Star className="h-5 w-5 text-white" />}
+                  {currentStep === 5 && <User className="h-5 w-5 text-white" />}
+                </div>
+                <div>
+                  <CardTitle className="text-2xl font-bold text-gray-900 font-['Cairo',_'Tajawal',_sans-serif]">
+                    {currentStep === 1 && (
+                      <>
+                        <span className="text-blue-600">المعلومات الأساسية</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">أدخل المعلومات الأساسية للعقار</p>
+                      </>
+                    )}
+                    {currentStep === 2 && (
+                      <>
+                        <span className="text-blue-600">تفاصيل العقار</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">حدد المواصفات والتفاصيل الفنية</p>
+                      </>
+                    )}
+                    {currentStep === 3 && (
+                      <>
+                        <span className="text-blue-600">صور العقار</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">أضف صور عالية الجودة للعقار</p>
+                      </>
+                    )}
+                    {currentStep === 4 && (
+                      <>
+                        <span className="text-blue-600">المميزات والخدمات</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">اختر المميزات والخدمات المتوفرة</p>
+                      </>
+                    )}
+                    {currentStep === 5 && (
+                      <>
+                        <span className="text-blue-600">معلومات التواصل</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">أدخل بيانات التواصل للمهتمين</p>
+                      </>
+                    )}
+                  </CardTitle>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>{renderStep()}</CardContent>
+            <CardContent className="p-8">{renderStep()}</CardContent>
           </Card>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
+          {/* Enhanced Navigation Buttons */}
+          <div className="flex justify-between items-center mt-10">
             <Button
               type="button"
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
+              className="px-8 py-3 rounded-xl border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
+              <ArrowRight className="h-4 w-4 ml-2" />
               {t('buttons.previous')}
             </Button>
 
-            <div className="flex space-x-4">
+            <div className="flex gap-4">
               {currentStep < totalSteps ? (
-                <Button type="button" onClick={nextStep}>
+                <Button 
+                  type="button" 
+                  onClick={nextStep}
+                  className="px-10 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                >
                   {t('buttons.next')}
+                  <ArrowLeft className="h-4 w-4 mr-2" />
                 </Button>
               ) : (
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? t('buttons.creatingListing') : t('buttons.createListing')}
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="px-10 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {t('buttons.creatingListing')}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      {t('buttons.createListing')}
+                    </>
+                  )}
                 </Button>
               )}
             </div>

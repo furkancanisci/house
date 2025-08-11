@@ -8,7 +8,7 @@ const api: AxiosInstance = axios.create({
     'Accept': 'application/json',
   },
   withCredentials: true,
-  timeout: 30000, // Increased timeout to 30 seconds to prevent timeouts with slow backend responses
+  timeout: 60000, // Increased timeout to 60 seconds to handle image uploads
 });
 
 // Flag to prevent multiple token refresh attempts

@@ -92,8 +92,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/{property:slug}/similar', [PropertyController::class, 'similar']);
         
         // Write operations - keeping these for future reference but making them public for now
-        Route::post('/', [PropertyController::class, 'store']);
-        Route::put('/{property}', [PropertyController::class, 'update']);
+        Route::post('/', [PropertyController::class, 'store'])->middleware('validate.image');
+        Route::put('/{property}', [PropertyController::class, 'update'])->middleware('validate.image');
         Route::delete('/{property}', [PropertyController::class, 'destroy']);
         Route::delete('/{property}/images/{mediaId}', [PropertyController::class, 'deleteImage']);
         Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite']);
@@ -129,6 +129,15 @@ Route::prefix('v1')->group(function () {
         
         // Get neighborhoods (optionally filtered by city and/or state)
         Route::get('/neighborhoods', 'App\Http\Controllers\Api\LocationController@getNeighborhoods');
+    });
+
+    // Cities Routes
+    Route::prefix('cities')->group(function () {
+        Route::get('/', 'App\Http\Controllers\Api\CityController@index');
+        Route::get('/countries', 'App\Http\Controllers\Api\CityController@getCountries');
+        Route::get('/states', 'App\Http\Controllers\Api\CityController@getStates');
+        Route::get('/by-state', 'App\Http\Controllers\Api\CityController@getCitiesByState');
+        Route::get('/search', 'App\Http\Controllers\Api\CityController@search');
     });
 
     // Statistics and Analytics Routes

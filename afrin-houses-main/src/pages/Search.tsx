@@ -66,9 +66,22 @@ interface SearchParams extends Record<string, string | undefined> {
 type ViewMode = 'grid' | 'list';
 
 const Search: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { state, filterProperties } = useApp();
+  const { state, filterProperties, loadProperties } = useApp();
+  
+  // Helper to normalize values that may be localized objects { name_ar, name_en }
+  const normalizeName = (val: any): string => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      const locale = i18n.language === 'ar' ? 'ar' : 'en';
+      const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
+      const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
+      return locale === 'ar' ? (ar || en || '') : (en || ar || '');
+    }
+    return String(val);
+  };
   const { properties: allProperties, filteredProperties: contextFilteredProperties, loading, error } = state;
   const [filteredProperties, setFilteredProperties] = useState<ExtendedProperty[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -709,7 +722,7 @@ const Search: React.FC = () => {
                   // Get square footage from various possible locations in the API response
                   const squareFootage = 
                     property.square_feet || 
-                    (property as any).details?.square_feet || 
+                    (property as any).details?.square_footage || 
                     (property as any).square_footage || 
                     (property as any).details?.square_footage || 
                     0;
@@ -740,7 +753,7 @@ const Search: React.FC = () => {
                     mainImage: mainImage,
                     images: images,
                     features: (property as any).features || [],
-                    address: (property as any).address || `${property.city || ''} ${property.state || ''}`.trim(),
+                    address: (property as any).address || `${normalizeName(property.city) || ''} ${normalizeName(property.state) || ''}`.trim(),
                     coordinates: {
                       lat: property.latitude || 0,
                       lng: property.longitude || 0
@@ -762,8 +775,8 @@ const Search: React.FC = () => {
                     updated_at: (property as any).updated_at || new Date().toISOString(),
                     user_id: (property as any).user_id || 0,
                     media: Array.isArray(property.media) ? property.media : [],
-                    city: property.city || '',
-                    state: property.state || '',
+                    city: normalizeName(property.city) || '',
+                    state: normalizeName(property.state) || '',
                     postal_code: (property as any).postal_code || '',
                   };
 

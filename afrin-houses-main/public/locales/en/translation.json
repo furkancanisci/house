@@ -192,9 +192,17 @@
     "sqft": "sqft"
   },
   "common": {
-    "loading": "Loading property details...",
+    "loading": "Loading...",
     "backToSearch": "Back to Search",
-    "linkCopied": "Link copied to clipboard"
+    "linkCopied": "Link copied to clipboard",
+    "country": "Country",
+    "state": "State",
+    "city": "City",
+    "selectCountry": "Select Country",
+    "selectState": "Select State",
+    "selectCity": "Select City",
+    "selectCountryFirst": "Select country first",
+    "selectStateFirst": "Select state first"
   },
   "messages": {
     "propertyDeletedSuccess": "Property deleted successfully",
