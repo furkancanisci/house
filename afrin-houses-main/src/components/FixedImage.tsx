@@ -15,8 +15,9 @@ interface FixedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 }
 
 // Utility function to fix image URLs
-const fixImageUrl = (url: string | undefined, propertyId?: string | number): string => {
-  if (!url) return getRandomPropertyImage(propertyId);
+const fixImageUrl = (url: string | undefined | null | any, propertyId?: string | number): string => {
+  // Check if url is not a string or is empty
+  if (!url || typeof url !== 'string') return getRandomPropertyImage(propertyId);
   
   // Don't process already processed URLs
   if (url.startsWith('http://localhost:8000/') ||

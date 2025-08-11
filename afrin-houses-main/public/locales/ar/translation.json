@@ -276,9 +276,19 @@
     "failedToLoadProperties": "فشل في تحميل العقارات"
   },
   "common": {
-    "loading": "جاري تحميل تفاصيل العقار...",
+    "loading": "جاري التحميل...",
     "backToSearch": "العودة إلى البحث",
     "linkCopied": "تم نسخ الرابط إلى الحافظة"
+  },
+  "location": {
+    "country": "الدولة",
+    "state": "المحافظة",
+    "city": "المدينة",
+    "selectCountry": "اختر الدولة",
+    "selectState": "اختر المحافظة",
+    "selectCity": "اختر المدينة",
+    "selectCountryFirst": "اختر الدولة أولاً",
+    "selectStateFirst": "اختر المحافظة أولاً"
   },
   "messages": {
     "propertyDeletedSuccess": "تم حذف العقار بنجاح",

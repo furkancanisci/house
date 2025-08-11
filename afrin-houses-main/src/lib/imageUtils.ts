@@ -77,8 +77,9 @@ const PROPERTY_TYPE_IMAGES: Record<string, string[]> = {
 /**
  * Fix image URL to ensure it's properly formatted
  */
-export const fixImageUrl = (url: string | undefined): string => {
-  if (!url) return '';
+export const fixImageUrl = (url: string | undefined | null | any): string => {
+  // Check if url is not a string or is empty
+  if (!url || typeof url !== 'string') return '';
   
   // Don't process already processed URLs
   if (url.startsWith('http://localhost:8000/') ||
@@ -91,6 +92,16 @@ export const fixImageUrl = (url: string | undefined): string => {
   // Replace localhost URLs with localhost:8000
   if (url.startsWith('http://localhost/')) {
     return url.replace('http://localhost/', 'http://localhost:8000/');
+  }
+  
+  // Handle relative URLs from backend (e.g., /storage/media/...)
+  if (url.startsWith('/storage/') || url.startsWith('/media/')) {
+    return `http://localhost:8000${url}`;
+  }
+  
+  // If it looks like a valid URL path, assume it's from the backend
+  if (url.startsWith('/') && !url.startsWith('/images/')) {
+    return `http://localhost:8000${url}`;
   }
   
   return url;
@@ -162,10 +173,16 @@ export const processPropertyImages = (
     mainImage = images[0];
   }
 
-  // If still no main image, use fallback based on property type
-  if (!mainImage) {
+  // Only use fallback images if NO real images exist at all
+  if (!mainImage && images.length === 0) {
     const type = propertyType || property.propertyType || property.property_type || property.type || 'apartment';
     mainImage = getFallbackImage(type, property.id);
+    // Add a few more fallback images for gallery if no real images exist
+    const typeImages = PROPERTY_TYPE_IMAGES[type.toLowerCase()] || PROPERTY_IMAGES;
+    images = typeImages.slice(0, 3);
+  } else if (!mainImage && images.length > 0) {
+    // If we have gallery images but no main image, use the first gallery image as main
+    mainImage = images[0];
   }
 
   // If no images array but we have a main image, add it to the array
@@ -173,13 +190,9 @@ export const processPropertyImages = (
     images = [mainImage];
   }
 
-  // Add some additional fallback images for variety
-  if (images.length < 3) {
-    const type = propertyType || property.propertyType || property.property_type || property.type || 'apartment';
-    const typeImages = PROPERTY_TYPE_IMAGES[type.toLowerCase()] || PROPERTY_IMAGES;
-    const additionalImages = typeImages.slice(0, 3 - images.length);
-    images = [...images, ...additionalImages];
-  }
+  // REMOVED: Do not add fallback images that override real uploaded images
+  // Only use fallback images if NO images exist at all
+  // This prevents mixing real uploaded images with random stock images
 
   return {
     mainImage,

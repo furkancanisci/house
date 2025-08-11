@@ -1,8 +1,9 @@
 import api from './api';
 
 // Utility function to fix image URLs
-const fixImageUrl = (url: string | null): string => {
-  if (!url) return '/placeholder-property.jpg';
+const fixImageUrl = (url: string | null | undefined | any): string => {
+  // Check if url is not a string or is empty
+  if (!url || typeof url !== 'string') return '/placeholder-property.jpg';
   
   // Replace localhost URLs with localhost:8000
   if (url.startsWith('http://localhost/')) {

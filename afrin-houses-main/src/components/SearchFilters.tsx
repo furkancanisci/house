@@ -33,6 +33,7 @@ import {
 } from './ui/collapsible';
 import { Checkbox } from './ui/checkbox';
 import { useTranslation } from 'react-i18next';
+import LocationSelector from './LocationSelector';
 
 interface SearchFiltersProps {
   onFiltersChange?: (filters: SearchFiltersType) => void;
@@ -65,6 +66,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     maxSquareFootage: initialFilters?.maxSquareFootage !== undefined ? Number(initialFilters.maxSquareFootage) : undefined,
     features: initialFilters?.features || []
   }));
+
+  // Location state for dropdowns
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedState, setSelectedState] = useState<string>('');
+  const [selectedCity, setSelectedCity] = useState<string>('');
   
   // Local state for input values that update as user types
   const [localValues, setLocalValues] = useState<{
@@ -170,6 +176,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     // Update filters with processed price values
     if (minPrice !== undefined) newFilters.minPrice = minPrice;
     if (maxPrice !== undefined) newFilters.maxPrice = maxPrice;
+    
+    // Update location based on selected dropdowns
+    const locationParts = [];
+    if (selectedCity) locationParts.push(selectedCity);
+    if (selectedState) locationParts.push(selectedState);
+    if (selectedCountry) locationParts.push(selectedCountry);
+    newFilters.location = locationParts.join(', ');
     
     // Call the appropriate callback
     if (onApplyFilters) {
@@ -287,6 +300,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       maxPrice: ''
     });
     
+    // Reset location dropdowns
+    setSelectedCountry('');
+    setSelectedState('');
+    setSelectedCity('');
+    
     // Notify parent component of changes
     if (onFiltersChange) {
       onFiltersChange(defaultFilters);
@@ -318,20 +336,18 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       
       <CardContent className="space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Location Search */}
-        <div className="space-y-2">
-          <Label htmlFor="location">{t('filters.location')}</Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              id="location"
-              placeholder={t('filters.enterLocation')}
-              value={formValues.location || ''}
-              onChange={(e) => handleFilterChange('location', e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
+        {/* Location Selector */}
+        <LocationSelector
+          selectedCountry={selectedCountry}
+          selectedState={selectedState}
+          selectedCity={selectedCity}
+          onCountryChange={setSelectedCountry}
+          onStateChange={setSelectedState}
+          onCityChange={setSelectedCity}
+          showCountry={true}
+          showState={true}
+          showCity={true}
+        />
 
         {/* Listing Type - conditionally hidden */}
         {!hideListingType && (

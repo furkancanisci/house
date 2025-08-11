@@ -37,10 +37,13 @@ import {
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import FixedImage from '../components/FixedImage';
+import LocationSelector from '../components/LocationSelector';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required'),
   address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
+  state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
   price: z.number().min(1, 'Price must be greater than 0'),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
@@ -77,6 +80,8 @@ const EditProperty: React.FC = () => {
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<any[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
+  const [selectedCity, setSelectedCity] = useState<string>('');
+  const [selectedState, setSelectedState] = useState<string>('');
 
   const {
     register,
@@ -151,6 +156,8 @@ const EditProperty: React.FC = () => {
 
         setProperty(foundProperty);
         setSelectedFeatures(foundProperty.features);
+        setSelectedCity(foundProperty.city || '');
+        setSelectedState(foundProperty.state || '');
         
         // Load existing images - handle different image formats safely
         if (foundProperty.images) {
@@ -173,6 +180,8 @@ const EditProperty: React.FC = () => {
         reset({
           title: foundProperty.title,
           address: foundProperty.address,
+          city: foundProperty.city || '',
+          state: foundProperty.state || '',
           price: Number(foundProperty.price) || 0,
           listingType: foundProperty.listingType,
           propertyType: foundProperty.propertyType,
@@ -208,6 +217,15 @@ const EditProperty: React.FC = () => {
         ? prev.filter(f => f !== feature)
         : [...prev, feature]
     );
+  };
+
+  const handleLocationChange = (location: { country?: string; state?: string; city?: string }) => {
+    if (location.city) {
+      setSelectedCity(location.city);
+    }
+    if (location.state) {
+      setSelectedState(location.state);
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,6 +269,8 @@ const EditProperty: React.FC = () => {
       const updatedProperty: any = {
         title: data.title,
         address: data.address,
+        city: selectedCity || data.city,
+        state: selectedState || data.state,
         price: data.price,
         listingType: data.listingType,
         propertyType: data.propertyType,
@@ -351,6 +371,14 @@ const EditProperty: React.FC = () => {
                 {errors.address && (
                   <p className="text-sm text-red-600 mt-1">{errors.address.message}</p>
                 )}
+              </div>
+
+              <div>
+                <LocationSelector
+                  onLocationChange={handleLocationChange}
+                  selectedCity={selectedCity}
+                  selectedState={selectedState}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

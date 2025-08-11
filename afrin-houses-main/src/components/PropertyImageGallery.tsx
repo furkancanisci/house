@@ -16,8 +16,9 @@ interface PropertyImageGalleryProps {
 }
 
 // Utility function to fix image URLs
-const fixImageUrl = (url: string | undefined, propertyId?: string | number): string => {
-  if (!url) return getRandomPropertyImage(propertyId);
+const fixImageUrl = (url: string | undefined | null | any): string => {
+  // Check if url is not a string or is empty
+  if (!url || typeof url !== 'string') return '';
   
   // Don't process already processed URLs
   if (url.startsWith('http://localhost:8000/') ||
@@ -30,6 +31,16 @@ const fixImageUrl = (url: string | undefined, propertyId?: string | number): str
   // Replace localhost URLs with localhost:8000
   if (url.startsWith('http://localhost/')) {
     return url.replace('http://localhost/', 'http://localhost:8000/');
+  }
+  
+  // Handle relative URLs from backend (e.g., /storage/media/...)
+  if (url.startsWith('/storage/') || url.startsWith('/media/')) {
+    return `http://localhost:8000${url}`;
+  }
+  
+  // If it looks like a valid URL path, assume it's from the backend
+  if (url.startsWith('/') && !url.startsWith('/images/')) {
+    return `http://localhost:8000${url}`;
   }
   
   return url;
@@ -52,16 +63,19 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
 
   // Process images to ensure they're valid - handle undefined/null images
   const processedImages = (images && Array.isArray(images) && images.length > 0) 
-    ? images.map(img => fixImageUrl(img, propertyId))
-    : [getRandomPropertyImage(propertyId)];
+    ? images.map(img => fixImageUrl(img)).filter(url => url !== '') // Remove empty URLs
+    : [];
+  
+  // Only use fallback if NO valid images exist at all
+  const finalImages = processedImages.length > 0 ? processedImages : [getRandomPropertyImage(propertyId)];
 
-  const currentImage = processedImages[currentImageIndex];
+  const currentImage = finalImages[currentImageIndex];
   const currentImageState = imageLoadStates[currentImageIndex] || { loaded: false, error: false, loading: true };
 
   // Initialize loading states for all images when component mounts or images change
   useEffect(() => {
     const initialStates: Record<number, { loaded: boolean; error: boolean; loading: boolean }> = {};
-    processedImages.forEach((_, index) => {
+    finalImages.forEach((_, index) => {
       if (!imageLoadStates[index]) {
         initialStates[index] = { loaded: false, error: false, loading: true };
       }
@@ -70,17 +84,17 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
     if (Object.keys(initialStates).length > 0) {
       setImageLoadStates(prev => ({ ...prev, ...initialStates }));
     }
-  }, [processedImages.length]);
+  }, [finalImages.length]);
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => 
-      prev === 0 ? processedImages.length - 1 : prev - 1
+      prev === 0 ? finalImages.length - 1 : prev - 1
     );
   };
 
   const handleNextImage = () => {
     setCurrentImageIndex((prev) => 
-      prev === processedImages.length - 1 ? 0 : prev + 1
+      prev === finalImages.length - 1 ? 0 : prev + 1
     );
   };
 
@@ -110,7 +124,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   };
 
   // Prepare slides for lightbox
-  const lightboxSlides = processedImages.map((src, index) => ({
+  const lightboxSlides = finalImages.map((src, index) => ({
     src,
     alt: `${alt} - Image ${index + 1}`,
   }));
@@ -148,7 +162,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
         />
 
         {/* Navigation Arrows (only show if multiple images) */}
-        {processedImages.length > 1 && (
+        {finalImages.length > 1 && (
           <>
             <button
               onClick={handlePrevImage}
@@ -168,17 +182,17 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
         )}
 
         {/* Image Counter */}
-        {processedImages.length > 1 && (
+        {finalImages.length > 1 && (
           <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
-            {currentImageIndex + 1} / {processedImages.length}
+            {currentImageIndex + 1} / {finalImages.length}
           </div>
         )}
       </div>
 
       {/* Thumbnails */}
-      {showThumbnails && processedImages.length > 1 && (
+      {showThumbnails && finalImages.length > 1 && (
         <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
-          {processedImages.map((image, index) => {
+          {finalImages.map((image, index) => {
             const thumbnailState = imageLoadStates[index] || { loaded: false, error: false, loading: true };
             return (
               <button
@@ -223,7 +237,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
         close={() => setLightboxOpen(false)}
         slides={lightboxSlides}
         index={lightboxIndex}
-        carousel={{ finite: processedImages.length === 1 }}
+        carousel={{ finite: finalImages.length === 1 }}
         on={{
           view: ({ index }) => setLightboxIndex(index),
         }}
