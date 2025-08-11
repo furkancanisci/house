@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
-import { ExtendedProperty, SearchFilters } from '../types';
+import { ExtendedProperty, Property, SearchFilters } from '../types';
 import PropertyCard from '../components/PropertyCard';
 import SearchFiltersComponent from '../components/SearchFilters';
 import { Button } from '../components/ui/button';
@@ -35,11 +35,18 @@ const HousesForRent: React.FC = () => {
   const rentProperties = useMemo(() => {
     if (!properties || !Array.isArray(properties)) return [];
     
-    return properties.filter((property: ExtendedProperty) => {
+    return properties.filter((property: Property) => {
       // Check both possible field names for listing type
       const listingType = property.listingType || property.listing_type;
       return listingType === 'rent';
-    });
+    }).map(property => ({
+      ...property,
+      // Map Property fields to ExtendedProperty fields
+      zipCode: property.zip_code || '',
+      squareFootage: property.squareFootage || property.square_feet || 0,
+      propertyType: property.propertyType || 'apartment',
+      listingType: (property.listingType || 'rent') as 'rent' | 'sale'
+    } as ExtendedProperty));
   }, [properties]);
 
   // Apply additional filters to rental properties
@@ -229,18 +236,18 @@ const HousesForRent: React.FC = () => {
             ${viewMode === 'grid' 
               ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
               : 'space-y-6'
-            }
-          `}>
+            }`}>
             {filteredProperties.map((property) => (
               <div
                 key={property.id}
                 className="transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
-                <PropertyCard
-                  property={property}
-                  view={viewMode}
-                  className="h-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:border-blue-300"
-                />
+                <div className={viewMode === 'grid' ? 'h-full' : 'h-48'}>
+                  <PropertyCard
+                    property={property}
+                    view={viewMode}
+                  />
+                </div>
               </div>
             ))}
           </div>
