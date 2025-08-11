@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
-import { ExtendedProperty, SearchFilters } from '../types';
+import { ExtendedProperty, Property, SearchFilters } from '../types';
 import PropertyCard from '../components/PropertyCard';
 import SearchFiltersComponent from '../components/SearchFilters';
 import { Button } from '../components/ui/button';
@@ -35,11 +35,18 @@ const HousesForSale: React.FC = () => {
   const saleProperties = useMemo(() => {
     if (!properties || !Array.isArray(properties)) return [];
     
-    return properties.filter((property: ExtendedProperty) => {
+    return properties.filter((property: Property) => {
       // Check both possible field names for listing type
       const listingType = property.listingType || property.listing_type;
       return listingType === 'sale';
-    });
+    }).map(property => ({
+      ...property,
+      // Map Property fields to ExtendedProperty fields
+      zipCode: property.zip_code || '',
+      squareFootage: property.squareFootage || property.square_feet || 0,
+      propertyType: property.propertyType || 'apartment',
+      listingType: (property.listingType || 'sale') as 'sale' | 'rent'
+    } as ExtendedProperty));
   }, [properties]);
 
   // Apply additional filters to sale properties
@@ -234,12 +241,11 @@ const HousesForSale: React.FC = () => {
             {filteredProperties.map((property) => (
               <div
                 key={property.id}
-                className="transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                className="transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:border-emerald-300"
               >
                 <PropertyCard
                   property={property}
                   view={viewMode}
-                  className="h-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:border-emerald-300"
                 />
               </div>
             ))}
