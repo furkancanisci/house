@@ -238,11 +238,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
         </div>
         
         <div className="flex flex-wrap gap-1 mb-3">
-          {property.features?.slice(0, 2).map((feature) => (
-            <Badge key={feature} variant="secondary" className="text-xs">
-              {t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, feature)}
-            </Badge>
-          ))}
+          {property.features?.slice(0, 2).map((feature) => {
+            const translated = t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: feature });
+            const displayText = typeof translated === 'string' ? translated : feature;
+            return (
+              <Badge key={feature} variant="secondary" className="text-xs">
+                {displayText}
+              </Badge>
+            );
+          })}
 
           {(property.features?.length ?? 0) > 2 && (
             <Badge variant="outline" className="text-xs">

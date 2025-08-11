@@ -75,7 +75,7 @@ const FixedImage: React.FC<FixedImageProps> = ({
     setIsLoading(false);
   };
 
-  const handleImageClick = (e: React.MouseEvent) => {
+  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (enableZoom && imageLoaded) {
       e.preventDefault();
       e.stopPropagation();
