@@ -50,8 +50,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     await toggleFavorite(property.id);
   };
 
-  const images = useGallery ? processPropertyImages(property) : [];
-  const mainImage = Array.isArray(images) && images.length > 0 ? images[0] : (property.mainImage || '/placeholder-property.jpg');
+  const processedImages = useGallery ? processPropertyImages(property) : { mainImage: property.mainImage || '/placeholder-property.jpg', images: [] };
+  const images = processedImages.images || [];
+  const mainImage = processedImages.mainImage || property.mainImage || '/placeholder-property.jpg';
 
   const propertySlug = property.slug || `property-${property.id}`;
 
@@ -173,7 +174,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <Link to={`/property/${propertySlug}`}>
         <div className="relative">
-          {useGallery && images.length > 1 ? (
+          {useGallery && images && images.length > 1 ? (
             <PropertyImageGallery
               images={images}
               alt={property.title}
