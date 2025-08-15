@@ -20,6 +20,9 @@ interface LocationSelectorProps {
   initialCountry?: string;
   initialState?: string;
   initialCity?: string;
+  selectedCountry?: string;
+  selectedState?: string;
+  selectedCity?: string;
   showCountry?: boolean;
   showState?: boolean;
   showCity?: boolean;
@@ -31,6 +34,9 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   initialCountry,
   initialState,
   initialCity,
+  selectedCountry,
+  selectedState,
+  selectedCity,
   showCountry = true,
   showState = true,
   showCity = true,
@@ -54,9 +60,22 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
     return locale === 'ar' ? 'دمشق' : 'Damascus';
   };
 
-  const [selectedCountry, setSelectedCountry] = useState<string>(getDefaultCountry());
-  const [selectedState, setSelectedState] = useState<string>(getDefaultState());
-  const [selectedCity, setSelectedCity] = useState<string>(initialCity || '');
+  const [internalCountry, setInternalCountry] = useState<string>(selectedCountry || getDefaultCountry());
+  const [internalState, setInternalState] = useState<string>(selectedState || getDefaultState());
+  const [internalCity, setInternalCity] = useState<string>(selectedCity || initialCity || '');
+  
+  // Update internal state when props change
+  useEffect(() => {
+    if (selectedCountry) setInternalCountry(selectedCountry);
+  }, [selectedCountry]);
+  
+  useEffect(() => {
+    if (selectedState) setInternalState(selectedState);
+  }, [selectedState]);
+  
+  useEffect(() => {
+    if (selectedCity) setInternalCity(selectedCity);
+  }, [selectedCity]);
   
   const [loading, setLoading] = useState({
     countries: false,
@@ -70,48 +89,57 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
       loadCountries();
     }
     // Always ensure Syria is selected as default
-    if (!selectedCountry || selectedCountry === '') {
-      setSelectedCountry(locale === 'ar' ? 'سوريا' : 'Syria');
+    if (!internalCountry || internalCountry === '') {
+      const defaultCountry = locale === 'ar' ? 'سوريا' : 'Syria';
+      setInternalCountry(defaultCountry);
+      // Update parent if callback is provided
+      if (onLocationChange) {
+        onLocationChange({
+          country: defaultCountry,
+          state: internalState,
+          city: internalCity
+        });
+      }
     }
   }, [locale, showCountry]);
 
   // Load states for default country (Syria) on mount
   useEffect(() => {
     const defaultCountry = locale === 'ar' ? 'سوريا' : 'Syria';
-    if (selectedCountry === defaultCountry && showState) {
+    if (internalCountry === defaultCountry && showState) {
       loadStates(defaultCountry);
     }
-  }, [locale]);
+  }, [locale, internalCountry, showState]);
 
   // Load states when country changes
   useEffect(() => {
-    if (selectedCountry && showState) {
-      loadStates(selectedCountry);
-    } else if (selectedCountry && !showState) {
+    if (internalCountry && showState) {
+      loadStates(internalCountry);
+    } else if (internalCountry && !showState) {
       // If not showing state selector, load all cities for the country
       if (showCity) {
-        loadCitiesForCountry(selectedCountry);
+        loadCitiesForCountry(internalCountry);
       }
     }
-  }, [selectedCountry, showState, showCity]);
+  }, [internalCountry, showState, showCity]);
 
   // Load cities when state changes
   useEffect(() => {
-    if (selectedState && showCity) {
-      loadCitiesForState(selectedState);
+    if (internalState && showCity) {
+      loadCitiesForState(internalState);
     }
-  }, [selectedState, showCity]);
+  }, [internalState, showCity]);
 
   // Notify parent component of location changes
   useEffect(() => {
     if (onLocationChange) {
       onLocationChange({
-        country: selectedCountry || undefined,
-        state: selectedState || undefined,
-        city: selectedCity || undefined,
+        country: internalCountry || undefined,
+        state: internalState || undefined,
+        city: internalCity || undefined,
       });
     }
-  }, [selectedCountry, selectedState, selectedCity, onLocationChange]);
+  }, [internalCountry, internalState, internalCity, onLocationChange]);
 
   const loadCountries = async () => {
     setLoading(prev => ({ ...prev, countries: true }));
@@ -127,7 +155,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
   const loadStates = async (country: string) => {
     setLoading(prev => ({ ...prev, states: true }));
-    setSelectedCity('');
+    setInternalCity('');
     setCities([]);
     
     try {
@@ -138,11 +166,11 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
       const isSyria = country === 'سوريا' || country === 'Syria';
       const damascusName = locale === 'ar' ? 'دمشق' : 'Damascus';
       
-      if (isSyria && data.includes(damascusName) && !selectedState) {
-        setSelectedState(damascusName);
-      } else if (!selectedState && !initialState) {
+      if (isSyria && data.includes(damascusName) && !internalState) {
+        setInternalState(damascusName);
+      } else if (!internalState && !initialState) {
         // If no initial state and not Syria, keep the default from getDefaultState
-        setSelectedState(getDefaultState());
+        setInternalState(getDefaultState());
       }
     } catch (error) {
       console.error('Error loading states:', error);
@@ -153,7 +181,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
   const loadCitiesForCountry = async (country: string) => {
     setLoading(prev => ({ ...prev, cities: true }));
-    setSelectedCity('');
+    setInternalCity('');
     
     try {
       const data = await cityService.getCities({ locale, country });
@@ -166,14 +194,15 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   };
 
   const loadCitiesForState = async (state: string) => {
+    if (!internalCountry) return;
+    
     setLoading(prev => ({ ...prev, cities: true }));
-    setSelectedCity('');
     
     try {
-      const data = await cityService.getCitiesByState({ 
-        locale, 
-        state, 
-        country: selectedCountry 
+      const data = await cityService.getCities({
+        locale,
+        country: internalCountry,
+        state,
       });
       setCities(data);
     } catch (error) {
@@ -184,15 +213,19 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   };
 
   const handleCountryChange = (value: string) => {
-    setSelectedCountry(value);
+    setInternalCountry(value);
+    setInternalState('');
+    setInternalCity('');
+    setStates([]);
+    setCities([]);
   };
 
   const handleStateChange = (value: string) => {
-    setSelectedState(value);
+    setInternalState(value);
   };
 
   const handleCityChange = (value: string) => {
-    setSelectedCity(value);
+    setInternalCity(value);
   };
 
   return (
@@ -204,7 +237,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
             {t('location.country')}
           </Label>
           <Select
-            value={selectedCountry}
+            value={internalCountry}
             onValueChange={handleCountryChange}
             disabled={loading.countries}
           >
@@ -237,14 +270,14 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
               {t('location.state')}
             </Label>
             <Select
-              value={selectedState}
+              value={internalState}
               onValueChange={handleStateChange}
-              disabled={loading.states || !selectedCountry}
+              disabled={!internalCountry || loading.states}
             >
               <SelectTrigger>
                 <SelectValue 
                   placeholder={
-                   !selectedCountry
+                   !internalCountry
                      ? t('common.selectCountryFirst')
                      : loading.states 
                        ? t('common.loading') 
@@ -270,21 +303,21 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
               {t('location.city')}
             </Label>
             <Select
-              value={selectedCity}
+              value={internalCity}
               onValueChange={handleCityChange}
-              disabled={loading.cities || !selectedCountry || (showState && !selectedState)}
+              disabled={!internalState || loading.cities}
             >
               <SelectTrigger>
                 <SelectValue 
                   placeholder={
-                   !selectedCountry
-                     ? t('common.selectCountryFirst')
-                     : (showState && !selectedState)
-                       ? t('common.selectStateFirst')
-                       : loading.cities 
-                         ? t('common.loading') 
-                         : t('location.selectCity')
-                 } 
+                    !internalCountry
+                      ? t('common.selectCountryFirst')
+                      : (showState && !internalState)
+                        ? t('common.selectStateFirst')
+                        : loading.cities 
+                          ? t('common.loading') 
+                          : t('location.selectCity')
+                  } 
                 />
               </SelectTrigger>
               <SelectContent>
