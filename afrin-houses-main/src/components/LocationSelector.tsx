@@ -23,6 +23,9 @@ interface LocationSelectorProps {
   selectedCountry?: string;
   selectedState?: string;
   selectedCity?: string;
+  onCountryChange?: (value: string) => void;
+  onStateChange?: (value: string) => void;
+  onCityChange?: (value: string) => void;
   showCountry?: boolean;
   showState?: boolean;
   showCity?: boolean;
@@ -37,6 +40,9 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   selectedCountry,
   selectedState,
   selectedCity,
+  onCountryChange,
+  onStateChange,
+  onCityChange,
   showCountry = true,
   showState = true,
   showCity = true,
@@ -218,14 +224,23 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
     setInternalCity('');
     setStates([]);
     setCities([]);
+    if (onCountryChange) {
+      onCountryChange(value);
+    }
   };
 
   const handleStateChange = (value: string) => {
     setInternalState(value);
+    if (onStateChange) {
+      onStateChange(value);
+    }
   };
 
   const handleCityChange = (value: string) => {
     setInternalCity(value);
+    if (onCityChange) {
+      onCityChange(value);
+    }
   };
 
   return (
