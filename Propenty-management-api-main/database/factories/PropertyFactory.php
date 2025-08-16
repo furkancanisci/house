@@ -53,7 +53,6 @@ class PropertyFactory extends Factory
             'city' => $city,
             'state' => $state,
             'postal_code' => fake()->postcode(),
-            'country' => 'US',
             'latitude' => fake()->latitude(24, 49),
             'longitude' => fake()->longitude(-125, -66),
             'neighborhood' => fake()->word() . ' District',

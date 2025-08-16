@@ -278,7 +278,7 @@ class PropertySeeder extends Seeder
                 'status' => 'draft',
             ],
             [
-                'title' => 'Draft Property - Country Cottage',
+                'title' => 'Draft Property - Traditional House',
                 'description' => 'Another draft property in progress.',
                 'property_type' => 'house',
                 'listing_type' => 'rent',

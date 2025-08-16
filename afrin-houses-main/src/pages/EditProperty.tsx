@@ -253,7 +253,7 @@ const EditProperty: React.FC = () => {
     );
   };
 
-  const handleLocationChange = (location: { country?: string; state?: string; city?: string }) => {
+  const handleLocationChange = (location: { state?: string; city?: string }) => {
     if (location.city) {
       setSelectedCity(location.city);
     }

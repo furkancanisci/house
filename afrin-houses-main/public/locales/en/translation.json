@@ -87,7 +87,6 @@
     "propertyDetails": "Property Details",
     "month": "Month",
     "year": "Year",
-    "month": "month",
     "types": {
       "all": "All Property Types",
       "apartment": "Apartment",
@@ -198,13 +197,17 @@
     "loading": "Loading...",
     "backToSearch": "Back to Search",
     "linkCopied": "Link copied to clipboard",
-    "country": "Country",
     "state": "State",
     "city": "City",
-    "selectCountry": "Select Country",
     "selectState": "Select State",
-    "selectCountryFirst": "Select country first",
     "selectStateFirst": "Select state first"
+  },
+  "location": {
+    "state": "State",
+    "city": "City",
+    "selectState": "Select State",
+    "selectCity": "Select City",
+    "selectStateFirst": "Select State First"
   },
   "messages": {
     "propertyDeletedSuccess": "Property deleted successfully",

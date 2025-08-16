@@ -222,26 +222,7 @@ class CityController extends Controller
     }
     
     /**
-     * Get all countries
-     */
-    public function getCountries(): JsonResponse
-    {
-        $countries = [
-            [
-                'name' => $this->getLocalizedName(['country_ar' => 'سوريا', 'country_en' => 'Syria'], 'country'),
-                'name_ar' => $this->ensureUtf8('سوريا'),
-                'name_en' => $this->ensureUtf8('Syria'),
-            ]
-        ];
-            
-        return response()->json([
-            'success' => true,
-            'data' => $countries
-        ]);
-    }
-    
-    /**
-     * Get states for a specific country
+     * Get states for Syria
      */
     public function getStates(Request $request): JsonResponse
     {

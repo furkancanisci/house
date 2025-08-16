@@ -60,17 +60,18 @@
     "adjustCriteria": "جرب تعديل معايير البحث أو تصفح جميع العقارات.",
     "clearFilters": "مسح الفلاتر",
     "loadMore": "تحميل المزيد من العقارات",
-    "sortOptions": {
+    "resultsCount": "{{count}} عقارات موجودة",
+    "debugInfo": "عرض {{count}} عقارات",
+    "showingCount": "عرض {{count}} عقارات",
+    "sortBy": "فرز حسب",
       "newestFirst": "الأحدث أولاً",
       "oldestFirst": "الأقدم أولاً",
       "priceLowToHigh": "السعر: من الأقل إلى الأعلى",
       "priceHighToLow": "السعر: من الأعلى إلى الأقل",
       "largestFirst": "الأكبر أولاً",
       "smallestFirst": "الأصغر أولاً"
-    }
-  },
+    },
   "property": {
-    "month": "شهر",
     "month": "شهر",
     "year": "سنة",
     "types": {
@@ -282,22 +283,17 @@
     "loading": "جاري التحميل...",
     "backToSearch": "العودة إلى البحث",
     "linkCopied": "تم نسخ الرابط إلى الحافظة",
-    "country": "البلد",
     "state": "الولاية",
     "city": "المدينة",
-    "selectCountry": "اختر البلد",
     "selectState": "اختر الولاية",
     "selectCity": "اختر المدينة",
-    "selectCountryFirst": "الرجاء اختيار البلد أولاً",
     "selectStateFirst": "الرجاء اختيار الولاية أولاً"
   },
   "location": {
-    "country": "الدولة",
     "state": "المحافظة",
     "city": "المدينة",
     "selectState": "اختر المحافظة",
     "selectCity": "اختر المدينة",
-    "selectCountryFirst": "اختر الدولة أولاً",
     "selectStateFirst": "اختر المحافظة أولاً"
   },
   "messages": {

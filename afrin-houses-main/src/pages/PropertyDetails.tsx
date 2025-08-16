@@ -105,7 +105,6 @@ const PropertyDetails: React.FC = () => {
           city: normalizeName(propertyData.city),
           state: normalizeName(propertyData.state),
           zip_code: propertyData.zip_code || propertyData.zipCode || '',
-          country: normalizeName(propertyData.country),
           price: typeof propertyData.price === 'string' ? parseFloat(propertyData.price) : (propertyData.price || 0),
           listingType: propertyData.listing_type === 'rent' ? 'rent' : 'sale',
           propertyType: propertyData.property_type || 'apartment',

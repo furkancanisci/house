@@ -241,7 +241,7 @@ const AddProperty: React.FC = () => {
     );
   };
 
-  const handleLocationChange = (location: { country?: string; state?: string; city?: string }) => {
+  const handleLocationChange = (location: { state?: string; city?: string }) => {
     if (location.city) {
       setSelectedCity(location.city);
       setValue('city', location.city); // Update form field for validation
@@ -373,7 +373,7 @@ const AddProperty: React.FC = () => {
         city: city,
         state: state,
         postalCode: postalCode,
-        country: 'United States', // Default country
+        // Country field removed - Syria-only application
         latitude: coordinates?.lat,
         longitude: coordinates?.lng,
         bedrooms: Number(data.bedrooms || 0),

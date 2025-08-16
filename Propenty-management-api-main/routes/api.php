@@ -135,7 +135,6 @@ Route::prefix('v1')->group(function () {
     // Cities Routes
     Route::prefix('cities')->group(function () {
         Route::get('/', 'App\Http\Controllers\Api\CityController@index');
-        Route::get('/countries', 'App\Http\Controllers\Api\CityController@getCountries');
         Route::get('/states', 'App\Http\Controllers\Api\CityController@getStates');
         Route::get('/by-state', 'App\Http\Controllers\Api\CityController@getCitiesByState');
         Route::get('/search', 'App\Http\Controllers\Api\CityController@search');

@@ -285,7 +285,6 @@ const Search: React.FC = () => {
       // Ensure required fields are present
       city: property.city || '',
       state: property.state || '',
-      country: property.country || '',
       // Ensure media is always an array
       media: Array.isArray(property.media) ? property.media : [],
     };

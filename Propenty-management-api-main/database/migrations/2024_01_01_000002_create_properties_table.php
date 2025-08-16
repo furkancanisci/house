@@ -36,7 +36,7 @@ return new class extends Migration
             $table->string('city');
             $table->string('state');
             $table->string('postal_code');
-            $table->string('country')->default('US');
+            // Country field removed - Syria-only application
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->string('neighborhood')->nullable();

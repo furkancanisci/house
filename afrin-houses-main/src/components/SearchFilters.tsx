@@ -68,7 +68,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
   }));
 
   // Location state for dropdowns
-  const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   
@@ -181,7 +180,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     const locationParts = [];
     if (selectedCity) locationParts.push(selectedCity);
     if (selectedState) locationParts.push(selectedState);
-    if (selectedCountry) locationParts.push(selectedCountry);
     newFilters.location = locationParts.join(', ');
     
     // Call the appropriate callback
@@ -301,7 +299,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     });
     
     // Reset location dropdowns
-    setSelectedCountry('');
     setSelectedState('');
     setSelectedCity('');
     
@@ -338,13 +335,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
         <form onSubmit={handleSubmit} className="space-y-4">
         {/* Location Selector */}
         <LocationSelector
-          selectedCountry={selectedCountry}
           selectedState={selectedState}
           selectedCity={selectedCity}
-          onCountryChange={setSelectedCountry}
           onStateChange={setSelectedState}
           onCityChange={setSelectedCity}
-          showCountry={true}
           showState={true}
           showCity={true}
         />

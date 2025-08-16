@@ -196,7 +196,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const city = normalizeName(property.city);
         const stateVal = normalizeName(property.state);
         const zipCode = property.postal_code || property.zip_code || '';
-        const country = normalizeName(property.country);
         const fullAddress = property.location?.full_address || 
           [streetAddress, city, stateVal, zipCode].filter(Boolean).join(', ');
         
@@ -210,7 +209,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           city: city,
           state: stateVal,
           zip_code: zipCode,
-          country: country,
           property_type: property.property_type || 'house',
           listing_type: property.listing_type || 'sale',
           
@@ -280,7 +278,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             property.city,
             property.state,
             property.postalCode,
-            property.country,
             // Check if any feature matches
             ...(property.features || [])
           ];
@@ -395,7 +392,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         city: getLocaleName(response.property.city),
         state: getLocaleName(response.property.state),
         zip_code: response.property.postalCode || response.property.zip_code || '',
-        country: getLocaleName(response.property.country),
         price: response.property.price || 0,
         listingType: (response.property.listing_type as 'rent' | 'sale') || 'sale',
         propertyType: (response.property.property_type as Property['propertyType']) || 'apartment',
@@ -490,7 +486,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         city: getLocaleName(response.property.location?.city ?? response.property.city),
         state: getLocaleName(response.property.location?.state ?? response.property.state),
         zip_code: response.property.location?.postal_code || response.property.postal_code || response.property.zip_code || '',
-        country: getLocaleName(response.property.location?.country ?? response.property.country),
         property_type: response.property.property_type || 'house',
         listing_type: response.property.listing_type || 'sale',
         

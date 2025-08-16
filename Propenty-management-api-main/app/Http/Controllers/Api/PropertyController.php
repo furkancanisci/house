@@ -262,7 +262,7 @@ class PropertyController extends Controller
         $query->select([
             'id', 'title', 'description', 'slug', 'property_type', 'listing_type',
             'bedrooms', 'bathrooms', 'square_feet', 'year_built', 'price', 'price_type',
-            'street_address', 'city', 'state', 'postal_code', 'country', 'neighborhood',
+            'street_address', 'city', 'state', 'postal_code', 'neighborhood',
             'latitude', 'longitude', 'amenities', 'nearby_places', 'status', 'is_featured',
             'is_available', 'available_from', 'published_at', 'views_count', 'contact_name',
             'contact_phone', 'contact_email', 'user_id', 'created_at', 'updated_at'
