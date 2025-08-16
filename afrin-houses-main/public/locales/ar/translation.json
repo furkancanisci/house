@@ -71,6 +71,7 @@
   },
   "property": {
     "month": "شهر",
+    "month": "شهر",
     "year": "سنة",
     "types": {
       "all": "جميع أنواع العقارات",
@@ -280,13 +281,20 @@
   "common": {
     "loading": "جاري التحميل...",
     "backToSearch": "العودة إلى البحث",
-    "linkCopied": "تم نسخ الرابط إلى الحافظة"
+    "linkCopied": "تم نسخ الرابط إلى الحافظة",
+    "country": "البلد",
+    "state": "الولاية",
+    "city": "المدينة",
+    "selectCountry": "اختر البلد",
+    "selectState": "اختر الولاية",
+    "selectCity": "اختر المدينة",
+    "selectCountryFirst": "الرجاء اختيار البلد أولاً",
+    "selectStateFirst": "الرجاء اختيار الولاية أولاً"
   },
   "location": {
     "country": "الدولة",
     "state": "المحافظة",
     "city": "المدينة",
-    "selectCountry": "اختر الدولة",
     "selectState": "اختر المحافظة",
     "selectCity": "اختر المدينة",
     "selectCountryFirst": "اختر الدولة أولاً",

@@ -222,7 +222,7 @@ const PropertyDetails: React.FC = () => {
     };
 
     fetchProperty();
-  }, [slug, i18n.language]);
+  }, [slug, i18n.language, t]);
 
   if (loading) {
     return (
@@ -251,13 +251,73 @@ const PropertyDetails: React.FC = () => {
   const propertyId = String(property.id);
   const isFavorite = favorites.includes(propertyId);
 
-  const formatPrice = (price: number | string | undefined, listingType: string) => {
-    // Handle both string and number prices safely
-    const priceValue = typeof price === 'string' ? parseFloat(price) || 0 : price || 0;
-    if (listingType === 'rent') {
-      return `$${priceValue.toLocaleString()}/month`;
+  const formatPrice = (price: any, listingType: string) => {
+    try {
+      // If price is null/undefined, return price on request
+      if (price === null || price === undefined || price === '') {
+        return t('property.priceOnRequest');
+      }
+      
+      // Handle different price formats
+      let numPrice = 0;
+      
+      // Handle object with amount property
+      if (typeof price === 'object' && price !== null) {
+        // Check for common price object structures
+        if (typeof price.amount !== 'undefined') {
+          numPrice = Number(price.amount) || 0;
+        } else if (typeof price.price !== 'undefined') {
+          numPrice = Number(price.price) || 0;
+        } else if (typeof price.formatted !== 'undefined') {
+          // If there's already a formatted price, return it directly
+          return price.formatted;
+        } else {
+          // Try to get the first numeric value from the object
+          const numericValue = Object.values(price).find((val: any) => {
+            const num = Number(val);
+            return !isNaN(num) && isFinite(num);
+          });
+          numPrice = numericValue ? Number(numericValue) : 0;
+        }
+      } 
+      // Handle string price (could be number string or JSON string)
+      else if (typeof price === 'string') {
+        try {
+          // Try to parse as JSON first
+          const parsed = JSON.parse(price);
+          if (typeof parsed === 'object' && parsed !== null) {
+            return formatPrice(parsed, listingType); // Recursively handle the parsed object
+          }
+          numPrice = Number(price) || 0;
+        } catch (e) {
+          // If not JSON, try to parse as number
+          numPrice = isNaN(Number(price)) ? 0 : Number(price);
+        }
+      } 
+      // Handle number directly
+      else if (typeof price === 'number') {
+        numPrice = price;
+      }
+      
+      // If we couldn't determine a valid price
+      if (numPrice === 0 || isNaN(numPrice) || !isFinite(numPrice)) {
+        return t('property.priceOnRequest');
+      }
+      
+      // Format the price with currency
+      const formattedPrice = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(numPrice);
+      
+      // Add /month for rent listings
+      return listingType === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
+    } catch (error) {
+      console.error('Error formatting price:', error, price);
+      return t('property.priceOnRequest');
     }
-    return `$${priceValue.toLocaleString()}`;
   };
 
   const formatDate = (dateString: string) => {

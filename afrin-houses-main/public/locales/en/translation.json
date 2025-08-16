@@ -87,6 +87,7 @@
     "propertyDetails": "Property Details",
     "month": "Month",
     "year": "Year",
+    "month": "month",
     "types": {
       "all": "All Property Types",
       "apartment": "Apartment",
@@ -202,7 +203,6 @@
     "city": "City",
     "selectCountry": "Select Country",
     "selectState": "Select State",
-    "selectCity": "Select City",
     "selectCountryFirst": "Select country first",
     "selectStateFirst": "Select state first"
   },

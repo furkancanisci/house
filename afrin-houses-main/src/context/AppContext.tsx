@@ -256,10 +256,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  // Filter properties based on search criteria
-  const filterProperties = (filters: SearchFilters) => {
+  // Filter properties based on search criteria - memoized with useCallback
+  const filterProperties = React.useCallback((filters: SearchFilters) => {
+    console.log('filterProperties called with:', filters);
     dispatch({ type: 'SET_SEARCH_FILTERS', payload: filters });
     
+    // Get current properties from state
     let filtered = [...state.properties];
 
     // Handle search query - check both search and searchQuery for maximum compatibility
@@ -343,7 +345,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: filtered });
-  };
+  }, [state.properties, dispatch]); // Add dependencies here
 
   // Add property using API
   const addProperty = async (propertyData: any) => {

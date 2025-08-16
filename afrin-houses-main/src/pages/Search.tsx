@@ -142,6 +142,18 @@ const Search: React.FC = () => {
       if (!isNaN(page) && page > 0) filters.page = page;
     }
     
+    // Handle sort param in the form of "price-asc", "date-desc"
+    if ((params as any).sort) {
+      const sortVal = String((params as any).sort);
+      const [by, order] = sortVal.split('-') as ['price' | 'date' | 'sqft', 'asc' | 'desc'];
+      if (by) {
+        filters.sortBy = by === 'date' ? 'created_at' : (by as any);
+      }
+      if (order === 'asc' || order === 'desc') {
+        filters.sortOrder = order;
+      }
+    }
+    
     return filters;
   };
 
@@ -178,6 +190,13 @@ const Search: React.FC = () => {
     });
     return urlParamsToSearchFilters(urlFilters);
   }, [searchParams]);
+
+  // Current sort value derived from filters state
+  const currentSortValue = useMemo(() => {
+    const by = filters?.sortBy === 'created_at' ? 'date' : (filters?.sortBy || 'date');
+    const order = filters?.sortOrder || 'desc';
+    return `${by}-${order}`;
+  }, [filters]);
 
   const previousFilters = useRef<SearchFiltersType | null>(null);
 
@@ -323,6 +342,7 @@ const Search: React.FC = () => {
   // Apply filters to properties from context
   const applyFilters = useCallback((filters: SearchFiltersType) => {
     if (!allProperties || allProperties.length === 0) {
+      console.log('No properties available to filter');
       setFilteredProperties([]);
       return;
     }
@@ -338,6 +358,9 @@ const Search: React.FC = () => {
         return null;
       }
     }).filter((prop): prop is ExtendedProperty => prop !== null);
+    
+    console.log('Total properties before filtering:', extendedProperties.length);
+    console.log('Sample property bathrooms:', extendedProperties[0]?.bathrooms);
     
     try {
       let result = [...extendedProperties];
@@ -397,21 +420,60 @@ const Search: React.FC = () => {
 
       // Apply bedroom filter
       if (filters.bedrooms) {
-        const minBedrooms = Number(filters.bedrooms);
-        if (!isNaN(minBedrooms)) {
-          result = result.filter(property => 
-            (property.bedrooms || 0) >= minBedrooms
-          );
+        const bedroomsFilter = String(filters.bedrooms);
+        if (bedroomsFilter.endsWith('+')) {
+          // Handle 'N+' case - show properties with N or more bedrooms
+          const minBedrooms = parseInt(bedroomsFilter);
+          if (!isNaN(minBedrooms)) {
+            result = result.filter(property => 
+              (property.bedrooms || 0) >= minBedrooms
+            );
+          }
+        } else {
+          // Handle exact number case
+          const exactBedrooms = parseInt(bedroomsFilter);
+          if (!isNaN(exactBedrooms)) {
+            result = result.filter(property => 
+              (property.bedrooms || 0) === exactBedrooms
+            );
+          }
         }
       }
 
       // Apply bathroom filter
       if (filters.bathrooms) {
-        const minBathrooms = Number(filters.bathrooms);
-        if (!isNaN(minBathrooms)) {
-          result = result.filter(property => 
-            (property.bathrooms || 0) >= minBathrooms
-          );
+        console.log('Filtering by bathrooms:', filters.bathrooms);
+        const bathroomsFilter = String(filters.bathrooms);
+        
+        // Log all property bathrooms for debugging
+        console.log('All property bathrooms:', result.map(p => p.bathrooms));
+        
+        if (bathroomsFilter.endsWith('+')) {
+          // Handle 'N+' case - show properties with N or more bathrooms
+          const minBathrooms = parseInt(bathroomsFilter);
+          console.log('Filtering for min bathrooms:', minBathrooms);
+          
+          if (!isNaN(minBathrooms)) {
+            result = result.filter(property => {
+              const propertyBathrooms = property.bathrooms || 0;
+              console.log(`Property ${property.id} has ${propertyBathrooms} bathrooms`);
+              return propertyBathrooms >= minBathrooms;
+            });
+            console.log(`After filtering for ${minBathrooms}+ bathrooms:`, result.length, 'properties');
+          }
+        } else {
+          // Handle exact number case
+          const exactBathrooms = parseInt(bathroomsFilter);
+          console.log('Filtering for exact bathrooms:', exactBathrooms);
+          
+          if (!isNaN(exactBathrooms)) {
+            result = result.filter(property => {
+              const propertyBathrooms = property.bathrooms || 0;
+              console.log(`Property ${property.id} has ${propertyBathrooms} bathrooms`);
+              return propertyBathrooms === exactBathrooms;
+            });
+            console.log(`After filtering for exactly ${exactBathrooms} bathrooms:`, result.length, 'properties');
+          }
         }
       }
 
@@ -511,13 +573,13 @@ const Search: React.FC = () => {
       ...newFilters,
       minPrice: newFilters.minPrice !== undefined ? Number(newFilters.minPrice) : undefined,
       maxPrice: newFilters.maxPrice !== undefined ? Number(newFilters.maxPrice) : undefined,
-      // Ensure proper typing for other number fields
-      bedrooms: newFilters.bedrooms !== undefined ? Number(newFilters.bedrooms) : undefined,
-      bathrooms: newFilters.bathrooms !== undefined ? Number(newFilters.bathrooms) : undefined,
+      // Keep bedrooms/bathrooms as provided to support values like '3+' or exact numbers
+      bedrooms: newFilters.bedrooms,
+      bathrooms: newFilters.bathrooms,
       minSquareFootage: newFilters.minSquareFootage !== undefined ? Number(newFilters.minSquareFootage) : undefined,
       maxSquareFootage: newFilters.maxSquareFootage !== undefined ? Number(newFilters.maxSquareFootage) : undefined,
       // Handle page as number
-      page: newFilters.page !== undefined ? Number(newFilters.page) : undefined,
+      page: newFilters.page !== undefined ? Number(newFilters.page) : 1, // Default to page 1
       // Ensure search and searchQuery are properly handled
       search: newFilters.search || newFilters.searchQuery || undefined,
       searchQuery: newFilters.searchQuery || newFilters.search || undefined,
@@ -529,6 +591,11 @@ const Search: React.FC = () => {
         delete processedFilters[key as keyof SearchFiltersType];
       }
     });
+    
+    // Update filters state and apply them
+    setFilters(processedFilters);
+    applyFilters(processedFilters);
+    updateURL(processedFilters);
     
     // Update filters in the context
     filterProperties(processedFilters);
@@ -547,6 +614,11 @@ const Search: React.FC = () => {
         }
       }
     });
+    // Also include compact 'sort' param for UX/back-compat
+    if (processedFilters.sortBy && processedFilters.sortOrder) {
+      const by = processedFilters.sortBy === 'created_at' ? 'date' : processedFilters.sortBy;
+      params.set('sort', `${by}-${processedFilters.sortOrder}`);
+    }
     
     navigate(`?${params.toString()}`, { replace: true });
   }, [filterProperties, navigate]);
@@ -622,15 +694,19 @@ const Search: React.FC = () => {
             : t('search.noResults')}
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="md:col-span-1">
-            <SearchFilters
-              initialFilters={filtersFromParams}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Filters Sidebar */}
+          <div className="w-full md:w-1/4">
+            <SearchFilters 
+              key={JSON.stringify(filters)} // Force re-render when filters change
               onFiltersChange={handleFilterChange}
               onApplyFilters={handleFilterChange}
+              initialFilters={filters}
             />
           </div>
-          <div className="md:col-span-3">
+          
+          {/* Results Section */}
+          <div className="w-full md:w-3/4">
             <div className="flex justify-between items-center mb-6">
               <p className="text-gray-600">
                 {t('search.showingCount', { count: filteredProperties.length })}
@@ -670,26 +746,24 @@ const Search: React.FC = () => {
               <div className="w-64">
                 <select
                   className="w-full p-2 border rounded"
-                  value={searchParams.get('sort') || 'date-desc'}
+                  value={currentSortValue}
                   onChange={(e) => {
                     const sortValue = e.target.value;
+                    if (sortValue === 'relevance') {
+                      // Clear sorting
+                      handleFilterChange({ ...filters, sortBy: undefined, sortOrder: undefined });
+                      return;
+                    }
                     const [sortBy, sortOrder] = sortValue.split('-') as ['price' | 'date' | 'sqft', 'asc' | 'desc'];
 
                     // Map the sortBy value to match the expected SearchFilters type
-                    let mappedSortBy: 'price' | 'created_at' | 'date' = 'created_at';
-                    if (sortBy === 'price') {
-                      mappedSortBy = 'price';
-                    } else if (sortBy === 'date') {
-                      mappedSortBy = 'created_at';
-                    }
+                    const mappedSortBy = sortBy === 'date' ? 'created_at' : sortBy;
 
-                    const newFilters: SearchFiltersType = {
-                      ...filtersFromParams,
-                      sortBy: mappedSortBy,
+                    handleFilterChange({
+                      ...filters,
+                      sortBy: mappedSortBy as any,
                       sortOrder: sortOrder as 'asc' | 'desc',
-                    };
-
-                    handleFilterChange(newFilters);
+                    });
                   }}
                 >
                   <option value="relevance">{t('search.sort.relevance', 'Relevance')}</option>

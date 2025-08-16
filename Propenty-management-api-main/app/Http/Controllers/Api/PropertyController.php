@@ -132,6 +132,14 @@ class PropertyController extends Controller
     {
         // Get the filters from the request
         $filters = $request->all();
+        
+        // Ensure proper UTF-8 encoding for all string inputs
+        array_walk_recursive($filters, function(&$value) {
+            if (is_string($value)) {
+                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+            }
+        });
+        
         // Log the received filters for debugging
         \Illuminate\Support\Facades\Log::info('Received request with filters:', [
             'url' => $request->fullUrl(),

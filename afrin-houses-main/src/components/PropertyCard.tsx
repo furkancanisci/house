@@ -242,7 +242,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             <PropertyImageGallery
               images={images}
               alt={property.title}
-              className="h-48 w-full object-cover"
+              containerClassName="h-48"
+              className="w-full h-full object-cover"
               showThumbnails={false}
               enableZoom={false}
               propertyId={property.id}
