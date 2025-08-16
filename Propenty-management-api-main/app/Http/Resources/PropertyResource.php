@@ -41,6 +41,7 @@ class PropertyResource extends JsonResource
             
             // Location - both nested and flat for compatibility
             'address' => $this->buildFullAddress(), // Frontend expects flat address
+            'full_address' => $this->buildFullAddress(), // Alternative field name
             'street_address' => $this->ensureUtf8($this->street_address),
             'city' => $this->ensureUtf8($this->city),
             'state' => $this->ensureUtf8($this->state),
@@ -80,11 +81,15 @@ class PropertyResource extends JsonResource
             
             // Media - simplified to avoid memory issues
             'images' => [
-                'main' => null, // Will be populated separately if needed
-                'gallery' => [],
-                'count' => 0,
+                'main' => $this->getFirstMedia('main_image')?->getUrl() ?: 
+                         ($this->getFirstMedia('images')?->getUrl() ?: null),
+                'gallery' => $this->getMedia('images')->map(function($media) {
+                    return $media->getUrl();
+                })->toArray(),
+                'count' => $this->getMedia('images')->count(),
             ],
-            'mainImage' => null, // Frontend expects mainImage
+            'mainImage' => $this->getFirstMedia('main_image')?->getUrl() ?: 
+                          ($this->getFirstMedia('images')?->getUrl() ?: '/placeholder-property.jpg'),
             
             // Statistics - simplified
             'stats' => [

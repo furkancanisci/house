@@ -89,6 +89,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/featured', [PropertyController::class, 'featured']);
         Route::get('/amenities', [PropertyController::class, 'amenities']);
         Route::get('/{property:slug}', [PropertyController::class, 'show']);
+        Route::get('/{property}/show', [PropertyController::class, 'show']); // Alternative route for ID
         Route::get('/{property:slug}/similar', [PropertyController::class, 'similar']);
         
         // Write operations - keeping these for future reference but making them public for now
