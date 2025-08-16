@@ -130,7 +130,7 @@ export const dashboardService = {
   // Update user profile
   async updateProfile(profileData: UserProfile): Promise<User> {
     try {
-      const response = await api.post('/profile', profileData, { baseURL: 'http://127.0.0.1:8000/api' });
+      const response = await api.post('/profile', profileData, { baseURL: 'https://house-6g6m.onrender.com/api' });
       return response.data.user;
     } catch (error) {
       console.error('Error updating profile:', error);
