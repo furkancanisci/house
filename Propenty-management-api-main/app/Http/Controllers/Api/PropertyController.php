@@ -76,6 +76,8 @@ class PropertyController extends Controller
         ]);
     }
 
+
+
     /**
      * Simple test property creation without validation
      */
@@ -146,9 +148,10 @@ class PropertyController extends Controller
         // Start building the query
         $query = Property::query();
         
-        // Apply listing type filter if present
-        if ($request->has('listing_type') && in_array($request->listing_type, ['rent', 'sale'])) {
-            $query->where('listing_type', $request->listing_type);
+        // Apply listing type filter if present - check both camelCase and snake_case
+        $listingType = $request->input('listing_type') ?: $request->input('listingType');
+        if ($listingType && in_array($listingType, ['rent', 'sale'])) {
+            $query->where('listing_type', $listingType);
         }
 
         // Apply price range filters
@@ -177,9 +180,10 @@ class PropertyController extends Controller
             }
         }
 
-        // Apply property type filter if present
-        if ($request->has('property_type') && !empty($request->property_type)) {
-            $query->where('property_type', $request->property_type);
+        // Apply property type filter if present - check both camelCase and snake_case
+        $propertyType = $request->input('property_type') ?: $request->input('propertyType');
+        if ($propertyType && !empty($propertyType)) {
+            $query->where('property_type', $propertyType);
         }
 
         // Apply search query if present - check both 'search' and 'q' parameters
@@ -245,8 +249,15 @@ class PropertyController extends Controller
         // Ensure only active properties are returned
         $query->where('status', 'active');
 
-        // Eager load relationships
-        $query->with(['user', 'media', 'favoritedByUsers']);
+        // Select fields needed by PropertyResource
+        $query->select([
+            'id', 'title', 'description', 'slug', 'property_type', 'listing_type',
+            'bedrooms', 'bathrooms', 'square_feet', 'year_built', 'price', 'price_type',
+            'street_address', 'city', 'state', 'postal_code', 'country', 'neighborhood',
+            'latitude', 'longitude', 'amenities', 'nearby_places', 'status', 'is_featured',
+            'is_available', 'available_from', 'published_at', 'views_count', 'contact_name',
+            'contact_phone', 'contact_email', 'user_id', 'created_at', 'updated_at'
+        ]);
 
         // Paginate the results
         $perPage = $request->input('per_page', 12);

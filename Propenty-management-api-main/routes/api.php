@@ -34,7 +34,7 @@ Route::get('/health', function () {
     ]);
 });
 
-Route::get('/test', [PropertyController::class, 'test']);
+
 
 Route::get('/testt', function () {
     return response()->json([

@@ -245,6 +245,9 @@ class PropertySeeder extends Seeder
                 ['name' => 'ABC Elementary', 'type' => 'school', 'distance' => 1.2],
             ]);
             
+            // Mark first 3 properties as featured
+            $data['is_featured'] = $index < 3;
+            
   
             
             // Build and execute raw SQL

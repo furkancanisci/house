@@ -177,7 +177,8 @@ class CityController extends Controller
     private function getLocalizedName($item, $type = 'name'): string
     {
         $locale = app()->getLocale();
-        return $locale === 'ar' ? $item[$type . '_ar'] : $item[$type . '_en'];
+        $value = $locale === 'ar' ? $item[$type . '_ar'] : $item[$type . '_en'];
+        return $this->ensureUtf8($value);
     }
 
     /**
@@ -209,8 +210,8 @@ class CityController extends Controller
                 return [
                     'id' => $city['id'],
                     'name' => $this->getLocalizedName($city),
-                    'name_ar' => $city['name_ar'],
-                    'name_en' => $city['name_en'],
+                    'name_ar' => $this->ensureUtf8($city['name_ar']),
+                    'name_en' => $this->ensureUtf8($city['name_en']),
                     'country' => $this->getLocalizedName($city, 'country'),
                     'state' => $this->getLocalizedName($city, 'state'),
                     'latitude' => $city['latitude'],
@@ -228,8 +229,8 @@ class CityController extends Controller
         $countries = [
             [
                 'name' => $this->getLocalizedName(['country_ar' => 'سوريا', 'country_en' => 'Syria'], 'country'),
-                'name_ar' => 'سوريا',
-                'name_en' => 'Syria',
+                'name_ar' => $this->ensureUtf8('سوريا'),
+                'name_en' => $this->ensureUtf8('Syria'),
             ]
         ];
             
@@ -255,8 +256,8 @@ class CityController extends Controller
             if (!in_array($stateKey, $seenStates)) {
                 $states[] = [
                     'name' => $this->getLocalizedName($city, 'state'),
-                    'name_ar' => $city['state_ar'],
-                    'name_en' => $city['state_en'],
+                    'name_ar' => $this->ensureUtf8($city['state_ar']),
+                    'name_en' => $this->ensureUtf8($city['state_en']),
                 ];
                 $seenStates[] = $stateKey;
             }
@@ -288,8 +289,8 @@ class CityController extends Controller
                 return [
                     'id' => $city['id'],
                     'name' => $this->getLocalizedName($city),
-                    'name_ar' => $city['name_ar'],
-                    'name_en' => $city['name_en'],
+                    'name_ar' => $this->ensureUtf8($city['name_ar']),
+                    'name_en' => $this->ensureUtf8($city['name_en']),
                 ];
             }, array_values($cities))
         ]);
@@ -324,10 +325,42 @@ class CityController extends Controller
                 return [
                     'id' => $city['id'],
                     'name' => $this->getLocalizedName($city),
-                    'name_ar' => $city['name_ar'],
-                    'name_en' => $city['name_en'],
+                    'name_ar' => $this->ensureUtf8($city['name_ar']),
+                    'name_en' => $this->ensureUtf8($city['name_en']),
                 ];
             }, array_values($filteredCities))
         ]);
+    }
+
+    /**
+     * Ensure proper UTF-8 encoding for text fields
+     */
+    private function ensureUtf8($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        
+        if (!is_string($value)) {
+            return $value;
+        }
+        
+        // Check if the string is already valid UTF-8
+        if (mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+        
+        // Try to convert from common encodings to UTF-8
+        $encodings = ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'];
+        
+        foreach ($encodings as $encoding) {
+            $converted = mb_convert_encoding($value, 'UTF-8', $encoding);
+            if (mb_check_encoding($converted, 'UTF-8')) {
+                return $converted;
+            }
+        }
+        
+        // If all else fails, remove invalid characters
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }

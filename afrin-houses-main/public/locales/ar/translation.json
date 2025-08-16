@@ -70,6 +70,8 @@
     }
   },
   "property": {
+    "month": "شهر",
+    "year": "سنة",
     "types": {
       "all": "جميع أنواع العقارات",
       "apartment": "شقة",
@@ -334,5 +336,24 @@
     "contact": "اتصل بنا",
     "contactInfo": "معلومات الاتصال",
     "copyright": " 2023 العقارات. جميع الحقوق محفوظة."
+  },
+  "map": {
+    "selectPropertyLocation": "حدد موقع العقار",
+    "searchLocation": "ابحث عن موقع...",
+    "useCurrentLocation": "استخدم الموقع الحالي",
+    "resetLocation": "إعادة تعيين الموقع",
+    "coordinates": "الإحداثيات",
+    "latitude": "خط العرض",
+    "longitude": "خط الطول",
+    "clickToSelectLocation": "انقر على الخريطة لتحديد الموقع",
+    "dragMarkerToAdjust": "اسحب العلامة لضبط الموقع",
+    "searchForAddress": "ابحث عن عنوان أو مكان",
+    "locationSelected": "تم تحديد الموقع",
+    "locationNotSelected": "لم يتم تحديد الموقع",
+    "gettingCurrentLocation": "جاري الحصول على الموقع الحالي...",
+    "locationAccessDenied": "تم رفض الوصول إلى الموقع",
+    "locationNotAvailable": "الموقع غير متاح",
+    "mapLoadError": "خطأ في تحميل الخريطة",
+    "invalidCoordinates": "إحداثيات غير صحيحة"
   }
 }

@@ -333,7 +333,12 @@ export const createProperty = async (propertyData: any) => {
         // Handle main image file
         formData.append('main_image', propertyData[key]);
       } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
-        formData.append(key, propertyData[key].toString());
+        // Handle boolean values properly for Laravel validation
+        if (typeof propertyData[key] === 'boolean') {
+          formData.append(key, propertyData[key] ? '1' : '0');
+        } else {
+          formData.append(key, propertyData[key].toString());
+        }
       }
     });
     
@@ -375,7 +380,12 @@ export const updateProperty = async (id: number, propertyData: any) => {
           formData.append(`remove_images[${index}]`, imageId);
         });
       } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
-        formData.append(key, propertyData[key].toString());
+        // Handle boolean values properly for Laravel validation
+        if (typeof propertyData[key] === 'boolean') {
+          formData.append(key, propertyData[key] ? '1' : '0');
+        } else {
+          formData.append(key, propertyData[key].toString());
+        }
       }
     });
     

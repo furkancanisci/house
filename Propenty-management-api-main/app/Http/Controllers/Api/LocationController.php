@@ -22,7 +22,7 @@ class LocationController extends Controller
             ->get()
             ->map(function($item) {
                 return [
-                    'name' => $item->state,
+                    'name' => $this->ensureUtf8($item->state),
                     'total' => $item->total
                 ];
             });
@@ -53,8 +53,8 @@ class LocationController extends Controller
             ->get()
             ->map(function($item) {
                 return [
-                    'name' => $item->city,
-                    'state' => $item->state,
+                    'name' => $this->ensureUtf8($item->city),
+                    'state' => $this->ensureUtf8($item->state),
                     'total' => $item->total
                 ];
             });
@@ -94,9 +94,9 @@ class LocationController extends Controller
             ->get()
             ->map(function($item) {
                 return [
-                    'name' => $item->neighborhood,
-                    'city' => $item->city,
-                    'state' => $item->state,
+                    'name' => $this->ensureUtf8($item->neighborhood),
+                    'city' => $this->ensureUtf8($item->city),
+                    'state' => $this->ensureUtf8($item->state),
                     'total' => $item->total
                 ];
             });
@@ -106,5 +106,37 @@ class LocationController extends Controller
             'data' => $neighborhoods,
             'message' => 'Neighborhoods retrieved successfully.'
         ]);
+    }
+
+    /**
+     * Ensure proper UTF-8 encoding for text fields
+     */
+    private function ensureUtf8($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        
+        if (!is_string($value)) {
+            return $value;
+        }
+        
+        // Check if the string is already valid UTF-8
+        if (mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+        
+        // Try to convert from common encodings to UTF-8
+        $encodings = ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'];
+        
+        foreach ($encodings as $encoding) {
+            $converted = mb_convert_encoding($value, 'UTF-8', $encoding);
+            if (mb_check_encoding($converted, 'UTF-8')) {
+                return $converted;
+            }
+        }
+        
+        // If all else fails, remove invalid characters
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }

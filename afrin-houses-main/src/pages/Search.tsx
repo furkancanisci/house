@@ -636,22 +636,36 @@ const Search: React.FC = () => {
                 {t('search.showingCount', { count: filteredProperties.length })}
               </p>
               <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  size="icon"
-                  onClick={() => setViewMode('grid')}
-                  aria-label="Grid view"
-                >
-                  <LayoutGrid className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="icon"
-                  onClick={() => setViewMode('list')}
-                  aria-label="List view"
-                >
-                  <List className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className={`flex items-center space-x-2 transition-all duration-200 ${
+                      viewMode === 'grid' 
+                        ? 'bg-white shadow-sm text-gray-900' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    aria-label="Grid view"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    <span className="hidden sm:inline font-medium">شبكة</span>
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className={`flex items-center space-x-2 transition-all duration-200 ${
+                      viewMode === 'list' 
+                        ? 'bg-white shadow-sm text-gray-900' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    aria-label="List view"
+                  >
+                    <List className="h-4 w-4" />
+                    <span className="hidden sm:inline font-medium">قائمة</span>
+                  </Button>
+                </div>
               </div>
               <div className="w-64">
                 <select
@@ -713,7 +727,12 @@ const Search: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6">
+              <div className={`
+                ${viewMode === 'grid' 
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+                  : 'flex flex-col space-y-4'
+                }
+              `}>
                 {filteredProperties.map((property) => {
                   const price = typeof property.price === 'object'
                     ? Number((property.price as any)?.amount) || 0
@@ -781,12 +800,21 @@ const Search: React.FC = () => {
                   };
 
                   return (
-                    <PropertyCard
+                    <div
                       key={mappedProperty.id.toString()}
-                      property={mappedProperty}
-                      view={viewMode}
-                      useGallery={true}
-                    />
+                      className={`
+                        ${viewMode === 'grid' 
+                          ? 'transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:border-blue-300'
+                          : 'w-full'
+                        }
+                      `}
+                    >
+                      <PropertyCard
+                        property={mappedProperty}
+                        view={viewMode}
+                        useGallery={true}
+                      />
+                    </div>
                   );
                 })}
               </div>

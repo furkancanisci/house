@@ -200,19 +200,27 @@ const HousesForRent: React.FC = () => {
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="flex items-center space-x-1 transition-all duration-200"
+                  className={`flex items-center space-x-2 transition-all duration-200 ${
+                    viewMode === 'grid' 
+                      ? 'bg-white shadow-sm text-gray-900' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
-                  <span className="hidden sm:inline">Grid</span>
+                  <span className="hidden sm:inline font-medium">شبكة</span>
                 </Button>
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="flex items-center space-x-1 transition-all duration-200"
+                  className={`flex items-center space-x-2 transition-all duration-200 ${
+                    viewMode === 'list' 
+                      ? 'bg-white shadow-sm text-gray-900' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
                   <List className="h-4 w-4" />
-                  <span className="hidden sm:inline">List</span>
+                  <span className="hidden sm:inline font-medium">قائمة</span>
                 </Button>
               </div>
             </div>
@@ -235,19 +243,23 @@ const HousesForRent: React.FC = () => {
           <div className={`
             ${viewMode === 'grid' 
               ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
-              : 'space-y-6'
-            }`}>
+              : 'flex flex-col space-y-4'
+            }
+          `}>
             {filteredProperties.map((property) => (
               <div
                 key={property.id}
-                className="transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                className={`
+                  ${viewMode === 'grid' 
+                    ? 'transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:border-blue-300'
+                    : 'w-full'
+                  }
+                `}
               >
-                <div className={viewMode === 'grid' ? 'h-full' : 'h-48'}>
-                  <PropertyCard
-                    property={property}
-                    view={viewMode}
-                  />
-                </div>
+                <PropertyCard
+                  property={property}
+                  view={viewMode}
+                />
               </div>
             ))}
           </div>
