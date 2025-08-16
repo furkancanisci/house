@@ -65,8 +65,7 @@ const PropertyDetails: React.FC = () => {
       try {
         setLoading(true);
         console.log('Fetching property with slug:', slug);
-        const response = await getProperty(slug);
-        const propertyData = response.property; // Extract the nested property object
+        const propertyData = await getProperty(slug);
         
         if (!propertyData) {
           throw new Error('No property data found in response');

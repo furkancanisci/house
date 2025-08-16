@@ -133,14 +133,14 @@ class PropertyController extends Controller
         // Get the filters from the request
         $filters = $request->all();
         // Log the received filters for debugging
-        \Log::info('Received request with filters:', [
+        \Illuminate\Support\Facades\Log::info('Received request with filters:', [
             'url' => $request->fullUrl(),
             'query_params' => $request->query(),
             'all_params' => $filters
         ]);
         
         // Debug: Log all request headers
-        \Log::info('Request Headers:', [
+        \Illuminate\Support\Facades\Log::info('Request Headers:', [
             'headers' => $request->headers->all(),
             'token' => $request->bearerToken(),
             'has_token' => $request->bearerToken() ? 'yes' : 'no'
@@ -190,7 +190,7 @@ class PropertyController extends Controller
         // Apply search query if present - check both 'search' and 'q' parameters
         $searchTerm = $request->input('search', $request->input('q'));
         if (!empty($searchTerm)) {
-            \Log::info('Searching for term:', ['term' => $searchTerm, 'all_params' => $request->all()]);
+            \Illuminate\Support\Facades\Log::info('Searching for term:', ['term' => $searchTerm, 'all_params' => $request->all()]);
             
             // Make search case-insensitive and trim whitespace
             $searchTerm = strtolower(trim($searchTerm));
@@ -209,7 +209,7 @@ class PropertyController extends Controller
             });
             
             // Debug: Log the final SQL query
-            \Log::info('Final Search Query:', [
+            \Illuminate\Support\Facades\Log::info('Final Search Query:', [
                 'sql' => $query->toSql(),
                 'bindings' => $query->getBindings(),
                 'search_term' => $searchTerm
@@ -230,7 +230,7 @@ class PropertyController extends Controller
 
         // Log the final SQL query and result count
         $resultCount = $query->count();
-        \Log::info('Final SQL Query and Result Count:', [
+        \Illuminate\Support\Facades\Log::info('Final SQL Query and Result Count:', [
             'sql' => $query->toSql(),
             'bindings' => $query->getBindings(),
             'result_count' => $resultCount,
@@ -238,8 +238,8 @@ class PropertyController extends Controller
         ]);
         
         if ($resultCount === 0) {
-            \Log::info('No properties found with current filters. Total properties in DB: ' . \App\Models\Property::count());
-            \Log::info('Sample property titles: ', 
+            \Illuminate\Support\Facades\Log::info('No properties found with current filters. Total properties in DB: ' . \App\Models\Property::count());
+            \Illuminate\Support\Facades\Log::info('Sample property titles: ', 
                 \App\Models\Property::select('id', 'title', 'status')
                     ->limit(5)
                     ->get()
@@ -362,7 +362,7 @@ class PropertyController extends Controller
         $property->incrementViews();
 
         // Debug logging
-        \Log::info('Property show request', [
+        \Illuminate\Support\Facades\Log::info('Property show request', [
             'property_id' => $property->id,
             'property_title' => $property->title,
             'request_path' => $request->path()
@@ -380,7 +380,7 @@ class PropertyController extends Controller
     {
         try {
             // Debug logging
-            \Log::info('Property update request', [
+            \Illuminate\Support\Facades\Log::info('Property update request', [
                 'property_id' => $property->id,
                 'property_title' => $property->title,
                 'user_id' => auth()->id(),

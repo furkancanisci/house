@@ -57,9 +57,9 @@ class StorePropertyRequest extends FormRequest
             'contactName' => 'nullable|string|max:100',
             'contactPhone' => 'nullable|string|max:20',
             'contactEmail' => 'nullable|email|max:100',
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120|dimensions:min_width=400,min_height=300', // 5MB max, min 400x300
+            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max, no dimension restrictions
             'images' => 'nullable|array|max:20', // Maximum 20 images
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120|dimensions:min_width=400,min_height=300', // 5MB max per image, min 400x300
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max per image, no dimension restrictions
             'base64_images' => 'nullable|array|max:20', // Maximum 20 base64 images
             'base64_images.*' => 'string|regex:/^data:image\/(jpeg|jpg|png|webp);base64,/', // Valid base64 image format
         ];

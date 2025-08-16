@@ -18,7 +18,7 @@ class SearchController extends Controller
     public function suggestions(Request $request)
     {
         $query = $request->get('q');
-        \Log::info('Search suggestions requested', ['query' => $query]);
+        \Illuminate\Support\Facades\Log::info('Search suggestions requested', ['query' => $query]);
         
         if (!$query || strlen($query) < 2) {
             return response()->json([
@@ -36,7 +36,7 @@ class SearchController extends Controller
             ->orderBy('total', 'desc')
             ->limit(5);
             
-        \Log::info('Cities SQL Query', ['sql' => $citiesQuery->toSql(), 'bindings' => $citiesQuery->getBindings()]);
+        \Illuminate\Support\Facades\Log::info('Cities SQL Query', ['sql' => $citiesQuery->toSql(), 'bindings' => $citiesQuery->getBindings()]);
             
         $cities = $citiesQuery->get()
             ->map(function ($item) {
@@ -49,7 +49,7 @@ class SearchController extends Controller
                 ];
             });
             
-        \Log::info('Cities results', ['count' => $cities->count(), 'results' => $cities->toArray()]);
+        \Illuminate\Support\Facades\Log::info('Cities results', ['count' => $cities->count(), 'results' => $cities->toArray()]);
 
         // Search for matching properties (case-insensitive)
         $propertiesQuery = Property::select('title', 'slug', 'city', 'state')
@@ -57,7 +57,7 @@ class SearchController extends Controller
             ->where('status', 'active')
             ->limit(5);
             
-        \Log::info('Properties SQL Query', ['sql' => $propertiesQuery->toSql(), 'bindings' => $propertiesQuery->getBindings()]);
+        \Illuminate\Support\Facades\Log::info('Properties SQL Query', ['sql' => $propertiesQuery->toSql(), 'bindings' => $propertiesQuery->getBindings()]);
             
         $properties = $propertiesQuery->get()
             ->map(function ($item) {
@@ -70,7 +70,7 @@ class SearchController extends Controller
                 ];
             });
             
-        \Log::info('Properties results', ['count' => $properties->count(), 'results' => $properties->toArray()]);
+        \Illuminate\Support\Facades\Log::info('Properties results', ['count' => $properties->count(), 'results' => $properties->toArray()]);
 
         // Combine and limit results
         $suggestions = $cities->concat($properties)->take(8)->values();
@@ -81,7 +81,7 @@ class SearchController extends Controller
             'message' => 'Search suggestions retrieved successfully.'
         ];
         
-        \Log::info('Final response', ['response' => $response]);
+        \Illuminate\Support\Facades\Log::info('Final response', ['response' => $response]);
         
         return response()->json($response, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
