@@ -294,11 +294,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     if (filters.listingType && filters.listingType !== 'all') {
-      filtered = filtered.filter(p => p.listingType === filters.listingType);
+      filtered = filtered.filter(p => (p.listing_type || p.listingType) === filters.listingType);
     }
 
     if (filters.propertyType && filters.propertyType !== 'all') {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
+      filtered = filtered.filter(p => (p.property_type || p.propertyType) === filters.propertyType);
     }
 
     if (filters.minPrice !== undefined) {
@@ -324,11 +324,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     if (filters.minSquareFootage !== undefined) {
-      filtered = filtered.filter(p => p.squareFootage >= filters.minSquareFootage!);
+      filtered = filtered.filter(p => (p.square_feet || p.squareFootage || 0) >= filters.minSquareFootage!);
     }
 
     if (filters.maxSquareFootage !== undefined) {
-      filtered = filtered.filter(p => p.squareFootage <= filters.maxSquareFootage!);
+      filtered = filtered.filter(p => (p.square_feet || p.squareFootage || 0) <= filters.maxSquareFootage!);
     }
 
     if (filters.features && filters.features.length > 0) {
@@ -342,6 +342,33 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         p.address.toLowerCase().includes(filters.location!.toLowerCase()) ||
         p.title.toLowerCase().includes(filters.location!.toLowerCase())
       );
+    }
+
+    // Apply sorting
+    if (filters.sortBy) {
+      filtered.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+        
+        switch (filters.sortBy) {
+          case 'price':
+            aValue = a.price || 0;
+            bValue = b.price || 0;
+            break;
+          case 'created_at':
+            aValue = new Date(a.created_at || 0).getTime();
+            bValue = new Date(b.created_at || 0).getTime();
+            break;
+          default:
+            return 0;
+        }
+        
+        if (filters.sortOrder === 'desc') {
+          return bValue - aValue;
+        } else {
+          return aValue - bValue;
+        }
+      });
     }
 
     dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: filtered });

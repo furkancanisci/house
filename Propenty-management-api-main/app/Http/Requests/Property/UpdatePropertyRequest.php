@@ -15,14 +15,14 @@ class UpdatePropertyRequest extends FormRequest
     {
         // For development, allow all updates
         // In production, you should enable proper authorization
-        return true;
+      /*  return true;*/
         
-        /* Production authorization code:
+        // Production authorization code:
         $property = $this->route('property');
         return auth()->check() && 
                $property && 
                $property->user_id === auth()->id();
-        */
+        
     }
 
     /**

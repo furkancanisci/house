@@ -34,13 +34,9 @@ class PropertyResource extends JsonResource
             'id' => $this->id,
             'title' => $this->ensureUtf8($this->title),
             'description' => $this->ensureUtf8($this->description),
-<<<<<<< HEAD
-            'slug' => $this->slug,
-=======
             'slug' => $this->ensureUtf8($this->slug),
             'property_type' => $this->ensureUtf8($this->property_type),
             'listing_type' => $this->ensureUtf8($this->listing_type),
->>>>>>> 7b5a859 (some bug fix)
             
             // Property details - flat structure for frontend compatibility
             'property_type' => $this->property_type,
@@ -58,13 +54,8 @@ class PropertyResource extends JsonResource
             'price' => $this->price, // Flat price for frontend
             'pricing' => [
                 'amount' => $this->price,
-<<<<<<< HEAD
-                'formatted' => '$' . number_format($this->price) . ($this->listing_type === 'rent' ? '/month' : ''),
-                'type' => $this->price_type,
-=======
                 'formatted' => $this->ensureUtf8($this->formatted_price),
                 'type' => $this->ensureUtf8($this->price_type),
->>>>>>> 7b5a859 (some bug fix)
                 'currency' => 'USD',
             ],
             
@@ -84,15 +75,9 @@ class PropertyResource extends JsonResource
                 'street_address' => $this->ensureUtf8($this->street_address),
                 'city' => $this->ensureUtf8($this->city),
                 'state' => $this->ensureUtf8($this->state),
-<<<<<<< HEAD
-                'postal_code' => $this->postal_code,
-                'country' => $this->ensureUtf8($this->country),
-                'full_address' => $this->buildFullAddress(),
-=======
                 'postal_code' => $this->ensureUtf8($this->postal_code),
                 'country' => $this->ensureUtf8($this->country),
                 'full_address' => $this->ensureUtf8($this->full_address),
->>>>>>> 7b5a859 (some bug fix)
                 'neighborhood' => $this->ensureUtf8($this->neighborhood),
                 'coordinates' => [
                     'latitude' => $this->latitude,
@@ -140,17 +125,11 @@ class PropertyResource extends JsonResource
                 'phone' => $this->contact_phone,
                 'email' => $this->contact_email,
             ],
-<<<<<<< HEAD
-            'contact_name' => $this->ensureUtf8($this->contact_name),
-            'contact_phone' => $this->contact_phone,
-            'contact_email' => $this->contact_email,
-=======
             
             // Owner information
             'owner' => $this->when($this->relationLoaded('user'), function () use ($request) {
                 return (new UserResource($this->user))->toArray($request);
             }),
->>>>>>> 7b5a859 (some bug fix)
             
             // Permissions for current user
             'permissions' => [
@@ -180,35 +159,4 @@ class PropertyResource extends JsonResource
         return $address;
     }
 
-    /**
-     * Ensure proper UTF-8 encoding for text fields
-     */
-    private function ensureUtf8($value)
-    {
-        if (is_null($value)) {
-            return null;
-        }
-        
-        if (!is_string($value)) {
-            return $value;
-        }
-        
-        // Check if the string is already valid UTF-8
-        if (mb_check_encoding($value, 'UTF-8')) {
-            return $value;
-        }
-        
-        // Try to convert from common encodings to UTF-8
-        $encodings = ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'];
-        
-        foreach ($encodings as $encoding) {
-            $converted = mb_convert_encoding($value, 'UTF-8', $encoding);
-            if (mb_check_encoding($converted, 'UTF-8')) {
-                return $converted;
-            }
-        }
-        
-        // If all else fails, remove invalid characters
-        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
-    }
 }
