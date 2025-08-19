@@ -74,7 +74,6 @@ class DocumentedPropertyController extends Controller
      * @bodyParam city string required The city where the property is located. Example: New York
      * @bodyParam state string required The state where the property is located. Example: NY
      * @bodyParam postal_code string required The postal code of the property. Example: 10001
-     * @bodyParam country string The country where the property is located. Default: US. Example: US
      * @bodyParam latitude number The latitude coordinate of the property. Example: 40.7506
      * @bodyParam longitude number The longitude coordinate of the property. Example: -73.9756
      * @bodyParam neighborhood string The neighborhood where the property is located. Example: Midtown

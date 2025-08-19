@@ -18,7 +18,7 @@ class SearchController extends Controller
     public function suggestions(Request $request)
     {
         $query = $request->get('q');
-        \Log::info('Search suggestions requested', ['query' => $query]);
+        \Illuminate\Support\Facades\Log::info('Search suggestions requested', ['query' => $query]);
         
         if (!$query || strlen($query) < 2) {
             return response()->json([
@@ -36,19 +36,20 @@ class SearchController extends Controller
             ->orderBy('total', 'desc')
             ->limit(5);
             
-        \Log::info('Cities SQL Query', ['sql' => $citiesQuery->toSql(), 'bindings' => $citiesQuery->getBindings()]);
+        \Illuminate\Support\Facades\Log::info('Cities SQL Query', ['sql' => $citiesQuery->toSql(), 'bindings' => $citiesQuery->getBindings()]);
             
         $cities = $citiesQuery->get()
             ->map(function ($item) {
+                $cityState = $this->ensureUtf8($item->city) . ', ' . $this->ensureUtf8($item->state);
                 return [
                     'type' => 'city',
-                    'value' => $item->city . ', ' . $item->state,
-                    'label' => $item->city . ', ' . $item->state,
+                    'value' => $cityState,
+                    'label' => $cityState,
                     'count' => $item->total
                 ];
             });
             
-        \Log::info('Cities results', ['count' => $cities->count(), 'results' => $cities->toArray()]);
+        \Illuminate\Support\Facades\Log::info('Cities results', ['count' => $cities->count(), 'results' => $cities->toArray()]);
 
         // Search for matching properties (case-insensitive)
         $propertiesQuery = Property::select('title', 'slug', 'city', 'state')
@@ -56,20 +57,20 @@ class SearchController extends Controller
             ->where('status', 'active')
             ->limit(5);
             
-        \Log::info('Properties SQL Query', ['sql' => $propertiesQuery->toSql(), 'bindings' => $propertiesQuery->getBindings()]);
+        \Illuminate\Support\Facades\Log::info('Properties SQL Query', ['sql' => $propertiesQuery->toSql(), 'bindings' => $propertiesQuery->getBindings()]);
             
         $properties = $propertiesQuery->get()
             ->map(function ($item) {
                 return [
                     'type' => 'property',
-                    'value' => $item->title,
-                    'label' => $item->title,
-                    'location' => $item->city . ', ' . $item->state,
+                    'value' => $this->ensureUtf8($item->title),
+                    'label' => $this->ensureUtf8($item->title),
+                    'location' => $this->ensureUtf8($item->city) . ', ' . $this->ensureUtf8($item->state),
                     'slug' => $item->slug
                 ];
             });
             
-        \Log::info('Properties results', ['count' => $properties->count(), 'results' => $properties->toArray()]);
+        \Illuminate\Support\Facades\Log::info('Properties results', ['count' => $properties->count(), 'results' => $properties->toArray()]);
 
         // Combine and limit results
         $suggestions = $cities->concat($properties)->take(8)->values();
@@ -80,7 +81,7 @@ class SearchController extends Controller
             'message' => 'Search suggestions retrieved successfully.'
         ];
         
-        \Log::info('Final response', ['response' => $response]);
+        \Illuminate\Support\Facades\Log::info('Final response', ['response' => $response]);
         
         return response()->json($response, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
@@ -115,5 +116,37 @@ class SearchController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Ensure proper UTF-8 encoding for text fields
+     */
+    private function ensureUtf8($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        
+        if (!is_string($value)) {
+            return $value;
+        }
+        
+        // Check if the string is already valid UTF-8
+        if (mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+        
+        // Try to convert from common encodings to UTF-8
+        $encodings = ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'];
+        
+        foreach ($encodings as $encoding) {
+            $converted = mb_convert_encoding($value, 'UTF-8', $encoding);
+            if (mb_check_encoding($converted, 'UTF-8')) {
+                return $converted;
+            }
+        }
+        
+        // If all else fails, remove invalid characters
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }

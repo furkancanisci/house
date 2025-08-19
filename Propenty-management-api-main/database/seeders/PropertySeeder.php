@@ -245,6 +245,9 @@ class PropertySeeder extends Seeder
                 ['name' => 'ABC Elementary', 'type' => 'school', 'distance' => 1.2],
             ]);
             
+            // Mark first 3 properties as featured
+            $data['is_featured'] = $index < 3;
+            
   
             
             // Build and execute raw SQL
@@ -275,7 +278,7 @@ class PropertySeeder extends Seeder
                 'status' => 'draft',
             ],
             [
-                'title' => 'Draft Property - Country Cottage',
+                'title' => 'Draft Property - Traditional House',
                 'description' => 'Another draft property in progress.',
                 'property_type' => 'house',
                 'listing_type' => 'rent',

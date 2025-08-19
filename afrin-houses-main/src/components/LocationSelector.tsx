@@ -1,309 +1,183 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
-import { Label } from './ui/label';
-import { MapPin, Globe, Building } from 'lucide-react';
-import { cityService, City } from '../services/cityService';
+import { Globe } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { cityService } from '@/services/cityService';
+
+type LoadingState = {
+  states: boolean;
+  cities: boolean;
+};
+
+interface City {
+  id: number | string;
+  name: string;
+  state: string;
+  name_ar?: string;
+  name_en?: string;
+}
 
 interface LocationSelectorProps {
-  onLocationChange?: (location: {
-    country?: string;
-    state?: string;
-    city?: string;
-  }) => void;
-  initialCountry?: string;
-  initialState?: string;
-  initialCity?: string;
-  selectedCountry?: string;
+  onLocationChange?: (location: { state?: string; city?: string }) => void;
   selectedState?: string;
   selectedCity?: string;
-  onCountryChange?: (value: string) => void;
   onStateChange?: (value: string) => void;
   onCityChange?: (value: string) => void;
-  showCountry?: boolean;
+  initialState?: string;
+  initialCity?: string;
   showState?: boolean;
   showCity?: boolean;
   className?: string;
 }
 
-const LocationSelector: React.FC<LocationSelectorProps> = ({
+const LocationSelector: FC<LocationSelectorProps> = ({
   onLocationChange,
-  initialCountry,
+  selectedState: propSelectedState,
+  selectedCity: propSelectedCity,
+  onStateChange: propOnStateChange,
+  onCityChange: propOnCityChange,
   initialState,
   initialCity,
-  selectedCountry,
-  selectedState,
-  selectedCity,
-  onCountryChange,
-  onStateChange,
-  onCityChange,
-  showCountry = true,
   showState = true,
   showCity = true,
-  className = '',
+  className = ''
 }) => {
   const { t, i18n } = useTranslation();
-  const locale = i18n.language === 'ar' ? 'ar' : 'en';
+  const { language: locale } = i18n;
 
-  const [countries, setCountries] = useState<string[]>([]);
-  const [states, setStates] = useState<string[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  
-  // Set default values: Syria as country and Damascus as state
-  const getDefaultCountry = () => {
-    if (initialCountry) return initialCountry;
-    return locale === 'ar' ? 'سوريا' : 'Syria';
-  };
-  
+  // Set default values: Damascus as state
   const getDefaultState = () => {
     if (initialState) return initialState;
     return locale === 'ar' ? 'دمشق' : 'Damascus';
   };
 
-  const [internalCountry, setInternalCountry] = useState<string>(selectedCountry || getDefaultCountry());
-  const [internalState, setInternalState] = useState<string>(selectedState || getDefaultState());
-  const [internalCity, setInternalCity] = useState<string>(selectedCity || initialCity || '');
-  
-  // Update internal state when props change
-  useEffect(() => {
-    if (selectedCountry) setInternalCountry(selectedCountry);
-  }, [selectedCountry]);
-  
-  useEffect(() => {
-    if (selectedState) setInternalState(selectedState);
-  }, [selectedState]);
-  
-  useEffect(() => {
-    if (selectedCity) setInternalCity(selectedCity);
-  }, [selectedCity]);
-  
+  // State for internal management
+  const [internalState, setInternalState] = useState<string>(getDefaultState());
+  const [internalCity, setInternalCity] = useState<string>(initialCity || '');
+  const [states, setStates] = useState<string[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState({
-    countries: false,
     states: false,
-    cities: false,
+    cities: false
   });
 
-  // Load countries on component mount and set defaults
-  useEffect(() => {
-    if (showCountry) {
-      loadCountries();
-    }
-    // Always ensure Syria is selected as default
-    if (!internalCountry || internalCountry === '') {
-      const defaultCountry = locale === 'ar' ? 'سوريا' : 'Syria';
-      setInternalCountry(defaultCountry);
-      // Update parent if callback is provided
-      if (onLocationChange) {
-        onLocationChange({
-          country: defaultCountry,
-          state: internalState,
-          city: internalCity
-        });
-      }
-    }
-  }, [locale, showCountry]);
+  // Use controlled values if provided, otherwise use internal state
+  const selectedState = propSelectedState !== undefined ? propSelectedState : internalState;
+  const selectedCity = propSelectedCity !== undefined ? propSelectedCity : internalCity;
 
-  // Load states for default country (Syria) on mount
-  useEffect(() => {
-    const defaultCountry = locale === 'ar' ? 'سوريا' : 'Syria';
-    if (internalCountry === defaultCountry && showState) {
-      loadStates(defaultCountry);
+  // Handle changes with callbacks if provided, otherwise update internal state
+  const onStateChangeHandler = (value: string) => {
+    if (propOnStateChange) {
+      propOnStateChange(value);
+    } else {
+      setInternalState(value);
     }
-  }, [locale, internalCountry, showState]);
+    if (onLocationChange) {
+      onLocationChange({ state: value });
+    }
+  };
 
-  // Load states when country changes
-  useEffect(() => {
-    if (internalCountry && showState) {
-      loadStates(internalCountry);
-    } else if (internalCountry && !showState) {
-      // If not showing state selector, load all cities for the country
-      if (showCity) {
-        loadCitiesForCountry(internalCountry);
-      }
+  const onCityChangeHandler = (value: string) => {
+    if (propOnCityChange) {
+      propOnCityChange(value);
+    } else {
+      setInternalCity(value);
     }
-  }, [internalCountry, showState, showCity]);
+    if (onLocationChange) {
+      onLocationChange({ state: selectedState, city: value });
+    }
+  };
+
+  // Load states on mount
+  useEffect(() => {
+    const loadStates = async () => {
+      try {
+        setLoading(prev => ({ ...prev, states: true }));
+        const data = await cityService.getStates();
+        setStates(data);
+      } catch (error) {
+        console.error('Error loading states:', error);
+      } finally {
+        setLoading(prev => ({ ...prev, states: false }));
+      }
+    };
+
+    loadStates();
+  }, []);
+
+  // Load cities when state changes
+  const loadCities = async (state: string) => {
+    if (!state) return;
+    
+    try {
+      setLoading(prev => ({ ...prev, cities: true }));
+      const data = await cityService.getCities({ state });
+      setCities(data);
+    } catch (error) {
+      console.error('Error loading cities:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, cities: false }));
+    }
+  };
+
+
 
   // Load cities when state changes
   useEffect(() => {
-    if (internalState && showCity) {
-      loadCitiesForState(internalState);
+    if (selectedState && showCity) {
+      loadCities(selectedState);
+      // Reset city when state changes
+      onCityChangeHandler('');
     }
-  }, [internalState, showCity]);
-
-  // Notify parent component of location changes
-  useEffect(() => {
-    if (onLocationChange) {
-      onLocationChange({
-        country: internalCountry || undefined,
-        state: internalState || undefined,
-        city: internalCity || undefined,
-      });
-    }
-  }, [internalCountry, internalState, internalCity, onLocationChange]);
-
-  const loadCountries = async () => {
-    setLoading(prev => ({ ...prev, countries: true }));
-    try {
-      const data = await cityService.getCountries(locale);
-      setCountries(data);
-    } catch (error) {
-      console.error('Error loading countries:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, countries: false }));
-    }
-  };
-
-  const loadStates = async (country: string) => {
-    setLoading(prev => ({ ...prev, states: true }));
-    setInternalCity('');
-    setCities([]);
-    
-    try {
-      const data = await cityService.getStates({ locale, country });
-      setStates(data);
-      
-      // Set Damascus as default state for Syria
-      const isSyria = country === 'سوريا' || country === 'Syria';
-      const damascusName = locale === 'ar' ? 'دمشق' : 'Damascus';
-      
-      if (isSyria && data.includes(damascusName) && !internalState) {
-        setInternalState(damascusName);
-      } else if (!internalState && !initialState) {
-        // If no initial state and not Syria, keep the default from getDefaultState
-        setInternalState(getDefaultState());
-      }
-    } catch (error) {
-      console.error('Error loading states:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, states: false }));
-    }
-  };
-
-  const loadCitiesForCountry = async (country: string) => {
-    setLoading(prev => ({ ...prev, cities: true }));
-    setInternalCity('');
-    
-    try {
-      const data = await cityService.getCities({ locale, country });
-      setCities(data);
-    } catch (error) {
-      console.error('Error loading cities:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, cities: false }));
-    }
-  };
-
-  const loadCitiesForState = async (state: string) => {
-    if (!internalCountry) return;
-    
-    setLoading(prev => ({ ...prev, cities: true }));
-    
-    try {
-      const data = await cityService.getCities({
-        locale,
-        country: internalCountry,
-        state,
-      });
-      setCities(data);
-    } catch (error) {
-      console.error('Error loading cities:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, cities: false }));
-    }
-  };
-
-  const handleCountryChange = (value: string) => {
-    setInternalCountry(value);
-    setInternalState('');
-    setInternalCity('');
-    setStates([]);
-    setCities([]);
-    if (onCountryChange) {
-      onCountryChange(value);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedState, showCity]);
 
   const handleStateChange = (value: string) => {
-    setInternalState(value);
-    if (onStateChange) {
-      onStateChange(value);
-    }
+    onStateChangeHandler(value);
+    // Reset city when state changes
+    onCityChangeHandler('');
   };
 
-  const handleCityChange = (value: string) => {
-    setInternalCity(value);
-    if (onCityChange) {
-      onCityChange(value);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onLocationChange) {
+      onLocationChange({
+        state: selectedState,
+        city: selectedCity,
+      });
     }
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      {showCountry && (
-        <div className="space-y-2">
-          <Label htmlFor="country" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            {t('location.country')}
-          </Label>
-          <Select
-            value={internalCountry}
-            onValueChange={handleCountryChange}
-            disabled={loading.countries}
-          >
-            <SelectTrigger>
-              <SelectValue 
-                placeholder={
-                  loading.countries 
-                    ? t('common.loading') 
-                    : t('location.selectCountry')
-                } 
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {countries.map((country) => (
-                <SelectItem key={country} value={country}>
-                  {country}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {/* State and City in the same row - always visible when enabled */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className={cn('space-y-4', className)}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         {showState && (
           <div className="space-y-2">
-            <Label htmlFor="state" className="flex items-center gap-2">
-              <Building className="h-4 w-4" />
+            <Label htmlFor="state" className="text-sm font-semibold text-gray-700">
               {t('location.state')}
             </Label>
             <Select
-              value={internalState}
+              value={selectedState}
               onValueChange={handleStateChange}
-              disabled={!internalCountry || loading.states}
+              disabled={loading.states}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-all duration-200 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100">
                 <SelectValue 
-                  placeholder={
-                   !internalCountry
-                     ? t('common.selectCountryFirst')
-                     : loading.states 
-                       ? t('common.loading') 
-                       : t('location.selectState')
-                 } 
+                  placeholder={t('location.selectState')} 
+                  className="text-gray-700 font-medium"
                 />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border-2 border-gray-100 shadow-lg">
                 {states.map((state) => (
-                  <SelectItem key={state} value={state}>
-                    {state}
+                  <SelectItem 
+                    key={state} 
+                    value={state}
+                    className="hover:bg-blue-50 focus:bg-blue-100 transition-colors duration-150 py-3 px-4 cursor-pointer"
+                  >
+                    <span className="font-medium text-gray-800">{state}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -313,39 +187,40 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
         {showCity && (
           <div className="space-y-2">
-            <Label htmlFor="city" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
+            <Label htmlFor="city" className="text-sm font-semibold text-gray-700">
               {t('location.city')}
             </Label>
             <Select
-              value={internalCity}
-              onValueChange={handleCityChange}
-              disabled={!internalState || loading.cities}
+              value={selectedCity}
+              onValueChange={onCityChangeHandler}
+              disabled={!selectedState || loading.cities}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-green-400 focus:border-green-500 transition-all duration-200 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed">
                 <SelectValue 
-                  placeholder={
-                    !internalCountry
-                      ? t('common.selectCountryFirst')
-                      : (showState && !internalState)
-                        ? t('common.selectStateFirst')
-                        : loading.cities 
-                          ? t('common.loading') 
-                          : t('location.selectCity')
+                  placeholder={selectedState 
+                    ? t('location.selectCity')
+                    : t('location.selectStateFirst')
                   } 
+                  className="text-gray-700 font-medium"
                 />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border-2 border-gray-100 shadow-lg">
                 {cities.map((city) => (
-                  <SelectItem key={city.id} value={locale === 'ar' ? city.name_ar : city.name_en}>
-                    {locale === 'ar' ? city.name_ar : city.name_en}
+                  <SelectItem 
+                    key={city.id} 
+                    value={city.name}
+                    className="hover:bg-green-50 focus:bg-green-100 transition-colors duration-150 py-3 px-4 cursor-pointer"
+                  >
+                    <span className="font-medium text-gray-800">
+                      {locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name)}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         )}
-      </div>
+      </form>
     </div>
   );
 };

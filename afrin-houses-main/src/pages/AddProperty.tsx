@@ -46,6 +46,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
+import PropertyLocationMap from '../components/PropertyLocationMap';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required').max(255, 'Title cannot exceed 255 characters'),
@@ -92,6 +93,8 @@ const propertySchema = z.object({
   contactName: z.string().min(1, 'Contact name is required'),
   contactPhone: z.string().min(1, 'Contact phone is required'),
   contactEmail: z.string().email('Valid email is required'),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
@@ -111,6 +114,7 @@ const AddProperty: React.FC = () => {
   // Location state
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('');
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   const {
     register,
@@ -140,6 +144,8 @@ const AddProperty: React.FC = () => {
       contactName: user?.name || '',
       contactEmail: user?.email || '',
       contactPhone: user?.phone || '',
+      latitude: undefined,
+      longitude: undefined,
     },
   });
 
@@ -253,7 +259,7 @@ const AddProperty: React.FC = () => {
     );
   };
 
-  const handleLocationChange = (location: { country?: string; state?: string; city?: string }) => {
+  const handleLocationChange = (location: { state?: string; city?: string }) => {
     if (location.city) {
       setSelectedCity(location.city);
       setValue('city', location.city); // Update form field for validation
@@ -262,6 +268,13 @@ const AddProperty: React.FC = () => {
       setSelectedState(location.state);
       setValue('state', location.state); // Update form field for validation
     }
+  };
+
+  const handleCoordinatesChange = (location: { latitude: number; longitude: number; address?: string }) => {
+    const coords = { lat: location.latitude, lng: location.longitude };
+    setCoordinates(coords);
+    setValue('latitude', location.latitude);
+    setValue('longitude', location.longitude);
   };
 
   // Helper function to get feature translation with fallback
@@ -392,46 +405,35 @@ const AddProperty: React.FC = () => {
 
       // Construct the property object matching the backend validation requirements
       const newProperty = {
-        slug: data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         title: data.title,
-        address: street,
+        description: data.description || '',
+        propertyType: data.propertyType,
+        listingType: data.listingType,
+        price: parseFloat(data.price.toString()),
+        address: street, // This will be mapped to street_address by backend
         city: city,
         state: state,
         postalCode: postalCode,
-        price: parseFloat(data.price.toString()),
-        listingType: data.listingType,
-        propertyType: data.propertyType,
+        // Country field removed - Syria-only application
+        latitude: coordinates?.lat,
+        longitude: coordinates?.lng,
         bedrooms: Number(data.bedrooms || 0),
         bathrooms: Number(data.bathrooms || 0),
         squareFootage: Number(data.squareFootage || 0),
-        description: data.description || '',
-        // Ensure features is included as an array of strings
-        features: Array.isArray(selectedFeatures) ? selectedFeatures : [],
+        lotSize: Number(data.lotSize || 0),
+        yearBuilt: Number(data.yearBuilt || new Date().getFullYear()),
+        parking: data.parking || 'none',
+        status: 'active',
+        is_featured: false,
+        is_available: true,
+        availableDate: data.availableDate || new Date().toISOString(),
         amenities: Array.isArray(selectedFeatures) ? selectedFeatures : [],
+        contactName: data.contactName || '',
+        contactPhone: data.contactPhone || '',
+        contactEmail: data.contactEmail || '',
         // Send actual File objects for upload
         images: selectedImages.slice(1), // Gallery images (excluding the first one which is main)
         mainImage: selectedImages[0] || null, // First image as main image (File object)
-        yearBuilt: Number(data.yearBuilt || new Date().getFullYear()),
-        availableDate: data.availableDate || new Date().toISOString(),
-        petPolicy: data.petPolicy || '',
-        parking_type: data.parking || 'none',
-        utilities: selectedUtilities.join(', ') || '',
-        lotSize: Number(data.lotSize || 0),
-        garage: data.garage || '',
-        heating: data.heating || '',
-        hoaFees: data.hoaFees || '',
-        building: data.building || '',
-        pool: data.pool || '',
-        contact: {
-          name: data.contactName || '',
-          phone: data.contactPhone || '',
-          email: data.contactEmail || ''
-        },
-        coordinates: {
-          lat: 40.7128, // Sample coordinates (NYC)
-          lng: -74.0060
-        },
-        datePosted: new Date().toISOString()
       };
       
       console.log('Prepared property data for submission:', newProperty);
@@ -543,8 +545,8 @@ const AddProperty: React.FC = () => {
                   <div className="lg:col-span-2">
                     <LocationSelector
                       onLocationChange={handleLocationChange}
-                      selectedCity={selectedCity}
-                      selectedState={selectedState}
+                      initialCity={selectedCity}
+                      initialState={selectedState}
                     />
                   </div>
 
@@ -569,6 +571,26 @@ const AddProperty: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Map Section */}
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <MapPin className="h-5 w-5 text-orange-600" />
+                {t('map.selectPropertyLocation')}
+              </h3>
+              <PropertyLocationMap
+                onLocationChange={handleCoordinatesChange}
+                initialCoordinates={coordinates}
+              />
+              {coordinates && coordinates.lat !== undefined && coordinates.lng !== undefined && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-700 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    {t('map.locationSelected')}: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Property Type Section */}

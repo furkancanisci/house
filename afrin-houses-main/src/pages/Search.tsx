@@ -142,6 +142,18 @@ const Search: React.FC = () => {
       const page = Number(params.page);
       if (!isNaN(page) && page > 0) filters.page = page;
     }
+    
+    // Handle sort param in the form of "price-asc", "date-desc"
+    if ((params as any).sort) {
+      const sortVal = String((params as any).sort);
+      const [by, order] = sortVal.split('-') as ['price' | 'date' | 'sqft', 'asc' | 'desc'];
+      if (by) {
+        filters.sortBy = by === 'date' ? 'created_at' : (by as any);
+      }
+      if (order === 'asc' || order === 'desc') {
+        filters.sortOrder = order;
+      }
+    }
 
     if (params.bedrooms) {
         const bedrooms = Number(params.bedrooms);
@@ -196,6 +208,13 @@ const Search: React.FC = () => {
     });
     return urlParamsToSearchFilters(urlFilters);
   }, [searchParams]);
+
+  // Current sort value derived from filters state
+  const currentSortValue = useMemo(() => {
+    const by = filters?.sortBy === 'created_at' ? 'date' : (filters?.sortBy || 'date');
+    const order = filters?.sortOrder || 'desc';
+    return `${by}-${order}`;
+  }, [filters]);
 
   const previousFilters = useRef<SearchFiltersType | null>(null);
 
@@ -284,7 +303,6 @@ const Search: React.FC = () => {
       // Ensure required fields are present
       city: property.location?.city || property.city || '',
       state: property.location?.state || property.state || '',
-      country: property.country || '',
       // Ensure media is always an array
       media: Array.isArray(property.media) ? property.media : [],
     };
@@ -341,6 +359,7 @@ const Search: React.FC = () => {
   // Apply filters to properties from context
   const applyFilters = useCallback((filters: SearchFiltersType) => {
     if (!allProperties || allProperties.length === 0) {
+      console.log('No properties available to filter');
       setFilteredProperties([]);
       return;
     }
@@ -356,6 +375,9 @@ const Search: React.FC = () => {
         return null;
       }
     }).filter((prop): prop is ExtendedProperty => prop !== null);
+    
+    console.log('Total properties before filtering:', extendedProperties.length);
+    console.log('Sample property bathrooms:', extendedProperties[0]?.bathrooms);
     
     try {
       let result = [...extendedProperties];
@@ -415,21 +437,60 @@ const Search: React.FC = () => {
 
       // Apply bedroom filter
       if (filters.bedrooms) {
-        const minBedrooms = Number(filters.bedrooms);
-        if (!isNaN(minBedrooms)) {
-          result = result.filter(property => 
-            (property.bedrooms || 0) >= minBedrooms
-          );
+        const bedroomsFilter = String(filters.bedrooms);
+        if (bedroomsFilter.endsWith('+')) {
+          // Handle 'N+' case - show properties with N or more bedrooms
+          const minBedrooms = parseInt(bedroomsFilter);
+          if (!isNaN(minBedrooms)) {
+            result = result.filter(property => 
+              (property.bedrooms || 0) >= minBedrooms
+            );
+          }
+        } else {
+          // Handle exact number case
+          const exactBedrooms = parseInt(bedroomsFilter);
+          if (!isNaN(exactBedrooms)) {
+            result = result.filter(property => 
+              (property.bedrooms || 0) === exactBedrooms
+            );
+          }
         }
       }
 
       // Apply bathroom filter
       if (filters.bathrooms) {
-        const minBathrooms = Number(filters.bathrooms);
-        if (!isNaN(minBathrooms)) {
-          result = result.filter(property => 
-            (property.bathrooms || 0) >= minBathrooms
-          );
+        console.log('Filtering by bathrooms:', filters.bathrooms);
+        const bathroomsFilter = String(filters.bathrooms);
+        
+        // Log all property bathrooms for debugging
+        console.log('All property bathrooms:', result.map(p => p.bathrooms));
+        
+        if (bathroomsFilter.endsWith('+')) {
+          // Handle 'N+' case - show properties with N or more bathrooms
+          const minBathrooms = parseInt(bathroomsFilter);
+          console.log('Filtering for min bathrooms:', minBathrooms);
+          
+          if (!isNaN(minBathrooms)) {
+            result = result.filter(property => {
+              const propertyBathrooms = property.bathrooms || 0;
+              console.log(`Property ${property.id} has ${propertyBathrooms} bathrooms`);
+              return propertyBathrooms >= minBathrooms;
+            });
+            console.log(`After filtering for ${minBathrooms}+ bathrooms:`, result.length, 'properties');
+          }
+        } else {
+          // Handle exact number case
+          const exactBathrooms = parseInt(bathroomsFilter);
+          console.log('Filtering for exact bathrooms:', exactBathrooms);
+          
+          if (!isNaN(exactBathrooms)) {
+            result = result.filter(property => {
+              const propertyBathrooms = property.bathrooms || 0;
+              console.log(`Property ${property.id} has ${propertyBathrooms} bathrooms`);
+              return propertyBathrooms === exactBathrooms;
+            });
+            console.log(`After filtering for exactly ${exactBathrooms} bathrooms:`, result.length, 'properties');
+          }
         }
       }
 
@@ -537,6 +598,11 @@ const Search: React.FC = () => {
         newParams.delete(key);
       }
     });
+    
+    // Update filters state and apply them
+    setFilters(processedFilters);
+    applyFilters(processedFilters);
+    updateURL(processedFilters);
 
     // Preserve existing params that are not part of the new filter set
     currentParams.forEach((value, key) => {
@@ -544,6 +610,11 @@ const Search: React.FC = () => {
         newParams.set(key, value);
       }
     });
+    // Also include compact 'sort' param for UX/back-compat
+    if (processedFilters.sortBy && processedFilters.sortOrder) {
+      const by = processedFilters.sortBy === 'created_at' ? 'date' : processedFilters.sortBy;
+      params.set('sort', `${by}-${processedFilters.sortOrder}`);
+    }
 
     navigate(`?${newParams.toString()}`, { replace: true });
   }, [navigate]);
@@ -616,54 +687,69 @@ const Search: React.FC = () => {
             <SearchFilters
               initialFilters={filtersFromParams}
               onApplyFilters={handleFilterChange}
+              initialFilters={filters}
             />
           </div>
-          <div className="md:col-span-3">
+          
+          {/* Results Section */}
+          <div className="w-full md:w-3/4">
             <div className="flex justify-between items-center mb-6">
               <p className="text-gray-600">
                 {t('search.showingCount', { count: filteredProperties.length })}
               </p>
               <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  size="icon"
-                  onClick={() => setViewMode('grid')}
-                  aria-label="Grid view"
-                >
-                  <LayoutGrid className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="icon"
-                  onClick={() => setViewMode('list')}
-                  aria-label="List view"
-                >
-                  <List className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className={`flex items-center space-x-2 transition-all duration-200 ${
+                      viewMode === 'grid' 
+                        ? 'bg-white shadow-sm text-gray-900' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    aria-label="Grid view"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    <span className="hidden sm:inline font-medium">شبكة</span>
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className={`flex items-center space-x-2 transition-all duration-200 ${
+                      viewMode === 'list' 
+                        ? 'bg-white shadow-sm text-gray-900' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    aria-label="List view"
+                  >
+                    <List className="h-4 w-4" />
+                    <span className="hidden sm:inline font-medium">قائمة</span>
+                  </Button>
+                </div>
               </div>
               <div className="w-64">
                 <select
                   className="w-full p-2 border rounded"
-                  value={searchParams.get('sort') || 'date-desc'}
+                  value={currentSortValue}
                   onChange={(e) => {
                     const sortValue = e.target.value;
+                    if (sortValue === 'relevance') {
+                      // Clear sorting
+                      handleFilterChange({ ...filters, sortBy: undefined, sortOrder: undefined });
+                      return;
+                    }
                     const [sortBy, sortOrder] = sortValue.split('-') as ['price' | 'date' | 'sqft', 'asc' | 'desc'];
 
                     // Map the sortBy value to match the expected SearchFilters type
-                    let mappedSortBy: 'price' | 'created_at' | 'date' = 'created_at';
-                    if (sortBy === 'price') {
-                      mappedSortBy = 'price';
-                    } else if (sortBy === 'date') {
-                      mappedSortBy = 'created_at';
-                    }
+                    const mappedSortBy = sortBy === 'date' ? 'created_at' : sortBy;
 
-                    const newFilters: SearchFiltersType = {
-                      ...filtersFromParams,
-                      sortBy: mappedSortBy,
+                    handleFilterChange({
+                      ...filters,
+                      sortBy: mappedSortBy as any,
                       sortOrder: sortOrder as 'asc' | 'desc',
-                    };
-
-                    handleFilterChange(newFilters);
+                    });
                   }}
                 >
                   <option value="relevance">{t('search.sort.relevance', 'Relevance')}</option>
@@ -701,7 +787,12 @@ const Search: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6">
+              <div className={`
+                ${viewMode === 'grid' 
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+                  : 'flex flex-col space-y-4'
+                }
+              `}>
                 {filteredProperties.map((property) => {
                   const price = typeof property.price === 'object'
                     ? Number((property.price as any)?.amount) || 0
@@ -769,12 +860,21 @@ const Search: React.FC = () => {
                   };
 
                   return (
-                    <PropertyCard
+                    <div
                       key={mappedProperty.id.toString()}
-                      property={mappedProperty}
-                      view={viewMode}
-                      useGallery={true}
-                    />
+                      className={`
+                        ${viewMode === 'grid' 
+                          ? 'transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:border-blue-300'
+                          : 'w-full'
+                        }
+                      `}
+                    >
+                      <PropertyCard
+                        property={mappedProperty}
+                        view={viewMode}
+                        useGallery={true}
+                      />
+                    </div>
                   );
                 })}
               </div>

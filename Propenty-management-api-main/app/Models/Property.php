@@ -31,7 +31,7 @@ class Property extends Model implements HasMedia
         'city',
         'state',
         'postal_code',
-        'country',
+        // 'country', // Removed - Syria-only application
         'latitude',
         'longitude',
         'neighborhood',
@@ -78,10 +78,11 @@ class Property extends Model implements HasMedia
      * @var array
      */
     protected $appends = [
-        'full_address',
-        'formatted_price',
-        'main_image_url',
-        'gallery_urls',
+        // Temporarily removing all accessors to debug the issue
+        // 'full_address',
+        // 'formatted_price',
+        // 'main_image_url',
+        // 'gallery_urls',
     ];
 
     /**
@@ -208,11 +209,11 @@ class Property extends Model implements HasMedia
      */
     public function getFullAddressAttribute(): string
     {
-        $address = $this->street_address;
-        if ($this->city) $address .= ', ' . $this->city;
-        if ($this->state) $address .= ', ' . $this->state;
+        $address = $this->ensureUtf8($this->street_address);
+        if ($this->city) $address .= ', ' . $this->ensureUtf8($this->city);
+        if ($this->state) $address .= ', ' . $this->ensureUtf8($this->state);
         if ($this->postal_code) $address .= ' ' . $this->postal_code;
-        if ($this->country && $this->country !== 'US') $address .= ', ' . $this->country;
+        // Country field removed - Syria-only application
 
         return $address;
     }
@@ -502,5 +503,37 @@ class Property extends Model implements HasMedia
             'favorites_count' => $this->favoritedByUsers()->count(),
             'images_count' => $this->getMedia('images')->count(),
         ];
+    }
+
+    /**
+     * Ensure proper UTF-8 encoding for text fields
+     */
+    private function ensureUtf8($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        
+        if (!is_string($value)) {
+            return $value;
+        }
+        
+        // Check if the string is already valid UTF-8
+        if (mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+        
+        // Try to convert from common encodings to UTF-8
+        $encodings = ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'];
+        
+        foreach ($encodings as $encoding) {
+            $converted = mb_convert_encoding($value, 'UTF-8', $encoding);
+            if (mb_check_encoding($converted, 'UTF-8')) {
+                return $converted;
+            }
+        }
+        
+        // If all else fails, remove invalid characters
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }

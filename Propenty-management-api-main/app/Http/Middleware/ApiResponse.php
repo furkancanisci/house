@@ -24,10 +24,19 @@ class ApiResponse
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('X-XSS-Protection', '1; mode=block');
 
-        // If it's a JSON response, ensure proper content type
+        // If it's a JSON response, ensure proper content type and UTF-8 encoding
         if ($response->headers->get('Content-Type') === null && 
             ($request->wantsJson() || $request->expectsJson() || $request->is('api/*'))) {
-            $response->headers->set('Content-Type', 'application/json');
+            $response->headers->set('Content-Type', 'application/json; charset=UTF-8');
+            
+            // Ensure the content is properly encoded
+            if (method_exists($response, 'setEncodingOptions')) {
+                $response->setEncodingOptions(
+                    JSON_UNESCAPED_UNICODE | 
+                    JSON_UNESCAPED_SLASHES |
+                    JSON_PARTIAL_OUTPUT_ON_ERROR
+                );
+            }
         }
 
         return $response;

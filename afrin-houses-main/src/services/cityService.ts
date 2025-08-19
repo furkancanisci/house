@@ -3,7 +3,6 @@ import api from './api';
 export interface City {
   id: number;
   name: string;
-  country: string;
   state: string;
   latitude?: number;
   longitude?: number;
@@ -17,22 +16,10 @@ export interface CityResponse {
   message: string;
 }
 
-export interface CountryData {
-  name: string;
-  name_ar: string;
-  name_en: string;
-}
-
 export interface StateData {
   name: string;
   name_ar: string;
   name_en: string;
-}
-
-export interface CountryResponse {
-  success: boolean;
-  data: CountryData[];
-  message: string;
 }
 
 export interface StateResponse {
@@ -47,7 +34,6 @@ class CityService {
    */
   async getCities(params?: {
     locale?: string;
-    country?: string;
     state?: string;
   }): Promise<City[]> {
     try {
@@ -60,49 +46,10 @@ class CityService {
   }
 
   /**
-   * Get all countries
-   */
-  async getCountries(locale: string = 'ar'): Promise<string[]> {
-    try {
-      // Using the correct endpoint /cities which maps to CityController@index
-      const response = await api.get<CountryResponse>('/cities', {
-        params: { locale }
-      });
-      
-      // Extract unique countries from the cities data
-      const countries = response.data.data.reduce((acc: CountryData[], city: City) => {
-        const countryExists = acc.some(c => 
-          c.name_en === city.country || 
-          c.name_ar === city.country
-        );
-        
-        if (!countryExists) {
-          acc.push({
-            name: city.country,
-            name_en: city.country === 'Syria' ? 'Syria' : city.country,
-            name_ar: city.country === 'Syria' ? 'سوريا' : city.country
-          });
-        }
-        return acc;
-      }, [] as CountryData[]);
-      
-      // Convert to the expected string format
-      return countries.map(country => 
-        locale === 'ar' ? country.name_ar : country.name_en
-      );
-    } catch (error) {
-      console.warn('Falling back to default countries list');
-      // Fallback to default countries if API fails
-      return locale === 'ar' ? ['سوريا'] : ['Syria'];
-    }
-  }
-
-  /**
-   * Get all states for a specific country
+   * Get all states for Syria
    */
   async getStates(params?: {
     locale?: string;
-    country?: string;
   }): Promise<string[]> {
     try {
       const response = await api.get<StateResponse>('/cities/states', { params });
@@ -128,10 +75,9 @@ class CityService {
   async getCitiesByState(params?: {
     locale?: string;
     state?: string;
-    country?: string;
   }): Promise<City[]> {
     try {
-      const response = await api.get<CityResponse>('/cities/by-state', { params });
+      const response = await api.get<CityResponse>('/cities', { params });
       return response.data.data;
     } catch (error) {
       console.error('Error fetching cities by state:', error);
@@ -161,8 +107,7 @@ class CityService {
    */
   async getSyrianCities(locale: string = 'ar'): Promise<City[]> {
     return this.getCities({
-      locale,
-      country: locale === 'ar' ? 'سوريا' : 'Syria'
+      locale
     });
   }
 
@@ -171,8 +116,7 @@ class CityService {
    */
   async getSyrianStates(locale: string = 'ar'): Promise<string[]> {
     return this.getStates({
-      locale,
-      country: locale === 'ar' ? 'سوريا' : 'Syria'
+      locale
     });
   }
 }

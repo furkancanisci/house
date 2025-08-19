@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { authService } from './authService';
 
 const api: AxiosInstance = axios.create({
-  baseURL: 'https://house-6g6m.onrender.com/api/v1',
+  baseURL: 'http://localhost:8000/api/v1',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -104,7 +104,7 @@ api.interceptors.response.use(
 const refreshToken = async (): Promise<string | null> => {
   try {
     const response = await axios.post(
-      'https://house-6g6m.onrender.com/api/v1/auth/refresh',
+      'http://127.0.0.1:8000/api/v1/auth/refresh',
       {},
       {
         withCredentials: true,

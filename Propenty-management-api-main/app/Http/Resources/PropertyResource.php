@@ -9,57 +9,85 @@ class PropertyResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
      */
+    /**
+     * Ensure proper UTF-8 encoding for a string
+     */
+    protected function ensureUtf8($value)
+    {
+        if (is_string($value)) {
+            return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+        }
+        if (is_array($value)) {
+            return array_map([$this, 'ensureUtf8'], $value);
+        }
+        if (is_object($value) && method_exists($value, 'toArray')) {
+            return $this->ensureUtf8($value->toArray());
+        }
+        return $value;
+    }
+
     public function toArray(Request $request): array
     {
-        return [
+        // Ensure all string values are properly UTF-8 encoded
+        $data = [
             'id' => $this->id,
-            'title' => $this->title,
-            'description' => $this->description,
-            'slug' => $this->slug,
-            'property_type' => $this->property_type,
-            'listing_type' => $this->listing_type,
+            'title' => $this->ensureUtf8($this->title),
+            'description' => $this->ensureUtf8($this->description),
+            'slug' => $this->ensureUtf8($this->slug),
+            'property_type' => $this->ensureUtf8($this->property_type),
+            'listing_type' => $this->ensureUtf8($this->listing_type),
             
-            // Pricing
-            'price' => [
+            // Property details - flat structure for frontend compatibility
+            'property_type' => $this->property_type,
+            'propertyType' => $this->property_type, // Frontend expects camelCase
+            'listing_type' => $this->listing_type,
+            'listingType' => $this->listing_type, // Frontend expects camelCase
+            'bedrooms' => (int) $this->bedrooms,
+            'bathrooms' => (float) $this->bathrooms,
+            'square_feet' => (int) $this->square_feet,
+            'squareFootage' => (int) $this->square_feet, // Frontend expects camelCase
+            'year_built' => $this->year_built,
+            'yearBuilt' => $this->year_built, // Frontend expects camelCase
+            
+            // Pricing - both nested and flat for compatibility
+            'price' => $this->price, // Flat price for frontend
+            'pricing' => [
                 'amount' => $this->price,
-                'formatted' => $this->formatted_price,
-                'type' => $this->price_type,
+                'formatted' => $this->ensureUtf8($this->formatted_price),
+                'type' => $this->ensureUtf8($this->price_type),
                 'currency' => 'USD',
             ],
             
-            // Location
+            // Location - both nested and flat for compatibility
+            'address' => $this->buildFullAddress(), // Frontend expects flat address
+            'full_address' => $this->buildFullAddress(), // Alternative field name
+            'street_address' => $this->ensureUtf8($this->street_address),
+            'city' => $this->ensureUtf8($this->city),
+            'state' => $this->ensureUtf8($this->state),
+            'postal_code' => $this->postal_code,
+            'zip_code' => $this->postal_code, // Frontend expects zip_code
+            'country' => $this->ensureUtf8($this->country),
+            'neighborhood' => $this->ensureUtf8($this->neighborhood),
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
             'location' => [
-                'street_address' => $this->street_address,
-                'city' => $this->city,
-                'state' => $this->state,
-                'postal_code' => $this->postal_code,
-                'country' => $this->country,
-                'full_address' => $this->full_address,
-                'neighborhood' => $this->neighborhood,
+                'street_address' => $this->ensureUtf8($this->street_address),
+                'city' => $this->ensureUtf8($this->city),
+                'state' => $this->ensureUtf8($this->state),
+                'postal_code' => $this->ensureUtf8($this->postal_code),
+                'country' => $this->ensureUtf8($this->country),
+                'full_address' => $this->ensureUtf8($this->full_address),
+                'neighborhood' => $this->ensureUtf8($this->neighborhood),
                 'coordinates' => [
                     'latitude' => $this->latitude,
                     'longitude' => $this->longitude,
                 ],
             ],
             
-            // Property Details
-            'details' => [
-                'bedrooms' => $this->bedrooms,
-                'bathrooms' => $this->bathrooms,
-                'square_feet' => $this->square_feet,
-                'lot_size' => $this->lot_size,
-                'year_built' => $this->year_built,
-                'parking' => [
-                    'type' => $this->parking_type,
-                    'spaces' => $this->parking_spaces,
-                ],
-            ],
-            
             // Features
             'amenities' => $this->amenities ?: [],
+            'features' => $this->amenities ?: [], // Frontend expects features
             'nearby_places' => $this->nearby_places ?: [],
             
             // Status
@@ -68,59 +96,67 @@ class PropertyResource extends JsonResource
             'is_available' => $this->is_available,
             'available_from' => $this->available_from?->format('Y-m-d'),
             'published_at' => $this->published_at?->toISOString(),
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
             
-            // Media
+            // Media - simplified to avoid memory issues
             'images' => [
-                'main' => $this->main_image_url,
-                'gallery' => $this->gallery_urls,
+                'main' => $this->getFirstMedia('main_image')?->getUrl() ?: 
+                         ($this->getFirstMedia('images')?->getUrl() ?: null),
+                'gallery' => $this->getMedia('images')->map(function($media) {
+                    return $media->getUrl();
+                })->toArray(),
                 'count' => $this->getMedia('images')->count(),
             ],
+            'mainImage' => $this->getFirstMedia('main_image')?->getUrl() ?: 
+                          ($this->getFirstMedia('images')?->getUrl() ?: '/placeholder-property.jpg'),
             
-            // Statistics
+            // Statistics - simplified
             'stats' => [
-                'views_count' => $this->views_count,
-                'favorites_count' => $this->whenLoaded('favoritedByUsers', function () {
-                    return $this->favoritedByUsers->count();
-                }, 0),
-                'is_favorited' => $this->when(auth()->check(), function () {
-                    // Use loaded relationship if available, otherwise return false to avoid query
-                    if ($this->relationLoaded('favoritedByUsers')) {
-                        return $this->favoritedByUsers->contains('id', auth()->id());
-                    }
-                    return false;
-                }),
+                'views_count' => $this->views_count ?? 0,
+                'favorites_count' => 0, // Will be populated separately if needed
+                'is_favorited' => false,
             ],
+            'views_count' => $this->views_count ?? 0, // Frontend expects flat views_count
             
-            // Contact information (only for property owner or when viewing property details)
+            // Contact information
             'contact' => [
-                'name' => $this->contact_name,
+                'name' => $this->ensureUtf8($this->contact_name),
                 'phone' => $this->contact_phone,
                 'email' => $this->contact_email,
             ],
             
             // Owner information
-            'owner' => $this->when($this->relationLoaded('user'), function () {
-                return new UserResource($this->user);
+            'owner' => $this->when($this->relationLoaded('user'), function () use ($request) {
+                return (new UserResource($this->user))->toArray($request);
             }),
             
             // Permissions for current user
             'permissions' => [
                 'can_edit' => auth()->check() && auth()->id() === $this->user_id,
                 'can_delete' => auth()->check() && auth()->id() === $this->user_id,
-                'can_view_analytics' => auth()->check() && auth()->id() === $this->user_id,
-                'can_favorite' => auth()->check() && auth()->id() !== $this->user_id,
             ],
             
-            // SEO
-            'seo' => [
-                'meta_title' => $this->title . ' - ' . $this->city . ', ' . $this->state,
-                'meta_description' => substr($this->description, 0, 160) . '...',
-                'canonical_url' => url("/properties/{$this->slug}"),
-            ],
-            
-            // Timestamps
-            'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
+            // User ID for ownership checks
+            'user_id' => $this->user_id,
         ];
+
+        // Ensure all string values in the response are properly UTF-8 encoded
+        return $this->ensureUtf8($data);
     }
+
+    /**
+     * Build full address without calling accessor
+     */
+    private function buildFullAddress()
+    {
+        $address = $this->ensureUtf8($this->street_address);
+        if ($this->city) $address .= ', ' . $this->ensureUtf8($this->city);
+        if ($this->state) $address .= ', ' . $this->ensureUtf8($this->state);
+        if ($this->postal_code) $address .= ' ' . $this->postal_code;
+        if ($this->country && $this->country !== 'US') $address .= ', ' . $this->ensureUtf8($this->country);
+
+        return $address;
+    }
+
 }

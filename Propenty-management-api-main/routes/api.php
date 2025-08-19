@@ -34,7 +34,7 @@ Route::get('/health', function () {
     ]);
 });
 
-Route::get('/test', [PropertyController::class, 'test']);
+
 
 Route::get('/testt', function () {
     return response()->json([
@@ -89,6 +89,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/featured', [PropertyController::class, 'featured']);
         Route::get('/amenities', [PropertyController::class, 'amenities']);
         Route::get('/{property:slug}', [PropertyController::class, 'show']);
+        Route::get('/{property}/show', [PropertyController::class, 'show']); // Alternative route for ID
         Route::get('/{property:slug}/similar', [PropertyController::class, 'similar']);
         
         // Write operations - keeping these for future reference but making them public for now
@@ -134,7 +135,6 @@ Route::prefix('v1')->group(function () {
     // Cities Routes
     Route::prefix('cities')->group(function () {
         Route::get('/', 'App\Http\Controllers\Api\CityController@index');
-        Route::get('/countries', 'App\Http\Controllers\Api\CityController@getCountries');
         Route::get('/states', 'App\Http\Controllers\Api\CityController@getStates');
         Route::get('/by-state', 'App\Http\Controllers\Api\CityController@getCitiesByState');
         Route::get('/search', 'App\Http\Controllers\Api\CityController@search');

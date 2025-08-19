@@ -2,11 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ExtendedProperty } from '../types';
 import { useApp } from '../context/AppContext';
-import { 
-  Heart, 
-  Bed, 
-  Bath, 
-  Square, 
+import {
+  Heart,
+  Bed,
+  Bath,
+  Square,
   MapPin,
   Calendar,
   DollarSign
@@ -30,6 +30,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
   const { t, i18n } = useTranslation();
   const isFavorite = state.favorites.includes(property.id);
   const user = state.user;
+
+  // Debug: Log the property data to understand the structure (only in development)
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('PropertyCard received property:', property);
+      console.log('Property bedrooms:', property.bedrooms);
+      console.log('Property details:', property.details);
+    }
+  }, [property]);
+
+  // Safety check: If property is null or undefined, return null
+  if (!property) {
+    console.error('PropertyCard: property is null or undefined');
+    return null;
+  }
 
   // Helper to normalize values that may be localized objects { name_ar, name_en }
   const normalizeName = (val: any): string => {
@@ -56,16 +71,39 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
 
   const propertySlug = property.slug || `property-${property.id}`;
 
+  // Helper functions to safely get property values
+  const getBedrooms = () => {
+    return Number(property.bedrooms ?? property.details?.bedrooms ?? 0) || 0;
+  };
+
+  const getBathrooms = () => {
+    return Number(property.bathrooms ?? property.details?.bathrooms ?? 0) || 0;
+  };
+
+  const getSquareFootage = () => {
+    return Number(property.square_feet ?? property.squareFootage ?? property.sqft ?? property.details?.square_feet ?? 0) || 0;
+  };
+
   const formatPrice = (price: number | string | { amount?: number } | undefined, type: string = 'sale') => {
-    const numPrice = typeof price === 'object' && price !== null 
-      ? (price as any).amount || 0 
+    const numPrice = typeof price === 'object' && price !== null
+      ? (price as any).amount || 0
       : Number(price) || 0;
     
     if (numPrice === 0) return t('property.priceOnRequest');
     
     // Format as a simple number with commas
     const formattedPrice = numPrice.toLocaleString(undefined, {
+
+    if (numPrice === 0) return type === 'rent' ? t('property.priceOnRequest') : t('property.priceOnRequest');
+
+    const formattedPrice = new Intl.NumberFormat('ar-SA', {
+      style: 'currency',
+      currency: 'SAR',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(numPrice);
+
+    return type === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
       maximumFractionDigits: 0
     });
     
@@ -88,87 +126,123 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
 
   if (view === 'list') {
     return (
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-        <div className="md:flex">
-          <div className="md:flex-shrink-0">
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-blue-300 lg:min-h-[280px]">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:h-full">
+          {/* Image Section */}
+          <div className="relative lg:flex-shrink-0 lg:self-center lg:m-3">
             <FixedImage
-              className="h-48 w-full object-cover md:w-48"
+              className="h-56 lg:h-48 w-full lg:w-72 object-cover rounded-t-lg lg:rounded-lg"
               src={mainImage}
               alt={property.title}
             />
+            {/* Listing Type Badge */}
+            <Badge
+              className={`absolute top-3 left-3 ${property.listingType === 'rent' ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
+                } text-white font-medium`}
+            >
+              {property.listingType === 'rent' ? t('property.listingTypes.forRent') : t('property.listingTypes.forSale')}
+            </Badge>
+
+            {/* Favorite Button */}
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleFavoriteClick}
+                className={`absolute top-3 right-3 ${isFavorite ? 'text-red-500 bg-white/90' : 'text-gray-600 bg-white/90'
+                  } hover:text-red-500 hover:bg-white rounded-full p-2 shadow-md`}
+              >
+                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
+              </Button>
+            )}
           </div>
-          <div className="p-6 flex-1 flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+
+          {/* Content Section */}
+          <div className="flex-1 p-4 lg:p-6 lg:flex lg:items-center">
+            <div className="flex flex-col h-full lg:w-full lg:justify-center">
+              {/* Header */}
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-4 space-y-2 lg:space-y-0">
+                <div className="flex-1 lg:pr-4">
+                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200 line-clamp-2 mb-2">
                     <Link to={`/property/${propertySlug}`}>
                       {property.title}
                     </Link>
                   </h3>
-                  <p className="mt-1 text-gray-600 flex items-center">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {property.address || `${normalizeName(property.city)}, ${normalizeName(property.state)}`}
+                  <p className="text-gray-600 flex items-center text-sm">
+                    <MapPin className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                    <span className="line-clamp-1">
+                      {property.address || `${normalizeName(property.city)}, ${normalizeName(property.state)}`}
+                    </span>
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-primary">
+                <div className="text-left lg:text-right lg:ml-4 flex-shrink-0">
+                  <p className="text-xl lg:text-2xl font-bold text-blue-600">
                     {formatPrice(property.price, property.listingType)}
                   </p>
+                  <p className="text-xs lg:text-sm text-gray-500 mt-1">
+                    {property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice')}
+                  </p>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center space-x-6 text-sm text-gray-700">
-                <div className="flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
-                  <Bed className="h-4 w-4 mr-2 text-primary" />
-                  <span className="font-medium">
-                    {Number(property.bedrooms ?? property.details?.bedrooms ?? 0) || 0} 
-                    <span className="ml-1 text-gray-600">{t('property.details.bedrooms')}</span>
+              {/* Property Details */}
+              <div className="flex flex-wrap gap-2 lg:gap-4 mb-4">
+                <div className="flex items-center bg-blue-50 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg">
+                  <Bed className="h-3 lg:h-4 w-3 lg:w-4 mr-1 lg:mr-2 text-blue-600" />
+                  <span className="font-semibold text-gray-800 text-sm lg:text-base">
+                    {getBedrooms()}
                   </span>
+                  <span className="ml-1 text-gray-600 text-xs lg:text-sm hidden sm:inline">{t('property.details.bedrooms')}</span>
                 </div>
-                <div className="flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
-                  <Bath className="h-4 w-4 mr-2 text-primary" />
-                  <span className="font-medium">
-                    {Number(property.bathrooms ?? property.details?.bathrooms ?? 0) || 0} 
-                    <span className="ml-1 text-gray-600">{t('property.details.bathrooms')}</span>
+                <div className="flex items-center bg-green-50 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg">
+                  <Bath className="h-3 lg:h-4 w-3 lg:w-4 mr-1 lg:mr-2 text-green-600" />
+                  <span className="font-semibold text-gray-800 text-sm lg:text-base">
+                    {getBathrooms()}
                   </span>
+                  <span className="ml-1 text-gray-600 text-xs lg:text-sm hidden sm:inline">{t('property.details.bathrooms')}</span>
                 </div>
-                <div className="hidden sm:flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
-                  <Square className="h-4 w-4 mr-2 text-primary" />
-                  <span className="font-medium">
-                    {(Number(property.square_feet ?? property.squareFootage ?? property.sqft ?? property.details?.square_feet ?? 0) || 0).toLocaleString()}
-                    <span className="ml-1 text-gray-600">{t('property.sqft')}</span>
+                <div className="flex items-center bg-purple-50 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg">
+                  <Square className="h-3 lg:h-4 w-3 lg:w-4 mr-1 lg:mr-2 text-purple-600" />
+                  <span className="font-semibold text-gray-800 text-sm lg:text-base">
+                    {getSquareFootage().toLocaleString()}
                   </span>
+                  <span className="ml-1 text-gray-600 text-xs lg:text-sm hidden sm:inline">{t('property.sqft')}</span>
                 </div>
               </div>
 
-              <p className="mt-3 text-gray-600 line-clamp-2">
+              {/* Description */}
+              <p className="text-gray-700 line-clamp-2 mb-3 lg:mb-4 leading-relaxed text-sm lg:text-base">
                 {property.description}
               </p>
-            </div>
 
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">
-                  {property.type}
-                </Badge>
-                <Badge variant="outline">
-                  {(property.listingType === 'rent') ? t('property.forRent') : t('property.forSale')}
-                </Badge>
-                {property.features && property.features.length > 3 && (
-                  <Badge variant="outline">
+              {/* Features */}
+              <div className="flex flex-wrap gap-1 lg:gap-2 mb-3 lg:mb-4">
+                {property.features?.slice(0, 3).map((feature) => {
+                  const translated = t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: feature });
+                  const displayText = typeof translated === 'string' ? translated : feature;
+                  return (
+                    <Badge key={feature} variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1">
+                      {displayText}
+                    </Badge>
+                  );
+                })}
+                {(property.features?.length ?? 0) > 3 && (
+                  <Badge variant="outline" className="text-xs text-gray-500 px-2 py-1">
                     +{property.features.length - 3} {t('property.more')}
                   </Badge>
                 )}
               </div>
-              
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-gray-500 flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {t('property.listed')} {formatDate(property.datePosted)}
-                </p>
+
+              {/* Footer */}
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mt-auto pt-3 lg:pt-4 border-t border-gray-100 space-y-2 lg:space-y-0">
+                <div className="flex items-center text-xs lg:text-sm text-gray-500">
+                  <Calendar className="h-3 lg:h-4 w-3 lg:w-4 mr-1" />
+                  <span>{t('property.listed')} {formatDate(property.created_at || property.datePosted)}</span>
+                </div>
                 <Link to={`/property/${propertySlug}`}>
-                  <Button>{t('property.actions.viewDetails')}</Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 lg:px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-md text-sm lg:text-base w-full lg:w-auto">
+                    {t('property.actions.viewDetails')}
+                  </Button>
                 </Link>
               </div>
             </div>
@@ -187,7 +261,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             <PropertyImageGallery
               images={images}
               alt={property.title}
-              className="h-48 w-full object-cover"
+              containerClassName="h-48"
+              className="w-full h-full object-cover"
               showThumbnails={false}
               enableZoom={false}
               propertyId={property.id}
@@ -199,10 +274,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
               className="h-48 w-full object-cover"
             />
           )}
-          <Badge 
-            className={`absolute top-2 left-2 ${
-              property.listingType === 'rent' ? 'bg-green-500' : 'bg-blue-500'
-            }`}
+          <Badge
+            className={`absolute top-2 left-2 ${property.listingType === 'rent' ? 'bg-green-500' : 'bg-blue-500'
+              }`}
           >
             {property.listingType === 'rent' ? t('property.listingTypes.forRent') : t('property.listingTypes.forSale')}
           </Badge>
@@ -211,9 +285,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
               variant="ghost"
               size="sm"
               onClick={() => toggleFavorite(property.id.toString())}
-              className={`absolute top-2 right-2 ${
-                isFavorite ? 'text-red-500' : 'text-gray-400'
-              } hover:text-red-500`}
+              className={`absolute top-2 right-2 ${isFavorite ? 'text-red-500' : 'text-gray-400'
+                } hover:text-red-500`}
             >
               <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
             </Button>
@@ -232,27 +305,27 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             {formatPrice(property.price, property.listingType)}
           </p>
         </div>
-        
+
         <p className="text-gray-600 mb-3 flex items-center text-sm">
           <MapPin className="h-4 w-4 mr-1" />
           {property.address}
         </p>
-        
+
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center text-gray-600 text-sm">
             <Bed className="h-4 w-4 mr-1" />
-            <span>{t('property.details.bedrooms', { count: property.details?.bedrooms || property.beds || 0 })}</span>
+            <span>{getBedrooms()} {t('property.details.bedrooms')}</span>
           </div>
           <div className="flex items-center text-gray-600 text-sm">
             <Bath className="h-4 w-4 mr-1" />
-            <span>{t('property.details.bathrooms', { count: property.details?.bathrooms || property.baths || 0 })}</span>
+            <span>{getBathrooms()} {t('property.details.bathrooms')}</span>
           </div>
           <div className="flex items-center text-gray-600 text-sm">
             <Square className="h-4 w-4 mr-1" />
-            {(property.squareFootage || property.sqft || 0).toLocaleString()}
+            {getSquareFootage().toLocaleString()}
           </div>
         </div>
-        
+
         <div className="flex flex-wrap gap-1 mb-3">
           {property.features?.slice(0, 2).map((feature) => {
             const translated = t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: feature });
@@ -271,7 +344,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
           )}
         </div>
       </CardContent>
-      
+
       <CardFooter className="p-4 pt-0">
         <Link to={`/property/${propertySlug}`} className="w-full">
           <Button className="w-full">{t('property.actions.viewDetails')}</Button>

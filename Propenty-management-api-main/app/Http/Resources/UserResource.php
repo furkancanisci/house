@@ -16,14 +16,14 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'full_name' => $this->full_name,
+            'first_name' => $this->ensureUtf8($this->first_name),
+            'last_name' => $this->ensureUtf8($this->last_name),
+            'full_name' => $this->ensureUtf8($this->full_name),
             'email' => $this->email,
             'phone' => $this->phone,
             'date_of_birth' => $this->date_of_birth?->format('Y-m-d'),
             'gender' => $this->gender,
-            'bio' => $this->bio,
+            'bio' => $this->ensureUtf8($this->bio),
             'user_type' => $this->user_type,
             'is_verified' => $this->is_verified,
             'is_active' => $this->is_active,
@@ -49,5 +49,37 @@ class UserResource extends JsonResource
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];
+    }
+
+    /**
+     * Ensure proper UTF-8 encoding for text fields
+     */
+    private function ensureUtf8($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        
+        if (!is_string($value)) {
+            return $value;
+        }
+        
+        // Check if the string is already valid UTF-8
+        if (mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+        
+        // Try to convert from common encodings to UTF-8
+        $encodings = ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'];
+        
+        foreach ($encodings as $encoding) {
+            $converted = mb_convert_encoding($value, 'UTF-8', $encoding);
+            if (mb_check_encoding($converted, 'UTF-8')) {
+                return $converted;
+            }
+        }
+        
+        // If all else fails, remove invalid characters
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }

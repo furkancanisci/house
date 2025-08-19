@@ -13,10 +13,16 @@ class UpdatePropertyRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // For development, allow all updates
+        // In production, you should enable proper authorization
+      /*  return true;*/
+        
+        // Production authorization code:
         $property = $this->route('property');
         return auth()->check() && 
                $property && 
                $property->user_id === auth()->id();
+        
     }
 
     /**
@@ -31,7 +37,9 @@ class UpdatePropertyRequest extends FormRequest
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string|max:5000',
             'property_type' => 'sometimes|required|in:apartment,house,condo,townhouse,studio,loft,villa,commercial,land',
+            'propertyType' => 'sometimes|required|in:apartment,house,condo,townhouse,studio,loft,villa,commercial,land', // Alternative field name
             'listing_type' => 'sometimes|required|in:rent,sale',
+            'listingType' => 'sometimes|required|in:rent,sale', // Alternative field name
             
             // Pricing
             'price' => 'sometimes|required|numeric|min:0|max:99999999.99',
@@ -39,6 +47,7 @@ class UpdatePropertyRequest extends FormRequest
             
             // Location
             'street_address' => 'sometimes|required|string|max:255',
+            'address' => 'sometimes|required|string|max:255', // Alternative field name
             'city' => 'sometimes|required|string|max:100',
             'state' => 'sometimes|required|string|max:100',
             'postal_code' => 'sometimes|required|string|max:20',
@@ -51,8 +60,10 @@ class UpdatePropertyRequest extends FormRequest
             'bedrooms' => 'sometimes|required|integer|min:0|max:20',
             'bathrooms' => 'sometimes|required|integer|min:0|max:20',
             'square_feet' => 'sometimes|nullable|integer|min:1|max:50000',
+            'squareFootage' => 'sometimes|nullable|integer|min:1|max:50000', // Alternative field name
             'lot_size' => 'sometimes|nullable|integer|min:1|max:1000000',
             'year_built' => 'sometimes|nullable|integer|min:1800|max:' . (date('Y') + 2),
+            'yearBuilt' => 'sometimes|nullable|integer|min:1800|max:' . (date('Y') + 2), // Alternative field name
             'parking_type' => 'sometimes|nullable|in:none,street,garage,driveway,carport',
             'parking_spaces' => 'sometimes|nullable|integer|min:0|max:10',
             
@@ -74,15 +85,25 @@ class UpdatePropertyRequest extends FormRequest
             'contactName' => 'sometimes|required|string|max:100',
             'contactPhone' => 'sometimes|required|string|max:20',
             'contactEmail' => 'sometimes|required|email|max:100',
+            'contact_name' => 'sometimes|required|string|max:100', // Alternative field name
+            'contact_phone' => 'sometimes|required|string|max:20', // Alternative field name
+            'contact_email' => 'sometimes|required|email|max:100', // Alternative field name
             
             // Media
-            'main_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:5120|dimensions:min_width=400,min_height=300', // 5MB max, min 400x300
+            'main_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max, no dimension restrictions
             'images' => 'sometimes|nullable|array|max:20', // Maximum 20 images
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120|dimensions:min_width=400,min_height=300', // 5MB max per image, min 400x300
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max per image, no dimension restrictions
             'base64_images' => 'sometimes|nullable|array|max:20', // Maximum 20 base64 images
             'base64_images.*' => 'string|regex:/^data:image\/(jpeg|jpg|png|webp);base64,/', // Valid base64 image format
             'remove_images' => 'sometimes|nullable|array',
             'remove_images.*' => 'integer|exists:media,id',
+            'imagesToRemove' => 'sometimes|nullable|array', // Alternative field name
+            'imagesToRemove.*' => 'integer',
+            
+            // Additional fields that might be sent from frontend
+            'petPolicy' => 'sometimes|nullable|string|max:255',
+            'utilities' => 'sometimes|nullable|string|max:255',
+            'hoaFees' => 'sometimes|nullable|string|max:255',
         ];
     }
 
@@ -140,13 +161,11 @@ class UpdatePropertyRequest extends FormRequest
             'main_image.image' => 'Main image must be a valid image file.',
             'main_image.mimes' => 'Main image must be JPEG, PNG, or WebP format.',
             'main_image.max' => 'Main image size cannot exceed 5MB.',
-            'main_image.dimensions' => 'Main image must be at least 400x300 pixels.',
             'images.array' => 'Images must be provided as a list.',
             'images.max' => 'You cannot upload more than 20 images.',
             'images.*.image' => 'All uploaded files must be valid images.',
             'images.*.mimes' => 'All images must be JPEG, PNG, or WebP format.',
             'images.*.max' => 'Each image size cannot exceed 5MB.',
-            'images.*.dimensions' => 'Each image must be at least 400x300 pixels.',
             'base64_images.array' => 'Base64 images must be provided as a list.',
             'base64_images.max' => 'You cannot upload more than 20 base64 images.',
             'base64_images.*.regex' => 'Invalid base64 image format. Must be JPEG, PNG, or WebP.',

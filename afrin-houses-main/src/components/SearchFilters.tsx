@@ -65,9 +65,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     features: initialFilters?.features || []
   }));
 
+  // Location state for dropdowns
+  const [selectedState, setSelectedState] = useState<string>('');
+  const [selectedCity, setSelectedCity] = useState<string>('');
   
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-
   // Local state for input values that update as user types
   const [localValues, setLocalValues] = useState<{
     minPrice: string;
@@ -156,6 +157,62 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       }));
     }
   };
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Create a copy of form values
+    const newFilters = { ...formValues };
+    
+    // Process price inputs
+    const minPrice = localValues.minPrice ? parseInt(localValues.minPrice, 10) : undefined;
+    const maxPrice = localValues.maxPrice ? parseInt(localValues.maxPrice, 10) : undefined;
+    
+    // Update filters with processed price values
+    if (minPrice !== undefined) newFilters.minPrice = minPrice;
+    if (maxPrice !== undefined) newFilters.maxPrice = maxPrice;
+    
+    // Update location based on selected dropdowns
+    const locationParts = [];
+    if (selectedCity) locationParts.push(selectedCity);
+    if (selectedState) locationParts.push(selectedState);
+    newFilters.location = locationParts.join(', ');
+    
+    // Call the appropriate callback
+    if (onApplyFilters) {
+      onApplyFilters(newFilters);
+    } else if (onFiltersChange) {
+      onFiltersChange(newFilters);
+    }
+  };
+  
+  // Handle reset filters
+  const handleReset = () => {
+    const resetFilters: SearchFiltersType = {
+      listingType: 'all',
+      propertyType: '',
+      location: '',
+      minPrice: undefined,
+      maxPrice: undefined,
+      bedrooms: undefined,
+      bathrooms: undefined,
+      minSquareFootage: undefined,
+      maxSquareFootage: undefined,
+      features: [],
+    };
+    
+    // Reset form values
+    setFormValues(resetFilters);
+    setLocalValues({ minPrice: '', maxPrice: '' });
+    
+    // Call the appropriate callback
+    if (onApplyFilters) {
+      onApplyFilters(resetFilters);
+    } else if (onFiltersChange) {
+      onFiltersChange(resetFilters);
+    }
+  };
 
   // Handle filter changes - update local form values
   const handleFilterChange = (key: keyof SearchFiltersType, value: any) => {
@@ -238,6 +295,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       maxPrice: ''
     });
     
+    // Reset location dropdowns
+    setSelectedState('');
+    setSelectedCity('');
     
     // Notify parent component of changes
     if (onApplyFilters) {
@@ -325,20 +385,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       
       <CardContent className="space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Location Input */}
-        <div className="space-y-2">
-          <Label htmlFor="location">{t('filters.location')}</Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              id="location"
-              placeholder={t('filters.locationPlaceholder')}
-              value={formValues.location || ''}
-              onChange={(e) => handleFilterChange('location', e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
+        {/* Location Selector */}
+        <LocationSelector
+          selectedState={selectedState}
+          selectedCity={selectedCity}
+          onStateChange={setSelectedState}
+          onCityChange={setSelectedCity}
+          showState={true}
+          showCity={true}
+        />
 
         {/* Listing Type - conditionally hidden */}
         {!hideListingType && (

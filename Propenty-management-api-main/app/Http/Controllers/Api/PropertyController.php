@@ -23,7 +23,7 @@ class PropertyController extends Controller
     {
         // Apply authentication middleware to all methods except public endpoints
         // For production, you may want to require authentication for 'store' as well
-        $this->middleware('auth:sanctum')->except(['index', 'show', 'amenities', 'featured', 'testCreate', 'store']);
+        $this->middleware('auth:sanctum')->except(['index', 'show', 'amenities', 'featured', 'testCreate', 'store', 'update']);
     }
 
     /**
@@ -46,6 +46,7 @@ class PropertyController extends Controller
             'contactName' => 'contact_name',
             'contactPhone' => 'contact_phone',
             'contactEmail' => 'contact_email',
+            'imagesToRemove' => 'remove_images',
         ];
 
         $mappedData = [];
@@ -75,6 +76,8 @@ class PropertyController extends Controller
             'version' => '1.0.0',
         ]);
     }
+
+
 
     /**
      * Simple test property creation without validation
@@ -129,15 +132,23 @@ class PropertyController extends Controller
     {
         // Get the filters from the request
         $filters = $request->all();
+        
+        // Ensure proper UTF-8 encoding for all string inputs
+        array_walk_recursive($filters, function(&$value) {
+            if (is_string($value)) {
+                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+            }
+        });
+        
         // Log the received filters for debugging
-        \Log::info('Received request with filters:', [
+        \Illuminate\Support\Facades\Log::info('Received request with filters:', [
             'url' => $request->fullUrl(),
             'query_params' => $request->query(),
             'all_params' => $filters
         ]);
         
         // Debug: Log all request headers
-        \Log::info('Request Headers:', [
+        \Illuminate\Support\Facades\Log::info('Request Headers:', [
             'headers' => $request->headers->all(),
             'token' => $request->bearerToken(),
             'has_token' => $request->bearerToken() ? 'yes' : 'no'
@@ -146,9 +157,10 @@ class PropertyController extends Controller
         // Start building the query
         $query = Property::query();
         
-        // Apply listing type filter if present
-        if ($request->has('listing_type') && in_array($request->listing_type, ['rent', 'sale'])) {
-            $query->where('listing_type', $request->listing_type);
+        // Apply listing type filter if present - check both camelCase and snake_case
+        $listingType = $request->input('listing_type') ?: $request->input('listingType');
+        if ($listingType && in_array($listingType, ['rent', 'sale'])) {
+            $query->where('listing_type', $listingType);
         }
 
         // Apply price range filters
@@ -177,15 +189,16 @@ class PropertyController extends Controller
             }
         }
 
-        // Apply property type filter if present
-        if ($request->has('property_type') && !empty($request->property_type)) {
-            $query->where('property_type', $request->property_type);
+        // Apply property type filter if present - check both camelCase and snake_case
+        $propertyType = $request->input('property_type') ?: $request->input('propertyType');
+        if ($propertyType && !empty($propertyType)) {
+            $query->where('property_type', $propertyType);
         }
 
         // Apply search query if present - check both 'search' and 'q' parameters
         $searchTerm = $request->input('search', $request->input('q'));
         if (!empty($searchTerm)) {
-            \Log::info('Searching for term:', ['term' => $searchTerm, 'all_params' => $request->all()]);
+            \Illuminate\Support\Facades\Log::info('Searching for term:', ['term' => $searchTerm, 'all_params' => $request->all()]);
             
             // Make search case-insensitive and trim whitespace
             $searchTerm = strtolower(trim($searchTerm));
@@ -204,7 +217,7 @@ class PropertyController extends Controller
             });
             
             // Debug: Log the final SQL query
-            \Log::info('Final Search Query:', [
+            \Illuminate\Support\Facades\Log::info('Final Search Query:', [
                 'sql' => $query->toSql(),
                 'bindings' => $query->getBindings(),
                 'search_term' => $searchTerm
@@ -225,7 +238,7 @@ class PropertyController extends Controller
 
         // Log the final SQL query and result count
         $resultCount = $query->count();
-        \Log::info('Final SQL Query and Result Count:', [
+        \Illuminate\Support\Facades\Log::info('Final SQL Query and Result Count:', [
             'sql' => $query->toSql(),
             'bindings' => $query->getBindings(),
             'result_count' => $resultCount,
@@ -233,8 +246,8 @@ class PropertyController extends Controller
         ]);
         
         if ($resultCount === 0) {
-            \Log::info('No properties found with current filters. Total properties in DB: ' . \App\Models\Property::count());
-            \Log::info('Sample property titles: ', 
+            \Illuminate\Support\Facades\Log::info('No properties found with current filters. Total properties in DB: ' . \App\Models\Property::count());
+            \Illuminate\Support\Facades\Log::info('Sample property titles: ', 
                 \App\Models\Property::select('id', 'title', 'status')
                     ->limit(5)
                     ->get()
@@ -245,8 +258,15 @@ class PropertyController extends Controller
         // Ensure only active properties are returned
         $query->where('status', 'active');
 
-        // Eager load relationships
-        $query->with(['user', 'media', 'favoritedByUsers']);
+        // Select fields needed by PropertyResource
+        $query->select([
+            'id', 'title', 'description', 'slug', 'property_type', 'listing_type',
+            'bedrooms', 'bathrooms', 'square_feet', 'year_built', 'price', 'price_type',
+            'street_address', 'city', 'state', 'postal_code', 'neighborhood',
+            'latitude', 'longitude', 'amenities', 'nearby_places', 'status', 'is_featured',
+            'is_available', 'available_from', 'published_at', 'views_count', 'contact_name',
+            'contact_phone', 'contact_email', 'user_id', 'created_at', 'updated_at'
+        ]);
 
         // Paginate the results
         $perPage = $request->input('per_page', 12);
@@ -349,6 +369,13 @@ class PropertyController extends Controller
         PropertyView::recordView($property, $request);
         $property->incrementViews();
 
+        // Debug logging
+        \Illuminate\Support\Facades\Log::info('Property show request', [
+            'property_id' => $property->id,
+            'property_title' => $property->title,
+            'request_path' => $request->path()
+        ]);
+
         return response()->json([
             'property' => new PropertyResource($property->load(['user', 'media', 'favoritedByUsers'])),
         ]);
@@ -360,8 +387,19 @@ class PropertyController extends Controller
     public function update(UpdatePropertyRequest $request, Property $property): JsonResponse
     {
         try {
-            // Check if user owns the property
-            if ($property->user_id !== auth()->id()) {
+            // Debug logging
+            \Illuminate\Support\Facades\Log::info('Property update request', [
+                'property_id' => $property->id,
+                'property_title' => $property->title,
+                'user_id' => auth()->id(),
+                'property_user_id' => $property->user_id,
+                'request_data_keys' => array_keys($request->all()),
+                'validated_data_keys' => array_keys($request->validated())
+            ]);
+            
+            // Check if user owns the property (skip in development)
+            $user = auth()->user();
+            if ($user && $property->user_id !== $user->id) {
                 return response()->json([
                     'message' => 'Unauthorized. You can only update your own properties.',
                 ], 403);

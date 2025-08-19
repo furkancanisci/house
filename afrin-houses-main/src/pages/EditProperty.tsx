@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Property } from '../types';
-import { updateProperty } from '../services/propertyService';
+import { updateProperty as updatePropertyAPI, getProperty } from '../services/propertyService';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -144,71 +144,105 @@ const EditProperty: React.FC = () => {
       return;
     }
 
-    if (id && properties.length > 0) {
-      const foundProperty = properties.find(p => p.id === id);
-      if (foundProperty) {
-        // Check if user owns this property
-        if (foundProperty.contact.email !== user.email) {
-          toast.error('You can only edit your own properties');
-          navigate('/dashboard');
-          return;
+    const loadProperty = async () => {
+      if (!id) {
+        toast.error('Property ID is required');
+        navigate('/dashboard');
+        return;
+      }
+
+      try {
+        // First try to find the property in the state
+        let foundProperty = null;
+        if (properties.length > 0) {
+          foundProperty = properties.find(p => p.id.toString() === id);
         }
 
-        setProperty(foundProperty);
-        setSelectedFeatures(foundProperty.features);
-        setSelectedCity(foundProperty.city || '');
-        setSelectedState(foundProperty.state || '');
-        
-        // Load existing images - handle different image formats safely
-        if (foundProperty.images) {
-          // Handle case where images is an object with gallery property
-          if (foundProperty.images && typeof foundProperty.images === 'object' && 'gallery' in foundProperty.images) {
-            const gallery = (foundProperty.images as any).gallery;
-            setExistingImages(Array.isArray(gallery) ? gallery : []);
-          } 
-          // Handle case where images is directly an array
-          else if (Array.isArray(foundProperty.images)) {
-            setExistingImages(foundProperty.images);
-          }
-          // Handle case where images is a string (single image URL)
-          else if (typeof foundProperty.images === 'string') {
-            setExistingImages([foundProperty.images]);
+        // If not found in state, fetch from API
+        if (!foundProperty) {
+          console.log('Property not found in state, fetching from API...');
+          try {
+            foundProperty = await getProperty(id);
+            console.log('Fetched property from API:', foundProperty);
+          } catch (apiError) {
+            console.error('Error fetching property from API:', apiError);
+            toast.error('Property not found');
+            navigate('/dashboard');
+            return;
           }
         }
-        
-        // Reset form with property data
-        reset({
-          title: foundProperty.title,
-          address: foundProperty.address,
-          city: foundProperty.city || '',
-          state: foundProperty.state || '',
-          price: Number(foundProperty.price) || 0,
-          listingType: foundProperty.listingType,
-          propertyType: foundProperty.propertyType,
-          bedrooms: Number(foundProperty.bedrooms) || 0,
-          bathrooms: Number(foundProperty.bathrooms) || 0,
-          squareFootage: Number(foundProperty.squareFootage) || 0,
-          description: foundProperty.description,
-          yearBuilt: foundProperty.yearBuilt,
-          availableDate: foundProperty.availableDate || '',
-          petPolicy: foundProperty.petPolicy || '',
-          parking: foundProperty.parking || '',
-          utilities: foundProperty.utilities || '',
-          lotSize: foundProperty.lotSize ? String(foundProperty.lotSize) : '',
-          garage: foundProperty.garage || '',
-          heating: foundProperty.heating || '',
-          hoaFees: foundProperty.hoaFees || '',
-          building: foundProperty.building || '',
-          pool: foundProperty.pool || '',
-          contactName: foundProperty.contact.name,
-          contactPhone: foundProperty.contact.phone,
-          contactEmail: foundProperty.contact.email,
-        });
-      } else {
-        toast.error('Property not found');
+
+        if (foundProperty) {
+          // Check if user owns this property
+          const propertyOwnerEmail = foundProperty.contact?.email || foundProperty.contact_email;
+          if (propertyOwnerEmail && propertyOwnerEmail !== user.email) {
+            toast.error('You can only edit your own properties');
+            navigate('/dashboard');
+            return;
+          }
+
+          setProperty(foundProperty);
+          setSelectedFeatures(foundProperty.features || []);
+          setSelectedCity(foundProperty.city || '');
+          setSelectedState(foundProperty.state || '');
+          
+          // Load existing images - handle different image formats safely
+          if (foundProperty.images) {
+            // Handle case where images is an object with gallery property
+            if (foundProperty.images && typeof foundProperty.images === 'object' && 'gallery' in foundProperty.images) {
+              const gallery = (foundProperty.images as any).gallery;
+              setExistingImages(Array.isArray(gallery) ? gallery : []);
+            } 
+            // Handle case where images is directly an array
+            else if (Array.isArray(foundProperty.images)) {
+              setExistingImages(foundProperty.images);
+            }
+            // Handle case where images is a string (single image URL)
+            else if (typeof foundProperty.images === 'string') {
+              setExistingImages([foundProperty.images]);
+            }
+          }
+          
+          // Reset form with property data
+          reset({
+            title: foundProperty.title || '',
+            address: foundProperty.address || foundProperty.full_address || '',
+            city: foundProperty.city || '',
+            state: foundProperty.state || '',
+            price: Number(foundProperty.price) || 0,
+            listingType: foundProperty.listingType || foundProperty.listing_type || 'sale',
+            propertyType: foundProperty.propertyType || foundProperty.property_type || 'apartment',
+            bedrooms: Number(foundProperty.bedrooms) || 0,
+            bathrooms: Number(foundProperty.bathrooms) || 0,
+            squareFootage: Number(foundProperty.squareFootage || foundProperty.square_feet) || 0,
+            description: foundProperty.description || '',
+            yearBuilt: foundProperty.yearBuilt || foundProperty.year_built || new Date().getFullYear(),
+            availableDate: foundProperty.availableDate || foundProperty.available_from || '',
+            petPolicy: foundProperty.petPolicy || '',
+            parking: foundProperty.parking || '',
+            utilities: foundProperty.utilities || '',
+            lotSize: foundProperty.lotSize ? String(foundProperty.lotSize) : '',
+            garage: foundProperty.garage || '',
+            heating: foundProperty.heating || '',
+            hoaFees: foundProperty.hoaFees || '',
+            building: foundProperty.building || '',
+            pool: foundProperty.pool || '',
+            contactName: foundProperty.contact?.name || foundProperty.contact_name || '',
+            contactPhone: foundProperty.contact?.phone || foundProperty.contact_phone || '',
+            contactEmail: foundProperty.contact?.email || foundProperty.contact_email || '',
+          });
+        } else {
+          toast.error('Property not found');
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error('Error loading property:', error);
+        toast.error('Failed to load property');
         navigate('/dashboard');
       }
-    }
+    };
+
+    loadProperty();
   }, [id, properties, user, navigate, reset]);
 
   const handleFeatureToggle = (feature: string) => {
@@ -219,7 +253,7 @@ const EditProperty: React.FC = () => {
     );
   };
 
-  const handleLocationChange = (location: { country?: string; state?: string; city?: string }) => {
+  const handleLocationChange = (location: { state?: string; city?: string }) => {
     if (location.city) {
       setSelectedCity(location.city);
     }
@@ -294,11 +328,8 @@ const EditProperty: React.FC = () => {
         imagesToRemove: imagesToRemove, // Existing images to remove
       };
 
-      // Update the property with a single object containing id and other properties
-      await updateProperty({
-        id: Number(property.id),
-        ...updatedProperty
-      });
+      // Update the property using the API service
+      await updatePropertyAPI(Number(property.id), updatedProperty);
       toast.success('Property updated successfully!');
       navigate('/dashboard');
     } catch (error) {

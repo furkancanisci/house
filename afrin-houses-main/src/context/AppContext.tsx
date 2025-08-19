@@ -196,7 +196,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const city = normalizeName(property.city);
         const stateVal = normalizeName(property.state);
         const zipCode = property.postal_code || property.zip_code || '';
-        const country = normalizeName(property.country);
         const fullAddress = property.location?.full_address || 
           [streetAddress, city, stateVal, zipCode].filter(Boolean).join(', ');
         
@@ -210,7 +209,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           city: city,
           state: stateVal,
           zip_code: zipCode,
-          country: country,
           property_type: property.property_type || 'house',
           listing_type: property.listing_type || 'sale',
           
@@ -256,10 +254,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  // Filter properties based on search criteria
-  const filterProperties = (filters: SearchFilters) => {
+  // Filter properties based on search criteria - memoized with useCallback
+  const filterProperties = React.useCallback((filters: SearchFilters) => {
+    console.log('filterProperties called with:', filters);
     dispatch({ type: 'SET_SEARCH_FILTERS', payload: filters });
     
+    // Get current properties from state
     let filtered = [...state.properties];
 
     // Handle search query - check both search and searchQuery for maximum compatibility
@@ -278,7 +278,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             property.city,
             property.state,
             property.postalCode,
-            property.country,
             // Check if any feature matches
             ...(property.features || [])
           ];
@@ -292,11 +291,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     if (filters.listingType && filters.listingType !== 'all') {
-      filtered = filtered.filter(p => p.listingType === filters.listingType);
+      filtered = filtered.filter(p => (p.listing_type || p.listingType) === filters.listingType);
     }
 
     if (filters.propertyType && filters.propertyType !== 'all') {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
+      filtered = filtered.filter(p => (p.property_type || p.propertyType) === filters.propertyType);
     }
 
     if (filters.minPrice !== undefined) {
@@ -322,11 +321,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     if (filters.minSquareFootage !== undefined) {
-      filtered = filtered.filter(p => p.squareFootage >= filters.minSquareFootage!);
+      filtered = filtered.filter(p => (p.square_feet || p.squareFootage || 0) >= filters.minSquareFootage!);
     }
 
     if (filters.maxSquareFootage !== undefined) {
-      filtered = filtered.filter(p => p.squareFootage <= filters.maxSquareFootage!);
+      filtered = filtered.filter(p => (p.square_feet || p.squareFootage || 0) <= filters.maxSquareFootage!);
     }
 
     if (filters.features && filters.features.length > 0) {
@@ -346,8 +345,35 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       );
     }
 
+    // Apply sorting
+    if (filters.sortBy) {
+      filtered.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+        
+        switch (filters.sortBy) {
+          case 'price':
+            aValue = a.price || 0;
+            bValue = b.price || 0;
+            break;
+          case 'created_at':
+            aValue = new Date(a.created_at || 0).getTime();
+            bValue = new Date(b.created_at || 0).getTime();
+            break;
+          default:
+            return 0;
+        }
+        
+        if (filters.sortOrder === 'desc') {
+          return bValue - aValue;
+        } else {
+          return aValue - bValue;
+        }
+      });
+    }
+
     dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: filtered });
-  };
+  }, [state.properties, dispatch]); // Add dependencies here
 
   // Add property using API
   const addProperty = async (propertyData: any) => {
@@ -370,7 +396,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         city: getLocaleName(response.property.city),
         state: getLocaleName(response.property.state),
         zip_code: response.property.postalCode || response.property.zip_code || '',
-        country: getLocaleName(response.property.country),
         price: response.property.price || 0,
         listingType: (response.property.listing_type as 'rent' | 'sale') || 'sale',
         propertyType: (response.property.property_type as Property['propertyType']) || 'apartment',
@@ -465,7 +490,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         city: getLocaleName(response.property.location?.city ?? response.property.city),
         state: getLocaleName(response.property.location?.state ?? response.property.state),
         zip_code: response.property.location?.postal_code || response.property.postal_code || response.property.zip_code || '',
-        country: getLocaleName(response.property.location?.country ?? response.property.country),
         property_type: response.property.property_type || 'house',
         listing_type: response.property.listing_type || 'sale',
         

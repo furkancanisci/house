@@ -43,6 +43,7 @@ import {
 } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
 import dashboardService, { DashboardStats, UserProfile } from '../services/dashboardService';
+import { getUserProperties } from '../services/propertyService';
 import FixedImage from '../components/FixedImage';
 
 const Dashboard: React.FC = () => {
@@ -86,7 +87,13 @@ const Dashboard: React.FC = () => {
         setStats(statsData);
 
         // Fetch user's properties
-        const userProps = await dashboardService.getDashboardStatsRaw();
+        const userProps = await getUserProperties();
+        console.log('Fetched user properties:', userProps);
+        console.log('Number of user properties:', userProps.length);
+        if (userProps.length > 0) {
+          console.log('First property sample:', userProps[0]);
+        }
+        setUserProperties(userProps);
 
         // Fetch favorite properties
         const favProps = await dashboardService.getFavoriteProperties();
@@ -306,13 +313,13 @@ const Dashboard: React.FC = () => {
                               <span>{property.squareFootage?.toLocaleString() || 'N/A'} sq ft</span>
                             </div>
                             <div className="flex space-x-2">
-                              <Link to={`/property/${property.id}`}>
+                              <Link to={`/property/${property.slug || property.id}`}>
                                 <Button variant="outline" size="sm">
                                   <Eye className="h-4 w-4 mr-2" />
                                   View
                                 </Button>
                               </Link>
-                              <Link to={`/edit-property/${property.id}`}>
+                              <Link to={`/edit-property/${property.slug || property.id}`}>
                                 <Button variant="outline" size="sm">
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit

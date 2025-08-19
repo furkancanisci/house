@@ -233,10 +233,17 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
   }
 };
 
-export const getProperty = async (slug: string) => {
+export const getProperty = async (slugOrId: string) => {
   try {
-    const response = await api.get(`/properties/${slug}`);
-    const property = response.data;
+    // Try to determine if it's a slug or ID
+    const isNumericId = /^\d+$/.test(slugOrId);
+    const endpoint = isNumericId ? `/properties/${slugOrId}/show` : `/properties/${slugOrId}`;
+    
+    console.log(`Fetching property from: ${endpoint}`);
+    const response = await api.get(endpoint);
+    const property = response.data.property || response.data;
+    
+    console.log('Raw property data from API:', property);
     
     // Fix image URLs in the property
     if (property && property.images) {
@@ -257,7 +264,7 @@ export const getProperty = async (slug: string) => {
     
     return property;
   } catch (error) {
-    console.error(`Error fetching property ${slug}:`, error);
+    console.error(`Error fetching property ${slugOrId}:`, error);
     throw error;
   }
 };
@@ -331,9 +338,9 @@ export const createProperty = async (propertyData: any) => {
         // Handle main image file
         formData.append('main_image', propertyData[key]);
       } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
-        // Convert nested objects to JSON strings
-        if (typeof propertyData[key] === 'object') {
-          formData.append(key, JSON.stringify(propertyData[key]));
+        // Handle boolean values properly for Laravel validation
+        if (typeof propertyData[key] === 'boolean') {
+          formData.append(key, propertyData[key] ? '1' : '0');
         } else {
           formData.append(key, propertyData[key].toString());
         }
@@ -401,7 +408,12 @@ export const updateProperty = async (id: number, propertyData: any) => {
           formData.append(`remove_images[${index}]`, imageId);
         });
       } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
-        formData.append(key, propertyData[key].toString());
+        // Handle boolean values properly for Laravel validation
+        if (typeof propertyData[key] === 'boolean') {
+          formData.append(key, propertyData[key] ? '1' : '0');
+        } else {
+          formData.append(key, propertyData[key].toString());
+        }
       }
     });
     
@@ -474,25 +486,53 @@ export const getUserProperties = async () => {
     const response = await api.get('/dashboard/properties');
     const properties = response.data.data || [];
     
-    // Fix image URLs in all user properties
+    console.log('Raw user properties from API:', properties);
+    
+    // Transform and fix image URLs in all user properties
     return properties.map((property: any) => {
+      // Fix image URLs
+      let mainImage = '/placeholder-property.jpg';
       if (property.images) {
         const fixedImages = { ...property.images };
         
         // Fix main image URL
         if (fixedImages.main) {
           fixedImages.main = fixImageUrl(fixedImages.main);
+          mainImage = fixedImages.main;
         }
         
         // Fix gallery image URLs
         if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
           fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
+          if (fixedImages.gallery.length > 0 && !mainImage) {
+            mainImage = fixedImages.gallery[0];
+          }
         }
         
         property.images = fixedImages;
       }
       
-      return property;
+      // Transform the property to match the expected format in Dashboard
+      return {
+        id: property.id,
+        title: property.title || 'Untitled Property',
+        description: property.description || '',
+        price: typeof property.price === 'object' ? property.price.amount : property.price,
+        address: property.location?.full_address || property.address || `${property.city || ''}, ${property.state || ''}`.trim(),
+        city: property.city,
+        state: property.state,
+        listingType: property.listing_type || property.listingType,
+        propertyType: property.property_type || property.propertyType,
+        bedrooms: property.bedrooms || 0,
+        bathrooms: property.bathrooms || 0,
+        squareFootage: property.square_feet || property.squareFootage || 0,
+        mainImage: mainImage,
+        images: property.images,
+        status: property.status,
+        created_at: property.created_at,
+        updated_at: property.updated_at,
+        slug: property.slug
+      };
     });
   } catch (error) {
     console.error('Error fetching user properties:', error);

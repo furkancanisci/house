@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useForm } from 'react-hook-form';
@@ -47,7 +47,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const Auth: React.FC = () => {
-  const { login, register } = useApp();
+  const { login, register, state } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +56,13 @@ const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState('login');
 
   const from = (location.state as any)?.from?.pathname || '/';
+
+  // Redirect to home if user is already logged in
+  useEffect(() => {
+    if (state.user) {
+      navigate('/', { replace: true });
+    }
+  }, [state.user, navigate]);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),

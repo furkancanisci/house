@@ -13,7 +13,6 @@ export interface Property {
   city: string;
   state: string;
   zip_code: string;
-  country: string;
   
   // Optional fields
   square_feet?: number;
@@ -75,7 +74,6 @@ export interface ExtendedProperty extends Omit<Property, 'property_type' | 'list
   longitude?: number | string;
   neighborhood?: string;
   county?: string;
-  country?: string;
   
   // Media
   media?: any[];

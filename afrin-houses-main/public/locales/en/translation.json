@@ -87,6 +87,8 @@
     "forRent": "For Rent",
     "forSale": "For Sale",
     "propertyDetails": "Property Details",
+    "month": "Month",
+    "year": "Year",
     "types": {
       "all": "All Property Types",
       "apartment": "Apartment",
@@ -270,14 +272,17 @@
     "loading": "Loading...",
     "backToSearch": "Back to Search",
     "linkCopied": "Link copied to clipboard",
-    "country": "Country",
     "state": "State",
     "city": "City",
-    "selectCountry": "Select Country",
+    "selectState": "Select State",
+    "selectStateFirst": "Select state first"
+  },
+  "location": {
+    "state": "State",
+    "city": "City",
     "selectState": "Select State",
     "selectCity": "Select City",
-    "selectCountryFirst": "Select country first",
-    "selectStateFirst": "Select state first"
+    "selectStateFirst": "Select State First"
   },
   "messages": {
     "propertyDeletedSuccess": "Property deleted successfully",
@@ -414,5 +419,23 @@
     "contact": "Contact",
     "contactInfo": "Contact Info",
     "copyright": " 2023 RealEstate. All rights reserved."
+  },
+  "map": {
+    "selectPropertyLocation": "Select Property Location",
+    "searchLocation": "Search for a location",
+    "searchPlaceholder": "Enter address, city, or landmark...",
+    "useCurrentLocation": "Use Current Location",
+    "resetLocation": "Reset Location",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "clickToPlace": "Click on the map to place a marker",
+    "dragToMove": "Drag the marker to adjust the location",
+    "searchToFind": "Use the search box to find a specific address",
+    "locationSelected": "Location selected successfully",
+    "markerPlaced": "Marker placed on map",
+    "locationReset": "Location reset to default",
+    "currentLocationFound": "Current location found",
+    "currentLocationError": "Unable to get current location",
+    "geolocationNotSupported": "Geolocation is not supported by this browser"
   }
 }

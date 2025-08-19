@@ -60,16 +60,20 @@
     "adjustCriteria": "جرب تعديل معايير البحث أو تصفح جميع العقارات.",
     "clearFilters": "مسح الفلاتر",
     "loadMore": "تحميل المزيد من العقارات",
-    "sortOptions": {
+    "resultsCount": "{{count}} عقارات موجودة",
+    "debugInfo": "عرض {{count}} عقارات",
+    "showingCount": "عرض {{count}} عقارات",
+    "sortBy": "فرز حسب",
       "newestFirst": "الأحدث أولاً",
       "oldestFirst": "الأقدم أولاً",
       "priceLowToHigh": "السعر: من الأقل إلى الأعلى",
       "priceHighToLow": "السعر: من الأعلى إلى الأقل",
       "largestFirst": "الأكبر أولاً",
       "smallestFirst": "الأصغر أولاً"
-    }
-  },
+    },
   "property": {
+    "month": "شهر",
+    "year": "سنة",
     "forRent": "للإيجار",
     "forSale": "للبيع",
     "types": {
@@ -353,16 +357,18 @@
     "currency": "ليرة تركية",
     "loading": "جاري التحميل...",
     "backToSearch": "العودة إلى البحث",
-    "linkCopied": "تم نسخ الرابط إلى الحافظة"
+    "linkCopied": "تم نسخ الرابط إلى الحافظة",
+    "state": "الولاية",
+    "city": "المدينة",
+    "selectState": "اختر الولاية",
+    "selectCity": "اختر المدينة",
+    "selectStateFirst": "الرجاء اختيار الولاية أولاً"
   },
   "location": {
-    "country": "الدولة",
     "state": "المحافظة",
     "city": "المدينة",
-    "selectCountry": "اختر الدولة",
     "selectState": "اختر المحافظة",
     "selectCity": "اختر المدينة",
-    "selectCountryFirst": "اختر الدولة أولاً",
     "selectStateFirst": "اختر المحافظة أولاً"
   },
   "messages": {
@@ -410,5 +416,24 @@
     "contact": "اتصل بنا",
     "contactInfo": "معلومات الاتصال",
     "copyright": " 2023 العقارات. جميع الحقوق محفوظة."
+  },
+  "map": {
+    "selectPropertyLocation": "حدد موقع العقار",
+    "searchLocation": "ابحث عن موقع...",
+    "useCurrentLocation": "استخدم الموقع الحالي",
+    "resetLocation": "إعادة تعيين الموقع",
+    "coordinates": "الإحداثيات",
+    "latitude": "خط العرض",
+    "longitude": "خط الطول",
+    "clickToSelectLocation": "انقر على الخريطة لتحديد الموقع",
+    "dragMarkerToAdjust": "اسحب العلامة لضبط الموقع",
+    "searchForAddress": "ابحث عن عنوان أو مكان",
+    "locationSelected": "تم تحديد الموقع",
+    "locationNotSelected": "لم يتم تحديد الموقع",
+    "gettingCurrentLocation": "جاري الحصول على الموقع الحالي...",
+    "locationAccessDenied": "تم رفض الوصول إلى الموقع",
+    "locationNotAvailable": "الموقع غير متاح",
+    "mapLoadError": "خطأ في تحميل الخريطة",
+    "invalidCoordinates": "إحداثيات غير صحيحة"
   }
 }
