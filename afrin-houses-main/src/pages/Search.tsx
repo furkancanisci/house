@@ -9,7 +9,6 @@ import { useApp } from '../context/AppContext';
 import PropertyCard from '../components/PropertyCard';
 
 // Define types for better type safety
-type IFilterChangeHandler = (filters: Partial<SearchFiltersType>) => Promise<void>;
 
 // Define a type for the media item
 interface MediaItem {
@@ -71,7 +70,7 @@ type ViewMode = 'grid' | 'list';
 const Search: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { state, loadProperties } = useApp();
+  const { state, loadProperties, filterProperties } = useApp();
   
   // Helper to normalize values that may be localized objects { name_ar, name_en }
   const normalizeName = (val: any): string => {
@@ -86,39 +85,6 @@ const Search: React.FC = () => {
     return String(val);
   };
   const { properties: allProperties, filteredProperties: contextFilteredProperties, loading, error } = state;
-  const filterProperties = async (filters: Partial<SearchFiltersType>) => {
-    try {
-      // Update URL with new filters
-      const params = new URLSearchParams();
-      
-      // Add filters to URL params
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          if (Array.isArray(value)) {
-            if (value.length > 0) {
-              params.set(key, value.join(','));
-            }
-          } else {
-            params.set(key, String(value));
-          }
-        }
-      });
-
-      // Update URL
-      navigate(`?${params.toString()}`, { replace: true });
-      
-      // Update local state
-      setActiveFilters(prev => ({
-        ...prev,
-        ...filters
-      }));
-      
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Error applying filters:', error);
-      return Promise.reject(error);
-    }
-  };
   const [activeFilters, setActiveFilters] = useState<SearchFiltersType>({});
   const [currentParams, setCurrentParams] = useState<URLSearchParams>(new URLSearchParams());
   const [newParams, setNewParams] = useState<URLSearchParams>(new URLSearchParams());
@@ -502,13 +468,7 @@ const Search: React.FC = () => {
     </div>
   );
 
-  if (loading && filteredProperties.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <LoadingState />
-      </div>
-    );
-  }
+
 
   if (error) {
     return (
@@ -527,7 +487,6 @@ const Search: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {loading && <LoadingState />}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-6">
           {loading 
@@ -693,11 +652,7 @@ const Search: React.FC = () => {
                 )}
               </div>
             ) : loading ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
-                <p className="text-gray-600 text-lg">جاري تحميل العقارات...</p>
-                <p className="text-gray-500 text-sm mt-2">يرجى الانتظار قليلاً</p>
-              </div>
+              <LoadingState />
             ) : (
               <div className={`
                 ${viewMode === 'grid' 
