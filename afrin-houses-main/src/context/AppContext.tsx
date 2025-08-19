@@ -254,126 +254,74 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  // Filter properties based on search criteria - memoized with useCallback
-  const filterProperties = React.useCallback((filters: SearchFilters) => {
+  // Filter properties based on search criteria - now uses API
+  const filterProperties = React.useCallback(async (filters: SearchFilters) => {
     console.log('filterProperties called with:', filters);
     dispatch({ type: 'SET_SEARCH_FILTERS', payload: filters });
+    dispatch({ type: 'SET_LOADING', payload: true });
     
-    // Get current properties from state
-    let filtered = [...state.properties];
-
-    // Handle search query - check both search and searchQuery for maximum compatibility
-    const searchQuery = filters.search || filters.searchQuery;
-    if (searchQuery) {
-      const query = searchQuery.toString().toLowerCase().trim();
-      if (query) {
-        filtered = filtered.filter(property => {
-          // Check various fields for matches
-          const searchableFields = [
-            property.title,
-            property.description,
-            property.property_type,
-            property.propertyType,
-            property.address,
-            property.city,
-            property.state,
-            property.postalCode,
-            // Check if any feature matches
-            ...(property.features || [])
-          ];
-
-          // Check if any field includes the search query
-          return searchableFields.some(field => 
-            field && field.toString().toLowerCase().includes(query)
-          );
-        });
+    try {
+      // Use the updated getProperties function with filters
+      const response = await getProperties(filters);
+      console.log('API response for filtered properties:', response);
+      
+      // Transform the response data
+      const responseData = response.data || [];
+      if (!Array.isArray(responseData)) {
+        console.warn('API response data is not an array:', responseData);
+        dispatch({ type: 'SET_PROPERTIES', payload: [] });
+        dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: [] });
+        return;
       }
-    }
+      
+      const properties = responseData.map((property: any) => {
+        return {
+          id: property.id?.toString() || Math.random().toString(),
+          title: property.title || 'Untitled Property',
+          description: property.description || '',
+          price: typeof property.price === 'string' ? parseFloat(property.price) || 0 : Number(property.price) || 0,
+          address: property.street_address || property.address || '',
+          city: property.city || '',
+          state: property.state || '',
+          postalCode: property.postal_code || property.zip_code || '',
+          bedrooms: property.bedrooms || 0,
+          bathrooms: property.bathrooms || 0,
+          squareFootage: property.square_feet || property.squareFootage || 0,
+          propertyType: property.property_type || property.propertyType || 'house',
+          listingType: property.listing_type || property.listingType || 'sale',
+          yearBuilt: property.year_built || new Date().getFullYear(),
+          datePosted: property.created_at || property.published_at || new Date().toISOString(),
+          
+          // Media handling
+          media: Array.isArray(property.media) ? property.media.map((img: any, index: number) => ({
+            id: img.id || index,
+            url: img.url || img,
+            type: 'image',
+            is_featured: img.is_featured || false
+          })) : [],
+          
+          // Additional fields
+          slug: property.slug || `property-${property.id}`,
+          features: property.amenities || property.features || [],
+          latitude: property.location?.coordinates?.latitude || property.latitude,
+          longitude: property.location?.coordinates?.longitude || property.longitude,
+          
+          // Extended fields
+          ...(property as any)
+        } as Property;
 
-    if (filters.listingType && filters.listingType !== 'all') {
-      filtered = filtered.filter(p => (p.listing_type || p.listingType) === filters.listingType);
-    }
-
-    if (filters.propertyType && filters.propertyType !== 'all') {
-      filtered = filtered.filter(p => (p.property_type || p.propertyType) === filters.propertyType);
-    }
-
-    if (filters.minPrice !== undefined) {
-      filtered = filtered.filter(p => {
-        const price = typeof p.price === 'string' ? parseFloat(p.price) || 0 : p.price || 0;
-        return price >= (filters.minPrice || 0);
       });
+      
+      console.log('Filtered properties from API:', properties);
+      dispatch({ type: 'SET_PROPERTIES', payload: properties });
+      dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: properties });
+    } catch (error: any) {
+      console.error('Failed to filter properties:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to filter properties' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
-
-    if (filters.maxPrice !== undefined) {
-      filtered = filtered.filter(p => {
-        const price = typeof p.price === 'string' ? parseFloat(p.price) || 0 : p.price || 0;
-        return price <= (filters.maxPrice || Number.MAX_SAFE_INTEGER);
-      });
-    }
-
-    if (filters.bedrooms !== undefined) {
-      filtered = filtered.filter(p => (p.bedrooms || 0) >= (filters.bedrooms || 0));
-    }
-
-    if (filters.bathrooms !== undefined) {
-      filtered = filtered.filter(p => (p.bathrooms || 0) >= (filters.bathrooms || 0));
-    }
-
-    if (filters.minSquareFootage !== undefined) {
-      filtered = filtered.filter(p => (p.square_feet || p.squareFootage || 0) >= filters.minSquareFootage!);
-    }
-
-    if (filters.maxSquareFootage !== undefined) {
-      filtered = filtered.filter(p => (p.square_feet || p.squareFootage || 0) <= filters.maxSquareFootage!);
-    }
-
-    if (filters.features && filters.features.length > 0) {
-      filtered = filtered.filter(p => 
-        filters.features!.every(feature => p.features.includes(feature))
-      );
-    }
-
-    if (filters.location) {
-      const locationQuery = filters.location.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.address.toLowerCase().includes(locationQuery) ||
-        p.title.toLowerCase().includes(locationQuery) ||
-        (p.city && p.city.toLowerCase().includes(locationQuery)) ||
-        (p.state && p.state.toLowerCase().includes(locationQuery)) ||
-        (p.zip_code && p.zip_code.toLowerCase().includes(locationQuery))
-      );
-    }
-
-    // Apply sorting
-    if (filters.sortBy) {
-      filtered.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
-        
-        switch (filters.sortBy) {
-          case 'price':
-            aValue = a.price || 0;
-            bValue = b.price || 0;
-            break;
-          case 'created_at':
-            aValue = new Date(a.created_at || 0).getTime();
-            bValue = new Date(b.created_at || 0).getTime();
-            break;
-          default:
-            return 0;
-        }
-        
-        if (filters.sortOrder === 'desc') {
-          return bValue - aValue;
-        } else {
-          return aValue - bValue;
-        }
-      });
-    }
-
-    dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: filtered });
-  }, [state.properties, dispatch]); // Add dependencies here
+  }, [dispatch]); // Remove state.properties dependency since we're using API
 
   // Add property using API
   const addProperty = async (propertyData: any) => {

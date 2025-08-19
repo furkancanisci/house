@@ -83,8 +83,97 @@ const Search: React.FC = () => {
     return String(val);
   };
   const { properties: allProperties, filteredProperties: contextFilteredProperties, loading, error } = state;
-  const [filteredProperties, setFilteredProperties] = useState<ExtendedProperty[]>([]);
-  const [activeFilters, setActiveFilters] = useState<SearchFiltersType>({});
+
+  
+  // Convert Property to ExtendedProperty
+  const toExtendedProperty = useCallback((property: Property | ExtendedProperty): ExtendedProperty => {
+    // If it's already an ExtendedProperty, return it as is
+    if ('formattedPrice' in property) {
+      return property as ExtendedProperty;
+    }
+    
+    // Otherwise, convert Property to ExtendedProperty
+    const details = property.details || {};
+    const price = typeof property.price === 'string' ? parseFloat(property.price) || 0 : Number(property.price) || 0;
+    const propertyType = property.property_type || 'house';
+    const listingType = property.listing_type === 'rent' || property.listing_type === 'sale' ? property.listing_type : 'sale';
+    
+    // Calculate square footage from either details or property directly
+    const squareFootage = details.square_footage || property.square_feet || 0;
+    const bedrooms = details.bedrooms || property.bedrooms || 0;
+    const bathrooms = details.bathrooms || property.bathrooms || 0;
+    
+    // Create base property with all required fields
+    const baseProperty: Omit<Property, 'property_type' | 'listing_type' | 'square_feet' | 'zip_code' | 'created_at'> & {
+      propertyType: string;
+      listingType: 'rent' | 'sale';
+      squareFootage: number;
+      zipCode: string;
+    } = {
+      ...property,
+      propertyType,
+      listingType,
+      squareFootage,
+      zipCode: property.zip_code || '',
+      // Ensure required fields are present
+      city: property.city || '',
+      state: property.state || '',
+      // Ensure media is always an array
+      media: Array.isArray(property.media) ? property.media : [],
+    };
+
+    // Create the extended property with all required fields
+    const extendedProperty: ExtendedProperty = {
+      ...baseProperty,
+      formattedPrice: new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(price),
+      bedrooms,
+      bathrooms,
+      squareFootage,
+      formattedSquareFootage: squareFootage 
+        ? `${squareFootage.toLocaleString()} sqft`
+        : 'N/A',
+      formattedBeds: bedrooms 
+        ? `${bedrooms} ${bedrooms === 1 ? 'Bed' : 'Beds'}` 
+        : 'N/A',
+      formattedBaths: details.bathrooms 
+        ? `${details.bathrooms} ${details.bathrooms === 1 ? 'Bath' : 'Baths'}` 
+        : 'N/A',
+      formattedAddress: property.address || 'N/A',
+      formattedPropertyType: propertyType,
+      formattedDate: property.created_at 
+        ? new Date(property.created_at).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          })
+        : 'N/A',
+      isFavorite: false, // Will be updated by the parent component
+      features: property.features || [],
+      images: Array.isArray(property.media) 
+        ? property.media.map(m => typeof m === 'string' ? m : m?.url || '').filter(Boolean)
+        : [],
+      details: {
+        bedrooms: details.bedrooms || 0,
+        bathrooms: details.bathrooms || 0,
+        squareFootage: details.square_footage || 0,
+        yearBuilt: details.year_built
+      },
+      mainImage: property.media?.find((m: any) => typeof m === 'object' && m.is_featured)?.url || 
+                (Array.isArray(property.media) && property.media[0]?.url) || 
+                '/placeholder-property.jpg'
+    };
+
+    return extendedProperty;
+  }, []);
+  
+  // Use context's filtered properties directly
+  const filteredProperties = contextFilteredProperties ? contextFilteredProperties.map(prop => toExtendedProperty(prop)) : [];
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const isInitialMount = useRef(true);
 
@@ -187,6 +276,7 @@ const Search: React.FC = () => {
   };
 
 
+
   // Get filters from URL parameters
   const [filters, setFilters] = useState<SearchFiltersType>(() => {
     const urlFilters: URLFilterType = {};
@@ -271,6 +361,7 @@ const Search: React.FC = () => {
   }, [navigate]);
 
   // Convert Property to ExtendedProperty
+
   const toExtendedProperty = useCallback((property: Property | ExtendedProperty): ExtendedProperty => {
     // If it's already an ExtendedProperty, return it as is
     if ('formattedPrice' in property) {
@@ -307,307 +398,57 @@ const Search: React.FC = () => {
       media: Array.isArray(property.media) ? property.media : [],
     };
 
-    // Create the extended property with all required fields
-    const extendedProperty: ExtendedProperty = {
-      ...baseProperty,
-      formattedPrice: new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(price),
-      bedrooms,
-      bathrooms,
-      squareFootage,
-      formattedSquareFootage: squareFootage 
-        ? `${squareFootage.toLocaleString()} sqft`
-        : 'N/A',
-      formattedBeds: bedrooms 
-        ? `${bedrooms} ${bedrooms === 1 ? 'Bed' : 'Beds'}` 
-        : 'N/A',
-      formattedBaths: details.bathrooms 
-        ? `${details.bathrooms} ${details.bathrooms === 1 ? 'Bath' : 'Baths'}` 
-        : 'N/A',
-      formattedAddress: property.address || 'N/A',
-      formattedPropertyType: propertyType,
-      formattedDate: property.created_at 
-        ? new Date(property.created_at).toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
-          })
-        : 'N/A',
-      isFavorite: false, // Will be updated by the parent component
-      features: property.features || [],
-      images: Array.isArray(property.media) 
-        ? property.media.map(m => typeof m === 'string' ? m : m?.url || '').filter(Boolean)
-        : [],
-      details: {
-        bedrooms: details.bedrooms || 0,
-        bathrooms: details.bathrooms || 0,
-        squareFootage: details.square_footage || 0,
-        yearBuilt: details.year_built
-      },
-      mainImage: property.media?.find((m: any) => typeof m === 'object' && m.is_featured)?.url || 
-                (Array.isArray(property.media) && property.media[0]?.url) || 
-                '/placeholder-property.jpg'
-    };
 
-    return extendedProperty;
-  }, []);
 
-  // Apply filters to properties from context
-  const applyFilters = useCallback((filters: SearchFiltersType) => {
-    if (!allProperties || allProperties.length === 0) {
-      console.log('No properties available to filter');
-      setFilteredProperties([]);
-      return;
-    }
-
-    console.log('Applying filters:', filters);
-    
-    // Convert all properties to ExtendedProperty format first
-    const extendedProperties = allProperties.map(prop => {
-      try {
-        return toExtendedProperty(prop);
-      } catch (error) {
-        console.error('Error converting property:', prop, error);
-        return null;
-      }
-    }).filter((prop): prop is ExtendedProperty => prop !== null);
-    
-    console.log('Total properties before filtering:', extendedProperties.length);
-    console.log('Sample property bathrooms:', extendedProperties[0]?.bathrooms);
-    
-    try {
-      let result = [...extendedProperties];
-
-      // Apply search query filter
-      if (filters.search || filters.searchQuery) {
-        const searchTerm = (filters.search || filters.searchQuery || '').toLowerCase();
-        result = result.filter(property => {
-          const title = property.title || '';
-          const description = property.description || '';
-          const address = property.address || '';
-          
-          return title.toLowerCase().includes(searchTerm) ||
-                 description.toLowerCase().includes(searchTerm) ||
-                 address.toLowerCase().includes(searchTerm);
-        });
-      }
-
-      // Apply property type filter
-      if (filters.propertyType && filters.propertyType !== 'all') {
-        result = result.filter(property => 
-          property.propertyType?.toLowerCase() === filters.propertyType?.toLowerCase()
-        );
-      }
-
-      // Apply listing type filter
-      if (filters.listingType && filters.listingType !== 'all') {
-        result = result.filter(property => 
-          property.listingType?.toLowerCase() === filters.listingType?.toLowerCase()
-        );
-      }
-
-      // Apply price range filter
-      if (filters.minPrice !== undefined) {
-        const minPrice = Number(filters.minPrice);
-        if (!isNaN(minPrice)) {
-          result = result.filter(property => {
-            const price = typeof property.price === 'string' 
-              ? parseFloat(property.price) 
-              : Number(property.price);
-            return price >= minPrice;
-          });
-        }
-      }
-      
-      if (filters.maxPrice !== undefined) {
-        const maxPrice = Number(filters.maxPrice);
-        if (!isNaN(maxPrice)) {
-          result = result.filter(property => {
-            const price = typeof property.price === 'string' 
-              ? parseFloat(property.price) 
-              : Number(property.price);
-            return price <= maxPrice;
-          });
-        }
-      }
-
-      // Apply bedroom filter
-      if (filters.bedrooms) {
-        const bedroomsFilter = String(filters.bedrooms);
-        if (bedroomsFilter.endsWith('+')) {
-          // Handle 'N+' case - show properties with N or more bedrooms
-          const minBedrooms = parseInt(bedroomsFilter);
-          if (!isNaN(minBedrooms)) {
-            result = result.filter(property => 
-              (property.bedrooms || 0) >= minBedrooms
-            );
-          }
-        } else {
-          // Handle exact number case
-          const exactBedrooms = parseInt(bedroomsFilter);
-          if (!isNaN(exactBedrooms)) {
-            result = result.filter(property => 
-              (property.bedrooms || 0) === exactBedrooms
-            );
-          }
-        }
-      }
-
-      // Apply bathroom filter
-      if (filters.bathrooms) {
-        console.log('Filtering by bathrooms:', filters.bathrooms);
-        const bathroomsFilter = String(filters.bathrooms);
-        
-        // Log all property bathrooms for debugging
-        console.log('All property bathrooms:', result.map(p => p.bathrooms));
-        
-        if (bathroomsFilter.endsWith('+')) {
-          // Handle 'N+' case - show properties with N or more bathrooms
-          const minBathrooms = parseInt(bathroomsFilter);
-          console.log('Filtering for min bathrooms:', minBathrooms);
-          
-          if (!isNaN(minBathrooms)) {
-            result = result.filter(property => {
-              const propertyBathrooms = property.bathrooms || 0;
-              console.log(`Property ${property.id} has ${propertyBathrooms} bathrooms`);
-              return propertyBathrooms >= minBathrooms;
-            });
-            console.log(`After filtering for ${minBathrooms}+ bathrooms:`, result.length, 'properties');
-          }
-        } else {
-          // Handle exact number case
-          const exactBathrooms = parseInt(bathroomsFilter);
-          console.log('Filtering for exact bathrooms:', exactBathrooms);
-          
-          if (!isNaN(exactBathrooms)) {
-            result = result.filter(property => {
-              const propertyBathrooms = property.bathrooms || 0;
-              console.log(`Property ${property.id} has ${propertyBathrooms} bathrooms`);
-              return propertyBathrooms === exactBathrooms;
-            });
-            console.log(`After filtering for exactly ${exactBathrooms} bathrooms:`, result.length, 'properties');
-          }
-        }
-      }
-
-      // Apply square footage filters
-      if (filters.minSquareFootage) {
-        const minSqft = Number(filters.minSquareFootage);
-        if (!isNaN(minSqft)) {
-          result = result.filter(property => 
-            (property.squareFootage || 0) >= minSqft
-          );
-        }
-      }
-
-      if (filters.maxSquareFootage) {
-        const maxSqft = Number(filters.maxSquareFootage);
-        if (!isNaN(maxSqft)) {
-          result = result.filter(property => 
-            (property.squareFootage || 0) <= maxSqft
-          );
-        }
-      }
-
-      // Apply features filter
-      if (filters.features && filters.features.length > 0) {
-        result = result.filter(property => {
-          const propertyFeatures = property.features || [];
-          return filters.features?.every(feature => 
-            propertyFeatures.includes(feature)
-          );
-        });
-      }
-
-      // Apply location filter
-      if (filters.location) {
-        const locationTerm = filters.location.toLowerCase();
-        result = result.filter(property => {
-          const address = property.address || '';
-          const city = property.city || '';
-          const state = property.state || '';
-          const zipCode = property.zipCode || '';
-          
-          return address.toLowerCase().includes(locationTerm) ||
-                 city.toLowerCase().includes(locationTerm) ||
-                 state.toLowerCase().includes(locationTerm) ||
-                 zipCode.includes(locationTerm);
-        });
-      }
-
-      // Apply sorting
-      if (filters.sortBy) {
-        const sortBy = filters.sortBy === 'date' ? 'created_at' : filters.sortBy;
-        const sortOrder = filters.sortOrder || 'desc';
-        
-        result.sort((a, b) => {
-          let aValue: any;
-          let bValue: any;
-          
-          if (sortBy === 'price') {
-            aValue = typeof a.price === 'string' ? parseFloat(a.price) : Number(a.price);
-            bValue = typeof b.price === 'string' ? parseFloat(b.price) : Number(b.price);
-          } else if (sortBy === 'created_at') {
-            aValue = new Date(a.created_at || 0).getTime();
-            bValue = new Date(b.created_at || 0).getTime();
-          } else {
-            aValue = a[sortBy as keyof ExtendedProperty];
-            bValue = b[sortBy as keyof ExtendedProperty];
-          }
-          
-          if (aValue === bValue) return 0;
-          if (aValue == null) return sortOrder === 'asc' ? -1 : 1;
-          if (bValue == null) return sortOrder === 'asc' ? 1 : -1;
-          
-          if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-          if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-          return 0;
-        });
-      }
-
-      console.log(`Filtered ${result.length} properties`);
-      setFilteredProperties(result);
-    } catch (error) {
-      console.error('Error applying filters:', error);
-      // Fallback to showing all properties if there's an error
-      setFilteredProperties(extendedProperties || []);
-    }
-  }, [allProperties, toExtendedProperty]);
+  // Since we're now using API-based filtering, we don't need local filtering
 
   // Handle filter changes - single implementation
-  const handleFilterChange = useCallback((newFilters: Partial<SearchFiltersType>) => {
-    const currentParams = new URLSearchParams(window.location.search);
+   const handleFilterChange: IFilterChangeHandler = useCallback(async (newFilters) => {
+    // Convert string prices to numbers for the filter and ensure proper typing
+    const processedFilters: SearchFiltersType = {
+      ...newFilters,
+      minPrice: newFilters.minPrice !== undefined ? Number(newFilters.minPrice) : undefined,
+      maxPrice: newFilters.maxPrice !== undefined ? Number(newFilters.maxPrice) : undefined,
+      // Keep bedrooms/bathrooms as provided to support values like '3+' or exact numbers
+      bedrooms: newFilters.bedrooms,
+      bathrooms: newFilters.bathrooms,
+      minSquareFootage: newFilters.minSquareFootage !== undefined ? Number(newFilters.minSquareFootage) : undefined,
+      maxSquareFootage: newFilters.maxSquareFootage !== undefined ? Number(newFilters.maxSquareFootage) : undefined,
+      // Handle page as number
+      page: newFilters.page !== undefined ? Number(newFilters.page) : 1, // Default to page 1
+      // Ensure search and searchQuery are properly handled
+      search: newFilters.search || newFilters.searchQuery || undefined,
+      searchQuery: newFilters.searchQuery || newFilters.search || undefined,
+    } as SearchFiltersType;
+    
+    // Clean up undefined values
+    Object.keys(processedFilters).forEach(key => {
+      if (processedFilters[key as keyof SearchFiltersType] === undefined) {
+        delete processedFilters[key as keyof SearchFiltersType];
 
-    // Create a new set of parameters
-    const newParams = new URLSearchParams();
-
-    // Add all new/updated filters to the new parameters
-    Object.entries(newFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '' && value !== 'any' && value !== 'all') {
-        if (Array.isArray(value) && value.length > 0) {
-          newParams.set(key, value.join(','));
-        } else if (!Array.isArray(value)) {
-          newParams.set(key, String(value));
-        }
-      } else {
-        // Remove the key if the value is empty/undefined
-        newParams.delete(key);
       }
     });
     
-    // Update filters state and apply them
+    // Update filters state and URL
     setFilters(processedFilters);
-    applyFilters(processedFilters);
     updateURL(processedFilters);
+     
+    // Update filters in the context
+    await filterProperties(processedFilters);
+    
+    // Update URL with the new filters
+    const params = new URLSearchParams();
+    Object.entries(processedFilters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        // Convert arrays to comma-separated strings
+        if (Array.isArray(value)) {
+          if (value.length > 0) {
+            params.set(key, value.join(','));
+          }
+        } else {
+          params.set(key, String(value));
+        }
 
-    // Preserve existing params that are not part of the new filter set
-    currentParams.forEach((value, key) => {
-      if (!newFilters.hasOwnProperty(key)) {
-        newParams.set(key, value);
       }
     });
     // Also include compact 'sort' param for UX/back-compat
@@ -620,43 +461,39 @@ const Search: React.FC = () => {
   }, [navigate]);
 
   // Handle pagination
-  const handlePageChange = useCallback((page: number) => {
+  const handlePageChange = useCallback(async (page: number) => {
+    // Create a new filters object with the updated page number
+
     const newFilters: SearchFiltersType = { 
       ...filtersFromParams,
       page: page,
     };
-    handleFilterChange(newFilters);
-  }, [filtersFromParams, handleFilterChange]);
+    
+    await filterProperties(newFilters);
+  }, [filtersFromParams, filterProperties]);
+
 
   // Apply filters whenever allProperties or searchParams change
   useEffect(() => {
-    if (allProperties.length === 0) {
-      return;
-    }
+    const applyInitialFilters = async () => {
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        
+        // Apply filters from URL parameters on initial load
+        if (Object.keys(filtersFromParams).length > 0) {
+          console.log('Applying filters from URL:', filtersFromParams);
+          await filterProperties(filtersFromParams);
+        } else {
+          console.log('No filters in URL, loading all properties');
+          await filterProperties({});
+        }
+      }
+    };
 
-    const urlFilters: URLFilterType = {};
-    searchParams.forEach((value, key) => {
-      urlFilters[key as keyof URLFilterType] = value;
-    });
+    applyInitialFilters();
+  }, [filtersFromParams, filterProperties]);
 
-    const filtersToApply = urlParamsToSearchFilters(urlFilters);
-    setActiveFilters(filtersToApply);
-
-    if (Object.keys(filtersToApply).length > 0) {
-      applyFilters(filtersToApply);
-    } else {
-      setFilteredProperties(allProperties.map(toExtendedProperty));
-    }
-  }, [allProperties, searchParams, applyFilters, toExtendedProperty]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="ml-2">Loading properties...</span>
-      </div>
-    );
-  }
+  // Remove the loading return statement to keep navbar and search interface visible
 
   if (error) {
     return (
@@ -677,15 +514,18 @@ const Search: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-6">
-          {filteredProperties.length > 0 
-            ? t('search.resultsCount', { count: filteredProperties.length })
-            : t('search.noResults')}
+          {loading 
+            ? 'جاري البحث عن العقارات...'
+            : filteredProperties.length > 0 
+              ? t('search.resultsCount', { count: filteredProperties.length })
+              : t('search.noResults')}
         </h1>
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Filters Sidebar */}
+          <div className="w-full md:w-1/4">
+            <SearchFilters 
+              key={JSON.stringify(filters)} // Force re-render when filters change
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="md:col-span-1">
-            <SearchFilters
-              initialFilters={filtersFromParams}
               onApplyFilters={handleFilterChange}
               initialFilters={filters}
             />
@@ -763,14 +603,65 @@ const Search: React.FC = () => {
 
             {filteredProperties.length === 0 ? (
               <div className="text-center py-12">
-                <h3 className="text-lg font-medium text-gray-900">{t('search.noResults')}</h3>
-                <p className="mt-2 text-sm text-gray-500">
-                  {t('search.tryAdjustingFilters')}
-                  <br />
-                  <span className="text-xs text-gray-400">
-                    {t('search.debugInfo', { count: filteredProperties.length })}
-                  </span>
-                </p>
+                <div className="mb-6">
+                  <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    {filtersFromParams.location && filtersFromParams.location.includes(',') ? (
+                      (() => {
+                        const locationParts = filtersFromParams.location.split(',').map(part => part.trim());
+                        const [city, state] = locationParts;
+                        return `لا توجد عقارات حالياً في ${city}، ${state}`;
+                      })()
+                    ) : filtersFromParams.location ? (
+                      `لا توجد عقارات حالياً في ${filtersFromParams.location}`
+                    ) : (
+                      t('search.noResults')
+                    )}
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    {filtersFromParams.location ? (
+                      'جرب البحث في محافظة أخرى أو قم بتعديل معايير البحث'
+                    ) : (
+                      t('search.tryAdjustingFilters')
+                    )}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      onClick={() => {
+                        handleFilterChange({ location: '' });
+                      }}
+                      variant="outline"
+                      className="px-6 py-2"
+                    >
+                      مسح فلتر الموقع
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        handleFilterChange({
+                          listingType: 'all',
+                          propertyType: '',
+                          location: '',
+                          minPrice: undefined,
+                          maxPrice: undefined,
+                          bedrooms: undefined,
+                          bathrooms: undefined,
+                          minSquareFootage: undefined,
+                          maxSquareFootage: undefined,
+                          features: [],
+                          sortBy: undefined,
+                          sortOrder: undefined
+                        });
+                      }}
+                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700"
+                    >
+                      مسح جميع الفلاتر
+                    </Button>
+                  </div>
+                </div>
                 {process.env.NODE_ENV === 'development' && (
                   <div className="mt-4 p-4 bg-gray-100 rounded-md text-left text-sm">
                     <h4 className="font-medium mb-2">Debug Information:</h4>
@@ -785,6 +676,12 @@ const Search: React.FC = () => {
                     </pre>
                   </div>
                 )}
+              </div>
+            ) : loading ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+                <p className="text-gray-600 text-lg">جاري تحميل العقارات...</p>
+                <p className="text-gray-500 text-sm mt-2">يرجى الانتظار قليلاً</p>
               </div>
             ) : (
               <div className={`

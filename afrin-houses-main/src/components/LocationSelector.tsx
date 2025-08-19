@@ -141,19 +141,9 @@ const LocationSelector: FC<LocationSelectorProps> = ({
     onCityChangeHandler('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onLocationChange) {
-      onLocationChange({
-        state: selectedState,
-        city: selectedCity,
-      });
-    }
-  };
-
   return (
     <div className={cn('space-y-4', className)}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-4">
         {showState && (
           <div className="space-y-2">
             <Label htmlFor="state" className="text-sm font-semibold text-gray-700">
@@ -220,7 +210,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
             </Select>
           </div>
         )}
-      </form>
+      </div>
     </div>
   );
 };

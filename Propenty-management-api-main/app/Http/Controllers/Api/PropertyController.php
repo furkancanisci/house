@@ -9,6 +9,7 @@ use App\Http\Resources\PropertyResource;
 use App\Http\Resources\PropertyCollection;
 use App\Models\Property;
 use App\Models\PropertyView;
+use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -147,58 +148,86 @@ class PropertyController extends Controller
             'all_params' => $filters
         ]);
         
-        // Debug: Log all request headers
-        \Illuminate\Support\Facades\Log::info('Request Headers:', [
-            'headers' => $request->headers->all(),
-            'token' => $request->bearerToken(),
-            'has_token' => $request->bearerToken() ? 'yes' : 'no'
-        ]);
-        
         // Start building the query
         $query = Property::query();
         
-        // Apply listing type filter if present - check both camelCase and snake_case
+        // Ensure only active properties are returned
+        $query->where('status', 'active');
+        
+        // Apply listing type filter - support both camelCase and snake_case
         $listingType = $request->input('listing_type') ?: $request->input('listingType');
         if ($listingType && in_array($listingType, ['rent', 'sale'])) {
             $query->where('listing_type', $listingType);
         }
 
-        // Apply price range filters
-        if ($request->has('price_min') && is_numeric($request->price_min)) {
-            $query->where('price', '>=', (float)$request->price_min);
-        }
-        if ($request->has('price_max') && is_numeric($request->price_max)) {
-            $query->where('price', '<=', (float)$request->price_max);
-        }
-
-        // Apply bedroom filter
-        if ($request->has('bedrooms')) {
-            if ($request->bedrooms === '4+') {
-                $query->where('bedrooms', '>=', 4);
-            } elseif (is_numeric($request->bedrooms)) {
-                $query->where('bedrooms', '>=', (int)$request->bedrooms);
-            }
-        }
-
-        // Apply bathroom filter
-        if ($request->has('bathrooms')) {
-            if ($request->bathrooms === '3+') {
-                $query->where('bathrooms', '>=', 3);
-            } elseif (is_numeric($request->bathrooms)) {
-                $query->where('bathrooms', '>=', (float)$request->bathrooms);
-            }
-        }
-
-        // Apply property type filter if present - check both camelCase and snake_case
+        // Apply property type filter - support both camelCase and snake_case
         $propertyType = $request->input('property_type') ?: $request->input('propertyType');
-        if ($propertyType && !empty($propertyType)) {
+        if ($propertyType && !empty($propertyType) && $propertyType !== 'any') {
             $query->where('property_type', $propertyType);
         }
 
-        // Apply search query if present - check both 'search' and 'q' parameters
-        $searchTerm = $request->input('search', $request->input('q'));
+        // Apply price range filters - support both min/max and minPrice/maxPrice
+        $minPrice = $request->input('price_min') ?: $request->input('minPrice');
+        $maxPrice = $request->input('price_max') ?: $request->input('maxPrice');
+        
+        if ($minPrice && is_numeric($minPrice) && $minPrice > 0) {
+            $query->where('price', '>=', (float)$minPrice);
+        }
+        if ($maxPrice && is_numeric($maxPrice) && $maxPrice > 0) {
+            $query->where('price', '<=', (float)$maxPrice);
+        }
+
+        // Apply bedroom filter - support 'any', numbers, and '4+' format
+        $bedrooms = $request->input('bedrooms');
+        if ($bedrooms && $bedrooms !== 'any' && $bedrooms !== '') {
+            if ($bedrooms === '4+') {
+                $query->where('bedrooms', '>=', 4);
+            } elseif (is_numeric($bedrooms)) {
+                $query->where('bedrooms', '>=', (int)$bedrooms);
+            }
+        }
+
+        // Apply bathroom filter - support 'any', numbers, and '3+' format
+        $bathrooms = $request->input('bathrooms');
+        if ($bathrooms && $bathrooms !== 'any' && $bathrooms !== '') {
+            if ($bathrooms === '3+') {
+                $query->where('bathrooms', '>=', 3);
+            } elseif (is_numeric($bathrooms)) {
+                $query->where('bathrooms', '>=', (float)$bathrooms);
+            }
+        }
+
+        // Apply square footage filters
+        $minSquareFootage = $request->input('min_square_feet') ?: $request->input('minSquareFootage');
+        $maxSquareFootage = $request->input('max_square_feet') ?: $request->input('maxSquareFootage');
+        
+        if ($minSquareFootage && is_numeric($minSquareFootage) && $minSquareFootage > 0) {
+            $query->where('square_feet', '>=', (int)$minSquareFootage);
+        }
+        if ($maxSquareFootage && is_numeric($maxSquareFootage) && $maxSquareFootage > 0) {
+            $query->where('square_feet', '<=', (int)$maxSquareFootage);
+        }
+
+        // Apply location filters with Arabic/English support
+        $location = $request->input('location');
+        if ($location && !empty($location)) {
+            $query = LocationService::buildLocationQuery($query, $location);
+        }
+
+        // Apply features/amenities filter
+        $features = $request->input('features') ?: $request->input('amenities');
+        if ($features && is_array($features) && !empty($features)) {
+            foreach ($features as $feature) {
+                if (!empty($feature)) {
+                    $query->whereJsonContains('amenities', $feature);
+                }
+            }
+        }
+
+        // Apply search query - check both 'search', 'q', and 'searchQuery' parameters
+        $searchTerm = $request->input('search', $request->input('q', $request->input('searchQuery')));
         if (!empty($searchTerm)) {
-            \Illuminate\Support\Facades\Log::info('Searching for term:', ['term' => $searchTerm, 'all_params' => $request->all()]);
+            \Illuminate\Support\Facades\Log::info('Searching for term:', ['term' => $searchTerm]);
             
             // Make search case-insensitive and trim whitespace
             $searchTerm = strtolower(trim($searchTerm));
@@ -212,37 +241,44 @@ class PropertyController extends Controller
                   ->orWhereRaw('LOWER(state) LIKE ?', [$searchTerm])
                   ->orWhereRaw('LOWER(street_address) LIKE ?', [$searchTerm])
                   ->orWhereRaw('LOWER(neighborhood) LIKE ?', [$searchTerm])
-                  ->orWhereRaw('LOWER(landmark) LIKE ?', [$searchTerm])
-                  ->orWhereRaw('LOWER(amenities) LIKE ?', [$searchTerm]);
+                  ->orWhereRaw('LOWER(amenities::text) LIKE ?', [$searchTerm]);
             });
-            
-            // Debug: Log the final SQL query
-            \Illuminate\Support\Facades\Log::info('Final Search Query:', [
-                'sql' => $query->toSql(),
-                'bindings' => $query->getBindings(),
-                'search_term' => $searchTerm
-            ]);
         }
 
+        // Apply sorting - support both sortBy/sortOrder and sort/direction
+        $sortField = $request->input('sort', $request->input('sortBy', 'created_at'));
+        $sortDirection = $request->input('direction', $request->input('sortOrder', 'desc'));
         
-
-        // Apply sorting
-        $sortField = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
+        // Map frontend sort fields to database columns
+        $sortFieldMap = [
+            'price' => 'price',
+            'bedrooms' => 'bedrooms',
+            'bathrooms' => 'bathrooms',
+            'squareFootage' => 'square_feet',
+            'square_feet' => 'square_feet',
+            'created_at' => 'created_at',
+            'updated_at' => 'updated_at',
+            'newest' => 'created_at',
+            'oldest' => 'created_at'
+        ];
         
-        if (in_array($sortField, ['price', 'bedrooms', 'bathrooms', 'square_feet', 'created_at'])) {
-            $query->orderBy($sortField, $sortDirection === 'asc' ? 'asc' : 'desc');
-        } else {
-            $query->latest();
+        $dbSortField = $sortFieldMap[$sortField] ?? 'created_at';
+        
+        // Handle special sort cases
+        if ($sortField === 'oldest') {
+            $sortDirection = 'asc';
+        } elseif ($sortField === 'newest') {
+            $sortDirection = 'desc';
         }
+        
+        $query->orderBy($dbSortField, $sortDirection === 'asc' ? 'asc' : 'desc');
 
         // Log the final SQL query and result count
         $resultCount = $query->count();
         \Illuminate\Support\Facades\Log::info('Final SQL Query and Result Count:', [
             'sql' => $query->toSql(),
             'bindings' => $query->getBindings(),
-            'result_count' => $resultCount,
-            'status_filter' => $query->where('status', 'active')->count()
+            'result_count' => $resultCount
         ]);
         
         if ($resultCount === 0) {
@@ -255,17 +291,14 @@ class PropertyController extends Controller
             );
         }
 
-        // Ensure only active properties are returned
-        $query->where('status', 'active');
-
         // Select fields needed by PropertyResource
         $query->select([
             'id', 'title', 'description', 'slug', 'property_type', 'listing_type',
             'bedrooms', 'bathrooms', 'square_feet', 'year_built', 'price', 'price_type',
             'street_address', 'city', 'state', 'postal_code', 'neighborhood',
             'latitude', 'longitude', 'amenities', 'nearby_places', 'status', 'is_featured',
-            'is_available', 'available_from', 'published_at', 'views_count', 'contact_name',
-            'contact_phone', 'contact_email', 'user_id', 'created_at', 'updated_at'
+            'is_available', 'available_from', 'published_at', 'views_count',
+            'user_id', 'created_at', 'updated_at'
         ]);
 
         // Paginate the results
