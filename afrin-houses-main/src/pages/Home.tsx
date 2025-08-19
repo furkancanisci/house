@@ -95,6 +95,7 @@ const Home: React.FC = () => {
     }
   };
 
+
   // Helper function to create ExtendedProperty from Property
   const createExtendedProperty = (property: Property): ExtendedProperty => {
     // Safely extract price, handling both number and object formats
@@ -200,7 +201,6 @@ const Home: React.FC = () => {
       color: 'text-primary-500',
     },
   ];
-
   const quickSearches = [
     t('home.quickSearches.downtownApartments'),
     t('home.quickSearches.familyHomes'),
@@ -382,6 +382,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+
       {/* Stats Section */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -398,6 +399,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Premium Listings */}
+
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           

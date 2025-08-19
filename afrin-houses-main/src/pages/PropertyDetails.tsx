@@ -180,8 +180,8 @@ const PropertyDetails: React.FC = () => {
           mainImage: propertyData.images?.main || '/placeholder-property.jpg',
           yearBuilt: Number(propertyData.details?.year_built) || new Date().getFullYear(),
           coordinates: {
-            lat: Number(propertyData.location?.latitude) || 0,
-            lng: Number(propertyData.location?.longitude) || 0
+            lat: Number(propertyData.location.coordinates?.latitude) || 0,
+            lng: Number(propertyData.location.coordinates?.longitude) || 0
           },
           contact: {
             name: propertyData.owner?.full_name || 'Agent',

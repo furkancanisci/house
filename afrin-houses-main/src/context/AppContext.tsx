@@ -99,8 +99,8 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
-  loadProperties: () => Promise<void>;
-  filterProperties: (filters: SearchFilters) => Promise<void>;
+  loadProperties: (filters?: SearchFilters) => Promise<void>;
+  filterProperties: (filters: SearchFilters) => void;
   addProperty: (property: Omit<Property, 'id' | 'datePosted'>) => void;
   updateProperty: (property: Property) => void;
   deleteProperty: (id: string) => void;
@@ -144,12 +144,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   // Load properties from API
-  const loadProperties = async () => {
+  const loadProperties = async (filters?: SearchFilters) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       console.log('DEBUG: Fetching properties from API...');
       
-      const response = await getProperties();
+      const response = await getProperties(filters);
       console.log('DEBUG: Properties API response:', response);
       
       // Handle different response structures safely with proper type checking
@@ -309,6 +309,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           // Extended fields
           ...(property as any)
         } as Property;
+
       });
       
       console.log('Filtered properties from API:', properties);

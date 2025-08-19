@@ -33,7 +33,6 @@ import {
 } from './ui/collapsible';
 import { Checkbox } from './ui/checkbox';
 import { useTranslation } from 'react-i18next';
-import LocationSelector from './LocationSelector';
 
 interface SearchFiltersProps {
   onFiltersChange?: (filters: SearchFiltersType) => void;
@@ -53,7 +52,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     hideListingType = false
   } = props;
   const { t } = useTranslation();
-  // Local form state that only updates when Apply is clicked
   const [formValues, setFormValues] = useState<SearchFiltersType>(() => ({
     listingType: initialFilters?.listingType || 'all',
     propertyType: initialFilters?.propertyType || '',
@@ -80,7 +78,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     minPrice: initialFilters?.minPrice !== undefined ? initialFilters.minPrice.toString() : '',
     maxPrice: initialFilters?.maxPrice !== undefined ? initialFilters.maxPrice.toString() : ''
   });
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
   const propertyTypes = [
     { value: 'all', label: t('property.types.all') },
@@ -338,7 +335,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     setSelectedCity('');
     
     // Notify parent component of changes
-    if (onFiltersChange) {
+    if (onApplyFilters) {
+      onApplyFilters(defaultFilters);
+    } else if (onFiltersChange) {
       onFiltersChange(defaultFilters);
     }
   };
@@ -346,8 +345,61 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
   const hasActiveFilters = Object.values(formValues).some(value => {
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === 'string') return value !== '' && value !== 'all' && value !== 'any';
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') return value !== '' && value !== 'all' && value !== 'any';
     return value !== undefined;
   });
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Create a copy of form values
+    const newFilters = { ...formValues };
+    
+    // Process price inputs
+    const minPrice = localValues.minPrice ? parseInt(localValues.minPrice, 10) : undefined;
+    const maxPrice = localValues.maxPrice ? parseInt(localValues.maxPrice, 10) : undefined;
+    
+    // Update filters with processed price values
+    if (minPrice !== undefined) newFilters.minPrice = minPrice;
+    if (maxPrice !== undefined) newFilters.maxPrice = maxPrice;
+    
+    
+    // Call the appropriate callback
+    if (onApplyFilters) {
+      onApplyFilters(newFilters);
+    } else if (onFiltersChange) {
+      onFiltersChange(newFilters);
+    }
+  };
+  
+  // Handle reset filters
+  const handleReset = () => {
+    const resetFilters: SearchFiltersType = {
+      listingType: 'all',
+      propertyType: '',
+      location: '',
+      minPrice: undefined,
+      maxPrice: undefined,
+      bedrooms: undefined,
+      bathrooms: undefined,
+      minSquareFootage: undefined,
+      maxSquareFootage: undefined,
+      features: [],
+    };
+    
+    // Reset form values
+    setFormValues(resetFilters);
+    setLocalValues({ minPrice: '', maxPrice: '' });
+    
+    // Call the appropriate callback
+    if (onApplyFilters) {
+      onApplyFilters(resetFilters);
+    } else if (onFiltersChange) {
+      onFiltersChange(resetFilters);
+    }
+  };
 
   return (
     <Card className="w-full">
@@ -464,8 +516,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           <div className="space-y-2">
             <Label>{t('filters.bedrooms')}</Label>
             <Select
-              value={formValues.bedrooms?.toString() || 'any'}
-              onValueChange={(value) => handleFilterChange('bedrooms', value === 'any' ? '' : value)}
+            value={formValues.bedrooms?.toString() || 'any'}
+            onValueChange={(value) => handleFilterChange('bedrooms', value === 'any' ? '' : value)}
             >
               <SelectTrigger>
                 <SelectValue>{formValues.bedrooms ? `${formValues.bedrooms}+` : t('filters.any')}</SelectValue>
@@ -483,8 +535,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           <div className="space-y-2">
             <Label>{t('filters.bathrooms')}</Label>
             <Select
-              value={formValues.bathrooms?.toString() || 'any'}
-              onValueChange={(value) => handleFilterChange('bathrooms', value === 'any' ? '' : value)}
+            value={formValues.bathrooms?.toString() || 'any'}
+            onValueChange={(value) => handleFilterChange('bathrooms', value === 'any' ? '' : value)}
             >
               <SelectTrigger>
                 <SelectValue>{formValues.bathrooms ? `${formValues.bathrooms}+` : t('filters.any')}</SelectValue>
@@ -560,7 +612,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
             </CollapsibleContent>
           </Collapsible>
         )}
-        
+
           {/* Apply Filters Button */}
           <div className="mt-6 flex justify-end space-x-2">
             <Button 

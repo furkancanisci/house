@@ -84,6 +84,8 @@
     }
   },
   "property": {
+    "forRent": "For Rent",
+    "forSale": "For Sale",
     "propertyDetails": "Property Details",
     "month": "Month",
     "year": "Year",
@@ -193,7 +195,80 @@
     "maxSqFt": "Max sq ft",
     "sqft": "sqft"
   },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last Updated: August 2023",
+    "introduction": {
+      "title": "Introduction",
+      "content": "We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you about how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you."
+    },
+    "informationWeCollect": {
+      "title": "Information We Collect",
+      "content": "We may collect, use, store and transfer different kinds of personal data about you which we have grouped together as follows: Identity Data, Contact Data, Technical Data, Usage Data, and Marketing and Communications Data."
+    },
+    "howWeUseYourData": {
+      "title": "How We Use Your Data",
+      "content": "We will only use your personal data when the law allows us to. Most commonly, we will use your personal data to provide and improve our services, manage our relationship with you, and send you marketing communications."
+    },
+    "dataSecurity": {
+      "title": "Data Security",
+      "content": "We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used or accessed in an unauthorized way, altered or disclosed."
+    },
+    "contactUs": {
+      "title": "Contact Us",
+      "content": "If you have any questions about this privacy policy or our privacy practices, please contact us at privacy@example.com."
+    }
+  },
+  "termsOfService": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last Updated: August 2023",
+    "introduction": {
+      "title": "Introduction",
+      "content": "These Terms of Service govern your use of our website and services. By accessing or using our services, you agree to be bound by these terms and conditions."
+    },
+    "accountTerms": {
+      "title": "Account Terms",
+      "content": "You are responsible for maintaining the security of your account and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account."
+    },
+    "userResponsibilities": {
+      "title": "User Responsibilities",
+      "content": "You agree not to use the service for any illegal or unauthorized purpose. You must not transmit any worms or viruses or any code of a destructive nature."
+    },
+    "limitationOfLiability": {
+      "title": "Limitation of Liability",
+      "content": "In no event shall our company be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses."
+    },
+    "contactUs": {
+      "title": "Contact Us",
+      "content": "If you have any questions about these Terms of Service, please contact us at legal@example.com."
+    }
+  },
+  "cookiePolicy": {
+    "title": "Cookie Policy",
+    "lastUpdated": "Last Updated: August 2023",
+    "whatAreCookies": {
+      "title": "What Are Cookies",
+      "content": "Cookies are small text files that are placed on your computer by websites that you visit. They are widely used to make websites work more efficiently, as well as to provide information to the site owners."
+    },
+    "howWeUseCookies": {
+      "title": "How We Use Cookies",
+      "content": "We use cookies to understand how you use our site and to improve your experience, including personalizing content and storing your preferences."
+    },
+    "typesOfCookies": {
+      "title": "Types of Cookies We Use",
+      "content": "We use both session cookies (which expire once you close your web browser) and persistent cookies (which stay on your device for a set period of time)."
+    },
+    "managingCookies": {
+      "title": "Managing Cookies",
+      "content": "You can control and/or delete cookies as you wish. You can delete all cookies that are already on your computer and you can set most browsers to prevent them from being placed."
+    },
+    "contactUs": {
+      "title": "Contact Us",
+      "content": "If you have any questions about our use of cookies, please contact us at privacy@example.com."
+    }
+  },
   "common": {
+    "currency": "TL",
     "loading": "Loading...",
     "backToSearch": "Back to Search",
     "linkCopied": "Link copied to clipboard",
@@ -237,7 +312,9 @@
     "squareFootage": "Square Footage",
     "features": "Features",
     "any": "Any",
-    "advancedFilters": "Advanced Filters"
+    "advancedFilters": "Advanced Filters",
+    "applyFilters": "Apply Filters",
+    "locationPlaceholder": "Enter city, address, or zip code"
   },
   "forms": {
     "propertyTitle": "Property Title",

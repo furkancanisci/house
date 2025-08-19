@@ -68,7 +68,7 @@ type ViewMode = 'grid' | 'list';
 const Search: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { state, filterProperties, loadProperties } = useApp();
+  const { state, loadProperties } = useApp();
   
   // Helper to normalize values that may be localized objects { name_ar, name_en }
   const normalizeName = (val: any): string => {
@@ -83,6 +83,7 @@ const Search: React.FC = () => {
     return String(val);
   };
   const { properties: allProperties, filteredProperties: contextFilteredProperties, loading, error } = state;
+
   
   // Convert Property to ExtendedProperty
   const toExtendedProperty = useCallback((property: Property | ExtendedProperty): ExtendedProperty => {
@@ -172,6 +173,7 @@ const Search: React.FC = () => {
   
   // Use context's filtered properties directly
   const filteredProperties = contextFilteredProperties ? contextFilteredProperties.map(prop => toExtendedProperty(prop)) : [];
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const isInitialMount = useRef(true);
 
@@ -241,11 +243,39 @@ const Search: React.FC = () => {
         filters.sortOrder = order;
       }
     }
+
+    if (params.bedrooms) {
+        const bedrooms = Number(params.bedrooms);
+        if (!isNaN(bedrooms)) filters.bedrooms = bedrooms;
+    }
+
+    if (params.bathrooms) {
+        const bathrooms = Number(params.bathrooms);
+        if (!isNaN(bathrooms)) filters.bathrooms = bathrooms;
+    }
+
+    if (params.minSquareFootage) {
+        const minSqft = Number(params.minSquareFootage);
+        if (!isNaN(minSqft)) filters.minSquareFootage = minSqft;
+    }
+
+    if (params.maxSquareFootage) {
+        const maxSqft = Number(params.maxSquareFootage);
+        if (!isNaN(maxSqft)) filters.maxSquareFootage = maxSqft;
+    }
+
+    if (params.features) {
+        filters.features = params.features.split(',');
+    }
+
+    if (params.location) {
+        filters.location = params.location;
+    }
     
     return filters;
   };
 
-  // No need to sync filtered properties since we're using them directly from context
+
 
   // Get filters from URL parameters
   const [filters, setFilters] = useState<SearchFiltersType>(() => {
@@ -332,16 +362,48 @@ const Search: React.FC = () => {
 
   // Convert Property to ExtendedProperty
 
+  const toExtendedProperty = useCallback((property: Property | ExtendedProperty): ExtendedProperty => {
+    // If it's already an ExtendedProperty, return it as is
+    if ('formattedPrice' in property) {
+      return property as ExtendedProperty;
+    }
+    
+    // Otherwise, convert Property to ExtendedProperty
+    const details = property.details || {};
+    const price = typeof property.price === 'string' ? parseFloat(property.price) || 0 : Number(property.price) || 0;
+    const propertyType = property.property_type || 'house';
+    const listingType = property.listing_type === 'rent' || property.listing_type === 'sale' ? property.listing_type : 'sale';
+    
+    // Calculate square footage from either details or property directly
+    const squareFootage = details.square_footage || property.square_feet || 0;
+    const bedrooms = details.bedrooms || property.bedrooms || 0;
+    const bathrooms = details.bathrooms || property.bathrooms || 0;
+    
+    // Create base property with all required fields
+    const baseProperty: Omit<Property, 'property_type' | 'listing_type' | 'square_feet' | 'zip_code' | 'created_at'> & {
+      propertyType: string;
+      listingType: 'rent' | 'sale';
+      squareFootage: number;
+      zipCode: string;
+    } = {
+      ...property,
+      propertyType,
+      listingType,
+      squareFootage,
+      zipCode: property.zip_code || property.location?.postal_code || '',
+      // Ensure required fields are present
+      city: property.location?.city || property.city || '',
+      state: property.location?.state || property.state || '',
+      // Ensure media is always an array
+      media: Array.isArray(property.media) ? property.media : [],
+    };
+
+
 
   // Since we're now using API-based filtering, we don't need local filtering
 
-  // Define filter change handler type
-  interface IFilterChangeHandler {
-    (filters: Partial<SearchFiltersType>): void;
-  }
-
   // Handle filter changes - single implementation
-  const handleFilterChange: IFilterChangeHandler = useCallback(async (newFilters) => {
+   const handleFilterChange: IFilterChangeHandler = useCallback(async (newFilters) => {
     // Convert string prices to numbers for the filter and ensure proper typing
     const processedFilters: SearchFiltersType = {
       ...newFilters,
@@ -363,13 +425,14 @@ const Search: React.FC = () => {
     Object.keys(processedFilters).forEach(key => {
       if (processedFilters[key as keyof SearchFiltersType] === undefined) {
         delete processedFilters[key as keyof SearchFiltersType];
+
       }
     });
     
     // Update filters state and URL
     setFilters(processedFilters);
     updateURL(processedFilters);
-    
+     
     // Update filters in the context
     await filterProperties(processedFilters);
     
@@ -385,6 +448,7 @@ const Search: React.FC = () => {
         } else {
           params.set(key, String(value));
         }
+
       }
     });
     // Also include compact 'sort' param for UX/back-compat
@@ -392,13 +456,14 @@ const Search: React.FC = () => {
       const by = processedFilters.sortBy === 'created_at' ? 'date' : processedFilters.sortBy;
       params.set('sort', `${by}-${processedFilters.sortOrder}`);
     }
-    
-    navigate(`?${params.toString()}`, { replace: true });
-  }, [filterProperties, navigate]);
+
+    navigate(`?${newParams.toString()}`, { replace: true });
+  }, [navigate]);
 
   // Handle pagination
   const handlePageChange = useCallback(async (page: number) => {
     // Create a new filters object with the updated page number
+
     const newFilters: SearchFiltersType = { 
       ...filtersFromParams,
       page: page,
@@ -407,7 +472,8 @@ const Search: React.FC = () => {
     await filterProperties(newFilters);
   }, [filtersFromParams, filterProperties]);
 
-  // Load properties when component mounts or filters change
+
+  // Apply filters whenever allProperties or searchParams change
   useEffect(() => {
     const applyInitialFilters = async () => {
       if (isInitialMount.current) {
@@ -454,12 +520,12 @@ const Search: React.FC = () => {
               ? t('search.resultsCount', { count: filteredProperties.length })
               : t('search.noResults')}
         </h1>
-
         <div className="flex flex-col md:flex-row gap-6">
           {/* Filters Sidebar */}
           <div className="w-full md:w-1/4">
             <SearchFilters 
               key={JSON.stringify(filters)} // Force re-render when filters change
+
               onApplyFilters={handleFilterChange}
               initialFilters={filters}
             />
@@ -602,7 +668,7 @@ const Search: React.FC = () => {
                     <pre className="text-xs overflow-auto max-h-40">
                       {JSON.stringify({
                         searchParams: Object.fromEntries(searchParams.entries()),
-                        filters: filtersFromParams,
+                        filters: activeFilters,
                         propertiesCount: filteredProperties.length,
                         hasError: !!error,
                         errorMessage: error

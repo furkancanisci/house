@@ -330,6 +330,10 @@ export const getFeaturedProperties = async (params: FeaturedPropertiesParams = {
 
 export const createProperty = async (propertyData: any) => {
   try {
+    console.log('Starting createProperty with data:', JSON.parse(JSON.stringify(propertyData, (key, value) => 
+      value instanceof File ? `[File ${value.name}]` : value
+    )));
+    
     const formData = new FormData();
     
     // Add all property data to FormData
@@ -357,16 +361,39 @@ export const createProperty = async (propertyData: any) => {
       }
     });
     
+    // Log FormData contents for debugging
+    console.log('FormData contents:');
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+    
     console.log('Sending property data to API with FormData');
     const response = await api.post('/properties', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 30000, // 30 second timeout
     });
+    
+    console.log('Property created successfully:', response.data);
     return response.data;
-  } catch (error) {
-    console.error('Error creating property:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Error in createProperty:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        data: error.config?.data,
+      },
+    });
+    
+    // Create a more detailed error object
+    const enhancedError = new Error(error.message || 'Failed to create property');
+    (enhancedError as any).response = error.response;
+    throw enhancedError;
   }
 };
 

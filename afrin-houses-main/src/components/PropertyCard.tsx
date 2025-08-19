@@ -88,6 +88,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     const numPrice = typeof price === 'object' && price !== null
       ? (price as any).amount || 0
       : Number(price) || 0;
+    
+    if (numPrice === 0) return t('property.priceOnRequest');
+    
+    // Format as a simple number with commas
+    const formattedPrice = numPrice.toLocaleString(undefined, {
 
     if (numPrice === 0) return type === 'rent' ? t('property.priceOnRequest') : t('property.priceOnRequest');
 
@@ -99,10 +104,24 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     }).format(numPrice);
 
     return type === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
+      maximumFractionDigits: 0
+    });
+    
+    // Add currency symbol and rental period if needed
+    if (type === 'rent') {
+      return `${formattedPrice} ${t('common.currency')} / ${t('property.perMonth', 'month')}`;
+    }
+    
+    return `${formattedPrice} ${t('common.currency')}`;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleDateString(i18n.language);
+    } catch (e) {
+      return '';
+    }
   };
 
   if (view === 'list') {

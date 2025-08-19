@@ -60,8 +60,12 @@ class CityService {
         return locale === 'ar' ? state.name_ar : state.name_en;
       });
     } catch (error) {
-      console.error('Error fetching states:', error);
-      throw error;
+      console.warn('Falling back to default states list');
+      // Fallback to default states if API fails
+      const locale = params?.locale || 'ar';
+      return locale === 'ar' 
+        ? ['دمشق', 'حلب', 'حماة', 'حمص', 'اللاذقية', 'درعا', 'دير الزور', 'الحسكة', 'الرقة', 'السويداء', 'طرطوس', 'القنيطرة', 'إدلب']
+        : ['Damascus', 'Aleppo', 'Hama', 'Homs', 'Latakia', 'Daraa', 'Deir ez-Zor', 'Al-Hasakah', 'Ar-Raqqah', 'As-Suwayda', 'Tartus', 'Quneitra', 'Idlib'];
     }
   }
 
