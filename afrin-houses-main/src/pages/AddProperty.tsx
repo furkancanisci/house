@@ -65,7 +65,25 @@ const propertySchema = z.object({
   petPolicy: z.string().optional(),
   parking: z.string().min(1, 'Parking type is required'),
   utilities: z.string().optional(),
-  lotSize: z.number().min(1, 'Lot size must be greater than 0').max(1000000, 'Lot size is too large').optional(),
+  lotSize: z.union([
+    z.string()
+      .refine(val => val === '' || /^\d+$/.test(val), {
+        message: 'Lot size must be a positive integer'
+      })
+      .transform((val) => val === '' ? undefined : parseInt(val, 10))
+      .refine(val => val === undefined || val > 0, {
+        message: 'Lot size must be greater than 0'
+      })
+      .refine(val => val === undefined || val <= 1000000, {
+        message: 'Lot size is too large'
+      })
+      .optional(),
+    z.number()
+      .int('Lot size must be an integer')
+      .positive('Lot size must be greater than 0')
+      .max(1000000, 'Lot size is too large')
+      .optional()
+  ]).optional().default(undefined),
   garage: z.string().optional(),
   heating: z.string().optional(),
   hoaFees: z.string().optional(),
@@ -328,13 +346,36 @@ const AddProperty: React.FC = () => {
   };
 
   const onSubmit = async (data: PropertyFormData) => {
+    if (isSubmitting) {
+      console.log('Form submission already in progress');
+      return; // Prevent multiple submissions
+    }
+    
+    // Ensure numeric fields are properly converted
+    const formData = {
+      ...data,
+      price: Number(data.price) || 0,
+      bedrooms: Number(data.bedrooms) || 0,
+      bathrooms: Number(data.bathrooms) || 0,
+      squareFootage: Number(data.squareFootage) || 0,
+      yearBuilt: data.yearBuilt ? Number(data.yearBuilt) : undefined,
+      lotSize: data.lotSize ? Number(data.lotSize) : undefined,
+      parking: data.parking ? Number(data.parking) : 0
+    };
+    
+    console.log('Processed form data:', formData);
+    
     try {
+      console.log('Starting form submission with data:', data);
+      
       // Parse address components
-      const addressParts = data.address.split(',').map(part => part.trim());
+      const addressParts = formData.address?.split(',').map(part => part.trim()) || [];
       const street = addressParts[0] || '';
-      let city = selectedCity || data.city || addressParts[1] || '';
-      let state = selectedState || data.state || '';
-      let postalCode = data.postalCode || '';
+      let city = selectedCity || formData.city || addressParts[1] || '';
+      let state = selectedState || formData.state || '';
+      let postalCode = formData.postalCode || '';
+      
+      console.log('Parsed address:', { street, city, state, postalCode });
       
       // If city, state, postalCode are not provided, try to parse from address
       if (!city || !state || !postalCode) {
@@ -393,17 +434,39 @@ const AddProperty: React.FC = () => {
         datePosted: new Date().toISOString()
       };
       
-      console.log('Submitting property data:', newProperty);
+      console.log('Prepared property data for submission:', newProperty);
       
-      await addProperty(newProperty);
-      toast.success('Property added successfully!');
-      navigate('/dashboard');
+      try {
+        console.log('Calling addProperty API...');
+        const result = await addProperty(newProperty);
+        console.log('Property added successfully:', result);
+        
+        toast.success('تمت إضافة العقار بنجاح!');
+        console.log('Navigating to dashboard...');
+        navigate('/dashboard');
+      } catch (apiError) {
+        console.error('Error in addProperty API call:', apiError);
+        throw apiError; // Re-throw to be caught by the outer catch
+      }
     } catch (error: any) {
       console.error('Error adding property:', error);
+      
+      // Log the full error for debugging
+      console.error('Full error object:', JSON.stringify(error, null, 2));
+      
+      // Extract error message from different possible locations in the error object
       const errorMessage = error?.response?.data?.message || 
+                          error?.response?.data?.error ||
                           error?.message || 
-                          'Failed to add property. Please try again.';
-      toast.error(errorMessage);
+                          'فشل في إضافة العقار. يرجى المحاولة مرة أخرى.';
+      
+      // Show detailed error in console and toast
+      console.error('Error details:', errorMessage);
+      toast.error(errorMessage, {
+        duration: 5000,
+        position: 'top-center',
+        style: { direction: 'rtl' }
+      });
     }
   };
 
@@ -1308,6 +1371,12 @@ const AddProperty: React.FC = () => {
                 <Button 
                   type="submit" 
                   disabled={isSubmitting}
+                  onClick={() => {
+                    console.log('Create Listing button clicked');
+                    console.log('Form isSubmitting:', isSubmitting);
+                    console.log('Form errors:', errors);
+                    console.log('Current step:', currentStep);
+                  }}
                   className="px-10 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (

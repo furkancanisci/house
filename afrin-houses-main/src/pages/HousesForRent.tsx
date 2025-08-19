@@ -242,7 +242,7 @@ const HousesForRent: React.FC = () => {
                 key={property.id}
                 className="transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
-                <div className={viewMode === 'grid' ? 'h-full' : 'h-48'}>
+                <div className={viewMode === 'grid' ? 'h-full' : 'mb-4'}>
                   <PropertyCard
                     property={property}
                     view={viewMode}

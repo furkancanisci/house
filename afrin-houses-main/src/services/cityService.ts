@@ -64,17 +64,36 @@ class CityService {
    */
   async getCountries(locale: string = 'ar'): Promise<string[]> {
     try {
-      const response = await api.get<CountryResponse>('/cities/countries', {
+      // Using the correct endpoint /cities which maps to CityController@index
+      const response = await api.get<CountryResponse>('/cities', {
         params: { locale }
       });
-      // Convert objects to strings based on locale
-      return response.data.data.map(country => {
-        if (typeof country === 'string') return country;
-        return locale === 'ar' ? country.name_ar : country.name_en;
-      });
+      
+      // Extract unique countries from the cities data
+      const countries = response.data.data.reduce((acc: CountryData[], city: City) => {
+        const countryExists = acc.some(c => 
+          c.name_en === city.country || 
+          c.name_ar === city.country
+        );
+        
+        if (!countryExists) {
+          acc.push({
+            name: city.country,
+            name_en: city.country === 'Syria' ? 'Syria' : city.country,
+            name_ar: city.country === 'Syria' ? 'سوريا' : city.country
+          });
+        }
+        return acc;
+      }, [] as CountryData[]);
+      
+      // Convert to the expected string format
+      return countries.map(country => 
+        locale === 'ar' ? country.name_ar : country.name_en
+      );
     } catch (error) {
-      console.error('Error fetching countries:', error);
-      throw error;
+      console.warn('Falling back to default countries list');
+      // Fallback to default countries if API fails
+      return locale === 'ar' ? ['سوريا'] : ['Syria'];
     }
   }
 
@@ -94,8 +113,12 @@ class CityService {
         return locale === 'ar' ? state.name_ar : state.name_en;
       });
     } catch (error) {
-      console.error('Error fetching states:', error);
-      throw error;
+      console.warn('Falling back to default states list');
+      // Fallback to default states if API fails
+      const locale = params?.locale || 'ar';
+      return locale === 'ar' 
+        ? ['دمشق', 'حلب', 'حماة', 'حمص', 'اللاذقية', 'درعا', 'دير الزور', 'الحسكة', 'الرقة', 'السويداء', 'طرطوس', 'القنيطرة', 'إدلب']
+        : ['Damascus', 'Aleppo', 'Hama', 'Homs', 'Latakia', 'Daraa', 'Deir ez-Zor', 'Al-Hasakah', 'Ar-Raqqah', 'As-Suwayda', 'Tartus', 'Quneitra', 'Idlib'];
     }
   }
 

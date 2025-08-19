@@ -99,7 +99,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
-  loadProperties: () => Promise<void>;
+  loadProperties: (filters?: SearchFilters) => Promise<void>;
   filterProperties: (filters: SearchFilters) => void;
   addProperty: (property: Omit<Property, 'id' | 'datePosted'>) => void;
   updateProperty: (property: Property) => void;
@@ -144,12 +144,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   // Load properties from API
-  const loadProperties = async () => {
+  const loadProperties = async (filters?: SearchFilters) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       console.log('DEBUG: Fetching properties from API...');
       
-      const response = await getProperties();
+      const response = await getProperties(filters);
       console.log('DEBUG: Properties API response:', response);
       
       // Handle different response structures safely with proper type checking
@@ -336,9 +336,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     if (filters.location) {
+      const locationQuery = filters.location.toLowerCase();
       filtered = filtered.filter(p => 
-        p.address.toLowerCase().includes(filters.location!.toLowerCase()) ||
-        p.title.toLowerCase().includes(filters.location!.toLowerCase())
+        p.address.toLowerCase().includes(locationQuery) ||
+        p.title.toLowerCase().includes(locationQuery) ||
+        (p.city && p.city.toLowerCase().includes(locationQuery)) ||
+        (p.state && p.state.toLowerCase().includes(locationQuery)) ||
+        (p.zip_code && p.zip_code.toLowerCase().includes(locationQuery))
       );
     }
 

@@ -125,30 +125,24 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     }
     
     // Bedrooms
-    if (filters.minBeds !== undefined) {
-      params.minBedrooms = filters.minBeds;
+    if ((filters as any).bedrooms !== undefined) {
+      params.min_bedrooms = (filters as any).bedrooms;
     }
     
-    if (filters.maxBeds !== undefined) {
-      params.maxBedrooms = filters.maxBeds;
-    }
     
     // Bathrooms
-    if (filters.minBaths !== undefined) {
-      params.minBathrooms = filters.minBaths;
+    if ((filters as any).bathrooms !== undefined) {
+      params.min_bathrooms = (filters as any).bathrooms;
     }
     
-    if (filters.maxBaths !== undefined) {
-      params.maxBathrooms = filters.maxBaths;
-    }
     
     // Square footage
-    if (filters.minSquareFeet !== undefined) {
-      params.minSquareFootage = filters.minSquareFeet;
+    if ((filters as any).minSquareFootage !== undefined) {
+      params.min_square_footage = (filters as any).minSquareFootage;
     }
     
-    if (filters.maxSquareFeet !== undefined) {
-      params.maxSquareFootage = filters.maxSquareFeet;
+    if ((filters as any).maxSquareFootage !== undefined) {
+      params.max_square_footage = (filters as any).maxSquareFootage;
     }
     
     // Features/amenities
@@ -315,6 +309,10 @@ export const getFeaturedProperties = async (params: FeaturedPropertiesParams = {
 
 export const createProperty = async (propertyData: any) => {
   try {
+    console.log('Starting createProperty with data:', JSON.parse(JSON.stringify(propertyData, (key, value) => 
+      value instanceof File ? `[File ${value.name}]` : value
+    )));
+    
     const formData = new FormData();
     
     // Add all property data to FormData
@@ -333,20 +331,48 @@ export const createProperty = async (propertyData: any) => {
         // Handle main image file
         formData.append('main_image', propertyData[key]);
       } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
-        formData.append(key, propertyData[key].toString());
+        // Convert nested objects to JSON strings
+        if (typeof propertyData[key] === 'object') {
+          formData.append(key, JSON.stringify(propertyData[key]));
+        } else {
+          formData.append(key, propertyData[key].toString());
+        }
       }
     });
+    
+    // Log FormData contents for debugging
+    console.log('FormData contents:');
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
     
     console.log('Sending property data to API with FormData');
     const response = await api.post('/properties', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 30000, // 30 second timeout
     });
+    
+    console.log('Property created successfully:', response.data);
     return response.data;
-  } catch (error) {
-    console.error('Error creating property:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Error in createProperty:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        data: error.config?.data,
+      },
+    });
+    
+    // Create a more detailed error object
+    const enhancedError = new Error(error.message || 'Failed to create property');
+    (enhancedError as any).response = error.response;
+    throw enhancedError;
   }
 };
 

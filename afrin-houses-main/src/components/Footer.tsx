@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building, Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -94,15 +96,15 @@ const Footer: React.FC = () => {
               © 2025 RealEstate Platform. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
-                Terms of Service
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
-                Cookie Policy
-              </a>
+              <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm transition-colors">
+                {t('privacyPolicy.title')}
+              </Link>
+              <Link to="/terms-of-service" className="text-gray-400 hover:text-white text-sm transition-colors">
+                {t('termsOfService.title')}
+              </Link>
+              <Link to="/cookie-policy" className="text-gray-400 hover:text-white text-sm transition-colors">
+                {t('cookiePolicy.title')}
+              </Link>
             </div>
           </div>
         </div>

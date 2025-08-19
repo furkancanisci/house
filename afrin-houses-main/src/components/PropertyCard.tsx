@@ -61,20 +61,29 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
       ? (price as any).amount || 0 
       : Number(price) || 0;
     
-    if (numPrice === 0) return type === 'rent' ? t('property.priceOnRequest') : t('property.priceOnRequest');
+    if (numPrice === 0) return t('property.priceOnRequest');
     
-    const formattedPrice = new Intl.NumberFormat('ar-SA', {
-      style: 'currency',
-      currency: 'SAR',
+    // Format as a simple number with commas
+    const formattedPrice = numPrice.toLocaleString(undefined, {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(numPrice);
+      maximumFractionDigits: 0
+    });
     
-    return type === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
+    // Add currency symbol and rental period if needed
+    if (type === 'rent') {
+      return `${formattedPrice} ${t('common.currency')} / ${t('property.perMonth', 'month')}`;
+    }
+    
+    return `${formattedPrice} ${t('common.currency')}`;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleDateString(i18n.language);
+    } catch (e) {
+      return '';
+    }
   };
 
   if (view === 'list') {
@@ -232,11 +241,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center text-gray-600 text-sm">
             <Bed className="h-4 w-4 mr-1" />
-            <span>{t('property.details.bedrooms', { count: property.details?.bedrooms || property.details.bedrooms || property.beds || 0 })}</span>
+            <span>{t('property.details.bedrooms', { count: property.details?.bedrooms || property.beds || 0 })}</span>
           </div>
           <div className="flex items-center text-gray-600 text-sm">
             <Bath className="h-4 w-4 mr-1" />
-            <span>{t('property.details.bathrooms', { count: property.details?.bathrooms || property.details.bathrooms || property.baths || 0 })}</span>
+            <span>{t('property.details.bathrooms', { count: property.details?.bathrooms || property.baths || 0 })}</span>
           </div>
           <div className="flex items-center text-gray-600 text-sm">
             <Square className="h-4 w-4 mr-1" />

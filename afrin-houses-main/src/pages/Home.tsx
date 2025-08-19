@@ -78,32 +78,6 @@ const Home: React.FC = () => {
     }
   };
 
-  const stats = [
-    {
-      icon: HomeIcon,
-      number: featuredProperties.length.toString(),
-      label: t('home.stats.propertiesListed'),
-      color: 'text-blue-600',
-    },
-    {
-      icon: Users,
-      number: '500+',
-      label: t('home.stats.happyCustomers'),
-      color: 'text-green-600',
-    },
-    {
-      icon: TrendingUp,
-      number: '95%',
-      label: t('home.stats.successRate'),
-      color: 'text-purple-600',
-    },
-    {
-      icon: Award,
-      number: '10+',
-      label: t('home.stats.yearsExperience'),
-      color: 'text-orange-600',
-    },
-  ];
 
   const quickSearches = [
     t('home.quickSearches.downtownApartments'),
@@ -147,22 +121,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center p-4 bg-white rounded-lg shadow">
-                <stat.icon className={`h-8 w-8 mx-auto mb-2 ${stat.color}`} />
-                <h3 className="text-2xl font-bold">{stat.number}</h3>
-                <p className="text-gray-600">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Properties */}
+{/* Featured Properties */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">

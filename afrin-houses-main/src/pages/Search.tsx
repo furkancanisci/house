@@ -68,7 +68,7 @@ type ViewMode = 'grid' | 'list';
 const Search: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { state, filterProperties, loadProperties } = useApp();
+  const { state, loadProperties } = useApp();
   
   // Helper to normalize values that may be localized objects { name_ar, name_en }
   const normalizeName = (val: any): string => {
@@ -84,6 +84,7 @@ const Search: React.FC = () => {
   };
   const { properties: allProperties, filteredProperties: contextFilteredProperties, loading, error } = state;
   const [filteredProperties, setFilteredProperties] = useState<ExtendedProperty[]>([]);
+  const [activeFilters, setActiveFilters] = useState<SearchFiltersType>({});
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const isInitialMount = useRef(true);
 
@@ -141,21 +142,38 @@ const Search: React.FC = () => {
       const page = Number(params.page);
       if (!isNaN(page) && page > 0) filters.page = page;
     }
+
+    if (params.bedrooms) {
+        const bedrooms = Number(params.bedrooms);
+        if (!isNaN(bedrooms)) filters.bedrooms = bedrooms;
+    }
+
+    if (params.bathrooms) {
+        const bathrooms = Number(params.bathrooms);
+        if (!isNaN(bathrooms)) filters.bathrooms = bathrooms;
+    }
+
+    if (params.minSquareFootage) {
+        const minSqft = Number(params.minSquareFootage);
+        if (!isNaN(minSqft)) filters.minSquareFootage = minSqft;
+    }
+
+    if (params.maxSquareFootage) {
+        const maxSqft = Number(params.maxSquareFootage);
+        if (!isNaN(maxSqft)) filters.maxSquareFootage = maxSqft;
+    }
+
+    if (params.features) {
+        filters.features = params.features.split(',');
+    }
+
+    if (params.location) {
+        filters.location = params.location;
+    }
     
     return filters;
   };
 
-  // Sync filtered properties from context
-  useEffect(() => {
-    if (contextFilteredProperties && contextFilteredProperties.length > 0) {
-      const extendedProperties = contextFilteredProperties.map(prop => toExtendedProperty(prop));
-      setFilteredProperties(extendedProperties);
-    } else if (allProperties && allProperties.length > 0) {
-      // If no filters applied, show all properties
-      const extendedProperties = allProperties.map(prop => toExtendedProperty(prop));
-      setFilteredProperties(extendedProperties);
-    }
-  }, [contextFilteredProperties, allProperties]);
 
   // Get filters from URL parameters
   const [filters, setFilters] = useState<SearchFiltersType>(() => {
@@ -262,10 +280,10 @@ const Search: React.FC = () => {
       propertyType,
       listingType,
       squareFootage,
-      zipCode: property.zip_code || '',
+      zipCode: property.zip_code || property.location?.postal_code || '',
       // Ensure required fields are present
-      city: property.city || '',
-      state: property.state || '',
+      city: property.location?.city || property.city || '',
+      state: property.location?.state || property.state || '',
       country: property.country || '',
       // Ensure media is always an array
       media: Array.isArray(property.media) ? property.media : [],
@@ -499,95 +517,66 @@ const Search: React.FC = () => {
     }
   }, [allProperties, toExtendedProperty]);
 
-  // Define filter change handler type
-  interface IFilterChangeHandler {
-    (filters: Partial<SearchFiltersType>): void;
-  }
-
   // Handle filter changes - single implementation
-  const handleFilterChange: IFilterChangeHandler = useCallback((newFilters) => {
-    // Convert string prices to numbers for the filter and ensure proper typing
-    const processedFilters: SearchFiltersType = {
-      ...newFilters,
-      minPrice: newFilters.minPrice !== undefined ? Number(newFilters.minPrice) : undefined,
-      maxPrice: newFilters.maxPrice !== undefined ? Number(newFilters.maxPrice) : undefined,
-      // Ensure proper typing for other number fields
-      bedrooms: newFilters.bedrooms !== undefined ? Number(newFilters.bedrooms) : undefined,
-      bathrooms: newFilters.bathrooms !== undefined ? Number(newFilters.bathrooms) : undefined,
-      minSquareFootage: newFilters.minSquareFootage !== undefined ? Number(newFilters.minSquareFootage) : undefined,
-      maxSquareFootage: newFilters.maxSquareFootage !== undefined ? Number(newFilters.maxSquareFootage) : undefined,
-      // Handle page as number
-      page: newFilters.page !== undefined ? Number(newFilters.page) : undefined,
-      // Ensure search and searchQuery are properly handled
-      search: newFilters.search || newFilters.searchQuery || undefined,
-      searchQuery: newFilters.searchQuery || newFilters.search || undefined,
-    } as SearchFiltersType;
-    
-    // Clean up undefined values
-    Object.keys(processedFilters).forEach(key => {
-      if (processedFilters[key as keyof SearchFiltersType] === undefined) {
-        delete processedFilters[key as keyof SearchFiltersType];
-      }
-    });
-    
-    // Update filters in the context
-    filterProperties(processedFilters);
-    
-    // Update URL with the new filters
-    const params = new URLSearchParams();
-    Object.entries(processedFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        // Convert arrays to comma-separated strings
-        if (Array.isArray(value)) {
-          if (value.length > 0) {
-            params.set(key, value.join(','));
-          }
-        } else {
-          params.set(key, String(value));
+  const handleFilterChange = useCallback((newFilters: Partial<SearchFiltersType>) => {
+    const currentParams = new URLSearchParams(window.location.search);
+
+    // Create a new set of parameters
+    const newParams = new URLSearchParams();
+
+    // Add all new/updated filters to the new parameters
+    Object.entries(newFilters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '' && value !== 'any' && value !== 'all') {
+        if (Array.isArray(value) && value.length > 0) {
+          newParams.set(key, value.join(','));
+        } else if (!Array.isArray(value)) {
+          newParams.set(key, String(value));
         }
+      } else {
+        // Remove the key if the value is empty/undefined
+        newParams.delete(key);
       }
     });
-    
-    navigate(`?${params.toString()}`, { replace: true });
-  }, [filterProperties, navigate]);
+
+    // Preserve existing params that are not part of the new filter set
+    currentParams.forEach((value, key) => {
+      if (!newFilters.hasOwnProperty(key)) {
+        newParams.set(key, value);
+      }
+    });
+
+    navigate(`?${newParams.toString()}`, { replace: true });
+  }, [navigate]);
 
   // Handle pagination
   const handlePageChange = useCallback((page: number) => {
-    // Create a new filters object with the updated page number
     const newFilters: SearchFiltersType = { 
       ...filtersFromParams,
       page: page,
     };
-    
-    filterProperties(newFilters);
-  }, [filtersFromParams, filterProperties]);
+    handleFilterChange(newFilters);
+  }, [filtersFromParams, handleFilterChange]);
 
-  // Load properties when component mounts or filters change
+  // Apply filters whenever allProperties or searchParams change
   useEffect(() => {
     if (allProperties.length === 0) {
-      console.log('No properties available yet, waiting for AppContext to load them...');
       return;
     }
 
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-    }
-
-    // Get filters from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlFilters: any = {};
-    urlParams.forEach((value, key) => {
-      urlFilters[key] = value;
+    const urlFilters: URLFilterType = {};
+    searchParams.forEach((value, key) => {
+      urlFilters[key as keyof URLFilterType] = value;
     });
 
-    if (Object.keys(urlFilters).length > 0) {
-      console.log('Applying filters from URL:', urlFilters);
-      applyFilters(urlFilters);
+    const filtersToApply = urlParamsToSearchFilters(urlFilters);
+    setActiveFilters(filtersToApply);
+
+    if (Object.keys(filtersToApply).length > 0) {
+      applyFilters(filtersToApply);
     } else {
-      console.log('No filters in URL, showing all properties');
       setFilteredProperties(allProperties.map(toExtendedProperty));
     }
-  }, [allProperties, applyFilters, toExtendedProperty]);
+  }, [allProperties, searchParams, applyFilters, toExtendedProperty]);
 
   if (loading) {
     return (
@@ -626,7 +615,6 @@ const Search: React.FC = () => {
           <div className="md:col-span-1">
             <SearchFilters
               initialFilters={filtersFromParams}
-              onFiltersChange={handleFilterChange}
               onApplyFilters={handleFilterChange}
             />
           </div>
@@ -703,7 +691,7 @@ const Search: React.FC = () => {
                     <pre className="text-xs overflow-auto max-h-40">
                       {JSON.stringify({
                         searchParams: Object.fromEntries(searchParams.entries()),
-                        filters: filtersFromParams,
+                        filters: activeFilters,
                         propertiesCount: filteredProperties.length,
                         hasError: !!error,
                         errorMessage: error
