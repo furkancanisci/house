@@ -33,6 +33,7 @@ import {
 } from './ui/collapsible';
 import { Checkbox } from './ui/checkbox';
 import { useTranslation } from 'react-i18next';
+import LocationSelector from './LocationSelector';
 
 interface SearchFiltersProps {
   onFiltersChange?: (filters: SearchFiltersType) => void;
@@ -68,6 +69,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
   // Location state for dropdowns
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false);
   
   // Local state for input values that update as user types
   const [localValues, setLocalValues] = useState<{
@@ -350,57 +352,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     return value !== undefined;
   });
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Create a copy of form values
-    const newFilters = { ...formValues };
-    
-    // Process price inputs
-    const minPrice = localValues.minPrice ? parseInt(localValues.minPrice, 10) : undefined;
-    const maxPrice = localValues.maxPrice ? parseInt(localValues.maxPrice, 10) : undefined;
-    
-    // Update filters with processed price values
-    if (minPrice !== undefined) newFilters.minPrice = minPrice;
-    if (maxPrice !== undefined) newFilters.maxPrice = maxPrice;
-    
-    
-    // Call the appropriate callback
-    if (onApplyFilters) {
-      onApplyFilters(newFilters);
-    } else if (onFiltersChange) {
-      onFiltersChange(newFilters);
-    }
-  };
   
-  // Handle reset filters
-  const handleReset = () => {
-    const resetFilters: SearchFiltersType = {
-      listingType: 'all',
-      propertyType: '',
-      location: '',
-      minPrice: undefined,
-      maxPrice: undefined,
-      bedrooms: undefined,
-      bathrooms: undefined,
-      minSquareFootage: undefined,
-      maxSquareFootage: undefined,
-      features: [],
-    };
-    
-    // Reset form values
-    setFormValues(resetFilters);
-    setLocalValues({ minPrice: '', maxPrice: '' });
-    
-    // Call the appropriate callback
-    if (onApplyFilters) {
-      onApplyFilters(resetFilters);
-    } else if (onFiltersChange) {
-      onFiltersChange(resetFilters);
-    }
-  };
-
+  
+ 
   return (
     <Card className="w-full">
       <CardHeader>
@@ -618,7 +572,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
             <Button 
               type="button"
               variant="outline" 
-              onClick={handleReset}
+              onClick={clearFilters}
               className="px-4 py-2"
             >
               Reset

@@ -91,28 +91,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     
     if (numPrice === 0) return t('property.priceOnRequest');
     
-    // Format as a simple number with commas
-    const formattedPrice = numPrice.toLocaleString(undefined, {
-
-    if (numPrice === 0) return type === 'rent' ? t('property.priceOnRequest') : t('property.priceOnRequest');
-
-    const formattedPrice = new Intl.NumberFormat('ar-SA', {
+    // Format the price based on the current language
+    const formattedPrice = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
       style: 'currency',
       currency: 'SAR',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(numPrice);
-
-    return type === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
       maximumFractionDigits: 0
-    });
+    }).format(numPrice);
     
-    // Add currency symbol and rental period if needed
+    // Add rental period if needed
     if (type === 'rent') {
-      return `${formattedPrice} ${t('common.currency')} / ${t('property.perMonth', 'month')}`;
+      return `${formattedPrice}/${t('property.month')}`;
     }
     
-    return `${formattedPrice} ${t('common.currency')}`;
+    return formattedPrice;
   };
 
   const formatDate = (dateString?: string) => {

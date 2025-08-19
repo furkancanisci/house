@@ -8,6 +8,9 @@ import { LayoutGrid, List, Loader2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import PropertyCard from '../components/PropertyCard';
 
+// Define types for better type safety
+type IFilterChangeHandler = (filters: Partial<SearchFiltersType>) => Promise<void>;
+
 // Define a type for the media item
 interface MediaItem {
   original_url?: string;
@@ -83,8 +86,43 @@ const Search: React.FC = () => {
     return String(val);
   };
   const { properties: allProperties, filteredProperties: contextFilteredProperties, loading, error } = state;
+  const filterProperties = async (filters: Partial<SearchFiltersType>) => {
+    try {
+      // Update URL with new filters
+      const params = new URLSearchParams();
+      
+      // Add filters to URL params
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          if (Array.isArray(value)) {
+            if (value.length > 0) {
+              params.set(key, value.join(','));
+            }
+          } else {
+            params.set(key, String(value));
+          }
+        }
+      });
 
-  
+      // Update URL
+      navigate(`?${params.toString()}`, { replace: true });
+      
+      // Update local state
+      setActiveFilters(prev => ({
+        ...prev,
+        ...filters
+      }));
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error applying filters:', error);
+      return Promise.reject(error);
+    }
+  };
+  const [activeFilters, setActiveFilters] = useState<SearchFiltersType>({});
+  const [currentParams, setCurrentParams] = useState<URLSearchParams>(new URLSearchParams());
+  const [newParams, setNewParams] = useState<URLSearchParams>(new URLSearchParams());
+
   // Convert Property to ExtendedProperty
   const toExtendedProperty = useCallback((property: Property | ExtendedProperty): ExtendedProperty => {
     // If it's already an ExtendedProperty, return it as is
@@ -362,48 +400,10 @@ const Search: React.FC = () => {
 
   // Convert Property to ExtendedProperty
 
-  const toExtendedProperty = useCallback((property: Property | ExtendedProperty): ExtendedProperty => {
-    // If it's already an ExtendedProperty, return it as is
-    if ('formattedPrice' in property) {
-      return property as ExtendedProperty;
-    }
-    
-    // Otherwise, convert Property to ExtendedProperty
-    const details = property.details || {};
-    const price = typeof property.price === 'string' ? parseFloat(property.price) || 0 : Number(property.price) || 0;
-    const propertyType = property.property_type || 'house';
-    const listingType = property.listing_type === 'rent' || property.listing_type === 'sale' ? property.listing_type : 'sale';
-    
-    // Calculate square footage from either details or property directly
-    const squareFootage = details.square_footage || property.square_feet || 0;
-    const bedrooms = details.bedrooms || property.bedrooms || 0;
-    const bathrooms = details.bathrooms || property.bathrooms || 0;
-    
-    // Create base property with all required fields
-    const baseProperty: Omit<Property, 'property_type' | 'listing_type' | 'square_feet' | 'zip_code' | 'created_at'> & {
-      propertyType: string;
-      listingType: 'rent' | 'sale';
-      squareFootage: number;
-      zipCode: string;
-    } = {
-      ...property,
-      propertyType,
-      listingType,
-      squareFootage,
-      zipCode: property.zip_code || property.location?.postal_code || '',
-      // Ensure required fields are present
-      city: property.location?.city || property.city || '',
-      state: property.location?.state || property.state || '',
-      // Ensure media is always an array
-      media: Array.isArray(property.media) ? property.media : [],
-    };
 
 
-
-  // Since we're now using API-based filtering, we don't need local filtering
-
-  // Handle filter changes - single implementation
-   const handleFilterChange: IFilterChangeHandler = useCallback(async (newFilters) => {
+  // Handle filter changes with proper typing
+  const handleFilterChange = useCallback(async (newFilters: Partial<SearchFiltersType>) => {
     // Convert string prices to numbers for the filter and ensure proper typing
     const processedFilters: SearchFiltersType = {
       ...newFilters,
@@ -428,35 +428,36 @@ const Search: React.FC = () => {
 
       }
     });
-    
-    // Update filters state and URL
-    setFilters(processedFilters);
-    updateURL(processedFilters);
-     
-    // Update filters in the context
-    await filterProperties(processedFilters);
-    
-    // Update URL with the new filters
-    const params = new URLSearchParams();
-    Object.entries(processedFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        // Convert arrays to comma-separated strings
-        if (Array.isArray(value)) {
-          if (value.length > 0) {
-            params.set(key, value.join(','));
-          }
-        } else {
-          params.set(key, String(value));
-        }
 
+    // Update filters state and apply them
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      ...newFilters
+    }));
+    
+    // Apply the new filters
+    filterProperties({
+      ...filtersFromParams,
+      ...newFilters
+    });
+
+    // Preserve existing params that are not part of the new filter set
+    currentParams.forEach((value, key) => {
+      if (!(key in newFilters)) {
+        newParams.set(key, value);
       }
     });
-    // Also include compact 'sort' param for UX/back-compat
-    if (processedFilters.sortBy && processedFilters.sortOrder) {
-      const by = processedFilters.sortBy === 'created_at' ? 'date' : processedFilters.sortBy;
-      params.set('sort', `${by}-${processedFilters.sortOrder}`);
+    
+    // Include sort parameters if they exist
+    if (newFilters.sortBy && newFilters.sortOrder) {
+      const by = newFilters.sortBy === 'created_at' ? 'date' : newFilters.sortBy;
+      newParams.set('sort', `${by}-${newFilters.sortOrder}`);
+    } else if (filtersFromParams.sortBy && filtersFromParams.sortOrder) {
+      const by = filtersFromParams.sortBy === 'created_at' ? 'date' : filtersFromParams.sortBy;
+      newParams.set('sort', `${by}-${filtersFromParams.sortOrder}`);
     }
 
+    // Update URL with the new parameters
     navigate(`?${newParams.toString()}`, { replace: true });
   }, [navigate]);
 
@@ -493,7 +494,21 @@ const Search: React.FC = () => {
     applyInitialFilters();
   }, [filtersFromParams, filterProperties]);
 
-  // Remove the loading return statement to keep navbar and search interface visible
+  // Loading state component
+  const LoadingState: React.FC = () => (
+    <div className="flex flex-col items-center justify-center min-h-[50vh]">
+      <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+      <p className="text-gray-600">جاري تحميل العقارات...</p>
+    </div>
+  );
+
+  if (loading && filteredProperties.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <LoadingState />
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -512,6 +527,7 @@ const Search: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {loading && <LoadingState />}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-6">
           {loading 
@@ -520,14 +536,13 @@ const Search: React.FC = () => {
               ? t('search.resultsCount', { count: filteredProperties.length })
               : t('search.noResults')}
         </h1>
+
         <div className="flex flex-col md:flex-row gap-6">
           {/* Filters Sidebar */}
           <div className="w-full md:w-1/4">
-            <SearchFilters 
-              key={JSON.stringify(filters)} // Force re-render when filters change
-
+            <SearchFilters
+              initialFilters={filtersFromParams}
               onApplyFilters={handleFilterChange}
-              initialFilters={filters}
             />
           </div>
           
@@ -537,7 +552,7 @@ const Search: React.FC = () => {
               <p className="text-gray-600">
                 {t('search.showingCount', { count: filteredProperties.length })}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}

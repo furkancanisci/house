@@ -171,7 +171,7 @@ class PropertyController extends Controller
         $maxPrice = $request->input('price_max') ?: $request->input('maxPrice');
         
         if ($minPrice && is_numeric($minPrice) && $minPrice > 0) {
-            $query->where('price', '>=', (float)$minPrice);
+            $query->where('price', '>=', $minPrice);
         }
         if ($maxPrice && is_numeric($maxPrice) && $maxPrice > 0) {
             $query->where('price', '<=', (float)$maxPrice);
@@ -273,25 +273,15 @@ class PropertyController extends Controller
         
         $query->orderBy($dbSortField, $sortDirection === 'asc' ? 'asc' : 'desc');
 
-        // Log the final SQL query and result count
-        $resultCount = $query->count();
-        \Illuminate\Support\Facades\Log::info('Final SQL Query and Result Count:', [
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings(),
-            'result_count' => $resultCount
-        ]);
-        
-        if ($resultCount === 0) {
-            \Illuminate\Support\Facades\Log::info('No properties found with current filters. Total properties in DB: ' . \App\Models\Property::count());
-            \Illuminate\Support\Facades\Log::info('Sample property titles: ', 
-                \App\Models\Property::select('id', 'title', 'status')
-                    ->limit(5)
-                    ->get()
-                    ->toArray()
-            );
+        // Log the search query for debugging
+        if (!empty($searchTerm)) {
+            \Illuminate\Support\Facades\Log::info('Search query details:', [
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings(),
+                'search_term' => $searchTerm
+            ]);
         }
 
-        // Select fields needed by PropertyResource
         $query->select([
             'id', 'title', 'description', 'slug', 'property_type', 'listing_type',
             'bedrooms', 'bathrooms', 'square_feet', 'year_built', 'price', 'price_type',
@@ -306,6 +296,7 @@ class PropertyController extends Controller
         $properties = $query->paginate($perPage);
         return new PropertyCollection($properties);
     }
+
 
     /**
      * Store a newly created property.
