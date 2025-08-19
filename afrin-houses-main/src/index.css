@@ -54,6 +54,59 @@ img {
   }
 }
 
+/* Enhanced Scroll Button Animations */
+@keyframes scrollButtonPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes scrollIndicatorGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), 0 0 25px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Property Grid Container Enhancements */
+.property-grid-container:hover {
+  backdrop-filter: blur(0.5px);
+}
+
+.scroll-indicator {
+  animation: scrollIndicatorGlow 3s ease-in-out infinite;
+}
+
+/* Scroll Button Hover Effects */
+.group:hover button[class*="scroll"] {
+  animation: scrollButtonPulse 2s infinite;
+}
+
+/* Hide scrollbar for all browsers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -91,6 +144,66 @@ img {
 .backdrop-blur-custom {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+/* Property Grid Scrolling Styles */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling for property grid */
+.property-grid-container {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced property card hover effects for grid */
+.property-grid-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.property-grid-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Custom scrollbar indicator animation */
+@keyframes scrollProgress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.scroll-indicator {
+  animation: scrollProgress 10s linear infinite;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 640px) {
+  .property-grid-card {
+    width: 280px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .property-grid-card {
+    width: 260px !important;
+  }
+}
+
+/* Performance optimizations */
+.property-grid-container {
+  will-change: scroll-position;
+  contain: layout style paint;
+}
+
+.property-grid-card {
+  will-change: transform;
+  contain: layout style paint;
 }
 
 /* RTL specific adjustments */

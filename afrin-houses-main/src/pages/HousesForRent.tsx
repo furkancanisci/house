@@ -140,17 +140,7 @@ const HousesForRent: React.FC = () => {
     }));
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">{t('common.loading')}</p>
-        </div>
-      </div>
-    );
-  }
+  // Remove loading state that hides entire page
 
   // Error state
   if (error) {
@@ -239,7 +229,13 @@ const HousesForRent: React.FC = () => {
         )}
 
         {/* Properties Grid/List */}
-        {filteredProperties.length > 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+            <p className="text-gray-600 text-lg">جاري تحميل العقارات للإيجار...</p>
+            <p className="text-gray-500 text-sm mt-2">يرجى الانتظار قليلاً</p>
+          </div>
+        ) : filteredProperties.length > 0 ? (
           <div className={`
             ${viewMode === 'grid' 
               ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 

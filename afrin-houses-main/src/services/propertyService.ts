@@ -92,22 +92,21 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     // Map frontend filters to backend API parameters
     const params: Record<string, any> = {};
     
-    // Handle search query - use 'search' parameter to match backend expectation
+    // Handle search query - use multiple parameter names for compatibility
     const searchQuery = filters.searchQuery || filters.search;
     if (searchQuery) {
       console.log('Search query found:', searchQuery);
-      // Use 'search' parameter to match backend expectation
+      params.searchQuery = searchQuery;
       params.search = searchQuery;
-      // Also include 'q' parameter for backward compatibility
       params.q = searchQuery;
     }
     
     // Basic filters
-    if (filters.listingType && filters.listingType !== 'all') {
+    if (filters.listingType && filters.listingType !== 'all' && filters.listingType !== 'any') {
       params.listingType = filters.listingType;
     }
     
-    if (filters.propertyType && filters.propertyType !== 'all') {
+    if (filters.propertyType && filters.propertyType !== 'all' && filters.propertyType !== 'any') {
       params.propertyType = filters.propertyType;
     }
     
@@ -115,45 +114,46 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       params.location = filters.location;
     }
     
-    // Price range
-    if (filters.minPrice !== undefined) {
+    // Price range - only send if values are greater than 0
+    if (filters.minPrice !== undefined && filters.minPrice > 0) {
       params.minPrice = filters.minPrice;
     }
     
-    if (filters.maxPrice !== undefined) {
+    if (filters.maxPrice !== undefined && filters.maxPrice > 0) {
       params.maxPrice = filters.maxPrice;
     }
     
-    // Bedrooms
-    if (filters.minBeds !== undefined) {
-      params.minBedrooms = filters.minBeds;
+    // Bedrooms - handle 'any' values and numeric values
+    if (filters.minBeds !== undefined && filters.minBeds !== 'any' && filters.minBeds !== '') {
+      params.bedrooms = filters.minBeds;
     }
     
-    if (filters.maxBeds !== undefined) {
+    if (filters.maxBeds !== undefined && filters.maxBeds !== 'any' && filters.maxBeds !== '') {
       params.maxBedrooms = filters.maxBeds;
     }
     
-    // Bathrooms
-    if (filters.minBaths !== undefined) {
-      params.minBathrooms = filters.minBaths;
+    // Bathrooms - handle 'any' values and numeric values
+    if (filters.minBaths !== undefined && filters.minBaths !== 'any' && filters.minBaths !== '') {
+      params.bathrooms = filters.minBaths;
     }
     
-    if (filters.maxBaths !== undefined) {
+    if (filters.maxBaths !== undefined && filters.maxBaths !== 'any' && filters.maxBaths !== '') {
       params.maxBathrooms = filters.maxBaths;
     }
     
-    // Square footage
-    if (filters.minSquareFeet !== undefined) {
+    // Square footage - only send if values are greater than 0
+    if (filters.minSquareFeet !== undefined && filters.minSquareFeet > 0) {
       params.minSquareFootage = filters.minSquareFeet;
     }
     
-    if (filters.maxSquareFeet !== undefined) {
+    if (filters.maxSquareFeet !== undefined && filters.maxSquareFeet > 0) {
       params.maxSquareFootage = filters.maxSquareFeet;
     }
     
-    // Features/amenities
+    // Features/amenities - send as array for better backend processing
     if (filters.features && filters.features.length > 0) {
-      params.amenities = filters.features.join(',');
+      params.features = filters.features;
+      params.amenities = filters.features; // Also send as amenities for backward compatibility
     }
     
     // Radius for location search
@@ -214,7 +214,7 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     console.log(`Found ${properties.length} properties in API response`);
     
     // Fix image URLs in all properties
-    return properties.map((property: any) => {
+    const processedProperties = properties.map((property: any) => {
       if (property.images) {
         const fixedImages = { ...property.images };
         
@@ -233,6 +233,14 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       
       return property;
     });
+    
+    // Return data in the expected format for AppContext
+    return {
+      data: processedProperties,
+      meta: response.data.meta || {},
+      links: response.data.links || {},
+      filters: response.data.filters || {}
+    };
   } catch (error) {
     console.error('Error fetching properties:', error);
     throw error;

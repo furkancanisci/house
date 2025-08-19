@@ -217,6 +217,41 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     }
   };
 
+  // Handle location changes from LocationSelector
+  const handleLocationChange = (location: { state?: string; city?: string }) => {
+    // Update local state only - no immediate filter application
+    let newCity = selectedCity;
+    let newState = selectedState;
+    
+    if (location.state !== undefined) {
+      newState = location.state;
+      setSelectedState(location.state);
+      // Reset city when state changes
+      if (location.city === undefined) {
+        newCity = '';
+        setSelectedCity('');
+      }
+    }
+    if (location.city !== undefined) {
+      newCity = location.city;
+      setSelectedCity(location.city);
+    }
+    
+    // Update form values for display but don't apply filters yet
+    const locationParts = [];
+    if (newCity) locationParts.push(newCity);
+    if (newState) locationParts.push(newState);
+    
+    const newLocation = locationParts.join(', ');
+    
+    setFormValues(prev => ({
+      ...prev,
+      location: newLocation
+    }));
+    
+    // Don't notify parent component - wait for form submission
+  };
+
   // Handle filter changes - update local form values
   const handleFilterChange = (key: keyof SearchFiltersType, value: any) => {
     // Skip if this is a price change (handled by handlePriceChange)
@@ -337,8 +372,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
         <LocationSelector
           selectedState={selectedState}
           selectedCity={selectedCity}
-          onStateChange={setSelectedState}
-          onCityChange={setSelectedCity}
+          onStateChange={(state) => {
+             handleLocationChange({ state });
+           }}
+           onCityChange={(city) => {
+             handleLocationChange({ city });
+           }}
           showState={true}
           showCity={true}
         />
