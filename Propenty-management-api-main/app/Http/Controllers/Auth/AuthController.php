@@ -7,14 +7,28 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Models\EmailVerificationLog;
+use App\Notifications\CustomEmailVerificationNotification;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
+    protected EmailVerificationService $emailVerificationService;
+
+    public function __construct(EmailVerificationService $emailVerificationService)
+    {
+        $this->emailVerificationService = $emailVerificationService;
+    }
     /**
      * Register a new user.
      */
@@ -50,27 +64,47 @@ class AuthController extends Controller
             // Convert stdClass to User model instance
             $userModel = User::findOrFail($userId);
             
-            try {
-                // Try to send email verification
-                $userModel->sendEmailVerificationNotification();
-                $emailMessage = 'Verification email has been sent.';
-            } catch (\Exception $e) {
-                // Log the error but don't fail the registration
-                \Log::warning('Could not send verification email: ' . $e->getMessage());
-                $emailMessage = 'Registration successful, but could not send verification email.';
-            }
+            // Send email verification using service
+            $verificationResult = $this->emailVerificationService->sendVerificationEmail(
+                $userModel, 
+                $request->ip(), 
+                $request->userAgent()
+            );
             
             // Create access token
             $token = $userModel->createToken('auth_token')->plainTextToken;
             
             \DB::commit();
             
-            return response()->json([
-                'message' => 'Registration successful. ' . ($emailMessage ?? 'Please verify your email address.'),
+            // Prepare response based on email sending result
+            $response = [
+                'message' => 'Registration successful.',
                 'user' => new UserResource($userModel),
                 'access_token' => $token,
                 'token_type' => 'Bearer',
-            ], 201);
+                'email_verification' => [
+                    'status' => $verificationResult['success'] ? 'sent' : 'failed',
+                    'message' => $verificationResult['message'],
+                    'code' => $verificationResult['code']
+                ]
+            ];
+            
+            // If email sending failed, provide alternative verification methods
+            if (!$verificationResult['success']) {
+                $alternativeMethods = $this->emailVerificationService->getAlternativeVerificationMethods($userModel);
+                $response['email_verification']['alternative_methods'] = $alternativeMethods;
+                $response['email_verification']['retry_info'] = [
+                    'can_retry' => true,
+                    'retry_endpoint' => '/api/auth/resend-verification',
+                    'retry_after_minutes' => 5
+                ];
+                
+                // Enable limited access for the user
+                $limitedAccessResult = $this->emailVerificationService->enableLimitedAccess($userModel);
+                $response['limited_access'] = $limitedAccessResult;
+            }
+            
+            return response()->json($response, 201);
             
         } catch (\Exception $e) {
             \DB::rollBack();
@@ -324,15 +358,37 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
+            Log::info('Logout attempt', [
+                'user_id' => $request->user()?->id,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            
+            // Check if user is authenticated
+            if (!$request->user()) {
+                Log::warning('Logout attempt without authenticated user');
+                return response()->json(['message' => 'User not authenticated'], 401);
+            }
+            
             // Revoke the current access token
-            $request->user()->currentAccessToken()->delete();
+            $token = $request->user()->currentAccessToken();
+            if ($token) {
+                $token->delete();
+                Log::info('Access token revoked successfully', ['user_id' => $request->user()->id]);
+            } else {
+                Log::warning('No current access token found for user', ['user_id' => $request->user()->id]);
+            }
             
             // Also clear the refresh token cookie
             return response()
                 ->json(['message' => 'Successfully logged out'])
                 ->withCookie(cookie()->forget('refresh_token'));
         } catch (\Exception $e) {
-            Log::error('Logout error: ' . $e->getMessage());
+            Log::error('Logout error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $request->user()?->id
+            ]);
             return response()->json(['message' => 'Error during logout'], 500);
         }
     }
@@ -356,53 +412,264 @@ class AuthController extends Controller
   
 
     /**
-     * Send email verification notification.
+     * Send email verification notification with rate limiting.
      */
     public function sendVerificationEmail(Request $request): JsonResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'Email already verified.',
-            ]);
+        $result = $this->emailVerificationService->sendVerificationEmail(
+            $request->user(),
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        $statusCode = match($result['code']) {
+            'ALREADY_VERIFIED' => 200,
+            'RATE_LIMITED' => 429,
+            'EMAIL_SENT' => 200,
+            'SEND_FAILED' => 500,
+            default => 500
+        };
+
+        $response = [
+            'message' => $result['message'],
+            'success' => $result['success'],
+            'code' => $result['code']
+        ];
+
+        // Add retry information for rate limited requests
+        if ($result['code'] === 'RATE_LIMITED') {
+            $response['retry_after'] = $result['retry_after'];
         }
 
-        $request->user()->sendEmailVerificationNotification();
+        return response()->json($response, $statusCode);
+    }
+
+    /**
+     * Verify email address with enhanced security.
+     */
+    public function verifyEmail(Request $request): JsonResponse
+    {
+        // Support both old format (for backward compatibility) and new encrypted format
+        if ($request->has('data') && $request->has('signature')) {
+            // New encrypted format
+            return $this->verifyEmailEncrypted($request);
+        } else {
+            // Old format for backward compatibility
+            $request->validate([
+                'id' => 'required|integer',
+                'hash' => 'required|string',
+                'token' => 'required|string',
+            ]);
+
+            $user = User::findOrFail($request->id);
+
+            $result = $this->emailVerificationService->verifyEmail(
+                $user,
+                $request->hash,
+                $request->token,
+                $request->ip(),
+                $request->userAgent()
+            );
+
+            $statusCode = match($result['code']) {
+                'ALREADY_VERIFIED' => 200,
+                'INVALID_HASH', 'INVALID_TOKEN', 'TOKEN_EXPIRED' => 400,
+                'EMAIL_VERIFIED' => 200,
+                'VERIFICATION_FAILED' => 500,
+                default => 500
+            };
+
+            $response = [
+                'message' => $result['message'],
+                'success' => $result['success'],
+                'code' => $result['code']
+            ];
+
+            // Add user data for successful verification
+            if ($result['success'] && isset($result['user'])) {
+                $response['user'] = new UserResource($result['user']);
+            }
+
+            return response()->json($response, $statusCode);
+        }
+    }
+
+    /**
+     * Verify email using encrypted data format.
+     */
+    private function verifyEmailEncrypted(Request $request): JsonResponse
+    {
+        $request->validate([
+            'data' => 'required|string',
+            'signature' => 'required|string',
+        ]);
+
+        try {
+            // Decode and decrypt the payload
+            $encryptedPayload = base64_decode($request->data);
+            $decryptedPayload = Crypt::decryptString($encryptedPayload);
+            $payload = json_decode($decryptedPayload, true);
+
+            if (!$payload || !is_array($payload)) {
+                return response()->json([
+                    'message' => 'Invalid verification data',
+                    'success' => false,
+                    'code' => 'INVALID_DATA'
+                ], 400);
+            }
+
+            // Verify signature
+            $expectedSignature = hash_hmac('sha256', 
+                $encryptedPayload . $payload['token'],
+                config('app.key')
+            );
+
+            if (!hash_equals($expectedSignature, $request->signature)) {
+                \Log::warning('Invalid verification signature', [
+                    'expected_signature' => $expectedSignature,
+                    'received_signature' => $request->signature,
+                    'payload' => $payload,
+                    'ip' => $request->ip()
+                ]);
+                
+                return response()->json([
+                    'message' => 'Invalid verification signature',
+                    'success' => false,
+                    'code' => 'INVALID_SIGNATURE'
+                ], 400);
+            }
+
+            // Check if link has expired (24 hours)
+            if (isset($payload['expires_at']) && $payload['expires_at'] < now()->timestamp) {
+                return response()->json([
+                    'message' => 'Verification link has expired',
+                    'success' => false,
+                    'code' => 'LINK_EXPIRED'
+                ], 400);
+            }
+
+            // Find user and verify
+            $user = User::findOrFail($payload['user_id']);
+            
+            // Verify email matches
+            if ($user->email !== $payload['email']) {
+                return response()->json([
+                    'message' => 'Email mismatch',
+                    'success' => false,
+                    'code' => 'EMAIL_MISMATCH'
+                ], 400);
+            }
+
+            $result = $this->emailVerificationService->verifyEmail(
+                $user,
+                sha1($user->getEmailForVerification()),
+                $payload['token'],
+                $request->ip(),
+                $request->userAgent()
+            );
+
+            $statusCode = match($result['code']) {
+                'ALREADY_VERIFIED' => 200,
+                'INVALID_HASH', 'INVALID_TOKEN', 'TOKEN_EXPIRED' => 400,
+                'EMAIL_VERIFIED' => 200,
+                'VERIFICATION_FAILED' => 500,
+                default => 500
+            };
+
+            $response = [
+                'message' => $result['message'],
+                'success' => $result['success'],
+                'code' => $result['code']
+            ];
+
+            // Add user data for successful verification
+            if ($result['success'] && isset($result['user'])) {
+                $response['user'] = new UserResource($result['user']);
+            }
+
+            return response()->json($response, $statusCode);
+
+        } catch (\Exception $e) {
+            \Log::error('Email verification decryption failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $request->data,
+                'signature' => $request->signature,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+
+            return response()->json([
+                'message' => 'Invalid verification data',
+                'success' => false,
+                'code' => 'DECRYPTION_FAILED',
+                'debug_info' => app()->environment('local') ? $e->getMessage() : null
+            ], 400);
+        }
+    }
+
+    /**
+     * Get verification status and statistics for the authenticated user.
+     */
+    public function getVerificationStatus(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $stats = $this->emailVerificationService->getVerificationStats($user);
+        $canRequest = $this->emailVerificationService->canRequestVerification($user);
 
         return response()->json([
-            'message' => 'Verification email sent.',
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'is_verified' => $user->hasVerifiedEmail(),
+            'verification_stats' => $stats,
+            'can_request_new' => $canRequest,
+            'active_verification' => $stats['active_verification'] ? [
+                'token_id' => $stats['active_verification']->id,
+                'expires_at' => $stats['active_verification']->expires_at,
+                'status' => $stats['active_verification']->status,
+                'created_at' => $stats['active_verification']->created_at
+            ] : null
         ]);
     }
 
     /**
-     * Verify email address.
+     * Resend verification email (alias for sendVerificationEmail with additional checks).
      */
-    public function verifyEmail(Request $request): JsonResponse
+    public function resendVerificationEmail(Request $request): JsonResponse
     {
-        $request->validate([
-            'id' => 'required|integer',
-            'hash' => 'required|string',
-        ]);
-
-        $user = User::findOrFail($request->id);
-
-        if (!hash_equals(sha1($user->getEmailForVerification()), $request->hash)) {
-            return response()->json([
-                'message' => 'Invalid verification link.',
-            ], 400);
-        }
-
+        $user = $request->user();
+        
+        // Additional validation for resend requests
         if ($user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'Email already verified.',
+                'message' => 'Email is already verified.',
+                'success' => false,
+                'code' => 'ALREADY_VERIFIED'
             ]);
         }
 
-        $user->markEmailAsVerified();
+        // Check if user can request verification
+        $canRequest = $this->emailVerificationService->canRequestVerification($user);
+        
+        if (!$canRequest['can_request']) {
+            $statusCode = $canRequest['reason'] === 'Rate limited' ? 429 : 400;
+            $response = [
+                'message' => 'Cannot resend verification email: ' . $canRequest['reason'],
+                'success' => false,
+                'code' => 'CANNOT_RESEND',
+                'reason' => $canRequest['reason']
+            ];
+            
+            if (isset($canRequest['retry_after'])) {
+                $response['retry_after'] = $canRequest['retry_after'];
+                $response['retry_after_minutes'] = $canRequest['retry_after_minutes'];
+            }
+            
+            return response()->json($response, $statusCode);
+        }
 
-        return response()->json([
-            'message' => 'Email verified successfully.',
-            'user' => new UserResource($user->fresh()),
-        ]);
+        // Use the same service method as sendVerificationEmail
+        return $this->sendVerificationEmail($request);
     }
 
     /**

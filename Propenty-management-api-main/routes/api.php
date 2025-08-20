@@ -70,6 +70,7 @@ Route::prefix('v1')->group(function () {
         // Email verification routes
         Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
             ->name('verification.verify');
+        Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
         
         // User info route - made public for now
         Route::get('/me', [AuthController::class, 'me']);
@@ -80,6 +81,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/logout-all', [AuthController::class, 'logoutAll']);
             Route::post('/refresh', [AuthController::class, 'refresh']);
             Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail']);
+            Route::post('/email/resend-verification', [AuthController::class, 'resendVerificationEmail']);
+            Route::get('/email/verification-status', [AuthController::class, 'getVerificationStatus']);
         });
     });
 

@@ -18,6 +18,7 @@ import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import CookiePolicy from './pages/CookiePolicy';
+import EmailVerification from './pages/EmailVerification';
 import './App.css';
 
 function App() {
@@ -37,6 +38,8 @@ function App() {
               <Route path="/edit-property/:id" element={<EditProperty />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/email/verify" element={<EmailVerification />} />
+              <Route path="/verify-email" element={<EmailVerification />} />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/contact" element={<ContactUs />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />

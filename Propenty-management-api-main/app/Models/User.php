@@ -68,7 +68,10 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'gender',
         'bio',
         'user_type',
+        'is_verified',
         'last_login_at',
+        'limited_access_enabled',
+        'limited_access_granted_at',
     ];
 
     /**
@@ -83,6 +86,8 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'password' => 'hashed',
         'is_verified' => 'boolean',
         'is_active' => 'boolean',
+        'limited_access_enabled' => 'boolean',
+        'limited_access_granted_at' => 'datetime',
     ];
 
     /**
