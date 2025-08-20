@@ -22,6 +22,8 @@ import { Card, CardContent } from '../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { getProperties } from '../services/propertyService';
 import { processPropertyImages } from '../lib/imageUtils';
+import leftTopOrnament from '../assets/left top_bb.png';
+import rightBottomOrnament from '../assets/right_bottom_bb.png';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -354,6 +356,23 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-primary-600 to-primary-800 text-white py-20">
         <div className="absolute inset-0 bg-black opacity-20"></div>
+        {/* Decorative ornaments */}
+        <div className="absolute top-0 left-0 w-44 h-44 md:w-60 md:h-60 opacity-100">
+          <img 
+            src={leftTopOrnament} 
+            alt="Decorative ornament" 
+            className="w-full h-full object-contain drop-shadow-lg"
+           
+          />
+        </div>
+        <div className="absolute bottom-0 right-0 w-44 h-44 md:w-60 md:h-60 opacity-100  -mr-2">
+          <img 
+            src={rightBottomOrnament} 
+            alt="Decorative ornament" 
+            className="w-full h-full object-contain drop-shadow-lg"
+            
+          />
+        </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             {t('home.hero.title')}
