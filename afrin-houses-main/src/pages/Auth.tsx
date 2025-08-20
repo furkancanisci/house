@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { 
   User, 
   Mail, 
@@ -22,31 +23,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
 
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+const createLoginSchema = (t: any) => z.object({
+  email: z.string().email(t('auth.validation.emailRequired')),
+  password: z.string().min(8, t('auth.validation.passwordMinLength')),
 });
 
-const registerSchema = z.object({
-  first_name: z.string().min(1, 'First name is required'),
-  last_name: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Please enter a valid email address'),
+const createRegisterSchema = (t: any) => z.object({
+  first_name: z.string().min(1, t('auth.validation.firstNameRequired')),
+  last_name: z.string().min(1, t('auth.validation.lastNameRequired')),
+  email: z.string().email(t('auth.validation.emailRequired')),
   phone: z.string().optional(),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, t('auth.validation.passwordMinLength')),
   confirmPassword: z.string(),
   terms_accepted: z.boolean()
     .refine(val => val === true, {
-      message: 'You must accept the terms and conditions',
+      message: t('auth.validation.termsRequired'),
     }),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: t('auth.validation.passwordsNoMatch'),
   path: ['confirmPassword'],
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
-type RegisterFormData = z.infer<typeof registerSchema>;
+type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>;
+type RegisterFormData = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 const Auth: React.FC = () => {
+  const { t } = useTranslation();
   const { login, register, state } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
@@ -65,7 +67,7 @@ const Auth: React.FC = () => {
   }, [state.user, navigate]);
 
   const loginForm = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(createLoginSchema(t)),
     defaultValues: {
       email: '',
       password: '',
@@ -73,7 +75,7 @@ const Auth: React.FC = () => {
   });
 
   const registerForm = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(createRegisterSchema(t)),
     defaultValues: {
       first_name: '',
       last_name: '',
@@ -90,13 +92,33 @@ const Auth: React.FC = () => {
     try {
       const success = await login(data.email, data.password);
       if (success) {
-        toast.success('Welcome back!');
+        toast.success(t('auth.welcomeBack'));
         navigate(from, { replace: true });
       } else {
-        toast.error('Invalid email or password');
+        toast.error(t('auth.invalidCredentials'));
       }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      // Extract error message from API response
+      let errorMessage = t('auth.errorOccurred');
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.response?.data?.errors) {
+        // Handle validation errors
+        const errors = error.response.data.errors;
+        const firstError = Object.values(errors)[0];
+        if (Array.isArray(firstError) && firstError.length > 0) {
+          errorMessage = firstError[0];
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -115,24 +137,45 @@ const Auth: React.FC = () => {
         terms_accepted: data.terms_accepted,
       });
       if (success) {
-        toast.success('Account created successfully!');
-        navigate(from, { replace: true });
+        toast.success(t('auth.accountCreatedSuccess'));
+        // Don't navigate immediately, let user verify email first
+        setActiveTab('login');
       } else {
-        toast.error('Failed to create account. Please try again.');
+        toast.error(t('auth.accountCreationFailed'));
       }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      // Extract error message from API response
+      let errorMessage = t('auth.errorOccurred');
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.response?.data?.errors) {
+        // Handle validation errors
+        const errors = error.response.data.errors;
+        const firstError = Object.values(errors)[0];
+        if (Array.isArray(firstError) && firstError.length > 0) {
+          errorMessage = firstError[0];
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const features = [
-    'Save your favorite properties',
-    'Get notified about new listings',
-    'Contact property owners directly',
-    'Manage your property listings',
-    'Access exclusive deals',
+    t('auth.welcome.features.saveProperties'),
+    t('auth.welcome.features.getNotifications'),
+    t('auth.welcome.features.contactOwners'),
+    t('auth.welcome.features.manageListings'),
+    t('auth.welcome.features.exclusiveDeals'),
   ];
 
   return (
@@ -146,17 +189,16 @@ const Auth: React.FC = () => {
               <span className="text-2xl font-bold text-gray-900">RealEstate</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Welcome to Your Dream Home Platform
+              {t('auth.welcome.title')}
             </h1>
             <p className="text-lg text-gray-600 mb-8">
-              Join thousands of users who trust us to find their perfect home. 
-              Sign up today and unlock exclusive features.
+              {t('auth.welcome.subtitle')}
             </p>
           </div>
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">
-              Why create an account?
+              {t('auth.welcome.whyCreateAccount')}
             </h3>
             <ul className="space-y-3">
               {features.map((feature, index) => (
@@ -170,11 +212,10 @@ const Auth: React.FC = () => {
 
           <div className="bg-blue-600 bg-opacity-10 rounded-lg p-6">
             <h4 className="font-semibold text-blue-900 mb-2">
-              Demo Account
+              {t('auth.welcome.demoAccount.title')}
             </h4>
             <p className="text-blue-800 text-sm">
-              For testing purposes, you can use any email and password. 
-              The system will automatically create an account for you.
+              {t('auth.welcome.demoAccount.description')}
             </p>
           </div>
         </div>
@@ -184,27 +225,27 @@ const Auth: React.FC = () => {
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">
-                {activeTab === 'login' ? 'Sign In' : 'Create Account'}
+                {activeTab === 'login' ? t('auth.signIn') : t('auth.createAccount')}
               </CardTitle>
             </CardHeader>
             
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Sign In</TabsTrigger>
-                  <TabsTrigger value="register">Sign Up</TabsTrigger>
+                  <TabsTrigger value="login">{t('auth.signIn')}</TabsTrigger>
+                  <TabsTrigger value="register">{t('auth.signUp')}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="login">
                   <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
+                      <Label htmlFor="login-email">{t('auth.email')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           id="login-email"
                           type="email"
-                          placeholder="Enter your email"
+                          placeholder={t('auth.placeholders.enterEmail')}
                           className="pl-10"
                           {...loginForm.register('email')}
                         />
@@ -217,13 +258,13 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">Password</Label>
+                      <Label htmlFor="login-password">{t('auth.password')}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           id="login-password"
                           type={showPassword ? 'text' : 'password'}
-                          placeholder="Enter your password"
+                          placeholder={t('auth.placeholders.enterPassword')}
                           className="pl-10 pr-10"
                           {...loginForm.register('password')}
                         />
@@ -247,7 +288,7 @@ const Auth: React.FC = () => {
                       className="w-full" 
                       disabled={isLoading}
                     >
-                      {isLoading ? 'Signing In...' : 'Sign In'}
+                      {isLoading ? t('auth.signingIn') : t('auth.signIn')}
                     </Button>
                   </form>
                 </TabsContent>
@@ -256,13 +297,13 @@ const Auth: React.FC = () => {
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="register-first-name">First Name</Label>
+                        <Label htmlFor="register-first-name">{t('auth.firstName')}</Label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <Input
                             id="register-first-name"
                             type="text"
-                            placeholder="First name"
+                            placeholder={t('auth.placeholders.enterFirstName')}
                             className="pl-10"
                             {...registerForm.register('first_name')}
                           />
@@ -274,13 +315,13 @@ const Auth: React.FC = () => {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="register-last-name">Last Name</Label>
+                        <Label htmlFor="register-last-name">{t('auth.lastName')}</Label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <Input
                             id="register-last-name"
                             type="text"
-                            placeholder="Last name"
+                            placeholder={t('auth.placeholders.enterLastName')}
                             className="pl-10"
                             {...registerForm.register('last_name')}
                           />
@@ -294,13 +335,13 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-email">Email</Label>
+                      <Label htmlFor="register-email">{t('auth.email')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           id="register-email"
                           type="email"
-                          placeholder="Enter your email"
+                          placeholder={t('auth.placeholders.enterEmail')}
                           className="pl-10"
                           {...registerForm.register('email')}
                         />
@@ -313,13 +354,13 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-phone">Phone (Optional)</Label>
+                      <Label htmlFor="register-phone">{t('auth.phoneOptional')}</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           id="register-phone"
                           type="tel"
-                          placeholder="Enter your phone number"
+                          placeholder={t('auth.placeholders.enterPhone')}
                           className="pl-10"
                           {...registerForm.register('phone')}
                         />
@@ -327,13 +368,13 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-password">Password</Label>
+                      <Label htmlFor="register-password">{t('auth.password')}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           id="register-password"
                           type={showPassword ? 'text' : 'password'}
-                          placeholder="Create a password"
+                          placeholder={t('auth.placeholders.createPassword')}
                           className="pl-10 pr-10"
                           {...registerForm.register('password')}
                         />
@@ -353,13 +394,13 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-confirm-password">Confirm Password</Label>
+                      <Label htmlFor="register-confirm-password">{t('auth.confirmPassword')}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           id="register-confirm-password"
                           type={showConfirmPassword ? 'text' : 'password'}
-                          placeholder="Confirm your password"
+                          placeholder={t('auth.placeholders.confirmPassword')}
                           className="pl-10 pr-10"
                           {...registerForm.register('confirmPassword')}
                         />
@@ -386,13 +427,13 @@ const Auth: React.FC = () => {
                           onCheckedChange={(checked) => registerForm.setValue('terms_accepted', !!checked)}
                         />
                         <Label htmlFor="terms" className="text-sm">
-                          I accept the{' '}
+                          {t('auth.agreeToTerms')}{' '}
                           <a href="/terms" className="text-blue-600 hover:underline">
-                            Terms of Service
+                            {t('auth.termsOfService')}
                           </a>{' '}
-                          and{' '}
+                          {t('auth.and')}{' '}
                           <a href="/privacy" className="text-blue-600 hover:underline">
-                            Privacy Policy
+                            {t('auth.privacyPolicy')}
                           </a>
                         </Label>
                       </div>
@@ -402,12 +443,12 @@ const Auth: React.FC = () => {
                         </p>
                       )}
                       <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={isLoading}
-                      >
-                        {isLoading ? 'Creating Account...' : 'Create Account'}
-                      </Button>
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
+                    </Button>
                     </div>
                   </form>
                 </TabsContent>
