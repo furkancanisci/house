@@ -2,15 +2,37 @@ import api from './api';
 
 // Utility function to fix image URLs
 const fixImageUrl = (url: string | null | undefined | any): string => {
-  // Check if url is not a string or is empty
-  if (!url || typeof url !== 'string') return '/placeholder-property.jpg';
+  const baseUrl = 'https://house-6g6m.onrender.com';
   
-  // Replace localhost URLs with localhost:8000
-  if (url.startsWith('http://localhost/')) {
-    return url.replace('http://localhost/', 'http://localhost:8000/');
+  // Return production placeholder if no URL is provided
+  if (!url || typeof url !== 'string') {
+    return `${baseUrl}/placeholder-property.jpg`;
   }
   
-  return url;
+  // Handle relative paths
+  if (url.startsWith('/')) {
+    return `${baseUrl}${url}`;
+  }
+  
+  // Handle storage paths
+  if (url.startsWith('storage/')) {
+    return `${baseUrl}/storage/${url.replace('storage/', '')}`;
+  }
+  
+  // Handle localhost URLs
+  if (url.includes('localhost')) {
+    return url
+      .replace('http://localhost:8000', baseUrl)
+      .replace('http://localhost', baseUrl);
+  }
+  
+  // If it's already a full URL, return as is
+  if (url.startsWith('http')) {
+    return url;
+  }
+  
+  // Default case - prepend base URL
+  return `${baseUrl}/${url}`;
 };
 
 // Utility function to fix image objects
