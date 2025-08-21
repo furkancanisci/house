@@ -266,7 +266,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       console.log('API response for filtered properties:', response);
       
       // Transform the response data
-      const responseData = response.data || [];
+      const responseData = Array.isArray(response) ? response : (response?.data || []);
       if (!Array.isArray(responseData)) {
         console.warn('API response data is not an array:', responseData);
         dispatch({ type: 'SET_PROPERTIES', payload: [] });

@@ -59,12 +59,23 @@ const Home: React.FC = () => {
         
         console.log('API Response:', response);
         
-        // Handle the response structure - getProperties returns { data: [], meta: {}, ... }
-        const allProps = response?.data || [];
+        // Handle the response structure - getProperties might return an array or an object with data
+        const allProps = Array.isArray(response) ? response : (response?.data || []);
         
-        // Filter properties by type for individual sections (if needed later)
-        const rental = allProps.filter(p => p.listingType === 'rent' || (p as any).listing_type === 'rent').slice(0, 3);
-        const sale = allProps.filter(p => p.listingType === 'sale' || (p as any).listing_type === 'sale').slice(0, 3);
+        if (!Array.isArray(allProps)) {
+          console.error('Invalid properties data:', allProps);
+          return;
+        }
+        
+        // Filter properties by type for individual sections
+        const rental = allProps
+          .filter(p => (p.listingType === 'rent' || (p as any).listing_type === 'rent'))
+          .slice(0, 3);
+          
+        const sale = allProps
+          .filter(p => (p.listingType === 'sale' || (p as any).listing_type === 'sale'))
+          .slice(0, 3);
+          
         const trending = allProps.slice(0, 3); // Most recent properties as trending
         
         setRentalProperties(rental);
@@ -316,8 +327,10 @@ const Home: React.FC = () => {
                 style={{
                   scrollbarWidth: 'none',
                   msOverflowStyle: 'none',
-                  WebkitScrollbar: { display: 'none' }
-                }}
+                  '&::-webkit-scrollbar': {
+                    display: 'none'
+                  }
+                } as React.CSSProperties}
               >
                 {rowProperties.length > 0 ? (
                   rowProperties.map((property) => (

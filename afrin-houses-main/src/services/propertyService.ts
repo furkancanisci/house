@@ -70,10 +70,10 @@ export interface PropertyFilters {
   propertyType?: string;
   minPrice?: number;
   maxPrice?: number;
-  minBeds?: number;
-  maxBeds?: number;
-  minBaths?: number;
-  maxBaths?: number;
+  minBeds?: number | string;
+  maxBeds?: number | string;
+  minBaths?: number | string;
+  maxBaths?: number | string;
   minSquareFeet?: number;
   maxSquareFeet?: number;
   features?: string[];
@@ -125,20 +125,20 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     
     // Bedrooms - handle 'any' values and numeric values
     if (filters.minBeds !== undefined && filters.minBeds !== 'any' && filters.minBeds !== '') {
-      params.bedrooms = filters.minBeds;
+      params.bedrooms = Number(filters.minBeds);
     }
     
     if (filters.maxBeds !== undefined && filters.maxBeds !== 'any' && filters.maxBeds !== '') {
-      params.maxBedrooms = filters.maxBeds;
+      params.maxBedrooms = Number(filters.maxBeds);
     }
     
     // Bathrooms - handle 'any' values and numeric values
     if (filters.minBaths !== undefined && filters.minBaths !== 'any' && filters.minBaths !== '') {
-      params.bathrooms = filters.minBaths;
+      params.bathrooms = Number(filters.minBaths);
     }
     
     if (filters.maxBaths !== undefined && filters.maxBaths !== 'any' && filters.maxBaths !== '') {
-      params.maxBathrooms = filters.maxBaths;
+      params.maxBathrooms = Number(filters.maxBaths);
     }
     
     // Square footage - only send if values are greater than 0
