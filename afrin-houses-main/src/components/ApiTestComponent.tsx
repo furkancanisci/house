@@ -37,13 +37,15 @@ const ApiTestComponent: React.FC = () => {
   const loadProperties = async () => {
     setLoading(true);
     try {
-      const data = await getProperties({ 
+      const response = await getProperties({ 
         page: 1, 
-        limit: 5, // Use 'limit' instead of 'perPage' to match PropertyFilters interface
-        search: '' // Add required search property
+        limit: 5,
+        search: ''
       });
-      setProperties(data);
-      console.log('Loaded properties:', data);
+      // Handle both array and object with data property
+      const propertiesData = Array.isArray(response) ? response : (response?.data || []);
+      setProperties(propertiesData);
+      console.log('Loaded properties:', propertiesData);
     } catch (error) {
       console.error('Failed to load properties:', error);
     } finally {
@@ -54,9 +56,11 @@ const ApiTestComponent: React.FC = () => {
   const loadFeaturedProperties = async () => {
     setLoading(true);
     try {
-      const data = await getFeaturedProperties({ limit: 3 });
-      setProperties(data);
-      console.log('Loaded featured properties:', data);
+      const response = await getFeaturedProperties({ limit: 3 });
+      // Handle both array and object with data property
+      const featuredData = Array.isArray(response) ? response : (response?.data || []);
+      setProperties(featuredData);
+      console.log('Loaded featured properties:', featuredData);
     } catch (error) {
       console.error('Failed to load featured properties:', error);
     } finally {

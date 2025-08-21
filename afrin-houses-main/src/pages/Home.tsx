@@ -328,8 +328,8 @@ const Home: React.FC = () => {
                   scrollbarWidth: 'none',
                   msOverflowStyle: 'none',
                   '&::-webkit-scrollbar': {
-                    display: 'none'
-                  }
+                    display: 'none',
+                  } as React.CSSProperties
                 } as React.CSSProperties}
               >
                 {rowProperties.length > 0 ? (
