@@ -47,7 +47,7 @@ class Property extends Model implements HasMedia
         'is_available',
         'available_from',
         'slug',
-        'amenities',
+        'amenities_json',
         'nearby_places',
         'contact_name',
         'contact_phone',
@@ -61,7 +61,7 @@ class Property extends Model implements HasMedia
      * @var array<string, string>
      */
     protected $casts = [
-        'amenities' => 'array',
+        'amenities_json' => 'array',
         'nearby_places' => 'array',
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
@@ -78,6 +78,7 @@ class Property extends Model implements HasMedia
      * @var array
      */
     protected $appends = [
+        'listing_type',
         // Temporarily removing all accessors to debug the issue
         // 'full_address',
         // 'formatted_price',
@@ -188,6 +189,22 @@ class Property extends Model implements HasMedia
     }
 
     /**
+     * The city relationship.
+     */
+    public function city()
+    {
+        return $this->belongsTo(\App\Models\City::class);
+    }
+
+    /**
+     * The property type relationship.
+     */
+    public function propertyType()
+    {
+        return $this->belongsTo(\App\Models\PropertyType::class);
+    }
+
+    /**
      * Users who favorited this property.
      */
     public function favoritedByUsers()
@@ -202,6 +219,15 @@ class Property extends Model implements HasMedia
     public function views()
     {
         return $this->hasMany(PropertyView::class);
+    }
+
+    /**
+     * The amenities associated with this property.
+     */
+    public function amenities()
+    {
+        return $this->belongsToMany(Amenity::class, 'property_amenities')
+            ->withTimestamps();
     }
 
     /**
@@ -272,6 +298,80 @@ class Property extends Model implements HasMedia
                 'mime_type' => $media->mime_type,
             ];
         })->toArray();
+    }
+
+    /**
+     * Get listing type from property type relationship.
+     */
+    public function getListingTypeAttribute(): string
+    {
+        if ($this->property_type_id) {
+            $propertyType = \App\Models\PropertyType::find($this->property_type_id);
+            if ($propertyType) {
+                if ($propertyType->slug === 'for-sale') {
+                    return 'sale';
+                } elseif ($propertyType->slug === 'for-rent') {
+                    return 'rent';
+                }
+            }
+        }
+        return 'sale'; // default
+    }
+
+    /**
+     * Set listing type by updating property_type_id.
+     */
+    public function setListingTypeAttribute($value)
+    {
+        $propertyTypeSlug = $value === 'sale' ? 'for-sale' : 'for-rent';
+        $propertyType = \App\Models\PropertyType::where('slug', $propertyTypeSlug)->first();
+        if ($propertyType) {
+            $this->property_type_id = $propertyType->id;
+        }
+    }
+
+    /**
+     * Get city name from relationship.
+     */
+    public function getCityAttribute()
+    {
+        if ($this->relationLoaded('city') && $this->getRelation('city')) {
+            $city = $this->getRelation('city');
+            return $city->name ?? $city->name_en ?? $city->name_ar;
+        }
+        if ($this->city_id) {
+            $city = \App\Models\City::find($this->city_id);
+            return $city ? ($city->name ?? $city->name_en ?? $city->name_ar) : null;
+        }
+        return null;
+    }
+
+    /**
+     * Get state from city relationship.
+     */
+    public function getStateAttribute()
+    {
+        if ($this->relationLoaded('city') && $this->getRelation('city')) {
+            return $this->getRelation('city')->state ?? 'Syria';
+        }
+        if ($this->city_id) {
+            return \App\Models\City::find($this->city_id)?->state ?? 'Syria';
+        }
+        return 'Syria';
+    }
+
+    /**
+     * Get property type name from relationship.
+     */
+    public function getPropertyTypeAttribute()
+    {
+        if ($this->relationLoaded('propertyType') && $this->getRelation('propertyType')) {
+            return $this->getRelation('propertyType')->name;
+        }
+        if ($this->property_type_id) {
+            return \App\Models\PropertyType::find($this->property_type_id)?->name;
+        }
+        return null;
     }
 
     /**
@@ -367,7 +467,16 @@ class Property extends Model implements HasMedia
      */
     public function scopeOfType(Builder $query, $type): Builder
     {
-        return $query->where('property_type', $type);
+        // Find property type by name or slug
+        $propertyType = \App\Models\PropertyType::where('name', $type)
+            ->orWhere('slug', $type)
+            ->first();
+        
+        if ($propertyType) {
+            return $query->where('property_type_id', $propertyType->id);
+        }
+        
+        return $query;
     }
 
     /**
@@ -375,7 +484,15 @@ class Property extends Model implements HasMedia
      */
     public function scopeForListing(Builder $query, $listingType): Builder
     {
-        return $query->where('listing_type', $listingType);
+        // Map listing type to property type
+        $propertyTypeSlug = $listingType === 'sale' ? 'for-sale' : 'for-rent';
+        $propertyType = \App\Models\PropertyType::where('slug', $propertyTypeSlug)->first();
+        
+        if ($propertyType) {
+            return $query->where('property_type_id', $propertyType->id);
+        }
+        
+        return $query;
     }
 
     /**

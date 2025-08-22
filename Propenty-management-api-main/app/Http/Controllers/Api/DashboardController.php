@@ -263,7 +263,7 @@ public function statsRaw()
     public function analytics(Request $request): JsonResponse
     {
         $user = $request->user();
-        $properties = $user->properties;
+        $properties = $user->properties()->with('propertyType')->get();
 
         // Overall analytics
         $analytics = [
@@ -271,7 +271,9 @@ public function statsRaw()
             'total_views' => $properties->sum('views_count'),
             'total_favorites' => $user->favoriteProperties()->count(),
             'average_price' => $properties->avg('price'),
-            'properties_by_type' => $properties->groupBy('property_type')
+            'properties_by_type' => $properties->groupBy(function($property) {
+                    return $property->propertyType?->name ?? 'Unknown';
+                })
                 ->map(function ($group, $type) {
                     return [
                         'type' => $type,

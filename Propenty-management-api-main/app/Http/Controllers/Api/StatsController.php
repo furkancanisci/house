@@ -20,10 +20,10 @@ class StatsController extends Controller
             $stats = [
                 'total_properties' => Property::where('status', 'active')->count(),
                 'total_for_sale' => Property::where('status', 'active')
-                    ->where('listing_type', 'sale')
+                    ->forListing('sale')
                     ->count(),
                 'total_for_rent' => Property::where('status', 'active')
-                    ->where('listing_type', 'rent')
+                    ->forListing('rent')
                     ->count(),
                 'total_agents' => Property::where('status', 'active')
                     ->distinct('user_id')
@@ -31,15 +31,16 @@ class StatsController extends Controller
                 'total_views' => Property::sum('views') ?? 0,
                 'avg_price' => [
                     'sale' => (float)Property::where('status', 'active')
-                        ->where('listing_type', 'sale')
+                        ->forListing('sale')
                         ->avg('price'),
                     'rent' => (float)Property::where('status', 'active')
-                        ->where('listing_type', 'rent')
+                        ->forListing('rent')
                         ->avg('price')
                 ],
-                'property_types' => Property::select('property_type as type', DB::raw('count(*) as count'))
-                    ->where('status', 'active')
-                    ->groupBy('property_type')
+                'property_types' => Property::select('property_types.name as type', DB::raw('count(properties.id) as count'))
+                    ->join('property_types', 'properties.property_type_id', '=', 'property_types.id')
+                    ->where('properties.status', 'active')
+                    ->groupBy('property_types.id', 'property_types.name')
                     ->orderBy('count', 'desc')
                     ->get(),
                 'recently_added' => Property::where('status', 'active')
@@ -81,11 +82,17 @@ class StatsController extends Controller
             $query = Property::where('status', 'active');
             
             if ($propertyType) {
-                $query->where('property_type', $propertyType);
+                // Find property type by name or slug
+                $type = \App\Models\PropertyType::where('name', $propertyType)
+                    ->orWhere('slug', $propertyType)
+                    ->first();
+                if ($type) {
+                    $query->where('property_type_id', $type->id);
+                }
             }
             
             if ($listingType) {
-                $query->where('listing_type', $listingType);
+                $query->forListing($listingType);
             }
             
             $prices = $query->pluck('price');

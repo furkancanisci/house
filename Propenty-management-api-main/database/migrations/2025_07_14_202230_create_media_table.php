@@ -13,8 +13,6 @@ return new class extends Migration
 
             $table->morphs('model');
             $table->uuid('uuid')->nullable()->unique();
-            $table->string('collection_name');
-            $table->string('name');
             $table->string('file_name');
             $table->string('mime_type')->nullable();
             $table->string('disk');
@@ -26,7 +24,7 @@ return new class extends Migration
             $table->json('responsive_images');
             $table->unsignedInteger('order_column')->nullable()->index();
 
-            $table->nullableTimestamps();
+            $table->unsignedInteger('order_column')->nullable()->index();
         });
     }
 };

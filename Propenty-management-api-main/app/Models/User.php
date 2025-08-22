@@ -64,14 +64,10 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'email',
         'password',
         'phone',
-        'date_of_birth',
-        'gender',
-        'bio',
-        'user_type',
-        'is_verified',
-        'last_login_at',
-        'limited_access_enabled',
-        'limited_access_granted_at',
+        'avatar_url',
+        'is_active',
+        'remember_token',
+        'email_verified_at',
     ];
 
     /**
@@ -81,13 +77,8 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'date_of_birth' => 'date',
-        'last_login_at' => 'datetime',
         'password' => 'hashed',
-        'is_verified' => 'boolean',
         'is_active' => 'boolean',
-        'limited_access_enabled' => 'boolean',
-        'limited_access_granted_at' => 'datetime',
     ];
 
     /**
@@ -96,9 +87,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      * @var array
      */
     protected $attributes = [
-        'is_verified' => false,
         'is_active' => true,
-        'user_type' => 'general_user',
     ];
 
     /**
@@ -158,7 +147,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      */
     public function isPropertyOwner(): bool
     {
-        return $this->user_type === 'property_owner';
+        return $this->hasRole(['Agent', 'Admin', 'SuperAdmin']);
     }
 
     /**
@@ -166,7 +155,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      */
     public function isGeneralUser(): bool
     {
-        return $this->user_type === 'general_user';
+        return $this->hasRole('User');
     }
 
     /**
@@ -175,6 +164,14 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function properties()
     {
         return $this->hasMany(Property::class);
+    }
+
+    /**
+     * Leads assigned to this user.
+     */
+    public function leads()
+    {
+        return $this->hasMany(Lead::class, 'assigned_to');
     }
 
     /**
@@ -207,7 +204,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      */
     public function scopeVerified($query)
     {
-        return $query->where('is_verified', true);
+        return $query->whereNotNull('email_verified_at');
     }
 
     /**
@@ -215,7 +212,9 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      */
     public function scopePropertyOwners($query)
     {
-        return $query->where('user_type', 'property_owner');
+        return $query->whereHas('roles', function($q) {
+            $q->whereIn('name', ['Agent', 'Admin', 'SuperAdmin']);
+        });
     }
 
     /**
@@ -223,7 +222,9 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      */
     public function scopeGeneralUsers($query)
     {
-        return $query->where('user_type', 'general_user');
+        return $query->whereHas('roles', function($q) {
+            $q->where('name', 'User');
+        });
     }
 
     /**

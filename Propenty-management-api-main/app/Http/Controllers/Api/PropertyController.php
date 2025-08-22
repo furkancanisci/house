@@ -157,13 +157,19 @@ class PropertyController extends Controller
         // Apply listing type filter - support both camelCase and snake_case
         $listingType = $request->input('listing_type') ?: $request->input('listingType');
         if ($listingType && in_array($listingType, ['rent', 'sale'])) {
-            $query->where('listing_type', $listingType);
+            $query->forListing($listingType);
         }
 
         // Apply property type filter - support both camelCase and snake_case
         $propertyType = $request->input('property_type') ?: $request->input('propertyType');
         if ($propertyType && !empty($propertyType) && $propertyType !== 'any') {
-            $query->where('property_type', $propertyType);
+            // Find property type by name or slug
+            $type = \App\Models\PropertyType::where('name', $propertyType)
+                ->orWhere('slug', $propertyType)
+                ->first();
+            if ($type) {
+                $query->where('property_type_id', $type->id);
+            }
         }
 
         // Apply price range filters - support both min/max and minPrice/maxPrice
@@ -568,9 +574,8 @@ class PropertyController extends Controller
     public function similar(Property $property, Request $request): PropertyCollection
     {
         $similar = Property::where('id', '!=', $property->id)
-            ->where('property_type', $property->property_type)
-            ->where('listing_type', $property->listing_type)
-            ->where('city', $property->city)
+            ->where('property_type_id', $property->property_type_id)
+            ->where('city_id', $property->city_id)
             ->active()
             ->with(['user', 'media', 'favoritedByUsers'])
             ->take($request->get('limit', 4))

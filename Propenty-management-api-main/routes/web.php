@@ -35,4 +35,16 @@ Route::get('/docs', function () {
         'postman_collection' => url('/api/postman-collection'),
     ]);
 });
- 
+
+// Redirect login to admin login
+Route::get('/login', function () {
+    return redirect()->route('admin.login');
+})->name('login');
+
+// Redirect to admin panel for authenticated users
+Route::get('/', function () {
+    if (auth()->check() && auth()->user()->can('view dashboard')) {
+        return redirect()->route('admin.dashboard');
+    }
+    return view('welcome');
+}); 
