@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Property } from '../services/propertyService';
+import { Property } from '../types';
 import { SearchFilters } from '../types';
 import MapSearchView from '../components/MapSearchView';
 import { ArrowLeft, X } from 'lucide-react';
@@ -20,9 +20,7 @@ const MapSearch: React.FC = () => {
     searchQuery: '',
     listingType: 'all',
     propertyType: 'all',
-    location: '',
-    bedrooms: 'any',
-    bathrooms: 'any'
+    location: ''
   });
 
   useEffect(() => {
@@ -39,8 +37,6 @@ const MapSearch: React.FC = () => {
             properties = response;
           } else if (response.data && Array.isArray(response.data)) {
             properties = response.data;
-          } else if (Array.isArray(response.properties)) {
-            properties = response.properties;
           }
         }
         console.log('Processed properties:', properties);
@@ -50,42 +46,52 @@ const MapSearch: React.FC = () => {
           console.log('No properties found, adding test data');
           const testProperties = [
             {
-              id: 1,
+              id: '1',
               title: 'شقة للبيع في دمشق',
               description: 'شقة جميلة في قلب دمشق',
               price: 150000,
-              propertyType: 'apartment',
-              listingType: 'sale',
+              propertyType: 'apartment' as const,
+              listingType: 'sale' as const,
               address: 'شارع الثورة، دمشق',
               city: 'دمشق',
               state: 'دمشق',
-              postalCode: '12345',
+              zip_code: '12345',
               bedrooms: 3,
               bathrooms: 2,
+              square_feet: 120,
               squareFootage: 120,
-              yearBuilt: 2020,
+              year_built: 2020,
               latitude: 33.5138,
               longitude: 36.2765,
-              isAvailable: true
+              is_available: true,
+              images: [],
+              amenities: [],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             },
             {
-              id: 2,
+              id: '2',
               title: 'فيلا للإيجار في حلب',
               description: 'فيلا واسعة مع حديقة',
               price: 2000,
-              propertyType: 'house',
-              listingType: 'rent',
+              propertyType: 'house' as const,
+              listingType: 'rent' as const,
               address: 'حي الفرقان، حلب',
               city: 'حلب',
               state: 'حلب',
-              postalCode: '54321',
+              zip_code: '54321',
               bedrooms: 4,
               bathrooms: 3,
+              square_feet: 200,
               squareFootage: 200,
-              yearBuilt: 2018,
+              year_built: 2018,
               latitude: 36.2021,
               longitude: 37.1343,
-              isAvailable: true
+              is_available: true,
+              images: [],
+              amenities: [],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             }
           ];
           setAllProperties(testProperties);
@@ -101,42 +107,52 @@ const MapSearch: React.FC = () => {
 
         const testProperties = [
           {
-            id: 1,
+            id: '1',
             title: 'شقة للبيع في دمشق',
             description: 'شقة جميلة في قلب دمشق',
             price: 150000,
-            propertyType: 'apartment',
-            listingType: 'sale',
+            propertyType: 'apartment' as const,
+            listingType: 'sale' as const,
             address: 'شارع الثورة، دمشق',
             city: 'دمشق',
             state: 'دمشق',
-            postalCode: '12345',
+            zip_code: '12345',
             bedrooms: 3,
             bathrooms: 2,
+            square_feet: 120,
             squareFootage: 120,
-            yearBuilt: 2020,
+            year_built: 2020,
             latitude: 33.5138,
             longitude: 36.2765,
-            isAvailable: true
+            is_available: true,
+            images: [],
+            amenities: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           },
           {
-            id: 2,
+            id: '2',
             title: 'فيلا للإيجار في حلب',
             description: 'فيلا واسعة مع حديقة',
             price: 2000,
-            propertyType: 'house',
-            listingType: 'rent',
+            propertyType: 'house' as const,
+            listingType: 'rent' as const,
             address: 'حي الفرقان، حلب',
             city: 'حلب',
             state: 'حلب',
-            postalCode: '54321',
+            zip_code: '54321',
             bedrooms: 4,
             bathrooms: 3,
+            square_feet: 200,
             squareFootage: 200,
-            yearBuilt: 2018,
+            year_built: 2018,
             latitude: 36.2021,
             longitude: 37.1343,
-            isAvailable: true
+            is_available: true,
+            images: [],
+            amenities: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         ];
         setAllProperties(testProperties);
@@ -222,12 +238,12 @@ const MapSearch: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Map Search View */}
-      <div className="h-[calc(100vh-160px)]">
+      <div className="h-[calc(100vh-80px)]">
         <MapSearchView
           properties={allProperties}
-          filters={searchFilters}
+          initialFilters={searchFilters}
           onFiltersChange={handleFiltersChange}
           onClose={handleClose}
         />

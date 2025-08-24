@@ -636,56 +636,34 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
 
       
       {/* Main content with integrated filters */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Wider Filters Sidebar - Better visibility on small screens */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Filters Sidebar - Better visibility and spacing */}
         {viewMode !== 'map' && (
-          <div className="w-full sm:w-72 lg:w-80 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto hidden sm:block">
-            <div className="p-1 sm:p-2">
-              <h3 className="text-sm font-semibold text-gray-900 mb-1 sm:mb-2 flex items-center gap-1">
-                <Filter className="h-3 w-3" />
+          <div className="w-full lg:w-72 xl:w-80 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 flex-shrink-0 overflow-y-auto">
+            <div className="p-4 lg:p-6 space-y-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
+                <Filter className="h-4 w-4 text-[#067977]" />
                 {t('map.filtersTitle')}
               </h3>
-              <SearchFiltersComponent
-                initialFilters={filters}
-                onFiltersChange={handleFiltersChange}
-                isLoadingCities={isLoadingCities}
-                citiesError={citiesError}
-                onRetryCities={retryLoadCities}
-              />
+              <div className="space-y-4">
+                <SearchFiltersComponent
+                  initialFilters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  isLoadingCities={isLoadingCities}
+                  citiesError={citiesError}
+                  onRetryCities={retryLoadCities}
+                />
+              </div>
             </div>
           </div>
         )}
         
-        {/* Mobile Filters - Always visible and compact on small screens */}
-        {viewMode !== 'map' && (
-          <div className="sm:hidden w-full bg-white border-b border-gray-200">
-            <div className="p-2">
-              <details className="group" open>
-                <summary className="flex items-center justify-between cursor-pointer list-none">
-                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                    <Filter className="h-3 w-3" />
-                    {t('map.filtersTitle')}
-                  </h3>
-                  <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="mt-2">
-                  <SearchFiltersComponent
-                    initialFilters={filters}
-                    onFiltersChange={handleFiltersChange}
-                    isLoadingCities={isLoadingCities}
-                    citiesError={citiesError}
-                    onRetryCities={retryLoadCities}
-                  />
-                </div>
-              </details>
-            </div>
-          </div>
-        )}
-        
-        {/* List view */}
-        {(viewMode === 'list' || viewMode === 'split') && (
-          <div className={`${viewMode === 'split' ? 'w-1/2' : 'flex-1'} flex flex-col border-r`}>
-            <div className="flex-1 overflow-y-auto p-1 sm:p-2">
+        {/* Content Area */}
+        <div className={`flex-1 flex ${viewMode === 'split' ? 'lg:flex-row' : 'flex-col'} overflow-hidden`}>
+          {/* List view */}
+          {(viewMode === 'list' || viewMode === 'split') && (
+            <div className={`${viewMode === 'split' ? 'w-full lg:w-1/2' : 'flex-1'} flex flex-col ${viewMode === 'split' ? 'lg:border-r' : ''} overflow-hidden`}>
+              <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4">
               {loading || isLoadingProperties ? (
                 <div className="flex flex-col items-center justify-center py-6">
                   <div className="relative">
@@ -835,7 +813,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
             
             {/* Compact Pagination */}
             {totalPages > 1 && (
-              <div className="border-t p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-0">
+              <div className="border-t p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 bg-gray-50/50">
                 <div className="flex items-center gap-0.5 bg-white rounded-md border border-gray-200 shadow-sm p-0.5">
                   <Button
                     variant="ghost"
@@ -895,9 +873,9 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
           </div>
         )}
         
-        {/* Map view */}
-        {(viewMode === 'map' || viewMode === 'split') && (
-          <div className={`${viewMode === 'split' ? 'w-1/2' : viewMode === 'map' ? 'w-full h-full' : 'flex-1'} relative`}>
+          {/* Map view */}
+          {(viewMode === 'map' || viewMode === 'split') && (
+            <div className={`${viewMode === 'split' ? 'w-full lg:w-1/2' : 'w-full'} relative min-h-[400px] lg:min-h-0 ${viewMode === 'map' ? 'h-full' : 'flex-1'}`}>
             {/* Compact Location and Exit Full Screen buttons */}
             <div className="absolute top-2 right-2 z-[1000] flex gap-1">
               {isMapFullScreen && (
@@ -1023,6 +1001,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
     </ErrorBoundary>
