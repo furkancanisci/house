@@ -48,47 +48,7 @@ const MapSearch: React.FC = () => {
         // Add some test properties if no properties are returned
         if (!properties || properties.length === 0) {
           console.log('No properties found, adding test data');
-          const testProperties = [
-            {
-              id: 1,
-              title: 'شقة للبيع في دمشق',
-              description: 'شقة جميلة في قلب دمشق',
-              price: 150000,
-              propertyType: 'apartment',
-              listingType: 'sale',
-              address: 'شارع الثورة، دمشق',
-              city: 'دمشق',
-              state: 'دمشق',
-              postalCode: '12345',
-              bedrooms: 3,
-              bathrooms: 2,
-              squareFootage: 120,
-              yearBuilt: 2020,
-              latitude: 33.5138,
-              longitude: 36.2765,
-              isAvailable: true
-            },
-            {
-              id: 2,
-              title: 'فيلا للإيجار في حلب',
-              description: 'فيلا واسعة مع حديقة',
-              price: 2000,
-              propertyType: 'house',
-              listingType: 'rent',
-              address: 'حي الفرقان، حلب',
-              city: 'حلب',
-              state: 'حلب',
-              postalCode: '54321',
-              bedrooms: 4,
-              bathrooms: 3,
-              squareFootage: 200,
-              yearBuilt: 2018,
-              latitude: 36.2021,
-              longitude: 37.1343,
-              isAvailable: true
-            }
-          ];
-          setAllProperties(testProperties);
+        
         } else {
           setAllProperties(properties);
         }
@@ -97,49 +57,7 @@ const MapSearch: React.FC = () => {
       } catch (err) {
         console.error('Error fetching properties:', err);
         
-        // Set test data instead of showing error
-
-        const testProperties = [
-          {
-            id: 1,
-            title: 'شقة للبيع في دمشق',
-            description: 'شقة جميلة في قلب دمشق',
-            price: 150000,
-            propertyType: 'apartment',
-            listingType: 'sale',
-            address: 'شارع الثورة، دمشق',
-            city: 'دمشق',
-            state: 'دمشق',
-            postalCode: '12345',
-            bedrooms: 3,
-            bathrooms: 2,
-            squareFootage: 120,
-            yearBuilt: 2020,
-            latitude: 33.5138,
-            longitude: 36.2765,
-            isAvailable: true
-          },
-          {
-            id: 2,
-            title: 'فيلا للإيجار في حلب',
-            description: 'فيلا واسعة مع حديقة',
-            price: 2000,
-            propertyType: 'house',
-            listingType: 'rent',
-            address: 'حي الفرقان، حلب',
-            city: 'حلب',
-            state: 'حلب',
-            postalCode: '54321',
-            bedrooms: 4,
-            bathrooms: 3,
-            squareFootage: 200,
-            yearBuilt: 2018,
-            latitude: 36.2021,
-            longitude: 37.1343,
-            isAvailable: true
-          }
-        ];
-        setAllProperties(testProperties);
+      
         setError(null); // Clear any error since we have fallback data
       } finally {
         setLoading(false);
@@ -183,7 +101,7 @@ const MapSearch: React.FC = () => {
       }
     } catch (error) {
       console.error('MapSearch: Error filtering properties:', error);
-      setError('حدث خطأ أثناء تطبيق الفلاتر');
+      setError(t('search.errorLoadingProperties'));
     }
   }, [filterProperties, state.properties]);
 
@@ -192,7 +110,7 @@ const MapSearch: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري تحميل الخريطة...</p>
+          <p className="text-gray-600">{t('map.loadingProperties')}</p>
         </div>
       </div>
     );

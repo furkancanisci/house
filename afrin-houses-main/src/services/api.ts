@@ -24,7 +24,7 @@ const calculateDelay = (attempt: number, baseDelay: number): number => {
 };
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -146,7 +146,7 @@ api.interceptors.response.use(
 const refreshToken = async (): Promise<string | null> => {
   try {
     const response = await axios.post(
-      'http://127.0.0.1:8000/api/v1/auth/refresh',
+      'https://house-6g6m.onrender.com/api/v1/auth/refresh',
       {},
       {
         withCredentials: true,

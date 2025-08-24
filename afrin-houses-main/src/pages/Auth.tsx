@@ -186,7 +186,11 @@ const Auth: React.FC = () => {
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start space-x-2 mb-4">
               <img src={logo} alt="Logo" className="h-10 w-auto" />
-            <span className="text-2xl font-bold text-[#067977]">{i18n.language === 'ar' ? 'بيست ترند' : 'Best Trend'}</span>
+            <span className="text-2xl font-bold text-[#067977]">
+              {i18n.language === 'ar' ? 'بيست ترند' : 
+               i18n.language === 'ku' ? 'Trend Baş' : 
+               'Best Trend'}
+            </span>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-[#067977] mb-4">
               {t('auth.welcome.title')}

@@ -19,7 +19,7 @@ i18n
     // Common namespace used around the app
     ns: ['translation'],
     defaultNS: 'translation',
-    supportedLngs: ['en', 'ar'],
+    supportedLngs: ['en', 'ar', 'ku'],
     
     // Language detection options
     detection: {

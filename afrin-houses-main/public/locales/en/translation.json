@@ -490,7 +490,8 @@
     "success": "Success",
     "error": "Error",
     "warning": "Warning",
-    "info": "Info"
+    "info": "Info",
+    "selectLanguage": "Select Language"
   },
   "location": {
     "state": "State",
@@ -535,7 +536,7 @@
     "clearAll": "Clear All",
     "activeFilters": "Active Filters",
     "advancedFilters": "Advanced Filters",
-    "applyFilters": "Apply Filters",
+    "applyFilters": "Filteran sepandin",
     "locationPlaceholder": "Enter city, address, or ZIP code",
     "geographicFilters": "Geographic Filters",
     "governorate": "Governorate",
@@ -545,7 +546,9 @@
     "selectedLocations": "Selected Locations",
     "addLocation": "Add Location",
     "removeLocation": "Remove",
-    "clearAllLocations": "Clear All"
+    "clearAllLocations": "Clear All",
+    "state": "state",
+    "city": "city"
   },
   "forms": {
     "propertyTitle": "Property Title",
