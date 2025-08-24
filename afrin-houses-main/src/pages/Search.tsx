@@ -72,15 +72,23 @@ const Search: React.FC = () => {
   const navigate = useNavigate();
   const { state, loadProperties, filterProperties } = useApp();
   
-  // Helper to normalize values that may be localized objects { name_ar, name_en }
+  // Helper to normalize values that may be localized objects { name_ar, name_en, name_ku }
   const normalizeName = (val: any): string => {
     if (!val) return '';
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
-      const locale = i18n.language === 'ar' ? 'ar' : 'en';
+      const currentLang = i18n.language;
       const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
-      const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
-      return locale === 'ar' ? (ar || en || '') : (en || ar || '');
+      const en = (val as any).name_en ?? (val as any).en;
+      const ku = (val as any).name_ku ?? (val as any).ku;
+      
+      // Priority order: current language > English > Arabic > Kurdish > any available
+      if (currentLang === 'ar' && ar) return ar;
+      if (currentLang === 'en' && en) return en;
+      if (currentLang === 'ku' && ku) return ku;
+      
+      // Fallback priority: English > Arabic > Kurdish > any available
+      return en || ar || ku || (val as any).name || '';
     }
     return String(val);
   };

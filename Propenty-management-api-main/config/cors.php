@@ -34,6 +34,10 @@ return [
         'http://127.0.0.1:5176',
         'http://localhost:5177',
         'http://127.0.0.1:5177',
+        // Production frontend URL
+        'https://house-1-3rtj.onrender.com',
+        // Backend URL (for internal requests)
+        'https://house-6g6m.onrender.com',
     ],
 
 
@@ -50,6 +54,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

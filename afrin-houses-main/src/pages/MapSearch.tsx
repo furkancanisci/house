@@ -44,57 +44,7 @@ const MapSearch: React.FC = () => {
         // Add some test properties if no properties are returned
         if (!properties || properties.length === 0) {
           console.log('No properties found, adding test data');
-          const testProperties = [
-            {
-              id: '1',
-              title: 'شقة للبيع في دمشق',
-              description: 'شقة جميلة في قلب دمشق',
-              price: 150000,
-              propertyType: 'apartment' as const,
-              listingType: 'sale' as const,
-              address: 'شارع الثورة، دمشق',
-              city: 'دمشق',
-              state: 'دمشق',
-              zip_code: '12345',
-              bedrooms: 3,
-              bathrooms: 2,
-              square_feet: 120,
-              squareFootage: 120,
-              year_built: 2020,
-              latitude: 33.5138,
-              longitude: 36.2765,
-              is_available: true,
-              images: [],
-              amenities: [],
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            },
-            {
-              id: '2',
-              title: 'فيلا للإيجار في حلب',
-              description: 'فيلا واسعة مع حديقة',
-              price: 2000,
-              propertyType: 'house' as const,
-              listingType: 'rent' as const,
-              address: 'حي الفرقان، حلب',
-              city: 'حلب',
-              state: 'حلب',
-              zip_code: '54321',
-              bedrooms: 4,
-              bathrooms: 3,
-              square_feet: 200,
-              squareFootage: 200,
-              year_built: 2018,
-              latitude: 36.2021,
-              longitude: 37.1343,
-              is_available: true,
-              images: [],
-              amenities: [],
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          ];
-          setAllProperties(testProperties);
+
         } else {
           setAllProperties(properties);
         }
@@ -102,60 +52,7 @@ const MapSearch: React.FC = () => {
 
       } catch (err) {
         console.error('Error fetching properties:', err);
-        
-        // Set test data instead of showing error
-
-        const testProperties = [
-          {
-            id: '1',
-            title: 'شقة للبيع في دمشق',
-            description: 'شقة جميلة في قلب دمشق',
-            price: 150000,
-            propertyType: 'apartment' as const,
-            listingType: 'sale' as const,
-            address: 'شارع الثورة، دمشق',
-            city: 'دمشق',
-            state: 'دمشق',
-            zip_code: '12345',
-            bedrooms: 3,
-            bathrooms: 2,
-            square_feet: 120,
-            squareFootage: 120,
-            year_built: 2020,
-            latitude: 33.5138,
-            longitude: 36.2765,
-            is_available: true,
-            images: [],
-            amenities: [],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            title: 'فيلا للإيجار في حلب',
-            description: 'فيلا واسعة مع حديقة',
-            price: 2000,
-            propertyType: 'house' as const,
-            listingType: 'rent' as const,
-            address: 'حي الفرقان، حلب',
-            city: 'حلب',
-            state: 'حلب',
-            zip_code: '54321',
-            bedrooms: 4,
-            bathrooms: 3,
-            square_feet: 200,
-            squareFootage: 200,
-            year_built: 2018,
-            latitude: 36.2021,
-            longitude: 37.1343,
-            is_available: true,
-            images: [],
-            amenities: [],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ];
-        setAllProperties(testProperties);
+   
         setError(null); // Clear any error since we have fallback data
       } finally {
         setLoading(false);
@@ -199,7 +96,7 @@ const MapSearch: React.FC = () => {
       }
     } catch (error) {
       console.error('MapSearch: Error filtering properties:', error);
-      setError('حدث خطأ أثناء تطبيق الفلاتر');
+      setError(t('search.errorLoadingProperties'));
     }
   }, [filterProperties, state.properties]);
 
@@ -208,7 +105,7 @@ const MapSearch: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري تحميل الخريطة...</p>
+          <p className="text-gray-600">{t('map.loadingProperties')}</p>
         </div>
       </div>
     );

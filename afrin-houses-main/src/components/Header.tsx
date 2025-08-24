@@ -12,7 +12,8 @@ import {
   X,
   Building,
   Key,
-  DollarSign
+  DollarSign,
+  ChevronDown
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { Button } from './ui/button';
@@ -50,9 +51,21 @@ const Header: React.FC = () => {
     ...(user ? [{ path: '/favorites', label: t('navigation.favorites'), icon: Heart }] : []),
   ];
 
-  // Toggle language function
-  const toggleLanguage = () => {
-    changeLanguage(language === 'ar' ? 'en' : 'ar');
+  // Language options
+  const languages = [
+    { code: 'en', name: 'English', nativeName: 'English' },
+    { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
+    { code: 'ku', name: 'Kurdish', nativeName: 'Kurdî' }
+  ];
+
+  // Get current language info
+  const getCurrentLanguage = () => {
+    return languages.find(lang => lang.code === language) || languages[0];
+  };
+
+  // Handle language selection from dropdown
+  const handleLanguageSelect = (languageCode: string) => {
+    changeLanguage(languageCode);
   };
 
   return (
@@ -62,7 +75,11 @@ const Header: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img src={logo} alt="Logo" className="h-10 w-auto" />
-            <span className="text-2xl font-bold text-[#067977]">{language === 'ar' ? 'بيست ترند' : 'Best Trend'}</span>
+            <span className="text-2xl font-bold text-[#067977]">
+              {language === 'ar' ? 'بيست ترند' : 
+               language === 'ku' ? 'Trend Baş' : 
+               'Best Trend'}
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -85,16 +102,42 @@ const Header: React.FC = () => {
 
           {/* User Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Language Switcher */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleLanguage}
-              className="flex items-center space-x-1 text-[#067977] hover:text-[#067977]/80 hover:bg-[#067977]/10 border border-[#067977]/20 hover:border-[#067977]/40"
-            >
-              <Globe className="h-4 w-4 text-[#067977]" />
-              <span>{language === 'ar' ? 'English' : 'العربية'}</span>
-            </Button>
+            {/* Language Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center space-x-1 text-[#067977] hover:text-[#067977]/80 hover:bg-[#067977]/10 border border-[#067977]/20 hover:border-[#067977]/40"
+                >
+                  <Globe className="h-4 w-4 text-[#067977]" />
+                  <span>{getCurrentLanguage().nativeName}</span>
+                  <ChevronDown className="h-3 w-3 text-[#067977] ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => handleLanguageSelect(lang.code)}
+                    className={`cursor-pointer flex items-center space-x-2 ${
+                      language === lang.code
+                        ? 'bg-[#067977]/10 text-[#067977] font-medium'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <Globe className="h-3 w-3" />
+                    <div className="flex flex-col">
+                      <span className="text-sm">{lang.nativeName}</span>
+                      <span className="text-xs text-gray-500">{lang.name}</span>
+                    </div>
+                    {language === lang.code && (
+                      <div className="ml-auto h-2 w-2 rounded-full bg-[#067977]"></div>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* List Property Button - Always visible */}
             <Button
@@ -191,6 +234,36 @@ const Header: React.FC = () => {
                 <Plus className="h-4 w-4" />
                 <span>{t('navigation.listProperty')}</span>
               </button>
+              
+              {/* Language Selection in Mobile */}
+              <div className="px-3 py-2">
+                <div className="text-xs font-medium text-gray-500 mb-2">Language / اللغة / Ziman</div>
+                <div className="space-y-1">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        handleLanguageSelect(lang.code);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center space-x-2 px-2 py-1.5 rounded-md text-sm font-medium w-full text-left transition-colors ${
+                        language === lang.code
+                          ? 'bg-[#067977]/10 text-[#067977] font-medium'
+                          : 'text-gray-700 hover:text-[#067977] hover:bg-gray-50'
+                      }`}
+                    >
+                      <Globe className="h-3 w-3" />
+                      <div className="flex flex-col">
+                        <span className="text-sm">{lang.nativeName}</span>
+                        <span className="text-xs text-gray-400">{lang.name}</span>
+                      </div>
+                      {language === lang.code && (
+                        <div className="ml-auto h-2 w-2 rounded-full bg-[#067977]"></div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
               
               {user ? (
                 <>

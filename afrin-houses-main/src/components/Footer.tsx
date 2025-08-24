@@ -5,7 +5,16 @@ import { useTranslation } from 'react-i18next';
 import logo from '../assets/logo.png';
 
 const Footer: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  
+  // Get brand name based on language
+  const getBrandName = () => {
+    switch (i18n.language) {
+      case 'ar': return 'بيست ترند';
+      case 'ku': return 'Trend Baş';
+      default: return 'Best Trend';
+    }
+  };
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6">
@@ -14,7 +23,7 @@ const Footer: React.FC = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-2">
               <img src={logo} alt="Logo" className="h-6 sm:h-8 w-auto" />
-              <span className="text-lg sm:text-xl font-bold">{t('language') === 'ar' ? 'بيست ترند' : 'Best Trend'}</span>
+              <span className="text-lg sm:text-xl font-bold">{getBrandName()}</span>
             </div>
             <p className="text-gray-300 mb-2 max-w-md text-sm">
               {t('footer.description')}
@@ -93,7 +102,7 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 mt-4 pt-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-xs">
-              © 2025 {t('language') === 'ar' ? 'بيست ترند' : 'Best Trend'}. {t('footer.allRightsReserved')}.
+              © 2025 {getBrandName()}. {t('footer.allRightsReserved')}.
             </p>
             <div className="flex space-x-4 mt-2 md:mt-0">
               <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-xs transition-colors">
