@@ -904,14 +904,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     i18n.changeLanguage(lang);
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    localStorage.setItem('language', lang); // Save language to localStorage
     dispatch({ type: 'SET_LANGUAGE', payload: lang });
   };
 
-  // Set initial language
+  // Set initial language from localStorage or i18n current language
   useEffect(() => {
-    // Get language from localStorage or use default
-    const savedLanguage = localStorage.getItem('language') || 'ar';
-    changeLanguage(savedLanguage);
+    const initializeLanguage = () => {
+      // Get language from localStorage first
+      const savedLanguage = localStorage.getItem('language');
+      
+      if (savedLanguage && savedLanguage !== i18n.language) {
+        changeLanguage(savedLanguage);
+      } else if (i18n.language) {
+        // Otherwise sync with current i18n language
+        console.log('DEBUG: Syncing with i18n language:', i18n.language);
+        document.documentElement.lang = i18n.language;
+        document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+        dispatch({ type: 'SET_LANGUAGE', payload: i18n.language });
+      } else {
+        changeLanguage('ar');
+      }
+    };
+
+    // Wait for i18n to be initialized
+    if (i18n.isInitialized) {
+      initializeLanguage();
+    } else {
+      i18n.on('initialized', initializeLanguage);
+      // Cleanup listener
+      return () => {
+        i18n.off('initialized', initializeLanguage);
+      };
+    }
   }, []);
 
   const updateUser = async (userData: Partial<User>) => {
