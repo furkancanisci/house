@@ -14,6 +14,7 @@ import {
   Key,
   DollarSign
 } from 'lucide-react';
+import logo from '../assets/logo.png';
 import { Button } from './ui/button';
 import {
   DropdownMenu,
@@ -60,8 +61,8 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Building className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">{t('appName')}</span>
+            <img src={logo} alt="Logo" className="h-10 w-auto" />
+            <span className="text-2xl font-bold text-[#067977]">{language === 'ar' ? 'بيست ترند' : 'Best Trend'}</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -72,8 +73,8 @@ const Header: React.FC = () => {
                 to={path}
                 className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive(path)
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    ? 'text-[#067977] bg-[#067977]/10'
+                  : 'text-gray-700 hover:text-[#067977] hover:bg-gray-50'
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -89,51 +90,56 @@ const Header: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={toggleLanguage}
-              className="flex items-center space-x-1"
+              className="flex items-center space-x-1 text-[#067977] hover:text-[#067977]/80 hover:bg-[#067977]/10 border border-[#067977]/20 hover:border-[#067977]/40"
             >
-              <Globe className="h-4 w-4" />
+              <Globe className="h-4 w-4 text-[#067977]" />
               <span>{language === 'ar' ? 'English' : 'العربية'}</span>
             </Button>
 
+            {/* List Property Button - Always visible */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (user) {
+                  navigate('/add-property');
+                } else {
+                  navigate('/auth');
+                }
+              }}
+              className="flex items-center space-x-1 text-[#067977] border-[#067977] hover:bg-[#067977] hover:text-white transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{t('navigation.listProperty')}</span>
+            </Button>
+
             {user ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/add-property')}
-                  className="flex items-center space-x-1"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>List Property</span>
-                </Button>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <span>{user.name}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                      <User className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/favorites')}>
-                      <Heart className="mr-2 h-4 w-4" />
-                      Favorites
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>{user.name}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    <User className="mr-2 h-4 w-4" />
+                    {t('navigation.dashboard')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/favorites')}>
+                    <Heart className="mr-2 h-4 w-4" />
+                    {t('navigation.favorites')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('navigation.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Button onClick={() => navigate('/auth')} size="sm">
-                Sign In
+              <Button onClick={() => navigate('/auth')} size="sm" className="bg-[#067977] hover:bg-[#067977]/90 text-white">
+                {t('navigation.login')}
               </Button>
             )}
           </div>
@@ -161,8 +167,8 @@ const Header: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(path)
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                      ? 'text-[#067977] bg-[#067977]/10'
+                  : 'text-gray-700 hover:text-[#067977] hover:bg-gray-50'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -170,33 +176,41 @@ const Header: React.FC = () => {
                 </Link>
               ))}
               
+              {/* List Property Button - Always visible in mobile */}
+              <button
+                onClick={() => {
+                  if (user) {
+                    navigate('/add-property');
+                  } else {
+                    navigate('/auth');
+                  }
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#067977] hover:bg-gray-50 w-full text-left"
+              >
+                <Plus className="h-4 w-4" />
+                <span>{t('navigation.listProperty')}</span>
+              </button>
+              
               {user ? (
                 <>
                   <Link
-                    to="/add-property"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>List Property</span>
-                  </Link>
-                  <Link
                     to="/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#067977] hover:bg-gray-50"
                   >
                     <User className="h-4 w-4" />
-                    <span>Dashboard</span>
+                    <span>{t('navigation.dashboard')}</span>
                   </Link>
                   <button
                     onClick={() => {
                       handleLogout();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#067977] hover:bg-gray-50 w-full text-left"
                   >
                     <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
+                    <span>{t('navigation.logout')}</span>
                   </button>
                 </>
               ) : (
@@ -205,10 +219,10 @@ const Header: React.FC = () => {
                     navigate('/auth');
                     setMobileMenuOpen(false);
                   }}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-white bg-[#067977] hover:bg-[#067977]/90 transition-colors"
                 >
                   <User className="h-4 w-4" />
-                  <span>Sign In</span>
+                  <span>{t('navigation.login')}</span>
                 </button>
               )}
             </div>

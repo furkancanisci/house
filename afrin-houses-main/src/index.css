@@ -206,6 +206,79 @@ img {
   contain: layout style paint;
 }
 
+/* Leaflet Map Responsive Styles */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 400px;
+}
+
+/* Map container responsive adjustments */
+@media (max-width: 768px) {
+  .leaflet-container {
+    min-height: 300px;
+  }
+  
+  /* Adjust map controls for mobile */
+  .leaflet-control-zoom {
+    margin-left: 10px !important;
+    margin-top: 10px !important;
+  }
+  
+  .leaflet-control-attribution {
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .leaflet-container {
+    min-height: 250px;
+  }
+  
+  /* Hide attribution on very small screens */
+  .leaflet-control-attribution {
+    display: none !important;
+  }
+}
+
+/* Map popup responsive styles */
+.leaflet-popup-content {
+  max-width: 280px !important;
+}
+
+@media (max-width: 480px) {
+  .leaflet-popup-content {
+    max-width: 200px !important;
+    font-size: 12px;
+  }
+}
+
+/* Cluster marker responsive styles */
+.marker-cluster {
+  background-clip: padding-box;
+  border-radius: 20px;
+}
+
+.marker-cluster div {
+  width: 30px;
+  height: 30px;
+  margin-left: 5px;
+  margin-top: 5px;
+  text-align: center;
+  border-radius: 15px;
+  font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+@media (max-width: 768px) {
+  .marker-cluster div {
+    width: 25px;
+    height: 25px;
+    margin-left: 3px;
+    margin-top: 3px;
+    font-size: 10px;
+  }
+}
+
 /* RTL specific adjustments */
 [dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]),
 [dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),

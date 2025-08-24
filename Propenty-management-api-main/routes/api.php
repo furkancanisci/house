@@ -140,6 +140,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/', 'App\Http\Controllers\Api\CityController@index');
         Route::get('/states', 'App\Http\Controllers\Api\CityController@getStates');
         Route::get('/by-state', 'App\Http\Controllers\Api\CityController@getCitiesByState');
+        Route::get('/state/{state}', 'App\Http\Controllers\Api\CityController@getCitiesByStateParam');
         Route::get('/search', 'App\Http\Controllers\Api\CityController@search');
     });
 

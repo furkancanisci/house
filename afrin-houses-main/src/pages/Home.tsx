@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Property } from '../services/propertyService';
-import { ExtendedProperty } from '../types';
+import { ExtendedProperty, SearchFilters } from '../types';
 import PropertyCard from '../components/PropertyCard';
+// MapSearchView moved to separate page
 import { 
   Search, 
   TrendingUp, 
@@ -34,6 +35,15 @@ const Home: React.FC = () => {
   const [allProperties, setAllProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // showMapSearch state removed - now using separate page
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    searchQuery: '',
+    listingType: 'all',
+    propertyType: 'all',
+    location: '',
+    bedrooms: undefined,
+    bathrooms: undefined
+  });
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -274,7 +284,7 @@ const Home: React.FC = () => {
       };
     }, []);
 
-    const rowTitles = ['Premium Listings', 'Premium Listings', 'Popular Choices'];
+    const rowTitles = [t('home.sections.recommended'), t('home.sections.trending'), t('home.sections.popularChoices')];
     const rowIcons = [HomeIcon, TrendingUp, Award];
     const rowColors = ['text-primary-600', 'text-primary-700', 'text-primary-800'];
 
@@ -290,7 +300,7 @@ const Home: React.FC = () => {
                 <h3 className="text-xl font-semibold text-gray-900">{rowTitles[rowIndex]}</h3>
               </div>
               <Link to="/search" className={`${rowColors[rowIndex]} hover:opacity-80 hover:underline flex items-center text-sm`}>
-                View All <ArrowRight className="h-4 w-4 ml-1" />
+                {t('common.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </div>
             
@@ -326,10 +336,7 @@ const Home: React.FC = () => {
                 className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 property-grid-container scroll-smooth hover:scroll-auto transition-all duration-300"
                 style={{
                   scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                  '&::-webkit-scrollbar': {
-                    display: 'none',
-                  } as React.CSSProperties
+                  msOverflowStyle: 'none'
                 } as React.CSSProperties}
               >
                 {rowProperties.length > 0 ? (
@@ -344,7 +351,7 @@ const Home: React.FC = () => {
                   ))
                 ) : (
                   <div className="w-full text-center py-8">
-                    <p className="text-gray-500">No properties available</p>
+                    <p className="text-gray-500">{t('home.noPropertiesFound')}</p>
                   </div>
                 )}
               </div>
@@ -368,7 +375,7 @@ const Home: React.FC = () => {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-primary-600 to-primary-800 text-white py-20">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="absolute inset-0 bg-[#067977] opacity-20"></div>
         {/* Decorative ornaments */}
         <div className="absolute top-0 left-0 w-44 h-44 md:w-60 md:h-60 opacity-100">
           <img 
@@ -395,25 +402,36 @@ const Home: React.FC = () => {
           </p>
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-2">
-            <div className="flex">
-              <Input
-                type="text"
-                placeholder={t('home.hero.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="flex-grow"
-              />
-              <Button onClick={handleSearch} className="ms-2">
-                <Search className="h-4 w-4 mr-2" />
-                {t('home.hero.searchButton')}
+          <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-1">
+                <Input
+                  type="text"
+                  placeholder={t('home.hero.searchPlaceholder')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="flex-grow"
+                />
+                <Button onClick={handleSearch} className="ms-2">
+                  <Search className="h-4 w-4 mr-2" />
+                  {t('home.hero.searchButton')}
+                </Button>
+              </div>
+              <Button 
+                onClick={() => navigate('/search/map')}
+                variant="outline"
+                className="bg-white border-primary-600 text-primary-600 hover:bg-primary-50"
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                {t('home.hero.searchByMap')}
               </Button>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Map Search View moved to separate page /search/map */}
 
       {/* Stats Section */}
       <section className="py-12 bg-gray-50">

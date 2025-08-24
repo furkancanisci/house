@@ -7,10 +7,10 @@ const AboutUs: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-blue-600 text-white py-20">
+      <div className="bg-[#067977] text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-bold mb-4">About Us</h1>
-          <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+          <p className="text-xl text-[#067977]/70 max-w-3xl mx-auto">
             Your trusted partner in finding the perfect home. We connect buyers, sellers, and renters with quality properties and exceptional service.
           </p>
         </div>
@@ -57,7 +57,7 @@ const AboutUs: React.FC = () => {
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold text-gray-900">{member.name}</h3>
-                  <p className="text-blue-600">{member.role}</p>
+                  <p className="text-[#067977]">{member.role}</p>
                 </div>
               </div>
             ))}
@@ -65,14 +65,14 @@ const AboutUs: React.FC = () => {
         </div>
 
         {/* Call to Action */}
-        <div className="bg-blue-600 rounded-lg shadow-lg p-8 text-center text-white">
+        <div className="bg-[#067977] rounded-lg shadow-lg p-8 text-center text-white">
           <h2 className="text-2xl font-bold mb-4">Ready to find your dream home?</h2>
-          <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
+          <p className="text-[#067977]/70 mb-6 max-w-2xl mx-auto">
             Our team of experienced real estate agents is here to help you every step of the way.
           </p>
           <Link
             to="/contact"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 transition-colors"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-[#067977] bg-white hover:bg-[#067977]/10 transition-colors"
           >
             Contact Us Today
           </Link>
