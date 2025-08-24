@@ -1,10 +1,11 @@
-import React, { useState, useEffect, FC } from 'react';
+import React, { useState, useEffect, useCallback, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { cityService } from '@/services/cityService';
 
 type LoadingState = {
@@ -67,29 +68,65 @@ const LocationSelector: FC<LocationSelectorProps> = ({
   // Use controlled values if provided, otherwise use internal state
   const selectedState = propSelectedState !== undefined ? propSelectedState : internalState;
   const selectedCity = propSelectedCity !== undefined ? propSelectedCity : internalCity;
-
+  
+  // Ensure selectedCity is always a string
+  const normalizedSelectedCity = selectedCity || t('location.selectCity');
   // Handle changes with callbacks if provided, otherwise update internal state
-  const onStateChangeHandler = (value: string) => {
+  const onStateChangeHandler = useCallback((value: string) => {
+    // Prevent unnecessary updates if value hasn't changed
+    if (selectedState === value) return;
+    
     if (propOnStateChange) {
       propOnStateChange(value);
     } else {
       setInternalState(value);
     }
-    if (onLocationChange) {
-      onLocationChange({ state: value });
-    }
-  };
+    // Don't call onLocationChange here to prevent infinite loops
+    // The parent component will handle the location change through onStateChange
+  }, [propOnStateChange, selectedState]);
 
-  const onCityChangeHandler = (value: string) => {
+  const onCityChangeHandler = useCallback((value: string) => {
+    // Prevent unnecessary updates if value hasn't changed
+    if (selectedCity === value) {
+      return;
+    }
+    // Verify the city exists in our options (check both display name and original name)
+    const cityExists = cities.some(city => {
+      const cityDisplayName = locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name);
+      const match = city.name === value || cityDisplayName === value;
+      console.log(`LocationSelector: Checking city '${city.name}' (display: '${cityDisplayName}') against '${value}': ${match}`);
+      return match;
+    });
+    console.log('LocationSelector: Does selected city exist in options?', cityExists);
+    
+    // If city doesn't exist in options, log warning but still proceed
+    if (!cityExists && cities.length > 0) {
+      console.warn('LocationSelector: Selected city not found in available cities:', {
+        selectedCity: value,
+        availableCities: cities.map(c => {
+          const displayName = locale === 'ar' && c.name_ar ? c.name_ar : (c.name_en || c.name);
+          return { original: c.name, display: displayName };
+        }),
+        citiesCount: cities.length
+      });
+    }
+    
+    // Always update internal state first to ensure UI responsiveness
     if (propOnCityChange) {
+      console.log('LocationSelector: Calling propOnCityChange with:', value);
       propOnCityChange(value);
     } else {
+      console.log('LocationSelector: Updating internal city state to:', value);
       setInternalCity(value);
     }
+    
+    // Also notify via onLocationChange if provided
     if (onLocationChange) {
+      console.log('LocationSelector: Calling onLocationChange with state and city');
       onLocationChange({ state: selectedState, city: value });
     }
-  };
+    
+  }, [propOnCityChange, selectedCity, cities, onLocationChange, selectedState, locale]);
 
   // Load states on mount
   useEffect(() => {
@@ -109,36 +146,103 @@ const LocationSelector: FC<LocationSelectorProps> = ({
   }, []);
 
   // Load cities when state changes
-  const loadCities = async (state: string) => {
+  const loadCities = useCallback(async (state: string) => {
     if (!state) return;
     
     try {
       setLoading(prev => ({ ...prev, cities: true }));
-      const data = await cityService.getCities({ state });
+      // Use getCitiesByState instead of getCities to avoid rate limiting on 'all-cities'
+      const data = await cityService.getCitiesByState(state);
       setCities(data);
     } catch (error) {
       console.error('Error loading cities:', error);
+      toast.error('خطأ في تحميل المدن. يرجى المحاولة مرة أخرى.');
+      // Set empty array on error to prevent UI issues
+      setCities([]);
     } finally {
       setLoading(prev => ({ ...prev, cities: false }));
     }
-  };
+  }, []);
 
 
 
-  // Load cities when state changes
+  // Load cities when state changes with debouncing to prevent rapid API calls
   useEffect(() => {
     if (selectedState && showCity) {
-      loadCities(selectedState);
-      // Reset city when state changes
-      onCityChangeHandler('');
+      // Add a small delay to prevent rapid API calls when state changes quickly
+      const timeoutId = setTimeout(() => {
+        loadCities(selectedState);
+      }, 200); // Increased debounce time
+      
+      // Only reset city when state changes AND city is currently set
+      // But preserve it if the user just selected a city for the current state
+      if (selectedCity) {
+        console.log('LocationSelector: State changed, checking if city should be cleared');
+        console.log('LocationSelector: Current state:', selectedState, 'Current city:', selectedCity);
+        
+        // Only clear the city if we're confident it's a new state selection
+        // (not just a re-render with the same state)
+        const shouldClearCity = selectedCity && cities.length === 0; // Only clear if no cities are loaded yet
+        
+        if (shouldClearCity) {
+          if (propOnCityChange) {
+            propOnCityChange('');
+          } else {
+            setInternalCity('');
+          }
+        } else {
+          console.log('LocationSelector: Preserving city selection:', selectedCity);
+        }
+      }
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Clear cities if no state is selected
+      setCities([]);
+      // Also clear city selection only if no state is selected
+      if (selectedCity && !selectedState) {
+        if (propOnCityChange) {
+          propOnCityChange('');
+        } else {
+          setInternalCity('');
+        }
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedState, showCity]);
+  }, [selectedState, showCity, propOnCityChange, loadCities]); // Removed selectedCity from dependencies to prevent loops
+
+  // Verify selected city exists when cities are loaded
+  useEffect(() => {
+    if (cities.length > 0 && selectedCity) {
+      // Check if selectedCity exists in either name format
+      const cityExists = cities.some(city => {
+        const cityDisplayName = locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name);
+        return city.name === selectedCity || cityDisplayName === selectedCity;
+      });
+      
+      console.log('LocationSelector: Verifying selected city after cities loaded:');
+      console.log('LocationSelector: Selected city:', selectedCity);
+      console.log('LocationSelector: Available cities:', cities.map(c => {
+        const displayName = locale === 'ar' && c.name_ar ? c.name_ar : (c.name_en || c.name);
+        return { original: c.name, display: displayName };
+      }));
+      console.log('LocationSelector: City exists in list:', cityExists);
+      
+      if (!cityExists) {
+        console.warn('LocationSelector: Selected city not found in loaded cities, clearing selection');
+        if (propOnCityChange) {
+          propOnCityChange('');
+        } else {
+          setInternalCity('');
+        }
+      } else {
+        console.log('LocationSelector: Selected city is valid, preserving selection');
+      }
+    }
+  }, [cities, selectedCity, propOnCityChange, locale]);
 
   const handleStateChange = (value: string) => {
     onStateChangeHandler(value);
-    // Reset city when state changes
-    onCityChangeHandler('');
+    // City will be reset by useEffect when selectedState changes
   };
 
   return (
@@ -154,7 +258,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
               onValueChange={handleStateChange}
               disabled={loading.states}
             >
-              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-all duration-200 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100">
+              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-[#067977] focus:border-[#067977] transition-all duration-200 bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 hover:from-[#067977]/20 hover:to-[#067977]/10">
                 <SelectValue 
                   placeholder={t('location.selectState')} 
                   className="text-gray-700 font-medium"
@@ -165,7 +269,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
                   <SelectItem 
                     key={state} 
                     value={state}
-                    className="hover:bg-blue-50 focus:bg-blue-100 transition-colors duration-150 py-3 px-4 cursor-pointer"
+                    className="hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 py-3 px-4 cursor-pointer"
                   >
                     <span className="font-medium text-gray-800">{state}</span>
                   </SelectItem>
@@ -181,31 +285,71 @@ const LocationSelector: FC<LocationSelectorProps> = ({
               {t('location.city')}
             </Label>
             <Select
-              value={selectedCity}
-              onValueChange={onCityChangeHandler}
+              key={`city-select-${selectedState}`}
+              value={normalizedSelectedCity}
+              onValueChange={(value) => {
+                onCityChangeHandler(value);
+              }}
               disabled={!selectedState || loading.cities}
             >
               <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-green-400 focus:border-green-500 transition-all duration-200 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                <SelectValue 
-                  placeholder={selectedState 
-                    ? t('location.selectCity')
-                    : t('location.selectStateFirst')
-                  } 
-                  className="text-gray-700 font-medium"
-                />
+                <SelectValue>
+                  {(() => {
+                    
+                    if (normalizedSelectedCity) {
+                      console.log('LocationSelector SelectValue: Displaying selectedCity:', normalizedSelectedCity);
+                      return (
+                        <span className="font-medium text-gray-800">
+                          {normalizedSelectedCity}
+                        </span>
+                      );
+                    } else {
+                      const placeholderText = selectedState 
+                        ? t('location.selectCity')
+                        : t('location.selectStateFirst');
+                      console.log('LocationSelector SelectValue: Displaying placeholder:', placeholderText);
+                      return (
+                        <span className="text-gray-500">
+                          {placeholderText}
+                        </span>
+                      );
+                    }
+                  })()} 
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-white border-2 border-gray-100 shadow-lg">
-                {cities.map((city) => (
-                  <SelectItem 
-                    key={city.id} 
-                    value={city.name}
-                    className="hover:bg-green-50 focus:bg-green-100 transition-colors duration-150 py-3 px-4 cursor-pointer"
-                  >
-                    <span className="font-medium text-gray-800">
-                      {locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name)}
-                    </span>
-                  </SelectItem>
-                ))}
+                {(() => {
+                  console.log('LocationSelector: Rendering SelectContent with cities:', cities.length);
+                  console.log('LocationSelector: Cities data:', cities.map(c => ({ id: c.id, name: c.name, state: c.state })));
+                  
+                  return cities.map((city) => {
+                    console.log('LocationSelector: Rendering city option:', {
+                      id: city.id,
+                      name: city.name,
+                      name_ar: city.name_ar,
+                      name_en: city.name_en,
+                      state: city.state
+                    });
+                    
+                    // Use the same logic for both display and value to ensure consistency
+                    const cityDisplayName = locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name);
+                    const cityValue = cityDisplayName; // Use display name as value to maintain consistency
+                    
+                    console.log('LocationSelector: City display name for', city.name, ':', cityDisplayName);
+                    
+                    return (
+                      <SelectItem 
+                        key={`city-${city.id}-${city.name}`} 
+                        value={cityValue}
+                        className="hover:bg-green-50 focus:bg-green-100 transition-colors duration-150 py-3 px-4 cursor-pointer"
+                      >
+                        <span className="font-medium text-gray-800">
+                          {cityDisplayName}
+                        </span>
+                      </SelectItem>
+                    );
+                  });
+                })()} 
               </SelectContent>
             </Select>
           </div>

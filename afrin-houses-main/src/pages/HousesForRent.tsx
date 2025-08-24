@@ -148,7 +148,7 @@ const HousesForRent: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
-            <p className="font-medium">Error loading properties</p>
+            <p className="font-medium">{t('housesForRent.errorLoadingProperties')}</p>
             <p className="text-sm mt-1">{error}</p>
           </div>
         </div>
@@ -167,7 +167,7 @@ const HousesForRent: React.FC = () => {
             {/* Results Count */}
             <div className="flex items-center space-x-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'} for Rent
+                {filteredProperties.length} {filteredProperties.length === 1 ? t('housesForRent.propertyForRent') : t('housesForRent.propertiesForRent')}
               </h2>
             </div>
 
@@ -181,7 +181,7 @@ const HousesForRent: React.FC = () => {
                 className="flex items-center space-x-2 transition-all duration-200 hover:scale-105"
               >
                 <Filter className="h-4 w-4" />
-                <span>Filters</span>
+                <span>{t('search.filters')}</span>
               </Button>
 
               {/* View Mode Toggle */}
@@ -197,7 +197,7 @@ const HousesForRent: React.FC = () => {
                   }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
-                  <span className="hidden sm:inline font-medium">شبكة</span>
+                  <span className="hidden sm:inline font-medium">{t('search.view.grid')}</span>
                 </Button>
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -210,7 +210,7 @@ const HousesForRent: React.FC = () => {
                   }`}
                 >
                   <List className="h-4 w-4" />
-                  <span className="hidden sm:inline font-medium">قائمة</span>
+                  <span className="hidden sm:inline font-medium">{t('search.view.list')}</span>
                 </Button>
               </div>
             </div>
@@ -231,9 +231,9 @@ const HousesForRent: React.FC = () => {
         {/* Properties Grid/List */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
-            <p className="text-gray-600 text-lg">جاري تحميل العقارات للإيجار...</p>
-            <p className="text-gray-500 text-sm mt-2">يرجى الانتظار قليلاً</p>
+            <Loader2 className="h-12 w-12 animate-spin text-[#067977] mb-4" />
+            <p className="text-gray-600 text-lg">{t('housesForRent.loadingPropertiesForRent')}</p>
+            <p className="text-gray-500 text-sm mt-2">{t('housesForRent.pleaseWait')}</p>
           </div>
         ) : filteredProperties.length > 0 ? (
           <div className={`
@@ -243,20 +243,11 @@ const HousesForRent: React.FC = () => {
             }
           `}>
             {filteredProperties.map((property) => (
-              <div
+              <PropertyCard
                 key={property.id}
-                className={`
-                  ${viewMode === 'grid' 
-                    ? 'transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:border-blue-300'
-                    : 'w-full'
-                  }
-                `}
-              >
-                <PropertyCard
-                  property={property}
-                  view={viewMode}
-                />
-              </div>
+                property={property}
+                view={viewMode}
+              />
             ))}
           </div>
         ) : (
@@ -264,16 +255,16 @@ const HousesForRent: React.FC = () => {
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
             <Key className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-              No Rental Properties Found
+              {t('housesForRent.noRentalPropertiesFound')}
             </h3>
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              We couldn't find any properties matching your criteria. Try adjusting your filters or check back later for new listings.
+              {t('housesForRent.noPropertiesMatchingCriteria')}
             </p>
             <Button
               onClick={() => setLocalFilters({ listingType: 'rent', sortBy: 'created_at', sortOrder: 'desc' })}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105"
+              className="bg-[#067977] hover:bg-[#067977]/90 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105"
             >
-              Clear All Filters
+              {t('housesForRent.clearAllFilters')}
             </Button>
           </div>
         )}

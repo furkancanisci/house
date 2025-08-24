@@ -195,7 +195,7 @@ const EmailVerification: React.FC = () => {
       case 'pending':
         return 'text-yellow-600';
       default:
-        return 'text-blue-600';
+        return 'text-[#067977]';
     }
   };
 
@@ -249,14 +249,14 @@ const EmailVerification: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#067977]/10 via-purple-50 to-pink-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg w-full">
         <Card className="text-center shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="pb-4">
             <div className="flex justify-center mb-6">
               <div className="relative">
                 {verificationStatus === 'loading' && (
-                  <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-20"></div>
+                  <div className="absolute inset-0 bg-[#067977] rounded-full animate-ping opacity-20"></div>
                 )}
                 {verificationStatus === 'success' && (
                   <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-20"></div>
@@ -265,7 +265,7 @@ const EmailVerification: React.FC = () => {
                   <div className="absolute inset-0 bg-red-400 rounded-full animate-pulse opacity-20"></div>
                 )}
                 <div className={`relative rounded-full p-4 ${
-                  verificationStatus === 'loading' ? 'bg-gradient-to-r from-blue-400 to-blue-500' :
+                  verificationStatus === 'loading' ? 'bg-gradient-to-r from-[#067977] to-[#067977]/80' :
                   verificationStatus === 'success' ? 'bg-gradient-to-r from-green-400 to-emerald-500' :
                   verificationStatus === 'error' ? 'bg-gradient-to-r from-red-400 to-red-500' :
                   'bg-gradient-to-r from-yellow-400 to-orange-500'
@@ -275,7 +275,7 @@ const EmailVerification: React.FC = () => {
               </div>
             </div>
             <CardTitle className={`text-3xl font-bold ${
-              verificationStatus === 'loading' ? 'bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent' :
+              verificationStatus === 'loading' ? 'bg-gradient-to-r from-[#067977] to-[#067977]/80 bg-clip-text text-transparent' :
               verificationStatus === 'success' ? 'bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent' :
               verificationStatus === 'error' ? 'bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent' :
               'bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent'
@@ -300,12 +300,12 @@ const EmailVerification: React.FC = () => {
             {verificationStatus === 'loading' && (
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 mb-6 shadow-inner">
                 <div className="flex items-center justify-center mb-3">
-                  <div className="bg-blue-100 rounded-full p-2">
-                    <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                  <div className="bg-[#067977]/20 rounded-full p-2">
+                <Loader2 className="h-6 w-6 text-[#067977] animate-spin" />
                   </div>
                 </div>
-                <p className="text-blue-800 font-semibold text-lg mb-2">⏳ جاري التحقق من البريد الإلكتروني</p>
-                <p className="text-blue-700 text-sm leading-relaxed">
+                <p className="text-[#067977] font-semibold text-lg mb-2">⏳ جاري التحقق من البريد الإلكتروني</p>
+              <p className="text-[#067977]/80 text-sm leading-relaxed">
                   {message || 'يرجى الانتظار بينما نتحقق من بريدك الإلكتروني...'}
                 </p>
               </div>

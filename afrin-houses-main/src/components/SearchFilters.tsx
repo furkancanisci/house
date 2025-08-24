@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { SearchFilters as SearchFiltersType } from '../types';
 import { 
   Search, 
@@ -20,12 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from './ui/card';
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -33,7 +28,9 @@ import {
 } from './ui/collapsible';
 import { Checkbox } from './ui/checkbox';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import LocationSelector from './LocationSelector';
+import { cityService } from '@/services/cityService';
 
 interface SearchFiltersProps {
   onFiltersChange?: (filters: SearchFiltersType) => void;
@@ -41,6 +38,9 @@ interface SearchFiltersProps {
   showAdvanced?: boolean;
   initialFilters?: Partial<SearchFiltersType>;
   hideListingType?: boolean;
+  isLoadingCities?: boolean;
+  citiesError?: string | null;
+  onRetryCities?: () => void;
 }
 
 const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
@@ -50,13 +50,18 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     onApplyFilters,
     showAdvanced = true,
     initialFilters = {},
-    hideListingType = false
+    hideListingType = false,
+    isLoadingCities = false,
+    citiesError = null,
+    onRetryCities
   } = props;
   const { t } = useTranslation();
   const [formValues, setFormValues] = useState<SearchFiltersType>(() => ({
     listingType: initialFilters?.listingType || 'all',
     propertyType: initialFilters?.propertyType || '',
     location: initialFilters?.location || '',
+    state: initialFilters?.state || '',
+    city: initialFilters?.city || '',
     minPrice: initialFilters?.minPrice !== undefined ? Number(initialFilters.minPrice) : undefined,
     maxPrice: initialFilters?.maxPrice !== undefined ? Number(initialFilters.maxPrice) : undefined,
     bedrooms: initialFilters?.bedrooms !== undefined ? Number(initialFilters.bedrooms) : undefined,
@@ -66,9 +71,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     features: initialFilters?.features || []
   }));
 
-  // Location state for dropdowns
-  const [selectedState, setSelectedState] = useState<string>('');
-  const [selectedCity, setSelectedCity] = useState<string>('');
+  // Advanced filters state
+  const [states, setStates] = useState<{ value: string; label: string }[]>([]);
+  const [cities, setCities] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false);
   
   // Local state for input values that update as user types
@@ -127,12 +135,18 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     'Hardwood Floors',
   ];
 
-  // Update form values when initialFilters change
+  // Update form values when initialFilters change - but only on mount or when there are no existing values
+  const isInitialMount = useRef(true);
+  
   useEffect(() => {
-    if (initialFilters) {
+    // Only update form values on initial mount or when current form is empty
+    if (isInitialMount.current && initialFilters) {
+      console.log('SearchFilters: Setting initial form values from props:', initialFilters);
       setFormValues(prev => ({
         ...prev,
         ...initialFilters,
+        state: initialFilters.state || '',
+        city: initialFilters.city || '',
         minPrice: initialFilters.minPrice ? Number(initialFilters.minPrice) : undefined,
         maxPrice: initialFilters.maxPrice ? Number(initialFilters.maxPrice) : undefined,
         bedrooms: initialFilters.bedrooms ? Number(initialFilters.bedrooms) : undefined,
@@ -146,8 +160,19 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
         minPrice: initialFilters.minPrice ? initialFilters.minPrice.toString() : '',
         maxPrice: initialFilters.maxPrice ? initialFilters.maxPrice.toString() : ''
       });
+      
+      isInitialMount.current = false;
     }
   }, [initialFilters]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Handle price input changes - only update local state
   const handlePriceChange = (type: 'min' | 'max', value: string) => {
@@ -164,6 +189,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('SearchFilters: Form submitted');
+    console.log('SearchFilters: Current formValues:', formValues);
+    console.log('SearchFilters: Current localValues:', localValues);
+    
     // Create a copy of form values
     const newFilters = { ...formValues };
     
@@ -175,17 +204,19 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     if (minPrice !== undefined) newFilters.minPrice = minPrice;
     if (maxPrice !== undefined) newFilters.maxPrice = maxPrice;
     
-    // Update location based on selected dropdowns
-    const locationParts = [];
-    if (selectedCity) locationParts.push(selectedCity);
-    if (selectedState) locationParts.push(selectedState);
-    newFilters.location = locationParts.join(', ');
+    console.log('SearchFilters: Final filters to apply:', newFilters);
+    
+    // Location is already handled by handleLocationChange and stored in formValues.location
     
     // Call the appropriate callback
     if (onApplyFilters) {
+      console.log('SearchFilters: Calling onApplyFilters');
       onApplyFilters(newFilters);
     } else if (onFiltersChange) {
+      console.log('SearchFilters: Calling onFiltersChange');
       onFiltersChange(newFilters);
+    } else {
+      console.log('SearchFilters: No callback provided!');
     }
   };
   
@@ -195,6 +226,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       listingType: 'all',
       propertyType: '',
       location: '',
+      state: '',
+      city: '',
       minPrice: undefined,
       maxPrice: undefined,
       bedrooms: undefined,
@@ -216,101 +249,167 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     }
   };
 
-  // Handle location changes from LocationSelector
-  const handleLocationChange = (location: { state?: string; city?: string }) => {
-    // Update local state only - no immediate filter application
-    let newCity = selectedCity;
-    let newState = selectedState;
+  // Handle location change with debouncing to prevent excessive API calls
+  const handleLocationChange = useCallback(async (type: 'state' | 'city', value: string) => {
+    console.log(`SearchFilters: handleLocationChange called - ${type}:`, value);
     
-    if (location.state !== undefined) {
-      newState = location.state;
-      setSelectedState(location.state);
-      // Reset city when state changes
-      if (location.city === undefined) {
-        newCity = '';
-        setSelectedCity('');
+    try {
+      if (type === 'state') {
+        // Use functional update to prevent stale closure issues
+        setFormValues(prev => {
+          if (prev.state === value) return prev; // Prevent unnecessary updates
+          const newValues = { ...prev, state: value, city: '' };
+          // Update location string
+          newValues.location = value;
+          console.log('SearchFilters: Updated formValues after state change:', newValues);
+          return newValues;
+        });
+        
+        // Clear existing timer
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+        }
+        
+        if (value) {
+          // Debounce API call by 500ms (increased from 300ms)
+          debounceTimerRef.current = setTimeout(async () => {
+            try {
+              console.log('SearchFilters: Loading cities for state:', value);
+              const citiesData = await cityService.getCitiesByState(value);
+              const newCities = citiesData.map(city => ({ value: city.name, label: city.name }));
+              console.log('SearchFilters: Loaded cities:', newCities);
+              setCities(prevCities => {
+                // Only update if cities actually changed
+                if (JSON.stringify(prevCities) === JSON.stringify(newCities)) {
+                  return prevCities;
+                }
+                return newCities;
+              });
+            } catch (error) {
+              console.error('Error loading cities:', error);
+              toast.error('خطأ في تحميل المدن');
+              setCities([]);
+            }
+          }, 500);
+        } else {
+          setCities([]);
+        }
+      } else {
+        setFormValues(prev => {
+          if (prev.city === value) return prev; // Prevent unnecessary updates
+          const newValues = { ...prev, city: value };
+          // Update location string to include both state and city
+          const locationParts = [];
+          if (value) locationParts.push(value);
+          if (prev.state) locationParts.push(prev.state);
+          newValues.location = locationParts.join(', ');
+          console.log('SearchFilters: Updated formValues after city change:', newValues);
+          return newValues;
+        });
+        
+        console.log('SearchFilters: City updated in form only, waiting for Apply Filters button');
       }
+    } catch (error) {
+      console.error(`Error handling ${type} change:`, error);
+      toast.error(`خطأ في معالجة ${type === 'state' ? 'الولاية' : 'المدينة'}`);
     }
-    if (location.city !== undefined) {
-      newCity = location.city;
-      setSelectedCity(location.city);
-    }
+  }, [onFiltersChange, formValues]);
+
+  // Handle location changes from LocationSelector with debouncing
+  const handleLocationSelectorChange = useCallback((location: { state?: string; city?: string }) => {
+    console.log('SearchFilters: Location selector changed:', location);
     
-    // Update form values for display but don't apply filters yet
+    // Only update form values for display - don't update selectedState/selectedCity
+    // to prevent infinite loops with LocationSelector
     const locationParts = [];
-    if (newCity) locationParts.push(newCity);
-    if (newState) locationParts.push(newState);
+    if (location.city) locationParts.push(location.city);
+    if (location.state) locationParts.push(location.state);
     
     const newLocation = locationParts.join(', ');
     
-    setFormValues(prev => ({
-      ...prev,
-      location: newLocation
-    }));
+    console.log('SearchFilters: New location string:', newLocation);
+    
+    // Use functional update to prevent stale closure issues
+    setFormValues(prev => {
+      if (prev.location === newLocation) return prev; // Prevent unnecessary updates
+      return {
+        ...prev,
+        location: newLocation
+      };
+    });
     
     // Don't notify parent component - wait for form submission
-  };
+  }, []);
 
   // Handle filter changes - update local form values
   const handleFilterChange = (key: keyof SearchFiltersType, value: any) => {
     // Skip if this is a price change (handled by handlePriceChange)
     if (key === 'minPrice' || key === 'maxPrice') return;
     
-    // Update local form values
+    // Update local form values with simplified logic
     setFormValues(prev => {
       const newValues = { ...prev };
       
-      // Handle different filter types
-      if (value === 'any' || value === 'all' || value === '') {
-        // Set to undefined instead of deleting to maintain form state
-        if (key === 'bedrooms' || key === 'bathrooms') {
+      // Handle specific cases to prevent infinite loops
+      if (key === 'listingType') {
+        newValues.listingType = value === 'all' ? 'all' : value;
+      } else if (key === 'propertyType') {
+        newValues.propertyType = (value === 'all' || value === 'all-property-types') ? '' : value;
+      } else if (key === 'bedrooms' || key === 'bathrooms') {
+        if (value === 'any' || value === '') {
           newValues[key] = undefined;
-        } else if (key === 'listingType') {
-          newValues.listingType = 'all';
-        } else if (key in newValues) {
-          delete newValues[key as keyof SearchFiltersType];
-        }
-      } else {
-        // Update the filter value with proper type casting
-        if (key === 'listingType' && (value === 'rent' || value === 'sale' || value === 'all')) {
-          newValues.listingType = value === 'all' ? undefined : value;
-        } else if (key === 'bedrooms' || key === 'bathrooms') {
+        } else {
           const numValue = Number(value);
-          if (!isNaN(numValue)) {
-            (newValues as any)[key] = numValue;
-          }
-        } else if (key === 'minSquareFootage' || key === 'maxSquareFootage') {
-          const numValue = Number(value);
-          if (!isNaN(numValue)) {
-            (newValues as any)[key] = numValue;
-          }
-        } else if (key === 'propertyType' && typeof value === 'string') {
-          newValues.propertyType = value;
-        } else if (key === 'location' && typeof value === 'string') {
-          newValues.location = value;
-        } else if (key === 'features' && Array.isArray(value)) {
-          newValues.features = value;
+          newValues[key] = !isNaN(numValue) ? numValue : undefined;
         }
+      } else if (key === 'minSquareFootage' || key === 'maxSquareFootage') {
+        const numValue = Number(value);
+        newValues[key] = !isNaN(numValue) && numValue > 0 ? numValue : undefined;
+      } else if (key === 'location') {
+        newValues.location = typeof value === 'string' ? value : '';
+      } else if (key === 'state') {
+        newValues.state = typeof value === 'string' ? value : '';
+      } else if (key === 'city') {
+        newValues.city = typeof value === 'string' ? value : '';
+      } else if (key === 'features') {
+        newValues.features = Array.isArray(value) ? value : [];
       }
       
       return newValues;
     });
   };
 
-  // Toggle feature in form values
-  const handleFeatureToggle = (feature: string) => {
+  // Toggle feature in form values with useCallback to prevent infinite re-renders
+  const handleFeatureToggle = useCallback((feature: string) => {
     setFormValues(prev => {
       const currentFeatures = prev.features || [];
-      const newFeatures = currentFeatures.includes(feature)
+      const isIncluded = currentFeatures.includes(feature);
+      
+      // Prevent unnecessary state updates if no change
+      if (isIncluded && currentFeatures.length === 1 && currentFeatures[0] === feature) {
+        const newFeatures = [];
+        return prev.features?.length === 0 ? prev : { ...prev, features: newFeatures };
+      }
+      
+      if (!isIncluded && currentFeatures.includes(feature)) {
+        return prev; // No change needed
+      }
+      
+      const newFeatures = isIncluded
         ? currentFeatures.filter(f => f !== feature)
         : [...currentFeatures, feature];
+      
+      // Only update if features actually changed
+      if (JSON.stringify(newFeatures.sort()) === JSON.stringify(currentFeatures.sort())) {
+        return prev;
+      }
       
       return {
         ...prev,
         features: newFeatures
       };
     });
-  };
+  }, []);
 
   const clearFilters = () => {
     const defaultFilters: SearchFiltersType = {
@@ -324,19 +423,19 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       maxSquareFootage: undefined,
       features: [],
       location: '',
+      state: '',
+      city: '',
     };
     
+    // Reset all state in a single batch
     setFormValues(defaultFilters);
     setLocalValues({
       minPrice: '',
       maxPrice: ''
     });
+
     
-    // Reset location dropdowns
-    setSelectedState('');
-    setSelectedCity('');
-    
-    // Notify parent component of changes
+    // Notify parent immediately without setTimeout
     if (onApplyFilters) {
       onApplyFilters(defaultFilters);
     } else if (onFiltersChange) {
@@ -344,89 +443,109 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     }
   };
 
-  const hasActiveFilters = Object.values(formValues).some(value => {
-    if (Array.isArray(value)) return value.length > 0;
-    if (typeof value === 'string') return value !== '' && value !== 'all' && value !== 'any';
-    if (Array.isArray(value)) return value.length > 0;
-    if (typeof value === 'string') return value !== '' && value !== 'all' && value !== 'any';
-    return value !== undefined;
-  });
+  const hasActiveFilters = useMemo(() => {
+    return Object.entries(formValues).some(([key, value]) => {
+      if (key === 'listingType') return value !== 'all' && value !== undefined;
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === 'string') return value !== '' && value !== 'all' && value !== 'all-property-types' && value !== 'any';
+      return value !== undefined;
+    });
+  }, [formValues]);
 
   
   
  
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Filter className="h-5 w-5" />
-            <span>{t('filters.searchFilters')}</span>
-          </div>
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={clearFilters}>
-              <X className="h-4 w-4 mr-1" />
-              {t('buttons.clear')}
+    <div className="w-full">
+      {/* Quick Clear Button */}
+      {hasActiveFilters && (
+        <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-[#067977]/10 border border-[#067977]/30 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm text-[#067977] font-medium">{t('filters.activeFilters')}</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearFilters}
+              type="button"
+              className="text-[#067977] border-[#067977]/30 hover:bg-[#067977]/20 px-2 py-1 text-xs"
+            >
+              <X className="h-3 w-3 mr-1" />
+              {t('filters.clearAll')}
             </Button>
-          )}
-        </CardTitle>
-      </CardHeader>
+          </div>
+        </div>
+      )}
       
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2 sm:space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 lg:space-y-6">
         {/* Location Selector */}
-        <LocationSelector
-          selectedState={selectedState}
-          selectedCity={selectedCity}
-          onStateChange={(state) => {
-             handleLocationChange({ state });
-           }}
-           onCityChange={(city) => {
-             handleLocationChange({ city });
-           }}
-          showState={true}
-          showCity={true}
-        />
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#067977] rounded-full"></div>
+            {t('filters.location')}
+          </label>
+          <div className="bg-gray-50 p-2 sm:p-3 rounded-lg border">
+            <LocationSelector
+              selectedState={formValues.state}
+              selectedCity={formValues.city}
+              onStateChange={(state) => {
+                handleLocationChange('state', state);
+              }}
+              onCityChange={(city) => {
+                handleLocationChange('city', city);
+              }}
+              showState={true}
+              showCity={true}
+            />
+          </div>
+        </div>
 
         {/* Listing Type - conditionally hidden */}
         {!hideListingType && (
-          <div className="space-y-2">
-            <Label>{t('filters.listingType')}</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"></div>
+              {t('filters.listingType')}
+            </label>
             <Select
               value={formValues.listingType || 'all'}
-              onValueChange={(value) => handleFilterChange('listingType', value === 'all' ? '' : value)}
+              onValueChange={(value) => handleFilterChange('listingType', value)}
             >
-              <SelectTrigger>
-                <SelectValue>
-                  {formValues.listingType === 'rent' ? t('property.listingTypes.forRent') : 
-                   formValues.listingType === 'sale' ? t('property.listingTypes.forSale') : 
+              <SelectTrigger className="bg-gray-50 border-gray-300">
+                <SelectValue placeholder={t('filters.selectListingType')}>
+                  {formValues.listingType === 'rent' ? t('property.listingTypes.rent') : 
+                   formValues.listingType === 'sale' ? t('property.listingTypes.sale') : 
                    t('property.listingTypes.all')}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('property.listingTypes.all')}</SelectItem>
-                <SelectItem value="rent">{t('property.listingTypes.forRent')}</SelectItem>
-                <SelectItem value="sale">{t('property.listingTypes.forSale')}</SelectItem>
+                <SelectItem value="rent">{t('property.listingTypes.rent')}</SelectItem>
+                <SelectItem value="sale">{t('property.listingTypes.sale')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         )}
 
         {/* Property Type */}
-        <div className="space-y-2">
-          <Label>{t('filters.propertyType')}</Label>
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full"></div>
+            {t('filters.propertyType')}
+          </label>
           <Select
-            value={formValues.propertyType || ''}
+            value={formValues.propertyType || 'all-property-types'}
             onValueChange={(value) => handleFilterChange('propertyType', value)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder={t('filters.propertyType')}>
+            <SelectTrigger className="bg-gray-50 border-gray-300">
+              <SelectValue placeholder={t('filters.selectPropertyType')}>
                 {formValues.propertyType ? 
                   propertyTypes.find(t => t.value === formValues.propertyType)?.label : 
-                  t('filters.propertyType')}
+                  t('filters.selectPropertyType')}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all-property-types">{t('property.types.all')}</SelectItem>
               {propertyTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}
@@ -437,73 +556,92 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
         </div>
 
         {/* Price Range */}
-        <div className="space-y-2">
-          <Label>{t('filters.priceRange')}</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="number"
-                min="0"
-                placeholder={t('filters.minPrice')}
-                value={localValues.minPrice}
-                onChange={(e) => handlePriceChange('min', e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="number"
-                min="0"
-                placeholder={t('filters.maxPrice')}
-                value={localValues.maxPrice}
-                onChange={(e) => handlePriceChange('max', e.target.value)}
-                className="pl-10"
-              />
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-yellow-500 rounded-full"></div>
+            {t('filters.priceRange')}
+          </label>
+          <div className="bg-gray-50 p-2 sm:p-3 rounded-lg border space-y-2 sm:space-y-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div>
+                <label className="text-xs text-gray-600 mb-0.5 sm:mb-1 block">{t('filters.minPrice')}</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={localValues.minPrice}
+                    onChange={(e) => handlePriceChange('min', e.target.value)}
+                    className="pl-8 sm:pl-10 bg-white text-xs sm:text-sm h-8 sm:h-10"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-600 mb-0.5 sm:mb-1 block">{t('filters.maxPrice')}</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="∞"
+                    value={localValues.maxPrice}
+                    onChange={(e) => handlePriceChange('max', e.target.value)}
+                    className="pl-8 sm:pl-10 bg-white text-xs sm:text-sm h-8 sm:h-10"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Bedrooms & Bathrooms */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>{t('filters.bedrooms')}</Label>
-            <Select
-            value={formValues.bedrooms?.toString() || 'any'}
-            onValueChange={(value) => handleFilterChange('bedrooms', value === 'any' ? '' : value)}
-            >
-              <SelectTrigger>
-                <SelectValue>{formValues.bedrooms ? `${formValues.bedrooms}+` : t('filters.any')}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">{t('filters.any')}</SelectItem>
-                {bedroomOptions.filter(opt => opt.value !== 'any').map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>{t('filters.bathrooms')}</Label>
-            <Select
-            value={formValues.bathrooms?.toString() || 'any'}
-            onValueChange={(value) => handleFilterChange('bathrooms', value === 'any' ? '' : value)}
-            >
-              <SelectTrigger>
-                <SelectValue>{formValues.bathrooms ? `${formValues.bathrooms}+` : t('filters.any')}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">{t('filters.any')}</SelectItem>
-                {bathroomOptions.filter(opt => opt.value !== 'any').map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-2 sm:space-y-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
+            <div className="space-y-1 sm:space-y-2">
+              <label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full"></div>
+                {t('filters.bedrooms')}
+              </label>
+              <Select
+              value={formValues.bedrooms?.toString() || 'any'}
+              onValueChange={(value) => handleFilterChange('bedrooms', value === 'any' ? '' : value)}
+              >
+                <SelectTrigger className="bg-gray-50 border-gray-300">
+                  <SelectValue>{formValues.bedrooms ? `${formValues.bedrooms}+` : t('filters.any')}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">{t('filters.any')}</SelectItem>
+                  {bedroomOptions.filter(opt => opt.value !== 'any').map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1 sm:space-y-2">
+              <label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-teal-500 rounded-full"></div>
+                {t('filters.bathrooms')}
+              </label>
+              <Select
+              value={formValues.bathrooms?.toString() || 'any'}
+              onValueChange={(value) => handleFilterChange('bathrooms', value === 'any' ? '' : value)}
+              >
+                <SelectTrigger className="bg-gray-50 border-gray-300">
+                  <SelectValue>{formValues.bathrooms ? `${formValues.bathrooms}+` : t('filters.any')}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">{t('filters.any')}</SelectItem>
+                  {bathroomOptions.filter(opt => opt.value !== 'any').map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -511,7 +649,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
         {showAdvanced && (
           <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between">
+              <Button type="button" variant="ghost" className="w-full justify-between">
                 {t('filters.advancedFilters')}
                 <Filter className="h-4 w-4" />
               </Button>
@@ -549,18 +687,23 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
               <div className="space-y-2">
                 <Label>{t('filters.features')}</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  {commonFeatures.map((feature) => (
-                    <div key={feature} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={feature}
-                        checked={formValues.features?.includes(feature) || false}
-                        onCheckedChange={() => handleFeatureToggle(feature)}
-                      />
-                      <Label htmlFor={feature} className="text-sm">
-                        {t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, feature)}
-                      </Label>
-                    </div>
-                  ))}
+                  {commonFeatures.map((feature, index) => {
+                    const featureId = `feature-${index}-${feature.replace(/\s+/g, '-').toLowerCase()}`;
+                    const isChecked = formValues.features?.includes(feature) || false;
+                    
+                    return (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={featureId}
+                          checked={isChecked}
+                          onCheckedChange={() => handleFeatureToggle(feature)}
+                        />
+                        <Label htmlFor={featureId} className="text-sm">
+                          {t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, feature)}
+                        </Label>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </CollapsibleContent>
@@ -568,25 +711,27 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
         )}
 
           {/* Apply Filters Button */}
-          <div className="mt-6 flex justify-end space-x-2">
-            <Button 
-              type="button"
-              variant="outline" 
-              onClick={clearFilters}
-              className="px-4 py-2"
-            >
-              Reset
-            </Button>
-            <Button 
-              type="submit"
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Apply Filters
-            </Button>
+          <div className="mt-4 sm:mt-6 lg:mt-8 pt-2 sm:pt-3 lg:pt-4 border-t border-gray-200">
+            <div className="flex gap-2 sm:gap-3">
+              <Button 
+                type="button"
+                variant="outline" 
+                onClick={clearFilters}
+                className="flex-1 py-2 sm:py-3 border-gray-300 text-gray-700 hover:bg-gray-50 text-xs sm:text-sm"
+              >
+                {t('common.reset')}
+              </Button>
+              <Button 
+                type="submit"
+                className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-[#067977] to-[#067977]/80 hover:from-[#067977]/90 hover:to-[#067977]/70 text-white font-medium shadow-lg text-xs sm:text-sm"
+              >
+                {t('filters.applyFilters')}
+              </Button>
+            </div>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

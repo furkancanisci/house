@@ -114,7 +114,7 @@ const FixedImage: React.FC<FixedImageProps> = ({
         {...props}
         src={currentSrc}
         alt={alt}
-        className={`${className} transition-all duration-300 ${isZoomable ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : ''} ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`${className} object-center transition-all duration-300 ${isZoomable ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : ''} ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         onError={handleError}
         onLoad={handleLoad}
         onClick={handleImageClick}

@@ -2,7 +2,7 @@ import api from './api';
 
 // Utility function to fix image URLs
 const fixImageUrl = (url: string | null | undefined | any): string => {
-  const baseUrl = 'https://house-6g6m.onrender.com';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://house-6g6m.onrender.com';
   
   // Return production placeholder if no URL is provided
   if (!url || typeof url !== 'string') {
@@ -100,6 +100,8 @@ export interface PropertyFilters {
   maxSquareFeet?: number;
   features?: string[];
   location?: string;
+  city?: string;
+  state?: string;
   radius?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
@@ -134,6 +136,15 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     
     if (filters.location) {
       params.location = filters.location;
+    }
+    
+    // City and state filters
+    if (filters.city) {
+      params.city = filters.city;
+    }
+    
+    if (filters.state) {
+      params.state = filters.state;
     }
     
     // Price range - only send if values are greater than 0
@@ -263,9 +274,22 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       links: response.data.links || {},
       filters: response.data.filters || {}
     };
-  } catch (error) {
-    console.error('Error fetching properties:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Error fetching properties:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url
+    });
+    
+    // Return fallback data instead of throwing
+    return {
+      data: [],
+      meta: {},
+      links: {},
+      filters: {},
+      error: 'فشل في تحميل العقارات. يرجى المحاولة مرة أخرى.'
+    };
   }
 };
 
@@ -299,9 +323,19 @@ export const getProperty = async (slugOrId: string) => {
     }
     
     return property;
-  } catch (error) {
-    console.error(`Error fetching property ${slugOrId}:`, error);
-    throw error;
+  } catch (error: any) {
+    console.error(`Error fetching property ${slugOrId}:`, {
+      message: error.message,
+      status: error.response?.status,
+      slug: slugOrId
+    });
+    
+    // Return null for not found properties
+    if (error.response?.status === 404) {
+      return null;
+    }
+    
+    throw new Error('فشل في تحميل تفاصيل العقار. يرجى المحاولة مرة أخرى.');
   }
 };
 
@@ -344,9 +378,14 @@ export const getFeaturedProperties = async (params: FeaturedPropertiesParams = {
       
       return property;
     });
-  } catch (error) {
-    console.error('Error fetching featured properties:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Error fetching featured properties:', {
+      message: error.message,
+      status: error.response?.status
+    });
+    
+    // Return empty array as fallback
+    return [];
   }
 };
 
@@ -385,7 +424,7 @@ export const createProperty = async (propertyData: any) => {
     
     // Log FormData contents for debugging
     console.log('FormData contents:');
-    for (let pair of formData.entries()) {
+    for (const pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }
     

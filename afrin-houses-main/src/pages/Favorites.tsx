@@ -276,9 +276,9 @@ const Favorites: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-blue-900 mb-2">Stay Updated</h4>
-                      <p className="text-blue-800">
+                    <div className="bg-[#067977]/10 p-4 rounded-lg">
+              <h4 className="font-semibold text-[#067977] mb-2">Stay Updated</h4>
+              <p className="text-[#067977]">
                         Check back regularly as property details and availability may change.
                       </p>
                     </div>

@@ -225,7 +225,7 @@ export const authService: AuthService = {
   // Update user profile
   async updateUser(userData: Partial<User>): Promise<{ user: User; message: string }> {
     try {
-      const response = await api.post('/profile', userData, { baseURL: 'http://127.0.0.1:8000/api' });
+      const response = await api.post('/profile', userData, { baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1').replace('/v1', '') });
       
       // Update the stored user data in localStorage
       const currentUser = this.getStoredUser();

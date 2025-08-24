@@ -137,11 +137,23 @@ export interface SearchFilters {
   maxSquareFootage?: number;
   features?: string[];
   location?: string;
-  sortBy?: 'price' | 'date' | 'created_at';
+  state?: string; // Added for location filtering
+  city?: string; // Added for location filtering
+  sortBy?: 'price' | 'date' | 'created_at' | 'squareFootage';
   sortOrder?: 'asc' | 'desc';
   searchQuery?: string; // Added to support search functionality
   search?: string; // For API compatibility
-  // Pagination support
+  // Map viewport for dynamic loading
+  viewport?: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+    zoom: number;
+  };
+  selectedPropertyId?: string | number; // Currently selected property
+  lastUpdated?: number; // Timestamp for forcing updates
+  // Pagination
   page?: number;
   perPage?: number;
 }

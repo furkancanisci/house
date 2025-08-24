@@ -1,12 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker, Autocomplete } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Search, RotateCcw } from 'lucide-react';
+import { useLeafletMap, DEFAULT_CENTER, DEFAULT_ZOOM, OSM_TILE_LAYER } from '../context/LeafletMapProvider';
+import { MapPin, Search, RotateCcw, Navigation } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { toast } from 'sonner';
+import L from 'leaflet';
 
 interface PropertyLocationMapProps {
   onLocationChange: (location: {
@@ -22,29 +24,100 @@ interface PropertyLocationMapProps {
   className?: string;
 }
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyCO0kKndUNlmQi3B5mxy4dblg_8WYcuKuk';
+// Map bounds for Syria region
+const SYRIA_BOUNDS: [[number, number], [number, number]] = [
+  [32.0, 35.5], // Southwest
+  [37.5, 42.5]  // Northeast
+];
 
-// Google Maps libraries to load
-const libraries: ("places" | "geometry" | "drawing" | "visualization")[] = ["places"];
-
-// Default center (Damascus, Syria)
-const DEFAULT_CENTER = {
-  lat: 33.5138,
-  lng: 36.2765
+// Custom marker icon
+const createLocationIcon = () => {
+  return L.divIcon({
+    html: `
+      <div style="
+        background-color: #ef4444;
+        width: 24px;
+        height: 24px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="
+          width: 8px;
+          height: 8px;
+          background-color: white;
+          border-radius: 50%;
+          transform: rotate(45deg);
+        "></div>
+      </div>
+    `,
+    className: 'custom-location-marker',
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+    popupAnchor: [0, -24]
+  });
 };
 
-const mapContainerStyle = {
-  width: '100%',
-  height: '400px',
-  borderRadius: '8px'
+// Component to handle map events
+const MapEventHandler: React.FC<{
+  onMapClick: (lat: number, lng: number) => void;
+}> = ({ onMapClick }) => {
+  useMapEvents({
+    click: (e) => {
+      const { lat, lng } = e.latlng;
+      onMapClick(lat, lng);
+    }
+  });
+  
+  return null;
 };
 
-const mapOptions = {
-  disableDefaultUI: false,
-  zoomControl: true,
-  streetViewControl: false,
-  mapTypeControl: false,
-  fullscreenControl: false,
+// Component to control map center
+const MapController: React.FC<{
+  center: [number, number] | null;
+  zoom: number;
+}> = ({ center, zoom }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center) {
+      map.setView(center, zoom, { animate: true });
+    }
+  }, [center, zoom, map]);
+  
+  return null;
+};
+
+// Draggable marker component
+const DraggableMarker: React.FC<{
+  position: [number, number];
+  onDragEnd: (lat: number, lng: number) => void;
+}> = ({ position, onDragEnd }) => {
+  const markerRef = useRef<L.Marker>(null);
+  
+  const eventHandlers = {
+    dragend: () => {
+      const marker = markerRef.current;
+      if (marker) {
+        const { lat, lng } = marker.getLatLng();
+        onDragEnd(lat, lng);
+      }
+    }
+  };
+  
+  return (
+    <Marker
+      ref={markerRef}
+      position={position}
+      icon={createLocationIcon()}
+      draggable={true}
+      eventHandlers={eventHandlers}
+    />
+  );
 };
 
 const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
@@ -54,179 +127,173 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
   className = ''
 }) => {
   const { t } = useTranslation();
+  const { isLoaded: isMapLoaded, loadError } = useLeafletMap();
   
   // Map state
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [marker, setMarker] = useState<{lat: number, lng: number} | null>(
+  const [marker, setMarker] = useState<[number, number] | null>(
     initialCoordinates && initialCoordinates.lat !== undefined && initialCoordinates.lng !== undefined
-      ? { lat: initialCoordinates.lat, lng: initialCoordinates.lng }
+      ? [initialCoordinates.lat, initialCoordinates.lng]
       : null
   );
   const [searchValue, setSearchValue] = useState(initialAddress || '');
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+  const [mapZoom, setMapZoom] = useState(marker ? 16 : DEFAULT_ZOOM);
   
-  // Autocomplete refs
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Geocoder for reverse geocoding
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-
-  // Initialize geocoder when maps API is loaded
-  useEffect(() => {
-    if (isLoaded && window.google) {
-      geocoderRef.current = new window.google.maps.Geocoder();
-    }
-  }, [isLoaded]);
-
-  // Handle map load
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
-    setIsLoaded(true);
-  }, []);
-
-  // Handle map unmount
-  const onUnmount = useCallback(() => {
-    setMap(null);
-    setIsLoaded(false);
-  }, []);
-
-  // Handle autocomplete load
-  const onAutocompleteLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
-    autocompleteRef.current = autocomplete;
-  }, []);
-
-  // Handle place selection from autocomplete
-  const onPlaceChanged = useCallback(() => {
-    if (autocompleteRef.current) {
-      const place = autocompleteRef.current.getPlace();
+  // Refs
+  const mapRef = useRef<L.Map | null>(null);
+  
+  // Reverse geocoding using Nominatim (OpenStreetMap)
+  const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+      );
       
-      if (place.geometry && place.geometry.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        const address = place.formatted_address || '';
-        
-        setMarker({ lat, lng });
-        setSearchValue(address);
-        
-        // Center map on selected location
-        if (map) {
-          map.panTo({ lat, lng });
-          map.setZoom(16);
+      if (response.ok) {
+        const data = await response.json();
+        return data.display_name || null;
+      }
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+    }
+    
+    return null;
+  }, []);
+  
+  // Forward geocoding using Nominatim
+  const forwardGeocode = useCallback(async (query: string): Promise<{lat: number, lng: number, address: string} | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1&countrycodes=sy`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.length > 0) {
+          const result = data[0];
+          return {
+            lat: parseFloat(result.lat),
+            lng: parseFloat(result.lon),
+            address: result.display_name
+          };
         }
-        
-        // Notify parent component
-        onLocationChange({
-          latitude: lat,
-          longitude: lng,
-          address
-        });
-        
-        toast.success(t('map.locationSelected'));
       }
+    } catch (error) {
+      console.error('Forward geocoding error:', error);
     }
-  }, [map, onLocationChange, t]);
-
+    
+    return null;
+  }, []);
+  
   // Handle map click to place marker
-  const onMapClick = useCallback((event: google.maps.MapMouseEvent) => {
-    if (event.latLng) {
-      const lat = event.latLng.lat();
-      const lng = event.latLng.lng();
-      
-      setMarker({ lat, lng });
-      
-      // Reverse geocode to get address
-      if (geocoderRef.current) {
-        geocoderRef.current.geocode(
-          { location: { lat, lng } },
-          (results, status) => {
-            if (status === 'OK' && results && results[0]) {
-              const address = results[0].formatted_address;
-              setSearchValue(address);
-              
-              // Notify parent component
-              onLocationChange({
-                latitude: lat,
-                longitude: lng,
-                address
-              });
-            } else {
-              // Notify parent component without address
-              onLocationChange({
-                latitude: lat,
-                longitude: lng
-              });
-            }
-          }
-        );
-      } else {
-        // Notify parent component without address
-        onLocationChange({
-          latitude: lat,
-          longitude: lng
-        });
-      }
-      
-      toast.success(t('map.markerPlaced'));
+  const onMapClick = useCallback(async (lat: number, lng: number) => {
+    setMarker([lat, lng]);
+    setMapCenter([lat, lng]);
+    setMapZoom(16);
+    
+    // Reverse geocode to get address
+    const address = await reverseGeocode(lat, lng);
+    if (address) {
+      setSearchValue(address);
     }
-  }, [onLocationChange, t]);
-
+    
+    // Notify parent component
+    onLocationChange({
+      latitude: lat,
+      longitude: lng,
+      address: address || undefined
+    });
+    
+    toast.success(t('map.markerPlaced'));
+  }, [onLocationChange, reverseGeocode, t]);
+  
+  // Handle marker drag
+  const onMarkerDragEnd = useCallback(async (lat: number, lng: number) => {
+    setMarker([lat, lng]);
+    
+    // Reverse geocode to get address
+    const address = await reverseGeocode(lat, lng);
+    if (address) {
+      setSearchValue(address);
+    }
+    
+    // Notify parent component
+    onLocationChange({
+      latitude: lat,
+      longitude: lng,
+      address: address || undefined
+    });
+    
+    toast.success(t('map.locationUpdated'));
+  }, [onLocationChange, reverseGeocode, t]);
+  
+  // Handle search
+  const handleSearch = useCallback(async () => {
+    if (!searchValue.trim()) {
+      toast.error(t('map.enterSearchTerm'));
+      return;
+    }
+    
+    const result = await forwardGeocode(searchValue.trim());
+    if (result) {
+      setMarker([result.lat, result.lng]);
+      setMapCenter([result.lat, result.lng]);
+      setMapZoom(16);
+      setSearchValue(result.address);
+      
+      // Notify parent component
+      onLocationChange({
+        latitude: result.lat,
+        longitude: result.lng,
+        address: result.address
+      });
+      
+      toast.success(t('map.locationFound'));
+    } else {
+      toast.error(t('map.locationNotFound'));
+    }
+  }, [searchValue, forwardGeocode, onLocationChange, t]);
+  
+  // Handle search on Enter key
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  }, [handleSearch]);
+  
   // Reset to default location
   const resetToDefault = useCallback(() => {
     setMarker(null);
     setSearchValue('');
-    
-    if (map) {
-      map.panTo(DEFAULT_CENTER);
-      map.setZoom(12);
-    }
+    setMapCenter(DEFAULT_CENTER);
+    setMapZoom(DEFAULT_ZOOM);
     
     toast.info(t('map.locationReset'));
-  }, [map, t]);
-
+  }, [t]);
+  
   // Get current location
   const getCurrentLocation = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           
-          setMarker({ lat, lng });
-          
-          if (map) {
-            map.panTo({ lat, lng });
-            map.setZoom(16);
-          }
+          setMarker([lat, lng]);
+          setMapCenter([lat, lng]);
+          setMapZoom(16);
           
           // Reverse geocode to get address
-          if (geocoderRef.current) {
-            geocoderRef.current.geocode(
-              { location: { lat, lng } },
-              (results, status) => {
-                if (status === 'OK' && results && results[0]) {
-                  const address = results[0].formatted_address;
-                  setSearchValue(address);
-                  
-                  onLocationChange({
-                    latitude: lat,
-                    longitude: lng,
-                    address
-                  });
-                } else {
-                  onLocationChange({
-                    latitude: lat,
-                    longitude: lng
-                  });
-                }
-              }
-            );
-          } else {
-            onLocationChange({
-              latitude: lat,
-              longitude: lng
-            });
+          const address = await reverseGeocode(lat, lng);
+          if (address) {
+            setSearchValue(address);
           }
+          
+          onLocationChange({
+            latitude: lat,
+            longitude: lng,
+            address: address || undefined
+          });
           
           toast.success(t('map.currentLocationFound'));
         },
@@ -238,8 +305,8 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
     } else {
       toast.error(t('map.geolocationNotSupported'));
     }
-  }, [map, onLocationChange, t]);
-
+  }, [onLocationChange, reverseGeocode, t]);
+  
   return (
     <div className={`space-y-4 ${className}`}>
       <Card>
@@ -255,26 +322,25 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
             <Label htmlFor="location-search">{t('map.searchLocation')}</Label>
             <div className="flex gap-2">
               <div className="flex-1">
-                <LoadScript
-                  googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-                  libraries={libraries}
-                >
-                  <Autocomplete
-                    onLoad={onAutocompleteLoad}
-                    onPlaceChanged={onPlaceChanged}
-                  >
-                    <Input
-                      ref={searchInputRef}
-                      id="location-search"
-                      type="text"
-                      placeholder={t('map.searchPlaceholder')}
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      className="w-full"
-                    />
-                  </Autocomplete>
-                </LoadScript>
+                <Input
+                  id="location-search"
+                  type="text"
+                  placeholder={t('map.searchPlaceholder')}
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full"
+                />
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSearch}
+                title={t('map.searchLocation')}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -282,7 +348,7 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
                 onClick={getCurrentLocation}
                 title={t('map.useCurrentLocation')}
               >
-                <Search className="h-4 w-4" />
+                <Navigation className="h-4 w-4" />
               </Button>
               <Button
                 type="button"
@@ -295,83 +361,60 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
               </Button>
             </div>
           </div>
-
+          
           {/* Map */}
           <div className="relative">
-            <LoadScript
-              googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-              libraries={libraries}
-            >
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={marker || DEFAULT_CENTER}
-                zoom={marker ? 16 : 12}
-                onLoad={onLoad}
-                onUnmount={onUnmount}
-                onClick={onMapClick}
-                options={mapOptions}
-              >
-                {marker && (
-                  <Marker
-                    position={marker}
-                    draggable={true}
-                    onDragEnd={(event) => {
-                      if (event.latLng) {
-                        const lat = event.latLng.lat();
-                        const lng = event.latLng.lng();
-                        
-                        setMarker({ lat, lng });
-                        
-                        // Reverse geocode to get address
-                        if (geocoderRef.current) {
-                          geocoderRef.current.geocode(
-                            { location: { lat, lng } },
-                            (results, status) => {
-                              if (status === 'OK' && results && results[0]) {
-                                const address = results[0].formatted_address;
-                                setSearchValue(address);
-                                
-                                onLocationChange({
-                                  latitude: lat,
-                                  longitude: lng,
-                                  address
-                                });
-                              } else {
-                                onLocationChange({
-                                  latitude: lat,
-                                  longitude: lng
-                                });
-                              }
-                            }
-                          );
-                        } else {
-                          onLocationChange({
-                            latitude: lat,
-            longitude: lng
-                          });
-                        }
-                      }
-                    }}
+            {loadError ? (
+              <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
+                <div className="text-red-500">Failed to load map</div>
+              </div>
+            ) : !isMapLoaded ? (
+              <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
+                <div>Loading map...</div>
+              </div>
+            ) : (
+              <div className="h-96 rounded-lg overflow-hidden border">
+                <MapContainer
+                  center={mapCenter || marker || DEFAULT_CENTER}
+                  zoom={mapZoom}
+                  style={{ height: '100%', width: '100%' }}
+                  maxBounds={SYRIA_BOUNDS}
+                  maxBoundsViscosity={1.0}
+                  ref={mapRef}
+                >
+                  <TileLayer
+                    url={OSM_TILE_LAYER.url}
+                    attribution={OSM_TILE_LAYER.attribution}
                   />
-                )}
-              </GoogleMap>
-            </LoadScript>
+                  
+                  <MapEventHandler onMapClick={onMapClick} />
+                  <MapController center={mapCenter} zoom={mapZoom} />
+                  
+                  {marker && (
+                    <DraggableMarker
+                      position={marker}
+                      onDragEnd={onMarkerDragEnd}
+                    />
+                  )}
+                </MapContainer>
+              </div>
+            )}
           </div>
-
+          
           {/* Coordinates Display */}
           {marker && (
             <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
               <div>
                 <Label className="text-sm text-gray-600">{t('map.latitude')}</Label>
-                <p className="font-mono text-sm">{marker.lat.toFixed(6)}</p>
+                <p className="font-mono text-sm">{marker[0].toFixed(6)}</p>
               </div>
               <div>
                 <Label className="text-sm text-gray-600">{t('map.longitude')}</Label>
-                <p className="font-mono text-sm">{marker.lng.toFixed(6)}</p>
+                <p className="font-mono text-sm">{marker[1].toFixed(6)}</p>
               </div>
             </div>
           )}
-
+          
           {/* Instructions */}
           <div className="text-sm text-gray-600 space-y-1">
             <p>• {t('map.clickToPlace')}</p>

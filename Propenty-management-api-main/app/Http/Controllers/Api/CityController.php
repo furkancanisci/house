@@ -222,6 +222,35 @@ class CityController extends Controller
     }
     
     /**
+     * Get cities by state using URL parameter
+     */
+    public function getCitiesByStateParam(string $state): JsonResponse
+    {
+        $cities = $this->getSyrianCitiesData();
+        
+        // Decode the state parameter in case it's URL encoded
+        $decodedState = urldecode($state);
+        
+        $cities = array_filter($cities, function ($city) use ($decodedState) {
+            return $city['state_ar'] === $decodedState || $city['state_en'] === $decodedState;
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => array_map(function ($city) {
+                return [
+                    'id' => $city['id'],
+                    'name' => $this->getLocalizedName($city),
+                    'name_ar' => $this->ensureUtf8($city['name_ar']),
+                    'name_en' => $this->ensureUtf8($city['name_en']),
+                    'state' => $this->getLocalizedName($city, 'state'),
+                    'country' => $this->getLocalizedName($city, 'country'),
+                ];
+            }, array_values($cities))
+        ]);
+    }
+    
+    /**
      * Get states for Syria
      */
     public function getStates(Request $request): JsonResponse

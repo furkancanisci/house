@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Property } from '../types';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import { useTranslation } from 'react-i18next';
+import { useLeafletMap, DEFAULT_CENTER, OSM_TILE_LAYER, createPropertyIcon } from '../context/LeafletMapProvider';
+import L from 'leaflet';
 import { 
   Heart, 
   Share2, 
@@ -40,10 +42,9 @@ const PropertyDetails: React.FC = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isLoaded: isMapLoaded, loadError } = useLeafletMap();
 
   const [showMap, setShowMap] = useState(false);
-
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyCO0kKndUNlmQi3B5mxy4dblg_8WYcuKuk';
 
   // Helper function to normalize location fields that might be objects
   const normalizeName = (val: any): string => {
@@ -372,15 +373,14 @@ const PropertyDetails: React.FC = () => {
 
 
 
-  const mapContainerStyle = {
-    width: '100%',
-    height: '400px'
-  };
-
-  const center = {
-    lat: property.coordinates.lat,
-    lng: property.coordinates.lng
-  };
+  // Map configuration
+  const mapCenter: [number, number] = [
+    property.coordinates.lat,
+    property.coordinates.lng
+  ];
+  
+  // Create custom marker icon
+  const propertyMarkerIcon = createPropertyIcon(property.propertyType, property.listingType);
 
   const getFeatureIcon = (feature: string) => {
     const iconMap: Record<string, any> = {
@@ -425,7 +425,7 @@ const PropertyDetails: React.FC = () => {
                 {/* Badges */}
                 <Badge 
                   className={`absolute top-4 left-4 ${
-                    property.listingType === 'rent' ? 'bg-green-500' : 'bg-blue-500'
+                    property.listingType === 'rent' ? 'bg-green-500' : 'bg-[#067977]'
                   }`}
                 >
                   {property.listingType === 'rent' ? t('property.listingTypes.forRent') : t('property.listingTypes.forSale')}
@@ -469,7 +469,7 @@ const PropertyDetails: React.FC = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold text-blue-600">
+                    <p className="text-3xl font-bold text-[#067977]">
                       {formatPrice(property.price, property.listingType)}
                     </p>
                   </div>
@@ -608,15 +608,31 @@ const PropertyDetails: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
-                  <GoogleMap
-                    mapContainerStyle={mapContainerStyle}
-                    center={center}
-                    zoom={15}
-                  >
-                    <Marker position={center} />
-                  </GoogleMap>
-                </LoadScript>
+                {loadError ? (
+                  <div className="text-red-500 text-center p-4">
+                    Failed to load map
+                  </div>
+                ) : !isMapLoaded ? (
+                  <div className="text-center p-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    Loading map...
+                  </div>
+                ) : (
+                  <div className="h-96 rounded-lg overflow-hidden border">
+                    <MapContainer
+                      center={mapCenter}
+                      zoom={15}
+                      style={{ height: '100%', width: '100%' }}
+                      scrollWheelZoom={false}
+                    >
+                      <TileLayer
+                        url={OSM_TILE_LAYER.url}
+                        attribution={OSM_TILE_LAYER.attribution}
+                      />
+                      <Marker position={mapCenter} icon={propertyMarkerIcon} />
+                    </MapContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -716,7 +732,7 @@ const PropertyDetails: React.FC = () => {
                 <Separator />
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 font-semibold">{t('forms.price')}</span>
-                  <span className="text-xl font-bold text-blue-600">
+                  <span className="text-xl font-bold text-[#067977]">
                     {formatPrice(property.price, property.listingType)}
                   </span>
                 </div>

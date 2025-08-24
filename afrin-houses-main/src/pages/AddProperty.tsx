@@ -482,9 +482,9 @@ const AddProperty: React.FC = () => {
         return (
           <div className="space-y-8">
             {/* Property Title Section */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+            <div className="bg-gradient-to-r from-[#067977]/10 to-[#067977]/20 rounded-xl p-6 border border-[#067977]/30">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
-                <Home className="h-5 w-5 text-blue-600" />
+                <Home className="h-5 w-5 text-[#067977]" />
                 عنوان العقار
               </h3>
               <div>
@@ -496,9 +496,9 @@ const AddProperty: React.FC = () => {
                   <Input
                     id="title"
                     placeholder={t('forms.propertyTitlePlaceholder')}
-                    className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-100 hover:border-blue-300 ${
-                      errors.title ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
-                    }`}
+                    className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
+              errors.title ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
+            }`}
                     {...register('title')}
                   />
                 </div>
@@ -618,7 +618,7 @@ const AddProperty: React.FC = () => {
                         <SelectContent>
                           <SelectItem value="rent" className="text-lg py-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <div className="w-2 h-2 bg-[#067977] rounded-full"></div>
                               {t('property.listingTypes.forRent')}
                             </div>
                           </SelectItem>
@@ -652,7 +652,7 @@ const AddProperty: React.FC = () => {
                         <SelectContent>
                           <SelectItem value="apartment" className="text-lg py-3">
                             <div className="flex items-center gap-2">
-                              <Building className="h-4 w-4 text-blue-600" />
+                              <Building className="h-4 w-4 text-[#067977]" />
                               {t('property.types.apartment')}
                             </div>
                           </SelectItem>
@@ -749,9 +749,9 @@ const AddProperty: React.FC = () => {
             </div>
 
             {/* Property Specifications */}
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+            <div className="bg-gradient-to-r from-[#067977]/10 to-[#067977]/15 rounded-xl p-6 border border-[#067977]/30">
               <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
-                <Building className="h-5 w-5 text-blue-600" />
+                <Building className="h-5 w-5 text-[#067977]" />
                 مواصفات العقار
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -766,9 +766,9 @@ const AddProperty: React.FC = () => {
                       type="number"
                       min="0"
                       placeholder="عدد الغرف"
-                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-100 hover:border-blue-300 ${
-                        errors.bedrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
-                      }`}
+                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
+              errors.bedrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
+            }`}
                       {...register('bedrooms', { valueAsNumber: true })}
                     />
                   </div>
@@ -792,9 +792,9 @@ const AddProperty: React.FC = () => {
                       min="0"
                       step="0.5"
                       placeholder="عدد الحمامات"
-                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-100 hover:border-blue-300 ${
-                        errors.bathrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
-                      }`}
+                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
+              errors.bathrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
+            }`}
                       {...register('bathrooms', { valueAsNumber: true })}
                     />
                   </div>
@@ -817,9 +817,9 @@ const AddProperty: React.FC = () => {
                       type="number"
                       min="1"
                       placeholder="المساحة (م²)"
-                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-100 hover:border-blue-300 ${
-                        errors.squareFootage ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
-                      }`}
+                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
+              errors.squareFootage ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
+            }`}
                       {...register('squareFootage', { valueAsNumber: true })}
                     />
                   </div>
@@ -950,7 +950,7 @@ const AddProperty: React.FC = () => {
                         </SelectItem>
                         <SelectItem value="driveway" className="text-lg py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div className="w-2 h-2 bg-[#067977] rounded-full"></div>
                             ممر خاص
                           </div>
                         </SelectItem>
@@ -1034,7 +1034,7 @@ const AddProperty: React.FC = () => {
                             <X className="h-4 w-4" />
                           </button>
                           {index === 0 && (
-                            <div className="absolute bottom-3 left-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-lg flex items-center gap-1">
+                            <div className="absolute bottom-3 left-3 bg-gradient-to-r from-[#067977] to-[#067977]/80 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-lg flex items-center gap-1">
                               <Star className="h-3 w-3 fill-current" />
                               الصورة الرئيسية
                             </div>
@@ -1060,12 +1060,12 @@ const AddProperty: React.FC = () => {
                   </div>
                   
                   {/* Image Upload Tips */}
-                  <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h5 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                  <div className="mt-6 bg-[#067977]/10 border border-[#067977]/30 rounded-lg p-4">
+                    <h5 className="font-semibold text-[#067977] mb-2 flex items-center gap-2">
                       <Camera className="h-4 w-4" />
                       نصائح للحصول على أفضل النتائج
                     </h5>
-                    <ul className="text-blue-800 text-sm space-y-1 font-['Cairo',_'Tajawal',_sans-serif]">
+                    <ul className="text-[#067977]/80 text-sm space-y-1 font-['Cairo',_'Tajawal',_sans-serif]">
                       <li>• استخدم إضاءة طبيعية جيدة</li>
                       <li>• التقط صور من زوايا مختلفة</li>
                       <li>• أظهر المميزات الرئيسية للعقار</li>
@@ -1130,11 +1130,11 @@ const AddProperty: React.FC = () => {
                       id={`utility-${utility}`}
                       checked={selectedUtilities.includes(utility)}
                       onCheckedChange={() => handleUtilityToggle(utility)}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                      className="data-[state=checked]:bg-[#067977] data-[state=checked]:border-[#067977]"
                     />
                     <Label
                       htmlFor={`utility-${utility}`}
-                      className="text-sm font-medium text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                      className="text-sm font-medium text-gray-700 cursor-pointer hover:text-[#067977] transition-colors"
                     >
                       {utility}
                     </Label>
@@ -1216,9 +1216,9 @@ const AddProperty: React.FC = () => {
               )}
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">{t('forms.note')}</h4>
-              <p className="text-blue-800 text-sm">
+            <div className="bg-[#067977]/10 p-4 rounded-lg">
+                <h4 className="font-semibold text-[#067977] mb-2">{t('forms.note')}</h4>
+                <p className="text-[#067977] text-sm">
                 Property listing will be created with the uploaded images.
               </p>
             </div>
@@ -1272,7 +1272,7 @@ const AddProperty: React.FC = () => {
               <span className="text-lg font-semibold text-gray-800 font-['Cairo',_'Tajawal',_sans-serif]">
                 {t('forms.step')} {currentStep} {t('forms.of')} {totalSteps}
               </span>
-              <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+              <div className="px-3 py-1 bg-[#067977]/20 text-[#067977] rounded-full text-sm font-medium">
                 {Math.round((currentStep / totalSteps) * 100)}% {t('forms.complete')}
               </div>
             </div>
@@ -1292,7 +1292,7 @@ const AddProperty: React.FC = () => {
                   ) : step}
                 </div>
                 <span className={`text-xs mt-2 font-medium ${
-                  step <= currentStep ? 'text-blue-600' : 'text-gray-400'
+                  step <= currentStep ? 'text-[#067977]' : 'text-gray-400'
                 }`}>
                   {step === 1 && 'أساسي'}
                   {step === 2 && 'تفاصيل'}
@@ -1307,7 +1307,7 @@ const AddProperty: React.FC = () => {
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
             <div
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500 ease-out shadow-sm relative overflow-hidden"
+              className="bg-gradient-to-r from-[#067977] to-[#067977]/80 h-3 rounded-full transition-all duration-500 ease-out shadow-sm relative overflow-hidden"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             >
               <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
@@ -1318,9 +1318,9 @@ const AddProperty: React.FC = () => {
         {/* Enhanced Form */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100/50 pb-6">
+            <CardHeader className="bg-gradient-to-r from-[#067977]/10 to-[#067977]/15 border-b border-[#067977]/20 pb-6">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg">
+                <div className="p-2 bg-gradient-to-r from-[#067977] to-[#067977]/80 rounded-lg">
                   {currentStep === 1 && <FileText className="h-5 w-5 text-white" />}
                   {currentStep === 2 && <Building className="h-5 w-5 text-white" />}
                   {currentStep === 3 && <Camera className="h-5 w-5 text-white" />}
@@ -1331,31 +1331,31 @@ const AddProperty: React.FC = () => {
                   <CardTitle className="text-2xl font-bold text-gray-900 font-['Cairo',_'Tajawal',_sans-serif]">
                     {currentStep === 1 && (
                       <>
-                        <span className="text-blue-600">المعلومات الأساسية</span>
+                        <span className="text-[#067977]">المعلومات الأساسية</span>
                         <p className="text-sm font-normal text-gray-600 mt-1">أدخل المعلومات الأساسية للعقار</p>
                       </>
                     )}
                     {currentStep === 2 && (
                       <>
-                        <span className="text-blue-600">تفاصيل العقار</span>
+                        <span className="text-[#067977]">تفاصيل العقار</span>
                         <p className="text-sm font-normal text-gray-600 mt-1">حدد المواصفات والتفاصيل الفنية</p>
                       </>
                     )}
                     {currentStep === 3 && (
                       <>
-                        <span className="text-blue-600">صور العقار</span>
+                        <span className="text-[#067977]">صور العقار</span>
                         <p className="text-sm font-normal text-gray-600 mt-1">أضف صور عالية الجودة للعقار</p>
                       </>
                     )}
                     {currentStep === 4 && (
                       <>
-                        <span className="text-blue-600">المميزات والخدمات</span>
+                        <span className="text-[#067977]">المميزات والخدمات</span>
                         <p className="text-sm font-normal text-gray-600 mt-1">اختر المميزات والخدمات المتوفرة</p>
                       </>
                     )}
                     {currentStep === 5 && (
                       <>
-                        <span className="text-blue-600">معلومات التواصل</span>
+                        <span className="text-[#067977]">معلومات التواصل</span>
                         <p className="text-sm font-normal text-gray-600 mt-1">أدخل بيانات التواصل للمهتمين</p>
                       </>
                     )}
@@ -1384,7 +1384,7 @@ const AddProperty: React.FC = () => {
                 <Button 
                   type="button" 
                   onClick={nextStep}
-                  className="px-10 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  className="px-10 py-3 bg-gradient-to-r from-[#067977] to-[#067977]/80 hover:from-[#067977]/90 hover:to-[#067977] text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
                 >
                   {t('buttons.next')}
                   <ArrowLeft className="h-4 w-4 mr-2" />

@@ -12,7 +12,7 @@ export const testApiConnection = async () => {
   try {
     // Test health endpoint
     console.log('Testing API health...');
-    const healthResponse = await fetch('https://house-6g6m.onrender.com/api/health');
+    const healthResponse = await fetch('http://127.0.0.1:8000/api/health');
     if (healthResponse.ok) {
       results.health = true;
       console.log('✅ Health check passed');
