@@ -1107,16 +1107,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.7.1",
+            "version": "2.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "c2270caaabe631b3b44c85f99e5a04bbb8060d16"
+                "reference": "21dc724a0583619cd1652f673303492272778051"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/c2270caaabe631b3b44c85f99e5a04bbb8060d16",
-                "reference": "c2270caaabe631b3b44c85f99e5a04bbb8060d16",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/21dc724a0583619cd1652f673303492272778051",
+                "reference": "21dc724a0583619cd1652f673303492272778051",
                 "shasum": ""
             },
             "require": {
@@ -1132,7 +1132,7 @@
             "require-dev": {
                 "bamarni/composer-bin-plugin": "^1.8.2",
                 "http-interop/http-factory-tests": "0.9.0",
-                "phpunit/phpunit": "^8.5.39 || ^9.6.20"
+                "phpunit/phpunit": "^8.5.44 || ^9.6.25"
             },
             "suggest": {
                 "laminas/laminas-httphandlerrunner": "Emit PSR-7 responses"
@@ -1203,7 +1203,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.7.1"
+                "source": "https://github.com/guzzle/psr7/tree/2.8.0"
             },
             "funding": [
                 {
@@ -1219,7 +1219,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-03-27T12:30:47+00:00"
+            "time": "2025-08-23T21:21:41+00:00"
         },
         {
             "name": "guzzlehttp/uri-template",
@@ -2732,16 +2732,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.6.0",
+            "version": "v5.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56"
+                "reference": "f103601b29efebd7ff4a1ca7b3eeea9e3336a2a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/221b0d0fdf1369c71047ad1d18bb5880017bbc56",
-                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/f103601b29efebd7ff4a1ca7b3eeea9e3336a2a2",
+                "reference": "f103601b29efebd7ff4a1ca7b3eeea9e3336a2a2",
                 "shasum": ""
             },
             "require": {
@@ -2760,7 +2760,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.0-dev"
+                    "dev-master": "5.x-dev"
                 }
             },
             "autoload": {
@@ -2784,9 +2784,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.6.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.6.1"
             },
-            "time": "2025-07-27T20:03:57+00:00"
+            "time": "2025-08-13T20:13:15+00:00"
         },
         {
             "name": "nunomaduro/termwind",
@@ -5102,7 +5102,7 @@
         },
         {
             "name": "symfony/polyfill-ctype",
-            "version": "v1.32.0",
+            "version": "v1.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
@@ -5161,7 +5161,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.32.0"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.33.0"
             },
             "funding": [
                 {
@@ -5173,6 +5173,10 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
@@ -5181,16 +5185,16 @@
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
-            "version": "v1.32.0",
+            "version": "v1.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-grapheme.git",
-                "reference": "b9123926e3b7bc2f98c02ad54f6a4b02b91a8abe"
+                "reference": "380872130d3a5dd3ace2f4010d95125fde5d5c70"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-intl-grapheme/zipball/b9123926e3b7bc2f98c02ad54f6a4b02b91a8abe",
-                "reference": "b9123926e3b7bc2f98c02ad54f6a4b02b91a8abe",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-grapheme/zipball/380872130d3a5dd3ace2f4010d95125fde5d5c70",
+                "reference": "380872130d3a5dd3ace2f4010d95125fde5d5c70",
                 "shasum": ""
             },
             "require": {
@@ -5239,7 +5243,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.32.0"
+                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.33.0"
             },
             "funding": [
                 {
@@ -5251,11 +5255,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-09T11:45:10+00:00"
+            "time": "2025-06-27T09:58:17+00:00"
         },
         {
             "name": "symfony/polyfill-intl-idn",
@@ -5342,7 +5350,7 @@
         },
         {
             "name": "symfony/polyfill-intl-normalizer",
-            "version": "v1.32.0",
+            "version": "v1.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-normalizer.git",
@@ -5403,7 +5411,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.32.0"
+                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.33.0"
             },
             "funding": [
                 {
@@ -5415,6 +5423,10 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
@@ -5423,7 +5435,7 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.32.0",
+            "version": "v1.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
@@ -5484,7 +5496,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.32.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.33.0"
             },
             "funding": [
                 {
@@ -5496,6 +5508,10 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
@@ -5504,7 +5520,7 @@
         },
         {
             "name": "symfony/polyfill-php80",
-            "version": "v1.32.0",
+            "version": "v1.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php80.git",
@@ -5564,7 +5580,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.32.0"
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.33.0"
             },
             "funding": [
                 {
@@ -5573,6 +5589,10 @@
                 },
                 {
                     "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
                     "type": "github"
                 },
                 {

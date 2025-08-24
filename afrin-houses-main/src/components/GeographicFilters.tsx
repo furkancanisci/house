@@ -18,6 +18,26 @@ import {
 } from './ui/card';
 import { Badge } from './ui/badge';
 
+interface District {
+  id: string;
+  name: string;
+  nameAr: string;
+}
+
+interface City {
+  name: string;
+  nameAr: string;
+  districts: District[];
+}
+
+interface Governorate {
+  name: string;
+  nameAr: string;
+  cities: Record<string, City>;
+}
+
+type SyrianLocations = Record<string, Governorate>;
+
 interface GeographicFiltersProps {
   onLocationChange?: (location: {
     governorate?: string;
@@ -33,7 +53,7 @@ interface GeographicFiltersProps {
 }
 
 // Syrian governorates, cities, and districts data
-const syrianLocations = {
+const syrianLocations: SyrianLocations = {
   'damascus': {
     name: 'Damascus',
     nameAr: 'دمشق',
@@ -294,15 +314,17 @@ const GeographicFilters: React.FC<GeographicFiltersProps> = ({
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   // Get available cities based on selected governorate
-  const availableCities = selectedGovernorate && syrianLocations[selectedGovernorate as keyof typeof syrianLocations]
-    ? Object.entries(syrianLocations[selectedGovernorate as keyof typeof syrianLocations].cities)
+  const availableCities = selectedGovernorate && syrianLocations[selectedGovernorate]
+    ? Object.entries(syrianLocations[selectedGovernorate].cities)
     : [];
 
   // Get available districts based on selected city
-  const availableDistricts = selectedGovernorate && selectedCity && 
-    syrianLocations[selectedGovernorate as keyof typeof syrianLocations]?.cities[selectedCity as keyof typeof syrianLocations[keyof typeof syrianLocations]['cities']]
-    ? syrianLocations[selectedGovernorate as keyof typeof syrianLocations].cities[selectedCity as keyof typeof syrianLocations[keyof typeof syrianLocations]['cities']].districts
-    : [];
+  const availableDistricts = selectedGovernorate && selectedCity ? (() => {
+    const governorate = syrianLocations[selectedGovernorate];
+    if (!governorate) return [];
+    const city = governorate.cities[selectedCity];
+    return city ? city.districts : [];
+  })() : [];
 
   // Handle governorate change
   const handleGovernorateChange = (value: string) => {
@@ -345,21 +367,24 @@ const GeographicFilters: React.FC<GeographicFiltersProps> = ({
     if (!selectedGovernorate) return;
     
     const governorateName = isArabic 
-      ? syrianLocations[selectedGovernorate as keyof typeof syrianLocations].nameAr
-      : syrianLocations[selectedGovernorate as keyof typeof syrianLocations].name;
+      ? syrianLocations[selectedGovernorate].nameAr
+      : syrianLocations[selectedGovernorate].name;
     
     let locationString = governorateName;
     
     if (selectedCity) {
-      const cityData = syrianLocations[selectedGovernorate as keyof typeof syrianLocations].cities[selectedCity as keyof typeof syrianLocations[keyof typeof syrianLocations]['cities']];
-      const cityName = isArabic ? cityData.nameAr : cityData.name;
-      locationString += ` - ${cityName}`;
-      
-      if (selectedDistrict) {
-        const districtData = cityData.districts.find(d => d.id === selectedDistrict);
-        if (districtData) {
-          const districtName = isArabic ? districtData.nameAr : districtData.name;
-          locationString += ` - ${districtName}`;
+      const governorate = syrianLocations[selectedGovernorate];
+      const cityData = governorate.cities[selectedCity];
+      if (cityData) {
+        const cityName = isArabic ? cityData.nameAr : cityData.name;
+        locationString += ` - ${cityName}`;
+        
+        if (selectedDistrict) {
+          const districtData = cityData.districts.find(d => d.id === selectedDistrict);
+          if (districtData) {
+            const districtName = isArabic ? districtData.nameAr : districtData.name;
+            locationString += ` - ${districtName}`;
+          }
         }
       }
     }

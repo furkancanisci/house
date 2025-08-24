@@ -20,6 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'https://house-6g6m.onrender.com',
         'http://localhost:3000',
         'http://localhost:5173',
         'http://localhost:5174',

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Property } from '../services/propertyService';
+import { Property } from '../types';
 import { SearchFilters } from '../types';
 import MapSearchView from '../components/MapSearchView';
 import { ArrowLeft, X } from 'lucide-react';
@@ -20,9 +20,7 @@ const MapSearch: React.FC = () => {
     searchQuery: '',
     listingType: 'all',
     propertyType: 'all',
-    location: '',
-    bedrooms: 'any',
-    bathrooms: 'any'
+    location: ''
   });
 
   useEffect(() => {
@@ -39,8 +37,6 @@ const MapSearch: React.FC = () => {
             properties = response;
           } else if (response.data && Array.isArray(response.data)) {
             properties = response.data;
-          } else if (Array.isArray(response.properties)) {
-            properties = response.properties;
           }
         }
         console.log('Processed properties:', properties);
@@ -48,7 +44,7 @@ const MapSearch: React.FC = () => {
         // Add some test properties if no properties are returned
         if (!properties || properties.length === 0) {
           console.log('No properties found, adding test data');
-        
+
         } else {
           setAllProperties(properties);
         }
@@ -56,8 +52,7 @@ const MapSearch: React.FC = () => {
 
       } catch (err) {
         console.error('Error fetching properties:', err);
-        
-      
+   
         setError(null); // Clear any error since we have fallback data
       } finally {
         setLoading(false);
@@ -140,12 +135,12 @@ const MapSearch: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Map Search View */}
-      <div className="h-[calc(100vh-160px)]">
+      <div className="h-[calc(100vh-80px)]">
         <MapSearchView
           properties={allProperties}
-          filters={searchFilters}
+          initialFilters={searchFilters}
           onFiltersChange={handleFiltersChange}
           onClose={handleClose}
         />
