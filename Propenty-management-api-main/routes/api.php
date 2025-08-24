@@ -51,12 +51,6 @@ Route::get('/overview', [DashboardController::class, 'overview']);
 Route::get('/properties', [DashboardController::class, 'properties']);
 Route::get('/favorites', [DashboardController::class, 'favorites']);
 Route::get('/analytics', [DashboardController::class, 'analytics']);
-
-// Keeping profile and notifications as protected since they're user-specific
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/profile', [DashboardController::class, 'updateProfile']);
-    Route::get('/notifications', [DashboardController::class, 'notifications']);
-});
 Route::prefix('v1')->group(function () {
     
     // Authentication Routes
@@ -114,7 +108,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/analytics', [DashboardController::class, 'analytics']);
         
         // Keeping profile and notifications as protected since they're user-specific
-   
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/profile', [DashboardController::class, 'updateProfile']);
+            Route::get('/notifications', [DashboardController::class, 'notifications']);
+        });
     });
 
     // Search and Filter Routes
