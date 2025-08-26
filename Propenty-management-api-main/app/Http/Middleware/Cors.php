@@ -20,6 +20,7 @@ class Cors
         $allowedOrigins = [
             'https://house-1-3rtj.onrender.com',
             'https://house-6g6m.onrender.com',
+            'https://house-1-3rtj.onrender.com',
             'http://localhost:5173',
             'http://localhost:5174',
             'http://localhost:3000',
