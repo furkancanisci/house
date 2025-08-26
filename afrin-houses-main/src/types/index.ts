@@ -39,6 +39,15 @@ export interface Property {
   latitude?: number | string;
   longitude?: number | string;
   
+  // Document type
+  document_type_id?: number | string;
+  documentType?: {
+    id: number;
+    name: string;
+    description?: string;
+    sort_order: number;
+  };
+  
   // For type safety with dynamic properties
   [key: string]: any;
 }

@@ -20,7 +20,8 @@ import {
   User,
   Upload,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  File
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -38,6 +39,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
+import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required'),
@@ -47,6 +49,7 @@ const propertySchema = z.object({
   price: z.number().min(1, 'Price must be greater than 0'),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
+  documentTypeId: z.string().optional(),
   bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater'),
   bathrooms: z.number().min(0, 'Bathrooms must be 0 or greater'),
   squareFootage: z.number().min(1, 'Square footage must be greater than 0'),
@@ -82,6 +85,10 @@ const EditProperty: React.FC = () => {
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('');
+  
+  // Document types state
+  const [documentTypes, setDocumentTypes] = useState<PropertyDocumentType[]>([]);
+  const [loadingDocumentTypes, setLoadingDocumentTypes] = useState(false);
 
   const {
     register,
@@ -212,6 +219,7 @@ const EditProperty: React.FC = () => {
             price: Number(foundProperty.price) || 0,
             listingType: foundProperty.listingType || foundProperty.listing_type || 'sale',
             propertyType: foundProperty.propertyType || foundProperty.property_type || 'apartment',
+            documentTypeId: foundProperty.document_type_id ? String(foundProperty.document_type_id) : '',
             bedrooms: Number(foundProperty.bedrooms) || 0,
             bathrooms: Number(foundProperty.bathrooms) || 0,
             squareFootage: Number(foundProperty.squareFootage || foundProperty.square_feet) || 0,
@@ -244,6 +252,28 @@ const EditProperty: React.FC = () => {
 
     loadProperty();
   }, [id, properties, user, navigate, reset]);
+
+  // Load property document types
+  useEffect(() => {
+    const loadDocumentTypes = async () => {
+      setLoadingDocumentTypes(true);
+      try {
+        const types = await propertyDocumentTypeService.getPropertyDocumentTypes({
+          lang: 'ar' // Default to Arabic for edit form
+        });
+        setDocumentTypes(types);
+      } catch (error) {
+        console.error('Failed to load document types:', error);
+        // Use fallback data if API fails
+        const fallbackTypes = propertyDocumentTypeService.getFallbackDocumentTypes('ar');
+        setDocumentTypes(fallbackTypes);
+      } finally {
+        setLoadingDocumentTypes(false);
+      }
+    };
+
+    loadDocumentTypes();
+  }, []);
 
   const handleFeatureToggle = (feature: string) => {
     setSelectedFeatures(prev =>
@@ -308,6 +338,7 @@ const EditProperty: React.FC = () => {
         price: data.price,
         listingType: data.listingType,
         propertyType: data.propertyType,
+        documentTypeId: data.documentTypeId ? Number(data.documentTypeId) : undefined,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
         squareFootage: data.squareFootage,
@@ -457,6 +488,44 @@ const EditProperty: React.FC = () => {
                     )}
                   />
                 </div>
+              </div>
+              
+              {/* Document Type Section */}
+              <div>
+                <Label>نوع التابو</Label>
+                <Controller
+                  name="documentTypeId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <div className="flex items-center gap-2">
+                          <File className="h-4 w-4 text-gray-400" />
+                          <SelectValue placeholder="اختر نوع التابو" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {loadingDocumentTypes ? (
+                          <SelectItem value="loading" disabled>
+                            <div className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></div>
+                              جاري التحميل...
+                            </div>
+                          </SelectItem>
+                        ) : (
+                          documentTypes.map((docType) => (
+                            <SelectItem key={docType.id} value={docType.id.toString()}>
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                                {docType.name}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>

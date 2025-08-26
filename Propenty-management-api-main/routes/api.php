@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\PropertyController;
+use App\Http\Controllers\Api\PropertyDocumentTypeController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Auth\AuthController;
@@ -139,6 +140,13 @@ Route::prefix('v1')->group(function () {
         Route::get('/by-state', 'App\Http\Controllers\Api\CityController@getCitiesByState');
         Route::get('/state/{state}', 'App\Http\Controllers\Api\CityController@getCitiesByStateParam');
         Route::get('/search', 'App\Http\Controllers\Api\CityController@search');
+    });
+
+    // Property Document Types Routes
+    Route::prefix('property-document-types')->group(function () {
+        Route::get('/', [PropertyDocumentTypeController::class, 'index']);
+        Route::get('/all-languages', [PropertyDocumentTypeController::class, 'getAllLanguages']);
+        Route::get('/{propertyDocumentType}', [PropertyDocumentTypeController::class, 'show']);
     });
 
     // Statistics and Analytics Routes

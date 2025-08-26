@@ -54,6 +54,7 @@ class PropertySeeder extends Seeder
                 'bathrooms' => 2,
                 'square_feet' => 1200,
                 'year_built' => 2020,
+                'document_type_id' => 1,
                 'parking_type' => 'garage',
                 'parking_spaces' => 1,
                 'amenities' => ['Air Conditioning', 'Dishwasher', 'Laundry in Unit', 'Balcony', 'Hardwood Floors', 'High Ceilings', 'Elevator', 'Gym', 'Roof Deck', 'Internet'],
@@ -69,6 +70,7 @@ class PropertySeeder extends Seeder
                 'street_address' => 'شارع المالكي، دمشق',
                 'city' => 'دمشق',
                 'state' => 'دمشق',
+                'document_type_id' => 2,
                 'postal_code' => '11000',
                 'latitude' => 33.5138,
                 'longitude' => 36.2765,
@@ -104,7 +106,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'garage',
                 'parking_spaces' => 3,
                 'amenities' => ['تكييف', 'تدفئة', 'حديقة', 'مسبح', 'مدفأة', 'أرضية رخام', 'مخزن', 'كراج', 'أمان', 'انترنت'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 3
             ],
             [
                 'title' => 'بيت عائلي في دمشق',
@@ -128,7 +131,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'driveway',
                 'parking_spaces' => 2,
                 'amenities' => ['تدفئة', 'فناء', 'قريب من المواصلات', 'هدوء', 'مخزن'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 4
             ],
             [
                 'title' => 'Luxury Family Villa',
@@ -152,7 +156,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'garage',
                 'parking_spaces' => 3,
                 'amenities' => ['Air Conditioning', 'Heating', 'Dishwasher', 'Garden', 'Fireplace', 'Hardwood Floors', 'Walk-in Closet', 'Storage', 'Garage', 'Pool', 'Security System'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 5
             ],
             [
                 'title' => 'Cozy Studio Loft',
@@ -175,7 +180,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'street',
                 'parking_spaces' => 0,
                 'amenities' => ['Air Conditioning', 'Hardwood Floors', 'High Ceilings', 'Internet', 'Recently Renovated'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 6
             ],
             [
                 'title' => 'Suburban Family Home',
@@ -199,7 +205,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'driveway',
                 'parking_spaces' => 2,
                 'amenities' => ['Air Conditioning', 'Heating', 'Dishwasher', 'Garden', 'Fireplace', 'Carpet', 'Storage', 'Pet Friendly'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 7
             ],
             [
                 'title' => 'Waterfront Condo',
@@ -222,7 +229,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'garage',
                 'parking_spaces' => 1,
                 'amenities' => ['Air Conditioning', 'Dishwasher', 'Balcony', 'Hardwood Floors', 'High Ceilings', 'Elevator', 'Doorman', 'Concierge', 'Pool', 'Internet'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 8
             ],
             [
                 'title' => 'Historic Townhouse',
@@ -246,6 +254,7 @@ class PropertySeeder extends Seeder
                 'parking_spaces' => 0,
                 'amenities' => ['Heating', 'Fireplace', 'Hardwood Floors', 'High Ceilings', 'Storage', 'Recently Renovated'],
                 'status' => 'active',
+                'document_type_id' => 8
             ],
             [
                 'title' => 'Modern Loft Space',
@@ -269,6 +278,7 @@ class PropertySeeder extends Seeder
                 'parking_spaces' => 1,
                 'amenities' => ['Air Conditioning', 'High Ceilings', 'Storage', 'Internet', 'New Construction'],
                 'status' => 'active',
+                'document_type_id' => 9
             ],
             [
                 'title' => 'Commercial Office Space',
@@ -292,6 +302,7 @@ class PropertySeeder extends Seeder
                 'parking_spaces' => 4,
                 'amenities' => ['Air Conditioning', 'Heating', 'Elevator', 'Security System', 'Internet'],
                 'status' => 'active',
+                'document_type_id' => 10
             ],
             // Syrian Properties
             [
@@ -315,7 +326,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'street',
                 'parking_spaces' => 1,
                 'amenities' => ['تكييف', 'تدفئة', 'مطبخ مجهز', 'انترنت', 'أمان'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 3
             ],
             [
                 'title' => 'فيلا فاخرة في حلب',
@@ -339,7 +351,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'garage',
                 'parking_spaces' => 2,
                 'amenities' => ['تكييف', 'تدفئة', 'حديقة', 'مدفأة', 'أرضية رخام', 'مخزن', 'كراج', 'أمان'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 3
             ],
             [
                 'title' => 'بيت تراثي في عفرين',
@@ -363,7 +376,8 @@ class PropertySeeder extends Seeder
                 'parking_type' => 'driveway',
                 'parking_spaces' => 1,
                 'amenities' => ['تدفئة', 'فناء', 'إطلالة جبلية', 'هدوء', 'قريب من الطبيعة'],
-                'status' => 'active'
+                'status' => 'active',
+                'document_type_id' => 1
             ],
         ];
 

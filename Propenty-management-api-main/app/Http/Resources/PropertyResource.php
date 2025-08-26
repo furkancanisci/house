@@ -137,6 +137,17 @@ class PropertyResource extends JsonResource
             
             // User ID for ownership checks
             'user_id' => $this->user_id,
+            
+            // Document type information
+            'document_type_id' => $this->document_type_id,
+            'document_type' => $this->when($this->relationLoaded('documentType'), function () {
+                return $this->documentType ? [
+                    'id' => $this->documentType->id,
+                    'name' => $this->documentType->getLocalizedName(request()->get('lang', 'ar')),
+                    'description' => $this->documentType->getLocalizedDescription(request()->get('lang', 'ar')),
+                    'sort_order' => $this->documentType->sort_order,
+                ] : null;
+            }),
         ];
 
         // Ensure all string values in the response are properly UTF-8 encoded

@@ -69,19 +69,47 @@ class PropertyView extends Model
      */
     public static function recordView(Property $property, $request): self
     {
-        return self::create([
-            'property_id' => $property->id,
-            'user_id' => auth()->id(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'referrer' => $request->header('referer'),
-            'device_info' => [
-                'browser' => self::getBrowser($request->userAgent()),
-                'platform' => self::getPlatform($request->userAgent()),
-                'is_mobile' => $request->header('sec-ch-ua-mobile') === '?1',
-            ],
-            'viewed_at' => now(),
-        ]);
+        try {
+            $userAgent = $request->userAgent() ?? '';
+            $viewData = [
+                'property_id' => $property->id,
+                'user_id' => auth()->id(),
+                'ip_address' => $request->ip() ?? '127.0.0.1',
+                'user_agent' => $userAgent,
+                'referrer' => $request->header('referer') ?? null,
+                'device_info' => [
+                    'browser' => self::getBrowser($userAgent),
+                    'platform' => self::getPlatform($userAgent),
+                    'is_mobile' => $request->header('sec-ch-ua-mobile') === '?1',
+                ],
+                'viewed_at' => now(),
+            ];
+            
+            $view = new self();
+            $view->fill($viewData);
+            $view->save();
+            
+            return $view;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error recording property view', [
+                'property_id' => $property->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return a dummy record to prevent breaking the flow
+            $view = new self();
+            $view->property_id = $property->id;
+            $view->user_id = auth()->id();
+            $view->ip_address = $request->ip() ?? '127.0.0.1';
+            $view->user_agent = $request->userAgent() ?? '';
+            $view->referrer = null;
+            $view->device_info = [];
+            $view->viewed_at = now();
+            $view->exists = false; // Mark as not saved
+            
+            return $view;
+        }
     }
 
     /**
@@ -89,6 +117,8 @@ class PropertyView extends Model
      */
     private static function getBrowser($userAgent): string
     {
+        if (empty($userAgent)) return 'Unknown';
+        
         if (str_contains($userAgent, 'Chrome')) return 'Chrome';
         if (str_contains($userAgent, 'Firefox')) return 'Firefox';
         if (str_contains($userAgent, 'Safari')) return 'Safari';
@@ -103,6 +133,8 @@ class PropertyView extends Model
      */
     private static function getPlatform($userAgent): string
     {
+        if (empty($userAgent)) return 'Unknown';
+        
         if (str_contains($userAgent, 'Windows')) return 'Windows';
         if (str_contains($userAgent, 'Mac')) return 'macOS';
         if (str_contains($userAgent, 'Linux')) return 'Linux';

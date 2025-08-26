@@ -28,10 +28,12 @@ import {
   Camera,
   Star,
   CheckCircle,
-  Car
+  Car,
+  File
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { InputWithIcon } from '../components/ui/input-with-icon';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -47,6 +49,7 @@ import { toast } from 'sonner';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
 import PropertyLocationMap from '../components/PropertyLocationMap';
+import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required').max(255, 'Title cannot exceed 255 characters'),
@@ -57,6 +60,7 @@ const propertySchema = z.object({
   price: z.number().min(0, 'Price must be 0 or greater').max(99999999.99, 'Price is too high'),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
+  documentTypeId: z.string().optional(),
   bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater').max(20, 'Bedrooms cannot exceed 20'),
   bathrooms: z.number().min(0, 'Bathrooms must be 0 or greater').max(20, 'Bathrooms cannot exceed 20'),
   squareFootage: z.number().min(1, 'Square footage must be greater than 0').max(50000, 'Square footage cannot exceed 50,000').optional(),
@@ -101,15 +105,20 @@ type PropertyFormData = z.infer<typeof propertySchema>;
 
 const AddProperty: React.FC = () => {
   const { state, addProperty } = useApp();
-  const { user } = state;
+  const { user, language } = state;
   const navigate = useNavigate();
-  const { t } = useTranslation(); // Add this line
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [selectedUtilities, setSelectedUtilities] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
+  
+  // Document types state
+  const [documentTypes, setDocumentTypes] = useState<PropertyDocumentType[]>([]);
+  const [loadingDocumentTypes, setLoadingDocumentTypes] = useState(false);
   
   // Location state
   const [selectedCity, setSelectedCity] = useState<string>('');
@@ -141,6 +150,7 @@ const AddProperty: React.FC = () => {
       price: 0,
       description: '',
       parking: 'none',
+      availableDate: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
       contactName: user?.name || '',
       contactEmail: user?.email || '',
       contactPhone: user?.phone || '',
@@ -154,6 +164,28 @@ const AddProperty: React.FC = () => {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+  // Load property document types
+  React.useEffect(() => {
+    const loadDocumentTypes = async () => {
+      setLoadingDocumentTypes(true);
+      try {
+        const types = await propertyDocumentTypeService.getPropertyDocumentTypes({
+          lang: i18n.language
+        });
+        setDocumentTypes(types);
+      } catch (error) {
+        console.error('Failed to load document types:', error);
+        // Use fallback data if API fails
+        const fallbackTypes = propertyDocumentTypeService.getFallbackDocumentTypes(i18n.language);
+        setDocumentTypes(fallbackTypes);
+      } finally {
+        setLoadingDocumentTypes(false);
+      }
+    };
+
+    loadDocumentTypes();
+  }, [i18n.language]);
 
   const availableFeatures = [
     'Air Conditioning',
@@ -403,18 +435,17 @@ const AddProperty: React.FC = () => {
         }
       }
 
-      // Construct the property object matching the backend validation requirements
-      const newProperty = {
+      // Create the property data object
+      const propertyData: any = {
         title: data.title,
         description: data.description || '',
         propertyType: data.propertyType,
         listingType: data.listingType,
         price: parseFloat(data.price.toString()),
-        address: street, // This will be mapped to street_address by backend
+        address: street,
         city: city,
         state: state,
         postalCode: postalCode,
-        // Country field removed - Syria-only application
         latitude: coordinates?.lat,
         longitude: coordinates?.lng,
         bedrooms: Number(data.bedrooms || 0),
@@ -431,16 +462,46 @@ const AddProperty: React.FC = () => {
         contactName: data.contactName || '',
         contactPhone: data.contactPhone || '',
         contactEmail: data.contactEmail || '',
-        // Send actual File objects for upload
-        images: selectedImages.slice(1), // Gallery images (excluding the first one which is main)
-        mainImage: selectedImages[0] || null, // First image as main image (File object)
+        document_type_id: data.documentTypeId ? Number(data.documentTypeId) : undefined,
       };
+
+      // Create FormData for file uploads
+      const formDataToSend = new FormData();
       
-      console.log('Prepared property data for submission:', newProperty);
+      // Add all property data fields to FormData
+      Object.keys(propertyData).forEach(key => {
+        const value = propertyData[key];
+        if (value !== null && value !== undefined) {
+          if (key === 'amenities' && Array.isArray(value)) {
+            // Handle amenities array
+            value.forEach((amenity: string, index: number) => {
+              formDataToSend.append(`amenities[${index}]`, amenity);
+            });
+          } else if (typeof value === 'boolean') {
+            // Handle boolean values
+            formDataToSend.append(key, value ? '1' : '0');
+          } else {
+            // Handle all other values
+            formDataToSend.append(key, String(value));
+          }
+        }
+      });
+
+      // Add images to FormData
+      if (selectedImages[0]) {
+        formDataToSend.append('main_image', selectedImages[0]);
+      }
+      
+      // Add gallery images (excluding the first one which is main)
+      for (let i = 1; i < selectedImages.length; i++) {
+        formDataToSend.append('images[]', selectedImages[i]);
+      }
+      
+      console.log('Prepared property data for submission');
       
       try {
         console.log('Calling addProperty API...');
-        const result = await addProperty(newProperty);
+        const result = await addProperty(formDataToSend);
         console.log('Property added successfully:', result);
         
         toast.success('تمت إضافة العقار بنجاح!');
@@ -485,23 +546,21 @@ const AddProperty: React.FC = () => {
             <div className="bg-gradient-to-r from-[#067977]/10 to-[#067977]/20 rounded-xl p-6 border border-[#067977]/30">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
                 <Home className="h-5 w-5 text-[#067977]" />
-                عنوان العقار
+                {t('addProperty.sectionTitles.propertyTitle')}
               </h3>
               <div>
                 <Label htmlFor="title" className="text-sm font-medium text-gray-700 mb-2 block">
                   {t('forms.propertyTitle')} <span className="text-red-500">*</span>
                 </Label>
-                <div className="relative">
-                  <FileText className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="title"
-                    placeholder={t('forms.propertyTitlePlaceholder')}
-                    className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
+                <InputWithIcon
+                  id="title"
+                  icon={FileText}
+                  placeholder={t('forms.propertyTitlePlaceholder')}
+                  className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
               errors.title ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
             }`}
-                    {...register('title')}
-                  />
-                </div>
+                  {...register('title')}
+                />
                 {errors.title && (
                   <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                     <X className="h-4 w-4" />
@@ -515,24 +574,22 @@ const AddProperty: React.FC = () => {
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
                 <MapPin className="h-5 w-5 text-green-600" />
-                العنوان والموقع
+                {t('addProperty.sectionTitles.addressLocation')}
               </h3>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="address" className="text-sm font-medium text-gray-700 mb-2 block">
                     {t('forms.address')} <span className="text-red-500">*</span>
                   </Label>
-                  <div className="relative">
-                    <MapPin className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      id="address"
-                      placeholder={t('forms.addressPlaceholder')}
-                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-green-100 hover:border-green-300 ${
+                  <InputWithIcon
+                    id="address"
+                    icon={MapPin}
+                    placeholder={t('forms.addressPlaceholder')}
+                    className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-green-100 hover:border-green-300 ${
                         errors.address ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-green-500'
                       }`}
-                      {...register('address')}
-                    />
-                  </div>
+                    {...register('address')}
+                  />
                   {errors.address && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
@@ -597,7 +654,7 @@ const AddProperty: React.FC = () => {
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
                 <Building className="h-5 w-5 text-purple-600" />
-                نوع العقار والإعلان
+                {t('addProperty.sectionTitles.propertyTypeAd')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -612,7 +669,7 @@ const AddProperty: React.FC = () => {
                         <SelectTrigger className="h-12 text-lg border-2 rounded-xl hover:border-purple-300 focus:ring-4 focus:ring-purple-100">
                           <div className="flex items-center gap-2">
                             <DollarSign className="h-4 w-4 text-purple-600" />
-                            <SelectValue placeholder="اختر نوع الإعلان" />
+                            <SelectValue placeholder={t('addProperty.placeholders.selectAdType')} />
                           </div>
                         </SelectTrigger>
                         <SelectContent>
@@ -646,7 +703,7 @@ const AddProperty: React.FC = () => {
                         <SelectTrigger className="h-12 text-lg border-2 rounded-xl hover:border-purple-300 focus:ring-4 focus:ring-purple-100">
                           <div className="flex items-center gap-2">
                             <Home className="h-4 w-4 text-purple-600" />
-                            <SelectValue placeholder="اختر نوع العقار" />
+                            <SelectValue placeholder={t('addProperty.placeholders.selectPropertyType')} />
                           </div>
                         </SelectTrigger>
                         <SelectContent>
@@ -710,6 +767,46 @@ const AddProperty: React.FC = () => {
                   />
                 </div>
               </div>
+              
+              {/* Document Type Section */}
+              <div className="mt-6">
+                <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                  نوع التابو
+                </Label>
+                <Controller
+                  name="documentTypeId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger className="h-12 text-lg border-2 rounded-xl hover:border-purple-300 focus:ring-4 focus:ring-purple-100">
+                        <div className="flex items-center gap-2">
+                          <File className="h-4 w-4 text-purple-600" />
+                          <SelectValue placeholder="اختر نوع التابو" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {loadingDocumentTypes ? (
+                          <SelectItem value="loading" disabled>
+                            <div className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b border-purple-600"></div>
+                              جاري التحميل...
+                            </div>
+                          </SelectItem>
+                        ) : (
+                          documentTypes.map((docType) => (
+                            <SelectItem key={docType.id} value={docType.id.toString()} className="text-lg py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                {docType.name}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
             </div>
           </div>
         );
@@ -721,24 +818,22 @@ const AddProperty: React.FC = () => {
             <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-6 border border-emerald-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
                 <DollarSign className="h-5 w-5 text-emerald-600" />
-                السعر والتكلفة
+                {t('addProperty.sectionTitles.priceAndCost')}
               </h3>
               <div>
                 <Label htmlFor="price" className="text-sm font-medium text-gray-700 mb-2 block">
                   {t('forms.price')} <span className="text-red-500">*</span>
                 </Label>
-                <div className="relative">
-                  <DollarSign className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="price"
-                    type="number"
-                    placeholder={watch('listingType') === 'rent' ? t('forms.monthlyRent') : t('forms.salePrice')}
-                    className={`pr-12 h-14 text-xl border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-emerald-100 hover:border-emerald-300 ${
+                <InputWithIcon
+                  id="price"
+                  type="number"
+                  icon={DollarSign}
+                  placeholder={watch('listingType') === 'rent' ? t('forms.monthlyRent') : t('forms.salePrice')}
+                  className={`h-14 text-xl border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-emerald-100 hover:border-emerald-300 ${
                       errors.price ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'
                     }`}
-                    {...register('price', { valueAsNumber: true })}
-                  />
-                </div>
+                  {...register('price', { valueAsNumber: true })}
+                />
                 {errors.price && (
                   <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                     <X className="h-4 w-4" />
@@ -752,26 +847,24 @@ const AddProperty: React.FC = () => {
             <div className="bg-gradient-to-r from-[#067977]/10 to-[#067977]/15 rounded-xl p-6 border border-[#067977]/30">
               <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
                 <Building className="h-5 w-5 text-[#067977]" />
-                مواصفات العقار
+                {t('addProperty.sectionTitles.propertySpecs')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <Label htmlFor="bedrooms" className="text-sm font-medium text-gray-700 mb-2 block">
                     {t('property.details.bedrooms')} <span className="text-red-500">*</span>
                   </Label>
-                  <div className="relative">
-                    <Bed className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      id="bedrooms"
-                      type="number"
-                      min="0"
-                      placeholder="عدد الغرف"
-                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
+                  <InputWithIcon
+                    id="bedrooms"
+                    type="number"
+                    min="0"
+                    icon={Bed}
+                    placeholder={t('addProperty.placeholders.bedroomCount')}
+                    className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
               errors.bedrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
             }`}
-                      {...register('bedrooms', { valueAsNumber: true })}
-                    />
-                  </div>
+                    {...register('bedrooms', { valueAsNumber: true })}
+                  />
                   {errors.bedrooms && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
@@ -784,20 +877,18 @@ const AddProperty: React.FC = () => {
                   <Label htmlFor="bathrooms" className="text-sm font-medium text-gray-700 mb-2 block">
                     {t('property.details.bathrooms')} <span className="text-red-500">*</span>
                   </Label>
-                  <div className="relative">
-                    <Bath className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      id="bathrooms"
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      placeholder="عدد الحمامات"
-                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
+                  <InputWithIcon
+                    id="bathrooms"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    icon={Bath}
+                    placeholder={t('addProperty.placeholders.bathroomCount')}
+                    className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
               errors.bathrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
             }`}
-                      {...register('bathrooms', { valueAsNumber: true })}
-                    />
-                  </div>
+                    {...register('bathrooms', { valueAsNumber: true })}
+                  />
                   {errors.bathrooms && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
@@ -810,19 +901,17 @@ const AddProperty: React.FC = () => {
                   <Label htmlFor="squareFootage" className="text-sm font-medium text-gray-700 mb-2 block">
                     {t('property.details.squareFootage')} <span className="text-red-500">*</span>
                   </Label>
-                  <div className="relative">
-                    <Square className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      id="squareFootage"
-                      type="number"
-                      min="1"
-                      placeholder="المساحة (م²)"
-                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
+                  <InputWithIcon
+                    id="squareFootage"
+                    type="number"
+                    min="1"
+                    icon={Square}
+                    placeholder={t('addProperty.placeholders.areaSquareMeters')}
+                    className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${
               errors.squareFootage ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
             }`}
-                      {...register('squareFootage', { valueAsNumber: true })}
-                    />
-                  </div>
+                    {...register('squareFootage', { valueAsNumber: true })}
+                  />
                   {errors.squareFootage && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
@@ -837,27 +926,25 @@ const AddProperty: React.FC = () => {
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
                 <Calendar className="h-5 w-5 text-orange-600" />
-                تفاصيل إضافية
+                {t('addProperty.sectionTitles.additionalDetails')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="yearBuilt" className="text-sm font-medium text-gray-700 mb-2 block">
                     {t('property.details.yearBuilt')} <span className="text-red-500">*</span>
                   </Label>
-                  <div className="relative">
-                    <Calendar className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      id="yearBuilt"
-                      type="number"
-                      min="1800"
-                      max={new Date().getFullYear()}
-                      placeholder="سنة البناء"
-                      className={`pr-12 h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-orange-100 hover:border-orange-300 ${
+                  <InputWithIcon
+                    id="yearBuilt"
+                    type="number"
+                    min="1800"
+                    max={new Date().getFullYear()}
+                    icon={Calendar}
+                    placeholder={t('addProperty.placeholders.yearBuilt')}
+                    className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-orange-100 hover:border-orange-300 ${
                         errors.yearBuilt ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-orange-500'
                       }`}
-                      {...register('yearBuilt', { valueAsNumber: true })}
-                    />
-                  </div>
+                    {...register('yearBuilt', { valueAsNumber: true })}
+                  />
                   {errors.yearBuilt && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
@@ -926,38 +1013,38 @@ const AddProperty: React.FC = () => {
                       <SelectTrigger className="h-12 text-lg border-2 rounded-xl hover:border-orange-300 focus:ring-4 focus:ring-orange-100">
                         <div className="flex items-center gap-2">
                           <Car className="h-4 w-4 text-orange-600" />
-                          <SelectValue placeholder="اختر نوع المواقف" />
+                          <SelectValue placeholder={t('addProperty.placeholders.selectParkingType')} />
                         </div>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none" className="text-lg py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                            لا يوجد مواقف
+                            {t('addProperty.parkingTypes.noParking')}
                           </div>
                         </SelectItem>
                         <SelectItem value="street" className="text-lg py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                            مواقف في الشارع
+                            {t('addProperty.parkingTypes.streetParking')}
                           </div>
                         </SelectItem>
                         <SelectItem value="garage" className="text-lg py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            جراج مغلق
+                            {t('addProperty.parkingTypes.closedGarage')}
                           </div>
                         </SelectItem>
                         <SelectItem value="driveway" className="text-lg py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-[#067977] rounded-full"></div>
-                            ممر خاص
+                            {t('addProperty.parkingTypes.privateDriveway')}
                           </div>
                         </SelectItem>
                         <SelectItem value="carport" className="text-lg py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                            مظلة سيارات
+                            {t('addProperty.parkingTypes.carShelter')}
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -976,10 +1063,10 @@ const AddProperty: React.FC = () => {
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
                 <Camera className="h-5 w-5 text-purple-600" />
-                صور العقار
+                {t('addProperty.sectionTitles.propertyImages')}
               </h3>
               <p className="text-sm text-gray-600 mb-6 font-['Cairo',_'Tajawal',_sans-serif]">
-                ارفع حتى 10 صور عالية الجودة للعقار. الصورة الأولى ستكون الصورة الرئيسية.
+                {t('addProperty.imageUpload.uploadHighQuality')}
               </p>
               
               <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50 transition-all duration-300 bg-white/50">
@@ -996,7 +1083,7 @@ const AddProperty: React.FC = () => {
                     <Upload className="h-10 w-10 text-purple-600" />
                   </div>
                   <p className="text-xl font-semibold text-gray-900 mb-2 font-['Cairo',_'Tajawal',_sans-serif]">
-                    اضغط لرفع الصور
+                    {t('addProperty.imageUpload.clickToUpload')}
                   </p>
                   <p className="text-sm text-gray-500 font-['Cairo',_'Tajawal',_sans-serif]">
                     PNG, JPG, GIF حتى 10 ميجابايت لكل صورة (حد أقصى 10 صور)
@@ -1009,7 +1096,7 @@ const AddProperty: React.FC = () => {
                   <div className="flex items-center justify-between mb-6">
                     <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
                       <ImageIcon className="h-5 w-5 text-purple-600" />
-                      الصور المختارة ({selectedImages.length}/10)
+                      {t('addProperty.imageUpload.selectedImages')} ({selectedImages.length}/10)
                     </h4>
                     <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
                       {selectedImages.length} من 10
@@ -1036,7 +1123,7 @@ const AddProperty: React.FC = () => {
                           {index === 0 && (
                             <div className="absolute bottom-3 left-3 bg-gradient-to-r from-[#067977] to-[#067977]/80 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-lg flex items-center gap-1">
                               <Star className="h-3 w-3 fill-current" />
-                              الصورة الرئيسية
+                              {t('addProperty.imageUpload.mainImage')}
                             </div>
                           )}
                           <div className="absolute top-3 left-3 bg-white/90 text-gray-700 text-xs px-2 py-1 rounded-full font-medium">
@@ -1052,7 +1139,7 @@ const AddProperty: React.FC = () => {
                         <label htmlFor="image-upload" className="cursor-pointer block">
                           <div className="w-full h-40 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-purple-400 hover:bg-purple-50 transition-all duration-200">
                             <Plus className="h-8 w-8 text-gray-400 mb-2" />
-                            <span className="text-sm text-gray-500 font-medium">إضافة المزيد</span>
+                            <span className="text-sm text-gray-500 font-medium">{t('addProperty.imageUpload.addMore')}</span>
                           </div>
                         </label>
                       </div>
@@ -1063,13 +1150,13 @@ const AddProperty: React.FC = () => {
                   <div className="mt-6 bg-[#067977]/10 border border-[#067977]/30 rounded-lg p-4">
                     <h5 className="font-semibold text-[#067977] mb-2 flex items-center gap-2">
                       <Camera className="h-4 w-4" />
-                      نصائح للحصول على أفضل النتائج
+                      {t('addProperty.imageUpload.tips.title')}
                     </h5>
                     <ul className="text-[#067977]/80 text-sm space-y-1 font-['Cairo',_'Tajawal',_sans-serif]">
-                      <li>• استخدم إضاءة طبيعية جيدة</li>
-                      <li>• التقط صور من زوايا مختلفة</li>
-                      <li>• أظهر المميزات الرئيسية للعقار</li>
-                      <li>• تأكد من وضوح الصور وجودتها العالية</li>
+                      <li>• {t('addProperty.imageUpload.tips.naturalLight')}</li>
+                      <li>• {t('addProperty.imageUpload.tips.differentAngles')}</li>
+                      <li>• {t('addProperty.imageUpload.tips.showFeatures')}</li>
+                      <li>• {t('addProperty.imageUpload.tips.ensureQuality')}</li>
                     </ul>
                   </div>
                 </div>
@@ -1142,7 +1229,7 @@ const AddProperty: React.FC = () => {
                 ))}
               </div>
               <p className="text-sm text-gray-500 mt-2">
-                {t('forms.selectedUtilities', { defaultValue: 'Selected utilities' })}: {selectedUtilities.length}
+                {t('addProperty.selectedUtilities')}: {selectedUtilities.length}
               </p>
             </div>
 
@@ -1169,15 +1256,13 @@ const AddProperty: React.FC = () => {
 
             <div>
               <Label htmlFor="contactName">{t('forms.contactName')} *</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="contactName"
-                  placeholder={t('forms.yourFullName')}
-                  className={`pl-10 ${errors.contactName ? 'border-red-500' : ''}`}
-                  {...register('contactName')}
-                />
-              </div>
+              <InputWithIcon
+                id="contactName"
+                icon={User}
+                placeholder={t('forms.yourFullName')}
+                className={`${errors.contactName ? 'border-red-500' : ''}`}
+                {...register('contactName')}
+              />
               {errors.contactName && (
                 <p className="text-sm text-red-600 mt-1">{errors.contactName.message}</p>
               )}
@@ -1185,15 +1270,13 @@ const AddProperty: React.FC = () => {
 
             <div>
               <Label htmlFor="contactPhone">{t('forms.phoneNumber')} *</Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="contactPhone"
-                  placeholder={t('forms.phoneNumberPlaceholder')}
-                  className={`pl-10 ${errors.contactPhone ? 'border-red-500' : ''}`}
-                  {...register('contactPhone')}
-                />
-              </div>
+              <InputWithIcon
+                id="contactPhone"
+                icon={Phone}
+                placeholder={t('forms.phoneNumberPlaceholder')}
+                className={`${errors.contactPhone ? 'border-red-500' : ''}`}
+                {...register('contactPhone')}
+              />
               {errors.contactPhone && (
                 <p className="text-sm text-red-600 mt-1">{errors.contactPhone.message}</p>
               )}
@@ -1201,16 +1284,14 @@ const AddProperty: React.FC = () => {
 
             <div>
               <Label htmlFor="contactEmail">{t('forms.emailAddress')} *</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="contactEmail"
-                  type="email"
-                  placeholder={t('forms.emailAddressPlaceholder')}
-                  className={`pl-10 ${errors.contactEmail ? 'border-red-500' : ''}`}
-                  {...register('contactEmail')}
-                />
-              </div>
+              <InputWithIcon
+                id="contactEmail"
+                type="email"
+                icon={Mail}
+                placeholder={t('forms.emailAddressPlaceholder')}
+                className={`${errors.contactEmail ? 'border-red-500' : ''}`}
+                {...register('contactEmail')}
+              />
               {errors.contactEmail && (
                 <p className="text-sm text-red-600 mt-1">{errors.contactEmail.message}</p>
               )}
@@ -1219,8 +1300,8 @@ const AddProperty: React.FC = () => {
             <div className="bg-[#067977]/10 p-4 rounded-lg">
                 <h4 className="font-semibold text-[#067977] mb-2">{t('forms.note')}</h4>
                 <p className="text-[#067977] text-sm">
-                Property listing will be created with the uploaded images.
-              </p>
+                  Property listing will be created with the uploaded images.
+                </p>
             </div>
           </div>
         );
@@ -1249,7 +1330,7 @@ const AddProperty: React.FC = () => {
             onClick={() => navigate('/dashboard')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-white/60 transition-all duration-200 rounded-xl px-4 py-2"
           >
-            <ArrowLeft className="h-5 w-5" />
+            {isRTL ? <ArrowRight className="h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
             <span className="font-medium">{t('dashboard.myProperties')}</span>
           </Button>
           <div className="flex items-center gap-3">
@@ -1260,7 +1341,7 @@ const AddProperty: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-900 font-['Cairo',_'Tajawal',_sans-serif]">
                 {t('navigation.listProperty')}
               </h1>
-              <p className="text-sm text-gray-600 mt-1">أضف عقارك الجديد بسهولة</p>
+              <p className="text-sm text-gray-600 mt-1">{t('addProperty.progress.addYourNewProperty')}</p>
             </div>
           </div>
         </div>
@@ -1294,11 +1375,11 @@ const AddProperty: React.FC = () => {
                 <span className={`text-xs mt-2 font-medium ${
                   step <= currentStep ? 'text-[#067977]' : 'text-gray-400'
                 }`}>
-                  {step === 1 && 'أساسي'}
-                  {step === 2 && 'تفاصيل'}
-                  {step === 3 && 'صور'}
-                  {step === 4 && 'مميزات'}
-                  {step === 5 && 'تواصل'}
+                  {step === 1 && t('addProperty.progress.basic')}
+                  {step === 2 && t('addProperty.progress.details')}
+                  {step === 3 && t('addProperty.progress.images')}
+                  {step === 4 && t('addProperty.progress.features')}
+                  {step === 5 && t('addProperty.progress.contact')}
                 </span>
               </div>
             ))}
@@ -1331,32 +1412,32 @@ const AddProperty: React.FC = () => {
                   <CardTitle className="text-2xl font-bold text-gray-900 font-['Cairo',_'Tajawal',_sans-serif]">
                     {currentStep === 1 && (
                       <>
-                        <span className="text-[#067977]">المعلومات الأساسية</span>
-                        <p className="text-sm font-normal text-gray-600 mt-1">أدخل المعلومات الأساسية للعقار</p>
+                        <span className="text-[#067977]">{t('addProperty.stepTitles.basicInfo')}</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">{t('addProperty.stepDescriptions.basicInfo')}</p>
                       </>
                     )}
                     {currentStep === 2 && (
                       <>
-                        <span className="text-[#067977]">تفاصيل العقار</span>
-                        <p className="text-sm font-normal text-gray-600 mt-1">حدد المواصفات والتفاصيل الفنية</p>
+                        <span className="text-[#067977]">{t('addProperty.stepTitles.propertySpecs')}</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">{t('addProperty.stepDescriptions.propertySpecs')}</p>
                       </>
                     )}
                     {currentStep === 3 && (
                       <>
-                        <span className="text-[#067977]">صور العقار</span>
-                        <p className="text-sm font-normal text-gray-600 mt-1">أضف صور عالية الجودة للعقار</p>
+                        <span className="text-[#067977]">{t('addProperty.stepTitles.images')}</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">{t('addProperty.stepDescriptions.images')}</p>
                       </>
                     )}
                     {currentStep === 4 && (
                       <>
-                        <span className="text-[#067977]">المميزات والخدمات</span>
-                        <p className="text-sm font-normal text-gray-600 mt-1">اختر المميزات والخدمات المتوفرة</p>
+                        <span className="text-[#067977]">{t('addProperty.stepTitles.features')}</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">{t('addProperty.stepDescriptions.features')}</p>
                       </>
                     )}
                     {currentStep === 5 && (
                       <>
-                        <span className="text-[#067977]">معلومات التواصل</span>
-                        <p className="text-sm font-normal text-gray-600 mt-1">أدخل بيانات التواصل للمهتمين</p>
+                        <span className="text-[#067977]">{t('addProperty.stepTitles.contact')}</span>
+                        <p className="text-sm font-normal text-gray-600 mt-1">{t('addProperty.stepDescriptions.contact')}</p>
                       </>
                     )}
                   </CardTitle>
@@ -1373,9 +1454,9 @@ const AddProperty: React.FC = () => {
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="px-8 py-3 rounded-xl border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="px-8 py-3 rounded-xl border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
             >
-              <ArrowRight className="h-4 w-4 ml-2" />
+              {isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
               {t('buttons.previous')}
             </Button>
 
@@ -1384,10 +1465,10 @@ const AddProperty: React.FC = () => {
                 <Button 
                   type="button" 
                   onClick={nextStep}
-                  className="px-10 py-3 bg-gradient-to-r from-[#067977] to-[#067977]/80 hover:from-[#067977]/90 hover:to-[#067977] text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  className="px-10 py-3 bg-gradient-to-r from-[#067977] to-[#067977]/80 hover:from-[#067977]/90 hover:to-[#067977] text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
                 >
                   {t('buttons.next')}
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {isRTL ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
                 </Button>
               ) : (
                 <Button 
@@ -1399,16 +1480,16 @@ const AddProperty: React.FC = () => {
                     console.log('Form errors:', errors);
                     console.log('Current step:', currentStep);
                   }}
-                  className="px-10 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-10 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       {t('buttons.creatingListing')}
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <CheckCircle className="h-4 w-4" />
                       {t('buttons.createListing')}
                     </>
                   )}

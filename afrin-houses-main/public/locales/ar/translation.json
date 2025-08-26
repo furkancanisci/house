@@ -221,6 +221,16 @@
     "printDetails": "طباعة التفاصيل",
     "amenities": "المميزات والمرافق",
     "propertyDetails": "تفاصيل العقار",
+    "documentType": "نوع التابو",
+    "documentTypes": {
+      "realEstate": "الطابو العقاري (الطابع العادي)",
+      "updated": "الطابو العيني (الطابع المحدث)",
+      "agricultural": "الطابو الأخضر (الطابع الزراعي)",
+      "construction": "أراضي البناء (الطابع العقاري)",
+      "temporary": "الطابو المؤقت",
+      "family": "الطابو العائلي",
+      "unspecified": "غير محدد"
+    },
     "perMonth": "شهر",
     "more": "المزيد",
     "listed": "مدرج",
@@ -272,6 +282,7 @@
     "contactInfoDescription": "ستظهر هذه المعلومات للمستأجرين/المشترين المحتملين ليتمكنوا من التواصل معك.",
     "phoneNumberPlaceholder": "(555) 123-4567",
     "emailAddressPlaceholder": "your@email.com",
+    "selectedUtilities": "المرافق المختارة",
     "note": "ملاحظة",
     "demoImagesNote": "في هذا العرض التوضيحي، سيتم تعيين صور عينة تلقائياً لعقارك. في التطبيق الحقيقي، ستقوم برفع صورك الخاصة هنا.",
     "step": "خطوة",
@@ -699,6 +710,71 @@
     "noPropertiesMatchingCriteria": "لم نتمكن من العثور على عقارات تطابق معاييرك. جرب تعديل الفلاتر أو تحقق لاحقاً من الإعلانات الجديدة.",
     "clearAllFilters": "مسح جميع الفلاتر",
     "errorLoadingProperties": "خطأ في تحميل العقارات"
+  },
+  "addProperty": {
+    "stepTitles": {
+      "basicInfo": "المعلومات الأساسية",
+      "propertySpecs": "تفاصيل العقار",
+      "images": "صور العقار",
+      "features": "المميزات والخدمات",
+      "contact": "معلومات التواصل"
+    },
+    "stepDescriptions": {
+      "basicInfo": "أدخل المعلومات الأساسية للعقار",
+      "propertySpecs": "حدد المواصفات والتفاصيل الفنية",
+      "images": "أضف صور عالية الجودة للعقار",
+      "features": "اختر المميزات والخدمات المتوفرة",
+      "contact": "أدخل بيانات التواصل للمهتمين"
+    },
+    "sectionTitles": {
+      "propertyTitle": "عنوان العقار",
+      "addressLocation": "العنوان والموقع",
+      "propertyTypeAd": "نوع العقار والإعلان",
+      "priceAndCost": "السعر والتكلفة",
+      "propertySpecs": "مواصفات العقار",
+      "additionalDetails": "تفاصيل إضافية",
+      "propertyImages": "صور العقار"
+    },
+    "placeholders": {
+      "selectAdType": "اختر نوع الإعلان",
+      "selectPropertyType": "اختر نوع العقار",
+      "bedroomCount": "عدد الغرف",
+      "bathroomCount": "عدد الحمامات",
+      "areaSquareMeters": "المساحة (م²)",
+      "yearBuilt": "سنة البناء",
+      "selectParkingType": "اختر نوع المواقف"
+    },
+    "parkingTypes": {
+      "noParking": "لا يوجد مواقف",
+      "streetParking": "مواقف في الشارع",
+      "closedGarage": "جراج مغلق",
+      "privateDriveway": "ممر خاص",
+      "carShelter": "مظلة سيارات"
+    },
+    "imageUpload": {
+      "uploadHighQuality": "ارفع حتى 10 صور عالية الجودة للعقار. الصورة الأولى ستكون الصورة الرئيسية.",
+      "clickToUpload": "اضغط لرفع الصور",
+      "selectedImages": "الصور المختارة",
+      "mainImage": "الصورة الرئيسية",
+      "addMore": "إضافة المزيد",
+      "tips": {
+        "title": "نصائح للحصول على أفضل النتائج",
+        "naturalLight": "استخدم إضاءة طبيعية جيدة",
+        "differentAngles": "التقط صور من زوايا مختلفة",
+        "showFeatures": "أظهر المميزات الرئيسية للعقار",
+        "ensureQuality": "تأكد من وضوح الصور وجودتها العالية"
+      }
+    },
+    "progress": {
+      "basic": "أساسي",
+      "details": "تفاصيل",
+      "images": "صور",
+      "features": "مميزات",
+      "contact": "تواصل",
+      "addYourNewProperty": "أضف عقارك الجديد بسهولة"
+    },
+    "selectedUtilities": "المرافق المختارة",
+    "utilitiesCount": "{{count}} مرفق"
   },
   "housesForSale": {
     "title": "بيوت للبيع",

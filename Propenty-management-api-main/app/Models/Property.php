@@ -53,6 +53,7 @@ class Property extends Model implements HasMedia
         'contact_phone',
         'contact_email',
         'published_at',
+        'document_type_id',
     ];
 
     /**
@@ -202,6 +203,14 @@ class Property extends Model implements HasMedia
     public function views()
     {
         return $this->hasMany(PropertyView::class);
+    }
+
+    /**
+     * Property document type.
+     */
+    public function documentType()
+    {
+        return $this->belongsTo(PropertyDocumentType::class, 'document_type_id');
     }
 
     /**

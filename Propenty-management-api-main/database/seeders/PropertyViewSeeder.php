@@ -47,18 +47,9 @@ class PropertyViewSeeder extends Seeder
             'Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/88.0',
         ];
 
-        $referrers = [
-            'https://www.google.com/',
-            'https://www.facebook.com/',
-            'https://www.zillow.com/',
-            'https://www.realtor.com/',
-            'https://www.trulia.com/',
-            null, // Direct access
-        ];
-
         foreach ($activeProperties as $property) {
-            // Each property gets 10-100 views
-            $viewsCount = rand(10, 100);
+            // Each property gets 5-20 views (reduced for simplicity)
+            $viewsCount = rand(5, 20);
 
             for ($i = 0; $i < $viewsCount; $i++) {
                 // 60% chance it's an authenticated user view, 40% anonymous
@@ -69,21 +60,11 @@ class PropertyViewSeeder extends Seeder
                     $user = null;
                 }
 
-                $viewedAt = now()->subDays(rand(1, 60))->subHours(rand(0, 23))->subMinutes(rand(0, 59));
-                $userAgent = $userAgents[array_rand($userAgents)];
-
                 PropertyView::create([
                     'property_id' => $property->id,
                     'user_id' => $user?->id,
                     'ip_address' => $user ? $this->generateUserIP($user->id) : $sampleIPs[array_rand($sampleIPs)],
-                    'user_agent' => $userAgent,
-                    'referrer' => $referrers[array_rand($referrers)],
-                    'device_info' => [
-                        'browser' => $this->getBrowserFromUserAgent($userAgent),
-                        'platform' => $this->getPlatformFromUserAgent($userAgent),
-                        'is_mobile' => str_contains(strtolower($userAgent), 'mobile'),
-                    ],
-                    'viewed_at' => $viewedAt,
+                    'user_agent' => $userAgents[array_rand($userAgents)],
                 ]);
             }
         }
