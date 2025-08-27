@@ -39,6 +39,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
+import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 
 const propertySchema = z.object({
@@ -490,40 +491,22 @@ const EditProperty: React.FC = () => {
                 </div>
               </div>
               
-              {/* Document Type Section */}
+              {/* Enhanced Document Type Section */}
               <div>
                 <Label>نوع التابو</Label>
                 <Controller
                   name="documentTypeId"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <div className="flex items-center gap-2">
-                          <File className="h-4 w-4 text-gray-400" />
-                          <SelectValue placeholder="اختر نوع التابو" />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {loadingDocumentTypes ? (
-                          <SelectItem value="loading" disabled>
-                            <div className="flex items-center gap-2">
-                              <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></div>
-                              جاري التحميل...
-                            </div>
-                          </SelectItem>
-                        ) : (
-                          documentTypes.map((docType) => (
-                            <SelectItem key={docType.id} value={docType.id.toString()}>
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                                {docType.name}
-                              </div>
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <EnhancedDocumentTypeSelect
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="اختر نوع التابو"
+                      loading={loadingDocumentTypes}
+                      documentTypes={documentTypes}
+                      showDescriptions={true}
+                      className="w-full"
+                    />
                   )}
                 />
               </div>

@@ -5,6 +5,8 @@ export interface PropertyDocumentType {
   name: string;
   description?: string;
   sort_order: number;
+  icon?: string; // Icon name for enhanced UI
+  color?: string; // Color code for enhanced UI
 }
 
 export interface PropertyDocumentTypeResponse {
@@ -193,36 +195,48 @@ class PropertyDocumentTypeService {
         name: language === 'ar' ? 'الطابو العقاري (الطابع العادي)' : 'Real Estate Tabu (Regular Title)',
         description: language === 'ar' ? 'الطابو العقاري العادي للممتلكات السكنية والتجارية' : 'Regular real estate title for residential and commercial properties',
         sort_order: 1,
+        icon: 'FileText',
+        color: '#067977',
       },
       {
         id: 2,
         name: language === 'ar' ? 'الطابو العيني (الطابع المحدث)' : 'Updated Tabu (Modern Title)',
         description: language === 'ar' ? 'الطابو المحدث والمطور للعقارات الجديدة' : 'Updated and modernized title for new properties',
         sort_order: 2,
+        icon: 'RefreshCw',
+        color: '#10b981',
       },
       {
         id: 3,
         name: language === 'ar' ? 'الطابو الأخضر (الطابع الزراعي)' : 'Green Tabu (Agricultural Title)',
         description: language === 'ar' ? 'الطابو الزراعي للأراضي الزراعية والحقول' : 'Agricultural title for farmland and agricultural fields',
         sort_order: 3,
+        icon: 'Leaf',
+        color: '#22c55e',
       },
       {
         id: 4,
         name: language === 'ar' ? 'أراضي البناء (الطابع العقاري)' : 'Construction Land (Building Title)',
         description: language === 'ar' ? 'طابو خاص بالأراضي المخصصة للبناء والتطوير' : 'Special title for land designated for construction and development',
         sort_order: 4,
+        icon: 'Building',
+        color: '#f59e0b',
       },
       {
         id: 5,
         name: language === 'ar' ? 'الطابو المؤقت' : 'Temporary Tabu',
         description: language === 'ar' ? 'طابو مؤقت في انتظار التسوية النهائية' : 'Temporary title pending final settlement',
         sort_order: 5,
+        icon: 'Clock',
+        color: '#ef4444',
       },
       {
         id: 6,
         name: language === 'ar' ? 'الطابو العائلي' : 'Family Tabu',
         description: language === 'ar' ? 'طابو مشترك للعائلة أو الورثة' : 'Shared family title or inheritance title',
         sort_order: 6,
+        icon: 'Users',
+        color: '#8b5cf6',
       },
     ];
 

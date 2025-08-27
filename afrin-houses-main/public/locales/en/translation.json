@@ -351,12 +351,12 @@
     "amenities": "Features & Amenities",
     "documentType": "Document Type",
     "documentTypes": {
-      "realEstate": "Real Estate Tabu (Regular Title)",
-      "updated": "Updated Tabu (Modern Title)",
-      "agricultural": "Green Tabu (Agricultural Title)",
+      "realEstate": "Real Estate Taboo (Regular Title)",
+      "updated": "Updated Taboo (Modern Title)",
+      "agricultural": "Green Taboo (Agricultural Title)",
       "construction": "Construction Land (Building Title)",
-      "temporary": "Temporary Tabu",
-      "family": "Family Tabu",
+      "temporary": "Temporary Taboo",
+      "family": "Family Taboo",
       "unspecified": "Not Specified"
     },
     "perMonth": "month",
