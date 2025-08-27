@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-2">
               <img src={logo} alt="Logo" className="h-6 sm:h-8 w-auto" />
-              <span className="text-lg sm:text-xl font-bold">{getBrandName()}</span>
+              <span className="text-lg sm:text-xl font-bold whitespace-nowrap">{getBrandName()}</span>
             </div>
             <p className="text-gray-300 mb-2 max-w-md text-sm">
               {t('footer.description')}

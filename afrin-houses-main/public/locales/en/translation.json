@@ -349,6 +349,16 @@
     "quickActions": "Quick Actions",
     "printDetails": "Print Details",
     "amenities": "Features & Amenities",
+    "documentType": "Document Type",
+    "documentTypes": {
+      "realEstate": "Real Estate Taboo (Regular Title)",
+      "updated": "Updated Taboo (Modern Title)",
+      "agricultural": "Green Taboo (Agricultural Title)",
+      "construction": "Construction Land (Building Title)",
+      "temporary": "Temporary Taboo",
+      "family": "Family Taboo",
+      "unspecified": "Not Specified"
+    },
     "perMonth": "month",
     "more": "more",
     "listed": "Listed",
@@ -553,6 +563,9 @@
   "forms": {
     "propertyTitle": "Property Title",
     "address": "Address",
+    "city": "City",
+    "state": "State",
+    "postalCode": "Postal Code",
     "price": "Price",
     "monthlyRent": "Monthly Rent",
     "salePrice": "Sale Price",
@@ -564,10 +577,10 @@
     "required": "Required",
     "validation": {
       "propertyTitleRequired": "Property title is required",
-      "addressRequired": "Address is required", 
+      "addressRequired": "Address is required",
       "contactNameRequired": "Contact name is required",
-      "contactPhoneRequired": "Contact phone is required",
-      "validEmailRequired": "Valid email is required",
+      "contactPhoneRequired": "Contact phone number is required",
+      "validEmailRequired": "A valid email address is required",
       "yearBuiltValid": "Year built must be valid",
       "yearBuiltFuture": "Year built cannot be in the future",
       "passwordsDontMatch": "Passwords don't match",
@@ -582,6 +595,7 @@
     "selectAllFeatures": "Select all features that apply to your property",
     "selectedFeatures": "Selected",
     "features": "features",
+    "selectedUtilities": "Selected utilities",
     "utilitiesPlaceholder": "e.g., Heat and hot water included",
     "hoaFeesPlaceholder": "e.g., $200/month",
     "contactInfoDescription": "This information will be displayed to potential tenants/buyers so they can contact you.",
@@ -750,6 +764,71 @@
     "noPropertiesMatchingCriteria": "We couldn't find any properties matching your criteria. Try adjusting your filters or check back later for new listings.",
     "clearAllFilters": "Clear All Filters",
     "errorLoadingProperties": "Error loading properties"
+  },
+  "addProperty": {
+    "stepTitles": {
+      "basicInfo": "Basic Information",
+      "propertySpecs": "Property Details",
+      "images": "Property Images",
+      "features": "Features & Services",
+      "contact": "Contact Information"
+    },
+    "stepDescriptions": {
+      "basicInfo": "Enter the basic property information",
+      "propertySpecs": "Define specifications and technical details",
+      "images": "Add high-quality property images",
+      "features": "Select available features and services",
+      "contact": "Enter contact information for interested parties"
+    },
+    "sectionTitles": {
+      "propertyTitle": "Property Title",
+      "addressLocation": "Address and Location",
+      "propertyTypeAd": "Property and Listing Type",
+      "priceAndCost": "Price and Cost",
+      "propertySpecs": "Property Specifications",
+      "additionalDetails": "Additional Details",
+      "propertyImages": "Property Images"
+    },
+    "placeholders": {
+      "selectAdType": "Select listing type",
+      "selectPropertyType": "Select property type",
+      "bedroomCount": "Number of bedrooms",
+      "bathroomCount": "Number of bathrooms",
+      "areaSquareMeters": "Area (m²)",
+      "yearBuilt": "Year built",
+      "selectParkingType": "Select parking type"
+    },
+    "parkingTypes": {
+      "noParking": "No parking",
+      "streetParking": "Street parking",
+      "closedGarage": "Closed garage",
+      "privateDriveway": "Private driveway",
+      "carShelter": "Car shelter"
+    },
+    "imageUpload": {
+      "uploadHighQuality": "Upload up to 10 high-quality property images. The first image will be the main image.",
+      "clickToUpload": "Click to upload images",
+      "selectedImages": "Selected Images",
+      "mainImage": "Main Image",
+      "addMore": "Add More",
+      "tips": {
+        "title": "Tips for Best Results",
+        "naturalLight": "Use good natural lighting",
+        "differentAngles": "Take photos from different angles",
+        "showFeatures": "Highlight key property features",
+        "ensureQuality": "Ensure photos are clear and high quality"
+      }
+    },
+    "progress": {
+      "basic": "Basic",
+      "details": "Details",
+      "images": "Images",
+      "features": "Features",
+      "contact": "Contact",
+      "addYourNewProperty": "Add your new property easily"
+    },
+    "selectedUtilities": "Selected utilities",
+    "utilitiesCount": "{{count}} utilities"
   },
   "housesForSale": {
     "title": "Houses for Sale",

@@ -20,7 +20,8 @@ import {
   User,
   Upload,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  File
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -38,6 +39,8 @@ import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
+import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
+import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required'),
@@ -47,6 +50,7 @@ const propertySchema = z.object({
   price: z.number().min(1, 'Price must be greater than 0'),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
+  documentTypeId: z.string().optional(),
   bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater'),
   bathrooms: z.number().min(0, 'Bathrooms must be 0 or greater'),
   squareFootage: z.number().min(1, 'Square footage must be greater than 0'),
@@ -82,6 +86,10 @@ const EditProperty: React.FC = () => {
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('');
+  
+  // Document types state
+  const [documentTypes, setDocumentTypes] = useState<PropertyDocumentType[]>([]);
+  const [loadingDocumentTypes, setLoadingDocumentTypes] = useState(false);
 
   const {
     register,
@@ -212,6 +220,7 @@ const EditProperty: React.FC = () => {
             price: Number(foundProperty.price) || 0,
             listingType: foundProperty.listingType || foundProperty.listing_type || 'sale',
             propertyType: foundProperty.propertyType || foundProperty.property_type || 'apartment',
+            documentTypeId: foundProperty.document_type_id ? String(foundProperty.document_type_id) : '',
             bedrooms: Number(foundProperty.bedrooms) || 0,
             bathrooms: Number(foundProperty.bathrooms) || 0,
             squareFootage: Number(foundProperty.squareFootage || foundProperty.square_feet) || 0,
@@ -244,6 +253,28 @@ const EditProperty: React.FC = () => {
 
     loadProperty();
   }, [id, properties, user, navigate, reset]);
+
+  // Load property document types
+  useEffect(() => {
+    const loadDocumentTypes = async () => {
+      setLoadingDocumentTypes(true);
+      try {
+        const types = await propertyDocumentTypeService.getPropertyDocumentTypes({
+          lang: 'ar' // Default to Arabic for edit form
+        });
+        setDocumentTypes(types);
+      } catch (error) {
+        console.error('Failed to load document types:', error);
+        // Use fallback data if API fails
+        const fallbackTypes = propertyDocumentTypeService.getFallbackDocumentTypes('ar');
+        setDocumentTypes(fallbackTypes);
+      } finally {
+        setLoadingDocumentTypes(false);
+      }
+    };
+
+    loadDocumentTypes();
+  }, []);
 
   const handleFeatureToggle = (feature: string) => {
     setSelectedFeatures(prev =>
@@ -308,6 +339,7 @@ const EditProperty: React.FC = () => {
         price: data.price,
         listingType: data.listingType,
         propertyType: data.propertyType,
+        documentTypeId: data.documentTypeId ? Number(data.documentTypeId) : undefined,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
         squareFootage: data.squareFootage,
@@ -457,6 +489,26 @@ const EditProperty: React.FC = () => {
                     )}
                   />
                 </div>
+              </div>
+              
+              {/* Enhanced Document Type Section */}
+              <div>
+                <Label>نوع التابو</Label>
+                <Controller
+                  name="documentTypeId"
+                  control={control}
+                  render={({ field }) => (
+                    <EnhancedDocumentTypeSelect
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="اختر نوع التابو"
+                      loading={loadingDocumentTypes}
+                      documentTypes={documentTypes}
+                      showDescriptions={true}
+                      className="w-full"
+                    />
+                  )}
+                />
               </div>
             </CardContent>
           </Card>

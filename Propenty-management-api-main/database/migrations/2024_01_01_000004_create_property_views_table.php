@@ -15,14 +15,16 @@ return new class extends Migration
             $table->id();
             $table->foreignId('property_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('ip_address');
-            $table->string('user_agent')->nullable();
-            $table->string('referrer')->nullable();
+            $table->string('ip_address', 45)->nullable(); // Support IPv6
+            $table->text('user_agent')->nullable();
+            $table->text('referrer')->nullable();
             $table->json('device_info')->nullable(); // Browser, OS, device type
-            $table->timestamp('viewed_at');
+            $table->timestamp('viewed_at')->nullable();
+            $table->timestamps(); // created_at and updated_at
             
             $table->index(['property_id', 'viewed_at']);
             $table->index(['ip_address', 'viewed_at']);
+            $table->index(['user_id', 'viewed_at']);
         });
     }
 

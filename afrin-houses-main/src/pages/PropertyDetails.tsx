@@ -22,7 +22,8 @@ import {
   Home,
   Car,
   Zap,
-  TreePine
+  TreePine,
+  File
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -30,6 +31,7 @@ import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { toast } from 'sonner';
 import { getProperty } from '../services/propertyService';
+import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import FixedImage from '../components/FixedImage';
 import PropertyImageGallery from '../components/PropertyImageGallery';
 
@@ -42,6 +44,8 @@ const PropertyDetails: React.FC = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [documentType, setDocumentType] = useState<PropertyDocumentType | null>(null);
+  const [loadingDocumentType, setLoadingDocumentType] = useState(false);
   const { isLoaded: isMapLoaded, loadError } = useLeafletMap();
 
   const [showMap, setShowMap] = useState(false);
@@ -90,6 +94,8 @@ const PropertyDetails: React.FC = () => {
         console.log('Square Feet:', propertyData.details?.square_feet);
         console.log('Property Type:', propertyData.property_type);
         console.log('Listing Type:', propertyData.listing_type);
+        console.log('Document Type ID:', propertyData.document_type_id);
+        console.log('Document Type Object:', propertyData.document_type);
         console.log('All response keys:', Object.keys(propertyData));
         
         // Debug image data specifically
@@ -204,7 +210,10 @@ const PropertyDetails: React.FC = () => {
           parking: propertyData.details?.parking?.type,
           lotSize: propertyData.details?.lot_size,
           garage: propertyData.details?.parking?.type === 'garage' ? 'Yes' : 'No',
-          building: propertyData.details?.building_name
+          building: propertyData.details?.building_name,
+          // Document type information
+          document_type_id: propertyData.document_type_id,
+          documentType: propertyData.document_type
         };
         
         // Log the transformed property
@@ -217,6 +226,10 @@ const PropertyDetails: React.FC = () => {
         console.log('Images array for gallery:', transformedProperty.images);
         console.log('Media array:', transformedProperty.media);
         console.log('Main image:', transformedProperty.mainImage);
+        console.log('Document Type ID after transform:', transformedProperty.document_type_id);
+        console.log('Document Type Object after transform:', transformedProperty.documentType);
+        console.log('Raw propertyData.document_type_id:', propertyData.document_type_id);
+        console.log('Raw propertyData.document_type:', propertyData.document_type);
         console.groupEnd();
         
         setProperty(transformedProperty);
@@ -231,6 +244,62 @@ const PropertyDetails: React.FC = () => {
 
     fetchProperty();
   }, [slug, i18n.language, t]);
+
+  // Fetch document type if property has document_type_id but no document type object
+  useEffect(() => {
+    const fetchDocumentType = async () => {
+      console.log('fetchDocumentType called with:', {
+        property_document_type_id: property?.document_type_id,
+        property_documentType: property?.documentType,
+        currentLanguage: i18n.language
+      });
+      
+      if (property?.document_type_id && !property?.documentType) {
+        setLoadingDocumentType(true);
+        try {
+          console.log('Fetching document type with ID:', property.document_type_id);
+          const docType = await propertyDocumentTypeService.getPropertyDocumentTypeById(
+            Number(property.document_type_id),
+            { lang: i18n.language }
+          );
+          console.log('Fetched document type:', docType);
+          if (docType) {
+            setDocumentType(docType);
+          }
+        } catch (error) {
+          console.error('Error fetching document type:', error);
+        } finally {
+          setLoadingDocumentType(false);
+        }
+      } else if (property?.documentType) {
+        // If document type is already included in property data
+        console.log('Using document type from property data:', property.documentType);
+        setDocumentType(property.documentType);
+      } else if (property?.document_type_id) {
+        // If we have a document_type_id but no documentType, still try to fetch
+        console.log('Property has document_type_id but no documentType object, forcing fetch');
+        setLoadingDocumentType(true);
+        try {
+          const docType = await propertyDocumentTypeService.getPropertyDocumentTypeById(
+            Number(property.document_type_id),
+            { lang: i18n.language }
+          );
+          console.log('Force fetched document type:', docType);
+          if (docType) {
+            setDocumentType(docType);
+          }
+        } catch (error) {
+          console.error('Error force fetching document type:', error);
+        } finally {
+          setLoadingDocumentType(false);
+        }
+      }
+    };
+
+    if (property) {
+      fetchDocumentType();
+    }
+  }, [property, i18n.language]);
 
   if (loading) {
     return (
@@ -725,6 +794,24 @@ const PropertyDetails: React.FC = () => {
                   <span className="text-gray-600">{t('filters.propertyType')}</span>
                   <span className="capitalize">{t(`property.types.${property.propertyType}`)}</span>
                 </div>
+                {(property.document_type_id || documentType || loadingDocumentType) && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 flex items-center gap-2">
+                      <File className="h-4 w-4" />
+                      {t('property.documentType')}
+                    </span>
+                    <span className="text-right">
+                      {loadingDocumentType ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></div>
+                          <span className="text-sm text-gray-500">{t('common.loading')}</span>
+                        </div>
+                      ) : (
+                        documentType?.name || t('property.documentTypes.unspecified')
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('property.details.bedrooms')}</span>
                   <span>{property.bedrooms}</span>

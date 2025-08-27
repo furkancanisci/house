@@ -12,6 +12,7 @@ use App\Models\PropertyView;
 use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
 
@@ -47,7 +48,11 @@ class PropertyController extends Controller
             'contactName' => 'contact_name',
             'contactPhone' => 'contact_phone',
             'contactEmail' => 'contact_email',
+            'documentTypeId' => 'document_type_id',
+            'document_type_id' => 'document_type_id', // Also accept snake_case
             'imagesToRemove' => 'remove_images',
+            'mainImage' => 'main_image',
+            'main_image' => 'main_image', // Also accept snake_case
         ];
 
         $mappedData = [];
@@ -77,8 +82,6 @@ class PropertyController extends Controller
             'version' => '1.0.0',
         ]);
     }
-
-
 
     /**
      * Simple test property creation without validation
@@ -127,8 +130,6 @@ class PropertyController extends Controller
     /**
      * Display a listing of properties with filtering and searching.
      */
-
-
     public function index(Request $request): PropertyCollection
     {
         // Get the filters from the request
@@ -175,26 +176,6 @@ class PropertyController extends Controller
         }
         if ($maxPrice && is_numeric($maxPrice) && $maxPrice > 0) {
             $query->where('price', '<=', (float)$maxPrice);
-        }
-
-        // Apply bedroom filter - support 'any', numbers, and '4+' format
-        $bedrooms = $request->input('bedrooms');
-        if ($bedrooms && $bedrooms !== 'any' && $bedrooms !== '') {
-            if ($bedrooms === '4+') {
-                $query->where('bedrooms', '>=', 4);
-            } elseif (is_numeric($bedrooms)) {
-                $query->where('bedrooms', '>=', (int)$bedrooms);
-            }
-        }
-
-        // Apply bathroom filter - support 'any', numbers, and '3+' format
-        $bathrooms = $request->input('bathrooms');
-        if ($bathrooms && $bathrooms !== 'any' && $bathrooms !== '') {
-            if ($bathrooms === '3+') {
-                $query->where('bathrooms', '>=', 3);
-            } elseif (is_numeric($bathrooms)) {
-                $query->where('bathrooms', '>=', (float)$bathrooms);
-            }
         }
 
         // Apply square footage filters
@@ -288,15 +269,17 @@ class PropertyController extends Controller
             'street_address', 'city', 'state', 'postal_code', 'neighborhood',
             'latitude', 'longitude', 'amenities', 'nearby_places', 'status', 'is_featured',
             'is_available', 'available_from', 'published_at', 'views_count',
-            'user_id', 'created_at', 'updated_at'
+            'user_id', 'document_type_id', 'created_at', 'updated_at'
         ]);
+
+        // Load relationships
+        $query->with(['documentType']);
 
         // Paginate the results
         $perPage = $request->input('per_page', 12);
         $properties = $query->paginate($perPage);
         return new PropertyCollection($properties);
     }
-
 
     /**
      * Store a newly created property.
@@ -316,25 +299,135 @@ class PropertyController extends Controller
             // Set default status if not provided
             $mappedData['status'] = $mappedData['status'] ?? 'active';
             
-            // Create the property
-            $property = Property::create($mappedData);
+            // Ensure required fields have proper defaults and validation
+            $mappedData['published_at'] = $mappedData['published_at'] ?? now();
+            $mappedData['views_count'] = 0;
+            $mappedData['rating'] = null;
+            $mappedData['reviews_count'] = 0;
             
-            // Handle main image upload
-            if ($request->hasFile('main_image')) {
-                $mainImage = $request->file('main_image');
-                $property->addMedia($mainImage)
-                    ->usingName($mainImage->getClientOriginalName())
-                    ->usingFileName(time() . '_main_' . $mainImage->getClientOriginalName())
-                    ->toMediaCollection('main_image');
+            // Ensure required fields are present
+            if (empty($mappedData['city'])) {
+                $mappedData['city'] = 'Unknown City';
+            }
+            if (empty($mappedData['state'])) {
+                $mappedData['state'] = 'Unknown State';
+            }
+            if (empty($mappedData['bedrooms'])) {
+                $mappedData['bedrooms'] = 0;
+            }
+            if (empty($mappedData['bathrooms'])) {
+                $mappedData['bathrooms'] = 0;
+            }
+            
+            // Clean up any null or problematic values that might cause PostgreSQL issues
+            foreach ($mappedData as $key => $value) {
+                if ($value === '' && in_array($key, ['latitude', 'longitude', 'lot_size', 'year_built', 'parking_spaces'])) {
+                    $mappedData[$key] = null;
+                }
+            }
+            
+            // Remove image fields from the database insertion as they should not be stored in the properties table
+            unset($mappedData['main_image']);
+            unset($mappedData['images']);
+            unset($mappedData['base64_images']);
+            
+            // Log the data being inserted for debugging
+            \Illuminate\Support\Facades\Log::info('Creating property with data', [
+                'mapped_data_keys' => array_keys($mappedData),
+                'user_id' => $mappedData['user_id'],
+                'title' => $mappedData['title'] ?? 'N/A',
+                'has_main_image' => $request->hasFile('main_image') || $request->hasFile('mainImage'),
+                'has_images' => $request->hasFile('images'),
+                'has_base64_images' => $request->has('base64_images'),
+                'request_method' => $request->method(),
+                'content_type' => $request->header('Content-Type')
+            ]);
+            
+            // Create the property using a PostgreSQL-safe approach
+            try {
+                // Generate a slug if not present
+                if (!isset($mappedData['slug'])) {
+                    $baseSlug = \Illuminate\Support\Str::slug($mappedData['title']);
+                    $slug = $baseSlug;
+                    $counter = 1;
+                    
+                    while (DB::table('properties')->where('slug', $slug)->exists()) {
+                        $slug = $baseSlug . '-' . $counter;
+                        $counter++;
+                    }
+                    $mappedData['slug'] = $slug;
+                }
+                
+                // Add timestamps
+                $mappedData['created_at'] = now();
+                $mappedData['updated_at'] = now();
+                
+                // Insert directly using DB facade to avoid the insertGetId issue
+                $propertyId = DB::table('properties')->insertGetId($mappedData);
+                
+                if (!$propertyId) {
+                    throw new \Exception('Failed to insert property into database');
+                }
+                
+                // Get the created property
+                $property = Property::find($propertyId);
+                
+                if (!$property) {
+                    throw new \Exception('Property inserted but could not be retrieved');
+                }
+                
+            } catch (\Exception $createException) {
+                \Illuminate\Support\Facades\Log::error('Property creation failed completely', [
+                    'error' => $createException->getMessage(),
+                    'trace' => $createException->getTraceAsString(),
+                    'data_keys' => array_keys($mappedData),
+                    'data_sample' => array_slice($mappedData, 0, 5)
+                ]);
+                
+                throw new \Exception('Failed to create property: ' . $createException->getMessage());
+            }
+            
+            // Handle main image upload (support both main_image and mainImage)
+            $mainImageFile = $request->file('main_image') ?? $request->file('mainImage');
+            if ($mainImageFile) {
+                try {
+                    $property->addMedia($mainImageFile)
+                        ->usingName($mainImageFile->getClientOriginalName())
+                        ->usingFileName(time() . '_main_' . $mainImageFile->getClientOriginalName())
+                        ->toMediaCollection('main_image');
+                    \Illuminate\Support\Facades\Log::info('Main image uploaded successfully');
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to upload main image', [
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
             
             // Handle multiple image uploads
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $index => $image) {
-                    $property->addMedia($image)
-                        ->usingName($image->getClientOriginalName())
-                        ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
-                        ->toMediaCollection('images');
+                try {
+                    $images = $request->file('images');
+                    if (is_array($images)) {
+                        foreach ($images as $index => $image) {
+                            $property->addMedia($image)
+                                ->usingName($image->getClientOriginalName())
+                                ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
+                                ->toMediaCollection('images');
+                        }
+                    } else {
+                        // Single image file
+                        $property->addMedia($images)
+                            ->usingName($images->getClientOriginalName())
+                            ->usingFileName(time() . '_single_' . $images->getClientOriginalName())
+                            ->toMediaCollection('images');
+                    }
+                    \Illuminate\Support\Facades\Log::info('Gallery images uploaded successfully', [
+                        'count' => is_array($images) ? count($images) : 1
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to upload gallery images', [
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
             
@@ -368,7 +461,7 @@ class PropertyController extends Controller
             }
             
             // Load the property with its relationships
-            $property->load(['user', 'media']);
+            $property->load(['user', 'media', 'documentType']);
             
             // Return the response
             return response()->json([
@@ -384,14 +477,30 @@ class PropertyController extends Controller
             ], 500);
         }
     }
+
     /**
      * Display the specified property.
      */
     public function show(Request $request, Property $property): JsonResponse
     {
-        // Record property view
-        PropertyView::recordView($property, $request);
-        $property->incrementViews();
+        try {
+            // Record property view - but don't let it fail the entire request
+            PropertyView::recordView($property, $request);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to record property view', [
+                'property_id' => $property->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        try {
+            $property->incrementViews();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to increment property views', [
+                'property_id' => $property->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         // Debug logging
         \Illuminate\Support\Facades\Log::info('Property show request', [
@@ -401,7 +510,7 @@ class PropertyController extends Controller
         ]);
 
         return response()->json([
-            'property' => new PropertyResource($property->load(['user', 'media', 'favoritedByUsers'])),
+            'property' => new PropertyResource($property->load(['user', 'media', 'favoritedByUsers', 'documentType'])),
         ]);
     }
 
@@ -499,7 +608,7 @@ class PropertyController extends Controller
 
             return response()->json([
                 'message' => 'Property updated successfully.',
-                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers'])),
+                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers', 'documentType'])),
             ]);
             
         } catch (\Exception $e) {
@@ -516,18 +625,30 @@ class PropertyController extends Controller
      */
     public function destroy(Property $property): JsonResponse
     {
-        // Check if user owns the property
-        if ($property->user_id !== auth()->id()) {
+        try {
+            // Check if user owns the property
+            if (auth()->id() && $property->user_id !== auth()->id()) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only delete your own properties.',
+                ], 403);
+            }
+
+            // Delete all media associated with the property
+            $property->clearMediaCollection('images');
+            $property->clearMediaCollection('main_image');
+
+            // Delete the property
+            $property->delete();
+
             return response()->json([
-                'message' => 'Unauthorized. You can only delete your own properties.',
-            ], 403);
+                'message' => 'Property deleted successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error deleting property',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $property->delete();
-
-        return response()->json([
-            'message' => 'Property deleted successfully.',
-        ]);
     }
 
     /**
@@ -535,152 +656,95 @@ class PropertyController extends Controller
      */
     public function featured(Request $request): PropertyCollection
     {
-        $limit = $request->get('limit', 6);
-        $searchTerm = $request->input('search', $request->input('q'));
+        $limit = $request->input('limit', 6);
         
-        $query = Property::with(['user', 'media', 'favoritedByUsers'])
-            ->where('is_featured', true);
-            
-        // Apply search filter if search term exists
-        if (!empty($searchTerm)) {
-            $searchTerm = strtolower(trim($searchTerm));
-            $likeTerm = "%$searchTerm%";
-            
-            $query->where(function($q) use ($likeTerm) {
-                $q->whereRaw('LOWER(title) LIKE ?', [$likeTerm])
-                  ->orWhereRaw('LOWER(description) LIKE ?', [$likeTerm])
-                  ->orWhereRaw('LOWER(property_type) LIKE ?', [$likeTerm])
-                  ->orWhereRaw('LOWER(city) LIKE ?', [$likeTerm])
-                  ->orWhereRaw('LOWER(state) LIKE ?', [$likeTerm])
-                  ->orWhereRaw('LOWER(street_address) LIKE ?', [$likeTerm]);
-            });
-        }
-    
-        $properties = $query->paginate($limit);
-    
+        $properties = Property::where('is_featured', true)
+            ->where('status', 'active')
+            ->where('is_available', true)
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+
         return new PropertyCollection($properties);
     }
-    
 
     /**
-     * Get similar properties.
-     */
-    public function similar(Property $property, Request $request): PropertyCollection
-    {
-        $similar = Property::where('id', '!=', $property->id)
-            ->where('property_type', $property->property_type)
-            ->where('listing_type', $property->listing_type)
-            ->where('city', $property->city)
-            ->active()
-            ->with(['user', 'media', 'favoritedByUsers'])
-            ->take($request->get('limit', 4))
-            ->get();
-
-        return new PropertyCollection($similar);
-    }
-
-    /**
-     * Toggle property favorite status.
-     */
-    public function toggleFavorite(Property $property): JsonResponse
-    {
-        $user = auth()->user();
-        
-        if ($user->favoriteProperties()->where('property_id', $property->id)->exists()) {
-            $user->favoriteProperties()->detach($property->id);
-            $message = 'Property removed from favorites.';
-            $is_favorited = false;
-        } else {
-            $user->favoriteProperties()->attach($property->id);
-            $message = 'Property added to favorites.';
-            $is_favorited = true;
-        }
-
-        return response()->json([
-            'message' => $message,
-            'is_favorited' => $is_favorited,
-        ]);
-    }
-
-    /**
-     * Delete a specific property image.
-     */
-    public function deleteImage(Property $property, $mediaId): JsonResponse
-    {
-        try {
-            // Check if user owns the property
-            if ($property->user_id !== auth()->id()) {
-                return response()->json([
-                    'message' => 'Unauthorized. You can only delete images from your own properties.',
-                ], 403);
-            }
-
-            // Find the media item
-            $media = $property->media()->find($mediaId);
-            
-            if (!$media) {
-                return response()->json([
-                    'message' => 'Image not found.',
-                ], 404);
-            }
-
-            // Delete the media item
-            $media->delete();
-
-            return response()->json([
-                'message' => 'Image deleted successfully.',
-                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers'])),
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error deleting image',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Get property analytics data.
-     */
-    public function analytics(Property $property): JsonResponse
-    {
-        // Check if user owns the property
-        if ($property->user_id !== auth()->id()) {
-            return response()->json([
-                'message' => 'Unauthorized. You can only view analytics for your own properties.',
-            ], 403);
-        }
-
-        $views = $property->views()
-            ->selectRaw('DATE(viewed_at) as date, COUNT(*) as views')
-            ->where('viewed_at', '>=', now()->subDays(30))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        $totalViews = $property->views_count;
-        $uniqueViews = $property->views()->distinct(['ip_address', 'user_id'])->count();
-        $favoritesCount = $property->favoritedByUsers()->count();
-
-        return response()->json([
-            'analytics' => [
-                'total_views' => $totalViews,
-                'unique_views' => $uniqueViews,
-                'favorites_count' => $favoritesCount,
-                'views_chart_data' => $views,
-                'conversion_rate' => $totalViews > 0 ? round(($favoritesCount / $totalViews) * 100, 2) : 0,
-            ],
-        ]);
-    }
-
-    /**
-     * Get available property amenities.
+     * Get property amenities.
      */
     public function amenities(): JsonResponse
     {
+        // This would typically come from a database or config
+        $amenities = [
+            'Air Conditioning',
+            'Heating',
+            'Dishwasher',
+            'Laundry in Unit',
+            'Laundry in Building',
+            'Balcony',
+            'Patio',
+            'Garden',
+            'Roof Deck',
+            'Terrace',
+            'Fireplace',
+            'Hardwood Floors',
+            'Carpet',
+            'Tile Floors',
+            'High Ceilings',
+            'Walk-in Closet',
+            'Storage',
+            'Basement',
+            'Attic',
+            'Garage',
+            'Parking',
+            'Elevator',
+            'Doorman',
+            'Concierge',
+            'Security System',
+            'Intercom',
+            'Video Security',
+            'Gym',
+            'Pool',
+            'Hot Tub',
+            'Sauna',
+            'Tennis Court',
+            'Basketball Court',
+            'Playground',
+            'Dog Park',
+            'Pet Friendly',
+            'No Pets',
+            'Furnished',
+            'Unfurnished',
+            'Internet',
+            'Cable TV',
+            'Utilities Included',
+            'Recently Renovated',
+            'New Construction',
+            'Outdoor Kitchen',
+            'Master Suite',
+            'Updated Kitchen',
+            'Updated Bathroom',
+            'Close to Transit',
+            'Ocean View',
+            'City View',
+            'Private Elevator',
+            'Spa',
+            'Wine Cellar',
+            'Smart Home',
+            'Historic Details',
+            'Bay Windows',
+            'Crown Molding',
+            'Community Pool',
+            'Washer/Dryer',
+            'In-Unit Laundry',
+            'Rooftop Deck',
+            'Fitness Center',
+            'Single Story',
+            'Large Backyard',
+            'Desert Landscaping',
+        ];
+
         return response()->json([
-            'amenities' => Property::getAvailableAmenities(),
+            'amenities' => $amenities,
         ]);
     }
 }

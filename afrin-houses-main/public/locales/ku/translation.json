@@ -124,7 +124,17 @@
             "shareProperty": "Mîlkê Parve Bike"
         },
         "location": "Cih",
-        "listed": "Hate Lîstkirin"
+        "listed": "Hate Lîstkirin",
+        "documentType": "Celeba Belgenameyê",
+        "documentTypes": {
+            "realEstate": "Tabuya Xanîyan (Navnîşana Asayî)",
+            "updated": "Tabuya Nûjen (Navnîşana Modern)",
+            "agricultural": "Tabuya Kesk (Navnîşana Çandiniyê)",
+            "construction": "Erdên Avahîsaziyê (Navnîşana Avahîsaziyê)",
+            "temporary": "Tabuya Demkî",
+            "family": "Tabuya Malbatî",
+            "unspecified": "Nehatiye Diyarkirin"
+        }
     },
     "auth": {
         "signIn": "Têkeve",
@@ -291,6 +301,71 @@
         "noPropertiesMatchingCriteria": "Em nikarin mîlkekî ku bi krîterên te biguncin bibînin. Filtreyên xwe biguhêre an ji bo lîstikên nû vegerî.",
         "clearAllFilters": "Hemû Filtreyan Pak Bike",
         "errorLoadingProperties": "Xeletî di barkirina mîlkan de"
+    },
+    "addProperty": {
+        "stepTitles": {
+            "basicInfo": "Agahiyên Bingehîn",
+            "propertySpecs": "Hûragahiyên Mîlkê",
+            "images": "Wêneyên Mîlkê",
+            "features": "Taybetmendî û Karûbarên",
+            "contact": "Agahiyên Têkiliyê"
+        },
+        "stepDescriptions": {
+            "basicInfo": "Agahiyên bingehîn ên mîlkê têkevê",
+            "propertySpecs": "Pîvanan û hûragahiyên teknîkî diyar bikin",
+            "images": "Wêneyên kalîteya bilind ên mîlkê zêde bikin",
+            "features": "Taybetmendî û karûbarên berdest hilbijêrin",
+            "contact": "Ji bo kesên balkêş agahiyên têkiliyê têkevê"
+        },
+        "sectionTitles": {
+            "propertyTitle": "Navê Mîlkê",
+            "addressLocation": "Navnîşan û Cîh",
+            "propertyTypeAd": "Cure Mîlk û Reklam",
+            "priceAndCost": "Biha û Lêçûn",
+            "propertySpecs": "Pîvanên Mîlkê",
+            "additionalDetails": "Hûragahiyên Zêde",
+            "propertyImages": "Wêneyên Mîlkê"
+        },
+        "placeholders": {
+            "selectAdType": "Cure reklam hilbijêre",
+            "selectPropertyType": "Cure mîlk hilbijêre",
+            "bedroomCount": "Hejmara odeyên razan",
+            "bathroomCount": "Hejmara avdestîxanan",
+            "areaSquareMeters": "Rûberî (m²)",
+            "yearBuilt": "Sala avakirinê",
+            "selectParkingType": "Cure parkkirinê hilbijêre"
+        },
+        "parkingTypes": {
+            "noParking": "Parkkirinek tune",
+            "streetParking": "Parkkirin li kolanan",
+            "closedGarage": "Garajek girtî",
+            "privateDriveway": "Rêya taybet",
+            "carShelter": "Sîpana otomobîlan"
+        },
+        "imageUpload": {
+            "uploadHighQuality": "Heta 10 wêneyan ên kalîteya bilind ji bo mîlkê barkirin. Wêneya yekem dê wêneya sereke be.",
+            "clickToUpload": "Ji bo barkirina wêneyan bitikîne",
+            "selectedImages": "Wêneyên Hilbijartî",
+            "mainImage": "Wêneya Sereke",
+            "addMore": "Bêtir Zêde Bike",
+            "tips": {
+                "title": "Şêret ji bo Encamên Çêtir",
+                "naturalLight": "Ronayîya xwezayî ya baş bikar bîne",
+                "differentAngles": "Ji aliyên cuda wêneyan bikişîne",
+                "showFeatures": "Taybetmendiyên sereke yên mîlkê nîşan bide",
+                "ensureQuality": "Piştrast bike ku wêne zelal û kalîteya bilind in"
+            }
+        },
+        "progress": {
+            "basic": "Bingehîn",
+            "details": "Hûragahî",
+            "images": "Wêne",
+            "features": "Taybetmendî",
+            "contact": "Têkilî",
+            "addYourNewProperty": "Mîlka xwe ya nû bi hêsanî zêde bike"
+        },
+        "selectedUtilities": "Karûbarên hilbijartî",
+        "utilitiesCount": "{{count}} karûbar"
     },
     "map": {
         "loadingProperties": "Mîlk li ser nexşeyê têne barkirin...",
