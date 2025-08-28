@@ -11,7 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        // Check if properties table exists before trying to modify it
+        if (Schema::hasTable('properties')) {
+            Schema::table('properties', function (Blueprint $table) {
+                // Add property_type_id foreign key
+                if (!Schema::hasColumn('properties', 'property_type_id')) {
+                    $table->unsignedBigInteger('property_type_id')->nullable()->after('property_type');
+                }
+                
+                // Add city_id foreign key to replace string city field
+                if (!Schema::hasColumn('properties', 'city_id')) {
+                    $table->unsignedBigInteger('city_id')->nullable()->after('city');
+                }
+            });
+        }
     }
 
     /**
@@ -19,6 +32,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        if (Schema::hasTable('properties')) {
+            Schema::table('properties', function (Blueprint $table) {
+                if (Schema::hasColumn('properties', 'property_type_id')) {
+                    $table->dropColumn('property_type_id');
+                }
+                if (Schema::hasColumn('properties', 'city_id')) {
+                    $table->dropColumn('city_id');
+                }
+            });
+        }
     }
 };

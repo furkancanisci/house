@@ -1,0 +1,344 @@
+/* RTL Layout Fixes for Arabic Language */
+/* This file contains specific RTL adjustments for AdminLTE admin panel */
+
+/* Font Family for Arabic */
+html[lang="ar"] body,
+html[lang="ar"] .main-sidebar,
+html[lang="ar"] .content-wrapper,
+html[lang="ar"] .navbar,
+html[lang="ar"] .card,
+html[lang="ar"] .form-control,
+body.rtl-layout,
+body.rtl-layout .main-sidebar,
+body.rtl-layout .content-wrapper,
+body.rtl-layout .navbar,
+body.rtl-layout .card,
+body.rtl-layout .form-control {
+    font-family: 'Cairo', 'Source Sans Pro', sans-serif !important;
+}
+
+/* SIDEBAR RTL POSITIONING - Move sidebar to right side */
+html[lang="ar"] .main-sidebar,
+body.rtl-layout .main-sidebar {
+    right: 0 !important;
+    left: auto !important;
+    transform: translateX(0) !important;
+}
+
+/* CONTENT WRAPPER - Adjust for right-side sidebar */
+html[lang="ar"] .content-wrapper,
+body.rtl-layout .content-wrapper {
+    margin-right: 250px !important;
+    margin-left: 0 !important;
+}
+
+/* Sidebar collapsed state */
+html[lang="ar"].sidebar-collapse .content-wrapper,
+body.rtl-layout.sidebar-collapse .content-wrapper {
+    margin-right: 0 !important;
+}
+
+/* Sidebar mini state */
+html[lang="ar"].sidebar-mini .content-wrapper,
+body.rtl-layout.sidebar-mini .content-wrapper {
+    margin-right: 4.6rem !important;
+    margin-left: 0 !important;
+}
+
+html[lang="ar"].sidebar-mini.sidebar-collapse .content-wrapper,
+body.rtl-layout.sidebar-mini.sidebar-collapse .content-wrapper {
+    margin-right: 0 !important;
+}
+
+/* NAVBAR RTL ADJUSTMENTS */
+html[lang="ar"] .main-header.navbar {
+    padding-right: 1rem !important;
+    padding-left: 1rem !important;
+}
+
+/* Push menu button positioning for RTL */
+html[lang="ar"] .navbar-nav .nav-link[data-widget="pushmenu"] {
+    margin-right: auto !important;
+    margin-left: 0 !important;
+}
+
+/* Text Direction for Content Elements */
+html[lang="ar"] .card-body,
+html[lang="ar"] .card-header h3,
+html[lang="ar"] .card-title,
+html[lang="ar"] .form-control,
+html[lang="ar"] .table,
+html[lang="ar"] .breadcrumb,
+html[lang="ar"] .nav-link p {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Dropdown RTL Positioning */
+html[lang="ar"] .dropdown-menu {
+    text-align: right;
+}
+
+html[lang="ar"] .dropdown-menu-right {
+    right: auto !important;
+    left: 0 !important;
+}
+
+html[lang="ar"] .dropdown-menu-left {
+    right: 0 !important;
+    left: auto !important;
+}
+
+/* Breadcrumb RTL */
+html[lang="ar"] .breadcrumb-item + .breadcrumb-item::before {
+    content: "\\" !important;
+    padding-left: 0 !important;
+    padding-right: 0.5rem !important;
+}
+
+/* Icon Spacing RTL */
+html[lang="ar"] .nav-link .fas,
+html[lang="ar"] .nav-link .far {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+html[lang="ar"] .btn .fas,
+html[lang="ar"] .btn .far {
+    margin-left: 0.25rem;
+    margin-right: 0;
+}
+
+/* Dashboard Stats RTL */
+html[lang="ar"] .small-box .inner {
+    text-align: right;
+}
+
+html[lang="ar"] .small-box .icon {
+    right: auto;
+    left: 10px;
+}
+
+html[lang="ar"] .small-box-footer {
+    text-align: left;
+}
+
+/* Content Header RTL */
+html[lang="ar"] .content-header h1 {
+    text-align: right;
+}
+
+/* Float utilities for content elements */
+html[lang="ar"] .float-sm-right {
+    float: left !important;
+}
+
+html[lang="ar"] .float-sm-left {
+    float: right !important;
+}
+
+/* Table RTL */
+html[lang="ar"] .table th,
+html[lang="ar"] .table td {
+    text-align: right;
+}
+
+/* Language Switcher */
+html[lang="ar"] .language-switcher {
+    text-align: right;
+    min-width: 120px;
+}
+
+/* Navbar Search RTL */
+html[lang="ar"] .navbar-search-block .form-inline .input-group {
+    direction: rtl;
+}
+
+/* Alert RTL */
+html[lang="ar"] .alert .close {
+    right: auto;
+    left: 0.75rem;
+}
+
+/* Modal RTL */
+html[lang="ar"] .modal-header,
+html[lang="ar"] .modal-body {
+    text-align: right;
+}
+
+/* Input Group RTL */
+html[lang="ar"] .input-group .form-control {
+    text-align: right;
+}
+
+/* Control Sidebar RTL */
+html[lang="ar"] .control-sidebar {
+    right: auto !important;
+    left: 0 !important;
+}
+
+/* Brand Link RTL adjustments */
+html[lang="ar"] .brand-link {
+    padding-right: 1rem !important;
+    padding-left: 0.5rem !important;
+}
+
+html[lang="ar"] .brand-link .brand-image {
+    margin-right: 0 !important;
+    margin-left: 0.5rem !important;
+}
+
+/* Sidebar User Panel RTL */
+html[lang="ar"] .user-panel .image {
+    float: right !important;
+    margin-right: 0 !important;
+    margin-left: 10px !important;
+}
+
+html[lang="ar"] .user-panel .info {
+    padding-right: 50px !important;
+    padding-left: 0 !important;
+    text-align: right !important;
+}
+
+/* Navigation Sidebar RTL */
+html[lang="ar"] .nav-sidebar .nav-link {
+    text-align: right !important;
+}
+
+html[lang="ar"] .nav-sidebar .nav-icon {
+    margin-left: 0.5rem !important;
+    margin-right: 0 !important;
+    float: right !important;
+}
+
+html[lang="ar"] .nav-sidebar .nav-link p {
+    text-align: right !important;
+    margin-right: 0 !important;
+    margin-left: auto !important;
+}
+
+/* Enhanced Responsive adjustments for RTL sidebar */
+@media (max-width: 991.98px) {
+    html[lang="ar"] .main-sidebar,
+    body.rtl-layout .main-sidebar {
+        transform: translateX(100%) !important;
+        right: 0 !important;
+        left: auto !important;
+    }
+    
+    html[lang="ar"].sidebar-open .main-sidebar,
+    body.rtl-layout.sidebar-open .main-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    html[lang="ar"] .content-wrapper,
+    body.rtl-layout .content-wrapper {
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+    }
+}
+
+/* Enhanced RTL sidebar positioning with multiple selector approaches */
+.rtl-layout .wrapper .main-sidebar,
+body.rtl-layout .main-sidebar {
+    right: 0 !important;
+    left: auto !important;
+    position: fixed !important;
+    z-index: 1038 !important;
+}
+
+.rtl-layout .wrapper .content-wrapper,
+body.rtl-layout .content-wrapper {
+    margin-right: 250px !important;
+    margin-left: 0 !important;
+}
+
+.rtl-layout.sidebar-collapse .wrapper .content-wrapper,
+body.rtl-layout.sidebar-collapse .content-wrapper {
+    margin-right: 0 !important;
+}
+
+/* Mini sidebar RTL adjustments */
+.rtl-layout.sidebar-mini .wrapper .content-wrapper,
+body.rtl-layout.sidebar-mini .content-wrapper {
+    margin-right: 4.6rem !important;
+    margin-left: 0 !important;
+}
+
+.rtl-layout.sidebar-mini.sidebar-collapse .wrapper .content-wrapper,
+body.rtl-layout.sidebar-mini.sidebar-collapse .content-wrapper {
+    margin-right: 0 !important;
+}
+
+/* Sidebar overlay for mobile RTL */
+@media (max-width: 991.98px) {
+    .rtl-layout.sidebar-open::before,
+    body.rtl-layout.sidebar-open::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.1);
+        z-index: 1037;
+        display: block;
+    }
+}
+
+/* Additional enforcement for AdminLTE layout structure */
+body.rtl-layout .wrapper {
+    direction: ltr !important; /* Keep wrapper LTR for layout structure */
+    overflow-x: hidden !important;
+}
+
+body.rtl-layout .main-sidebar {
+    direction: rtl !important;
+    transform: translateX(0) !important;
+}
+
+body.rtl-layout .content-wrapper {
+    direction: rtl !important;
+    transition: margin-right 0.3s ease-in-out !important;
+}
+
+/* Push menu button positioning for RTL */
+body.rtl-layout .navbar-nav .nav-link[data-widget="pushmenu"] {
+    order: 1;
+}
+
+body.rtl-layout .navbar-nav:first-child {
+    margin-right: auto !important;
+    margin-left: 0 !important;
+}
+
+/* TreeView menu RTL fixes */
+body.rtl-layout .nav-treeview .nav-link {
+    padding-right: 2rem !important;
+    padding-left: 1rem !important;
+}
+
+body.rtl-layout .nav-treeview .nav-icon {
+    margin-right: 0 !important;
+    margin-left: 0.5rem !important;
+}
+
+/* Sidebar scrollbar RTL */
+body.rtl-layout .sidebar {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* Brand link RTL improvements */
+body.rtl-layout .brand-link {
+    text-align: right !important;
+    padding-right: 1.5rem !important;
+    padding-left: 0.5rem !important;
+}
+
+/* User panel RTL improvements */
+body.rtl-layout .user-panel .info a {
+    text-align: right !important;
+    direction: rtl !important;
+}

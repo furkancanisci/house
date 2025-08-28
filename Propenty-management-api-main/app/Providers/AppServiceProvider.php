@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Disable Sanctum's auto-migration to prevent conflicts
+        \Laravel\Sanctum\Sanctum::ignoreMigrations();
     }
 }

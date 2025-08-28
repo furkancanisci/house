@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer require:*)",
+      "Bash(php artisan vendor:publish:*)",
+      "Bash(php artisan:*)",
+      "Bash(composer install:*)",
+      "Bash(composer:*)",
+      "Bash(php:*)",
+      "Bash(where psql)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

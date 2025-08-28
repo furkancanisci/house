@@ -17,6 +17,7 @@ class City extends Model
     protected $fillable = [
         'name_ar',
         'name_en',
+        'slug',
         'country_ar',
         'country_en',
         'state_ar',
@@ -43,6 +44,14 @@ class City extends Model
     public function getName($locale = 'ar')
     {
         return $locale === 'ar' ? $this->name_ar : $this->name_en;
+    }
+
+    /**
+     * Get the name attribute (default to Arabic name for backward compatibility)
+     */
+    public function getNameAttribute()
+    {
+        return $this->name_ar ?: $this->name_en;
     }
 
     /**
@@ -93,5 +102,13 @@ class City extends Model
     public function properties()
     {
         return $this->hasMany(Property::class, 'city', 'name_ar');
+    }
+
+    /**
+     * Neighborhoods in this city
+     */
+    public function neighborhoods()
+    {
+        return $this->hasMany(Neighborhood::class);
     }
 }

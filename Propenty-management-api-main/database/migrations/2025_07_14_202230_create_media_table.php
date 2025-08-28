@@ -11,10 +11,9 @@ return new class extends Migration
         Schema::create('media', function (Blueprint $table) {
             $table->id();
 
-            $table->morphs('model');
-            $table->uuid('uuid')->nullable()->unique();
-            $table->string('collection_name');
-            $table->string('name');
+            $table->string('model_type');
+            $table->unsignedBigInteger('model_id');
+            $table->uuid('uuid')->nullable();
             $table->string('file_name');
             $table->string('mime_type')->nullable();
             $table->string('disk');
@@ -24,9 +23,13 @@ return new class extends Migration
             $table->json('custom_properties');
             $table->json('generated_conversions');
             $table->json('responsive_images');
-            $table->unsignedInteger('order_column')->nullable()->index();
-
-            $table->nullableTimestamps();
+            $table->unsignedInteger('order_column')->nullable();
+            $table->timestamps();
         });
+    }
+    
+    public function down(): void
+    {
+        Schema::dropIfExists('media');
     }
 };

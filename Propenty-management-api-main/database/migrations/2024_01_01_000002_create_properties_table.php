@@ -17,20 +17,10 @@ return new class extends Migration
             $table->unsignedBigInteger('document_type_id')->nullable();
             $table->string('title');
             $table->text('description');
-            $table->enum('property_type', [
-                'apartment',
-                'house', 
-                'condo',
-                'townhouse',
-                'studio',
-                'loft',
-                'villa',
-                'commercial',
-                'land'
-            ]);
-            $table->enum('listing_type', ['rent', 'sale']);
+            $table->string('property_type'); // apartment, house, condo, townhouse, studio, loft, villa, commercial, land
+            $table->string('listing_type'); // rent, sale
             $table->decimal('price', 12, 2);
-            $table->enum('price_type', ['monthly', 'yearly', 'total'])->default('monthly');
+            $table->string('price_type')->default('monthly'); // monthly, yearly, total
             
             // Location fields
             $table->string('street_address');
@@ -48,17 +38,17 @@ return new class extends Migration
             $table->integer('square_feet')->nullable();
             $table->integer('lot_size')->nullable();
             $table->integer('year_built')->nullable();
-            $table->enum('parking_type', ['none', 'street', 'garage', 'driveway', 'carport'])->default('none');
+            $table->string('parking_type')->default('none'); // none, street, garage, driveway, carport
             $table->integer('parking_spaces')->default(0);
             
             // Property status
-            $table->enum('status', ['draft', 'active', 'pending', 'sold', 'rented', 'inactive'])->default('draft');
+            $table->string('status')->default('draft'); // draft, active, pending, sold, rented, inactive
             $table->boolean('is_featured')->default(false);
             $table->boolean('is_available')->default(true);
             $table->date('available_from')->nullable();
             
             // SEO and metadata
-            $table->string('slug')->unique();
+            $table->string('slug'); // Remove unique constraint temporarily
             $table->json('amenities')->nullable(); // Store as JSON array
             $table->json('nearby_places')->nullable(); // Store nearby amenities
             $table->integer('views_count')->default(0);
@@ -68,9 +58,6 @@ return new class extends Migration
             // Timestamps
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('document_type_id')->references('id')->on('property_document_types')->onDelete('set null');
             
             // Indexes
             $table->index(['user_id', 'status']);

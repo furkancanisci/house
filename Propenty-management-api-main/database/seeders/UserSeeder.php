@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
@@ -14,6 +15,26 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create Super Admin user first (if roles exist)
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'superadmin@property.com'],
+            [
+                'first_name' => 'Super',
+                'last_name' => 'Admin',
+                'password' => Hash::make('SuperAdmin@123456'),
+                'phone' => '+1-555-0000',
+                'user_type' => 'admin',
+                'is_verified' => true,
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'bio' => 'System Super Administrator with full access to all features.',
+            ]
+        );
+        
+        // Assign SuperAdmin role if it exists
+        if (Role::where('name', 'SuperAdmin')->exists()) {
+            $superAdmin->assignRole('SuperAdmin');
+        }
         // Use raw SQL to insert the first user with proper boolean values
         DB::statement("INSERT INTO users (first_name, last_name, email, password, phone, user_type, is_verified, is_active, email_verified_at, bio, created_at, updated_at) 
             VALUES (?, ?, ?, ?, ?, ?, true, true, ?, ?, NOW(), NOW())",

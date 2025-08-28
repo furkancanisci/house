@@ -158,13 +158,19 @@ class PropertyController extends Controller
         // Apply listing type filter - support both camelCase and snake_case
         $listingType = $request->input('listing_type') ?: $request->input('listingType');
         if ($listingType && in_array($listingType, ['rent', 'sale'])) {
-            $query->where('listing_type', $listingType);
+            $query->forListing($listingType);
         }
 
         // Apply property type filter - support both camelCase and snake_case
         $propertyType = $request->input('property_type') ?: $request->input('propertyType');
         if ($propertyType && !empty($propertyType) && $propertyType !== 'any') {
-            $query->where('property_type', $propertyType);
+            // Find property type by name or slug
+            $type = \App\Models\PropertyType::where('name', $propertyType)
+                ->orWhere('slug', $propertyType)
+                ->first();
+            if ($type) {
+                $query->where('property_type_id', $type->id);
+            }
         }
 
         // Apply price range filters - support both min/max and minPrice/maxPrice
@@ -669,7 +675,118 @@ class PropertyController extends Controller
     }
 
     /**
-     * Get property amenities.
+     * Get similar properties.
+     */
+    public function similar(Property $property, Request $request): PropertyCollection
+    {
+        $similar = Property::where('id', '!=', $property->id)
+            ->where('property_type_id', $property->property_type_id)
+            ->where('city_id', $property->city_id)
+            ->active()
+            ->with(['user', 'media', 'favoritedByUsers'])
+            ->take($request->get('limit', 4))
+            ->get();
+
+        return new PropertyCollection($similar);
+    }
+
+    /**
+     * Toggle property favorite status.
+     */
+    public function toggleFavorite(Property $property): JsonResponse
+    {
+        $user = auth()->user();
+        
+        if ($user->favoriteProperties()->where('property_id', $property->id)->exists()) {
+            $user->favoriteProperties()->detach($property->id);
+            $message = 'Property removed from favorites.';
+            $is_favorited = false;
+        } else {
+            $user->favoriteProperties()->attach($property->id);
+            $message = 'Property added to favorites.';
+            $is_favorited = true;
+        }
+
+        return response()->json([
+            'message' => $message,
+            'is_favorited' => $is_favorited,
+        ]);
+    }
+
+    /**
+     * Delete a specific property image.
+     */
+    public function deleteImage(Property $property, $mediaId): JsonResponse
+    {
+        try {
+            // Check if user owns the property
+            if ($property->user_id !== auth()->id()) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only delete images from your own properties.',
+                ], 403);
+            }
+
+            // Find the media item
+            $media = $property->media()->find($mediaId);
+            
+            if (!$media) {
+                return response()->json([
+                    'message' => 'Image not found.',
+                ], 404);
+            }
+
+            // Delete the media item
+            $media->delete();
+
+            return response()->json([
+                'message' => 'Image deleted successfully.',
+                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers'])),
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error deleting image',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get property analytics data.
+     */
+    public function analytics(Property $property): JsonResponse
+    {
+        // Check if user owns the property
+        if ($property->user_id !== auth()->id()) {
+            return response()->json([
+                'message' => 'Unauthorized. You can only view analytics for your own properties.',
+            ], 403);
+        }
+
+        $views = $property->views()
+            ->selectRaw('DATE(viewed_at) as date, COUNT(*) as views')
+            ->where('viewed_at', '>=', now()->subDays(30))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        $totalViews = $property->views_count;
+        $uniqueViews = $property->views()->distinct(['ip_address', 'user_id'])->count();
+        $favoritesCount = $property->favoritedByUsers()->count();
+
+        return response()->json([
+            'analytics' => [
+                'total_views' => $totalViews,
+                'unique_views' => $uniqueViews,
+                'favorites_count' => $favoritesCount,
+                'views_chart_data' => $views,
+                'conversion_rate' => $totalViews > 0 ? round(($favoritesCount / $totalViews) * 100, 2) : 0,
+            ],
+        ]);
+    }
+
+    /**
+     * Get available property amenities.
      */
     public function amenities(): JsonResponse
     {

@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('property_types', function (Blueprint $table) {
             $table->id();
+            $table->string('name'); // e.g., Apartment, House, Villa
+            $table->string('slug'); // for-sale, for-rent
+            $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->integer('sort_order')->default(0);
             $table->timestamps();
         });
     }

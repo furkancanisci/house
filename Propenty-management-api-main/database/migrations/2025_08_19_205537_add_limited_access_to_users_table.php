@@ -11,10 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('limited_access_enabled')->default(false)->after('last_login_at');
-            $table->timestamp('limited_access_granted_at')->nullable()->after('limited_access_enabled');
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                if (!Schema::hasColumn('users', 'limited_access_enabled')) {
+                    $table->boolean('limited_access_enabled')->default(false)->after('last_login_at');
+                }
+                if (!Schema::hasColumn('users', 'limited_access_granted_at')) {
+                    $table->timestamp('limited_access_granted_at')->nullable()->after('limited_access_enabled');
+                }
+            });
+        }
     }
 
     /**
@@ -22,8 +28,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['limited_access_enabled', 'limited_access_granted_at']);
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn(['limited_access_enabled', 'limited_access_granted_at']);
+            });
+        }
     }
 };
