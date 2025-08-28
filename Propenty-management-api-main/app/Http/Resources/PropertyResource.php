@@ -83,10 +83,11 @@ class PropertyResource extends JsonResource
                 ],
             ],
             
-            // Features
-            'amenities' => $this->amenities ?: [],
-            'features' => $this->amenities ?: [], // Frontend expects features
-            'nearby_places' => $this->nearby_places ?: [],
+            // Features - ensure always returns array
+            'amenities' => $this->getAmenitiesArray(),
+            'features' => $this->getAmenitiesArray(), // Frontend expects features
+            'nearby_places' => is_array($this->nearby_places) ? $this->nearby_places : 
+                            (is_string($this->nearby_places) ? json_decode($this->nearby_places, true) : []),
             
             // Status
             'status' => $this->status,
@@ -154,6 +155,26 @@ class PropertyResource extends JsonResource
         return $this->ensureUtf8($data);
     }
 
+    /**
+     * Get amenities as array
+     */
+    private function getAmenitiesArray()
+    {
+        // Check if amenities is already an array
+        if (is_array($this->amenities)) {
+            return $this->amenities;
+        }
+        
+        // If it's a JSON string, decode it
+        if (is_string($this->amenities)) {
+            $decoded = json_decode($this->amenities, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        
+        // If it's null or any other type, return empty array
+        return [];
+    }
+    
     /**
      * Build full address without calling accessor
      */

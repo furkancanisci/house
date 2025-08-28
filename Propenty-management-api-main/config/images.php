@@ -12,38 +12,45 @@ return [
     |
     */
     'quality_settings' => [
+        'original' => [
+            'width' => 2400, // Ultra high quality for detailed property views
+            'height' => 1600,
+            'quality' => 95, // Maximum quality for property showcase
+            'aspect_ratio' => '3:2',
+            'format' => 'webp'
+        ],
         'full' => [
-            'width' => 1200,
-            'height' => 800,
-            'quality' => 90,
+            'width' => 1920, // Full HD for main gallery
+            'height' => 1280,
+            'quality' => 92,
             'aspect_ratio' => '3:2',
             'format' => 'webp'
         ],
         'large' => [
+            'width' => 1200,
+            'height' => 800,
+            'quality' => 88,
+            'aspect_ratio' => '3:2',
+            'format' => 'webp'
+        ],
+        'medium' => [
             'width' => 800,
             'height' => 533,
             'quality' => 85,
             'aspect_ratio' => '3:2',
             'format' => 'webp'
         ],
-        'medium' => [
-            'width' => 600,
-            'height' => 400,
-            'quality' => 80,
-            'aspect_ratio' => '3:2',
-            'format' => 'webp'
-        ],
         'thumbnail' => [
             'width' => 400,
             'height' => 300,
-            'quality' => 75,
+            'quality' => 80,
             'aspect_ratio' => '4:3',
             'format' => 'webp'
         ],
         'small' => [
             'width' => 300,
             'height' => 200,
-            'quality' => 70,
+            'quality' => 75,
             'aspect_ratio' => '3:2',
             'format' => 'webp'
         ]
@@ -58,12 +65,16 @@ return [
     |
     */
     'upload' => [
-        'max_file_size' => 5 * 1024 * 1024, // 5MB in bytes
+        'max_file_size' => 10 * 1024 * 1024, // 10MB in bytes for high quality property images
         'allowed_mime_types' => ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
         'allowed_extensions' => ['jpeg', 'jpg', 'png', 'webp'],
         'min_width' => 400,
         'min_height' => 300,
-        'max_images_per_property' => 20
+        'max_width' => 8000, // Maximum width for ultra-high quality images
+        'max_height' => 6000, // Maximum height for ultra-high quality images
+        'max_images_per_property' => 20,
+        'optimize_large_images' => true, // Automatically optimize images over 2MB
+        'preserve_quality_threshold' => 2 * 1024 * 1024 // Preserve original quality for images under 2MB
     ],
 
     /*

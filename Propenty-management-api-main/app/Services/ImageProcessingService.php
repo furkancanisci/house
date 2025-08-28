@@ -3,15 +3,12 @@
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManagerStatic as Image;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ImageProcessingService
 {
-    private ImageManager $imageManager;
-    
     // Get quality settings from config
     private function getQualitySettings(): array
     {
@@ -38,7 +35,8 @@ class ImageProcessingService
 
     public function __construct()
     {
-        $this->imageManager = new ImageManager(new Driver());
+        // Configure Intervention Image to use GD driver
+        Image::configure(['driver' => 'gd']);
     }
 
     /**
@@ -51,11 +49,13 @@ class ImageProcessingService
         $supportedFormats = $this->getSupportedFormats();
         $minWidth = config('images.upload.min_width', 400);
         $minHeight = config('images.upload.min_height', 300);
+        $maxWidth = config('images.upload.max_width', 8000);
+        $maxHeight = config('images.upload.max_height', 6000);
         $allowedMimeTypes = config('images.upload.allowed_mime_types', ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 
         // Check file size
         if ($file->getSize() > $maxFileSize) {
-            $errors[] = 'File size exceeds maximum allowed size of ' . ($maxFileSize / 1024 / 1024) . 'MB';
+            $errors[] = 'File size exceeds maximum allowed size of ' . ($maxFileSize / 1024 / 1024) . 'MB. Please compress the image or reduce its dimensions.';
         }
 
         // Check file type
@@ -70,7 +70,7 @@ class ImageProcessingService
             $errors[] = 'Invalid MIME type. File must be a valid image.';
         }
 
-        // Check minimum dimensions
+        // Check dimensions
         try {
             $imageInfo = getimagesize($file->getPathname());
             if ($imageInfo) {
@@ -79,6 +79,11 @@ class ImageProcessingService
                 
                 if ($width < $minWidth || $height < $minHeight) {
                     $errors[] = "Image dimensions too small. Minimum size is {$minWidth}x{$minHeight} pixels.";
+                }
+                
+                // Check maximum dimensions
+                if ($width > $maxWidth || $height > $maxHeight) {
+                    $errors[] = "Image dimensions too large. Maximum size is {$maxWidth}x{$maxHeight} pixels. The image will be automatically resized.";
                 }
             }
         } catch (\Exception $e) {
@@ -94,32 +99,70 @@ class ImageProcessingService
     public function processPropertyImage(UploadedFile $file, string $propertySlug): array
     {
         $processedImages = [];
-        $originalImage = $this->imageManager->read($file->getPathname());
+        $originalImage = Image::make($file->getPathname());
         $qualitySettings = $this->getQualitySettings();
         $storagePath = config('images.storage.path', 'properties');
+        $preserveQualityThreshold = config('images.upload.preserve_quality_threshold', 2 * 1024 * 1024);
+        $optimizeLargeImages = config('images.upload.optimize_large_images', true);
+        
+        // Check if we should preserve original quality for smaller images
+        $fileSize = $file->getSize();
+        $shouldPreserveOriginal = $fileSize <= $preserveQualityThreshold;
+        
+        // Get original dimensions
+        $originalWidth = $originalImage->width();
+        $originalHeight = $originalImage->height();
         
         foreach ($qualitySettings as $size => $settings) {
+            // For high-quality images under threshold, use higher quality settings
+            if ($shouldPreserveOriginal && in_array($size, ['original', 'full'])) {
+                $settings['quality'] = min($settings['quality'] + 3, 98); // Boost quality for showcase images
+            }
+            
             // Calculate dimensions maintaining aspect ratio
             $dimensions = $this->calculateDimensions(
-                $originalImage->width(),
-                $originalImage->height(),
+                $originalWidth,
+                $originalHeight,
                 $settings['width'],
                 $settings['height']
             );
             
-            // Create resized image
-            $resizedImage = $originalImage->clone()
-                ->resize($dimensions['width'], $dimensions['height']);
-            
-            // Apply format conversion based on config
-            $format = $settings['format'] ?? 'webp';
-            if ($format === 'webp') {
-                $resizedImage = $resizedImage->toWebp($settings['quality']);
-            } elseif ($format === 'jpeg') {
-                $resizedImage = $resizedImage->toJpeg($settings['quality']);
+            // Skip resize if the original is smaller than the target size
+            if ($size === 'original' && 
+                $originalWidth <= $settings['width'] && 
+                $originalHeight <= $settings['height']) {
+                // Keep original dimensions for highest quality
+                $dimensions = [
+                    'width' => $originalWidth,
+                    'height' => $originalHeight
+                ];
             }
             
-            // Generate filename
+            // Create a copy of the original image for processing
+            $resizedImage = Image::make($file->getPathname());
+            
+            // Only resize if dimensions are different
+            if ($dimensions['width'] != $originalWidth || 
+                $dimensions['height'] != $originalHeight) {
+                $resizedImage->resize($dimensions['width'], $dimensions['height'], function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+            }
+            
+            // Apply intelligent compression based on file size
+            if ($optimizeLargeImages && $fileSize > 4 * 1024 * 1024) {
+                // For very large files, apply interlace for progressive loading
+                $resizedImage->interlace(true);
+            }
+            
+            // Generate filename with appropriate format
+            $format = $settings['format'] ?? 'jpg';
+            // Intervention Image v2 doesn't support webp directly, use jpg as fallback
+            if ($format === 'webp') {
+                $format = 'jpg';
+            }
+            
             $filename = $propertySlug . '_' . $size . '_' . time() . '.' . $format;
             $path = $storagePath . '/' . $filename;
             $fullPath = storage_path('app/public/' . $path);
@@ -130,8 +173,8 @@ class ImageProcessingService
                 mkdir($directory, 0755, true);
             }
             
-            // Save the image
-            $resizedImage->save($fullPath);
+            // Save the image with the appropriate quality
+            $resizedImage->save($fullPath, $settings['quality']);
             
             $processedImages[$size] = [
                 'path' => $path,
@@ -140,7 +183,8 @@ class ImageProcessingService
                 'height' => $dimensions['height'],
                 'size' => filesize($fullPath),
                 'quality' => $settings['quality'],
-                'format' => $format
+                'format' => $format,
+                'is_original_preserved' => $shouldPreserveOriginal && in_array($size, ['original', 'full'])
             ];
         }
         
@@ -183,8 +227,8 @@ class ImageProcessingService
         file_put_contents($tempPath, $imageData);
         
         try {
-            // Load and validate image
-            $image = $this->imageManager->read($tempPath);
+            // Load and validate image using Intervention Image v2
+            $image = Image::make($tempPath);
             
             // Check minimum dimensions
             if ($image->width() < $minWidth || $image->height() < $minHeight) {
@@ -205,16 +249,17 @@ class ImageProcessingService
                     $settings['height']
                 );
                 
-                // Create resized image
-                $resizedImage = $image->clone()
-                    ->resize($dimensions['width'], $dimensions['height']);
+                // Create resized image from temp file
+                $resizedImage = Image::make($tempPath);
+                $resizedImage->resize($dimensions['width'], $dimensions['height'], function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
                 
-                // Apply format conversion based on config
-                $format = $settings['format'] ?? 'webp';
+                // Apply format conversion - v2 doesn't support webp directly
+                $format = $settings['format'] ?? 'jpg';
                 if ($format === 'webp') {
-                    $resizedImage = $resizedImage->toWebp($settings['quality']);
-                } elseif ($format === 'jpeg') {
-                    $resizedImage = $resizedImage->toJpeg($settings['quality']);
+                    $format = 'jpg';
                 }
                 
                 // Generate filename
@@ -228,8 +273,8 @@ class ImageProcessingService
                     mkdir($directory, 0755, true);
                 }
                 
-                // Save the image
-                $resizedImage->save($fullPath);
+                // Save the image with quality setting
+                $resizedImage->save($fullPath, $settings['quality']);
                 
                 $processedImages[$sizeName] = [
                     'path' => $path,

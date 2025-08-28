@@ -293,6 +293,14 @@ class PropertyController extends Controller
     public function store(StorePropertyRequest $request): JsonResponse
     {
         try {
+            // Log raw request for debugging
+            \Illuminate\Support\Facades\Log::info('PropertyController::store - Raw Request', [
+                'all_input' => $request->all(),
+                'files' => $request->allFiles() ? array_keys($request->allFiles()) : [],
+                'has_title' => $request->has('title'),
+                'title_value' => $request->input('title')
+            ]);
+            
             // Get validated data
             $validatedData = $request->validated();
             
@@ -337,11 +345,26 @@ class PropertyController extends Controller
             unset($mappedData['images']);
             unset($mappedData['base64_images']);
             
+            // Convert amenities array to JSON for PostgreSQL
+            if (isset($mappedData['amenities']) && is_array($mappedData['amenities'])) {
+                $mappedData['amenities'] = json_encode($mappedData['amenities']);
+            } elseif (!isset($mappedData['amenities'])) {
+                $mappedData['amenities'] = json_encode([]);
+            }
+            
+            // Convert nearby_places array to JSON for PostgreSQL
+            if (isset($mappedData['nearby_places']) && is_array($mappedData['nearby_places'])) {
+                $mappedData['nearby_places'] = json_encode($mappedData['nearby_places']);
+            } elseif (!isset($mappedData['nearby_places'])) {
+                $mappedData['nearby_places'] = json_encode([]);
+            }
+            
             // Log the data being inserted for debugging
             \Illuminate\Support\Facades\Log::info('Creating property with data', [
                 'mapped_data_keys' => array_keys($mappedData),
                 'user_id' => $mappedData['user_id'],
                 'title' => $mappedData['title'] ?? 'N/A',
+                'amenities' => $mappedData['amenities'] ?? '[]',
                 'has_main_image' => $request->hasFile('main_image') || $request->hasFile('mainImage'),
                 'has_images' => $request->hasFile('images'),
                 'has_base64_images' => $request->has('base64_images'),
@@ -383,6 +406,17 @@ class PropertyController extends Controller
                 }
                 
             } catch (\Exception $createException) {
+                // Check if this is an array to string conversion error
+                if (strpos($createException->getMessage(), 'Array to string conversion') !== false) {
+                    \Illuminate\Support\Facades\Log::error('Array to string conversion issue detected in property creation process', [
+                        'error' => $createException->getMessage(),
+                        'data_types' => array_map('gettype', $mappedData),
+                        'array_fields' => array_keys(array_filter($mappedData, 'is_array'))
+                    ]);
+                    
+                    throw new \Exception('Array to string conversion issue detected in property creation process');
+                }
+                
                 \Illuminate\Support\Facades\Log::error('Property creation failed completely', [
                     'error' => $createException->getMessage(),
                     'trace' => $createException->getTraceAsString(),
@@ -397,44 +431,81 @@ class PropertyController extends Controller
             $mainImageFile = $request->file('main_image') ?? $request->file('mainImage');
             if ($mainImageFile) {
                 try {
-                    $property->addMedia($mainImageFile)
+                    \Illuminate\Support\Facades\Log::info('Attempting to upload main image', [
+                        'filename' => $mainImageFile->getClientOriginalName(),
+                        'size' => $mainImageFile->getSize(),
+                        'mime' => $mainImageFile->getMimeType()
+                    ]);
+                    
+                    $media = $property->addMedia($mainImageFile)
                         ->usingName($mainImageFile->getClientOriginalName())
                         ->usingFileName(time() . '_main_' . $mainImageFile->getClientOriginalName())
                         ->toMediaCollection('main_image');
-                    \Illuminate\Support\Facades\Log::info('Main image uploaded successfully');
+                    
+                    \Illuminate\Support\Facades\Log::info('Main image uploaded successfully', [
+                        'media_id' => $media->id,
+                        'url' => $media->getUrl(),
+                        'collection' => 'main_image'
+                    ]);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to upload main image', [
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
                     ]);
                 }
+            } else {
+                \Illuminate\Support\Facades\Log::warning('No main image file found in request', [
+                    'has_main_image' => $request->hasFile('main_image'),
+                    'has_mainImage' => $request->hasFile('mainImage'),
+                    'all_files' => array_keys($request->allFiles())
+                ]);
             }
             
             // Handle multiple image uploads
             if ($request->hasFile('images')) {
                 try {
                     $images = $request->file('images');
+                    $uploadedCount = 0;
+                    
                     if (is_array($images)) {
                         foreach ($images as $index => $image) {
-                            $property->addMedia($image)
+                            $media = $property->addMedia($image)
                                 ->usingName($image->getClientOriginalName())
                                 ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
                                 ->toMediaCollection('images');
+                            $uploadedCount++;
+                            
+                            \Illuminate\Support\Facades\Log::info('Gallery image uploaded', [
+                                'index' => $index,
+                                'media_id' => $media->id,
+                                'url' => $media->getUrl()
+                            ]);
                         }
                     } else {
                         // Single image file
-                        $property->addMedia($images)
+                        $media = $property->addMedia($images)
                             ->usingName($images->getClientOriginalName())
                             ->usingFileName(time() . '_single_' . $images->getClientOriginalName())
                             ->toMediaCollection('images');
+                        $uploadedCount = 1;
+                        
+                        \Illuminate\Support\Facades\Log::info('Single gallery image uploaded', [
+                            'media_id' => $media->id,
+                            'url' => $media->getUrl()
+                        ]);
                     }
+                    
                     \Illuminate\Support\Facades\Log::info('Gallery images uploaded successfully', [
-                        'count' => is_array($images) ? count($images) : 1
+                        'count' => $uploadedCount
                     ]);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to upload gallery images', [
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
                     ]);
                 }
+            } else {
+                \Illuminate\Support\Facades\Log::info('No gallery images in request');
             }
             
             // Handle base64 image uploads if present
