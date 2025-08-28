@@ -59,9 +59,6 @@ return new class extends Migration
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
             
-            // Foreign key constraints
-            $table->foreign('document_type_id')->references('id')->on('property_document_types')->onDelete('set null');
-            
             // Indexes
             $table->index(['user_id', 'status']);
             $table->index(['property_type', 'listing_type']);
