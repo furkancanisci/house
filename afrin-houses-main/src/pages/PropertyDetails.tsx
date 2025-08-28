@@ -102,10 +102,9 @@ const PropertyDetails: React.FC = () => {
         console.group('Image Data Debug');
         console.log('propertyData.media:', propertyData.media);
         console.log('propertyData.images:', propertyData.images);
-        console.log('propertyData.media?.main_image_url:', propertyData.media?.main_image_url);
-        console.log('propertyData.media?.gallery_urls:', propertyData.media?.gallery_urls);
-        console.log('propertyData.images?.main:', propertyData.images?.main);
-        console.log('propertyData.images?.gallery:', propertyData.images?.gallery);
+        console.log('propertyData.images?.main (raw from API):', propertyData.images?.main);
+        console.log('propertyData.images?.gallery (raw from API):', propertyData.images?.gallery);
+        console.log('propertyData.mainImage (raw from API):', propertyData.mainImage);
         console.groupEnd();
         
         console.groupEnd();
@@ -158,38 +157,26 @@ const PropertyDetails: React.FC = () => {
             // Extract image URLs for the PropertyImageGallery component
             const imageUrls: string[] = [];
             
-            // First, try to get images from the media.gallery_urls array (new backend format)
-            if (propertyData.media?.gallery_urls && Array.isArray(propertyData.media.gallery_urls)) {
-              imageUrls.push(...propertyData.media.gallery_urls);
+            console.log('=== PropertyDetails Image Processing ===');
+            console.log('Raw gallery from API:', propertyData.images?.gallery);
+            console.log('Raw main from API:', propertyData.images?.main);
+            
+            // Use the current API format directly without any processing since API returns perfect URLs
+            if (propertyData.images?.gallery && Array.isArray(propertyData.images.gallery)) {
+              console.log('Gallery URLs (using directly from API):', propertyData.images.gallery);
+              imageUrls.push(...propertyData.images.gallery);
             }
             
-            // Add main image URL if available
-            if (propertyData.media?.main_image_url) {
-              // Add main image at the beginning if not already included
-              if (!imageUrls.includes(propertyData.media.main_image_url)) {
-                imageUrls.unshift(propertyData.media.main_image_url);
+            // Add main image directly from API
+            if (propertyData.images?.main) {
+              console.log('Main URL (using directly from API):', propertyData.images.main);
+              if (!imageUrls.includes(propertyData.images.main)) {
+                imageUrls.unshift(propertyData.images.main);
               }
             }
             
-            // Fallback to old format if new format is not available
-            if (imageUrls.length === 0) {
-              // Try old images.gallery format
-              if (propertyData.images?.gallery && Array.isArray(propertyData.images.gallery)) {
-                imageUrls.push(...propertyData.images.gallery.map((img: any) => 
-                  typeof img === 'string' ? img : img.url || img
-                ));
-              }
-              
-              // Add main image from old format
-              const mainImage = propertyData.images?.main || propertyData.mainImage;
-              if (mainImage) {
-                const mainImageUrl = typeof mainImage === 'string' ? mainImage : mainImage.url;
-                if (mainImageUrl && !imageUrls.includes(mainImageUrl)) {
-                  imageUrls.unshift(mainImageUrl);
-                }
-              }
-            }
-            
+            console.log('Final processed image URLs for gallery:', imageUrls);
+            console.log('=== End PropertyDetails Image Processing ===');
             return imageUrls;
           })(),
           mainImage: propertyData.images?.main || '/placeholder-property.jpg',
@@ -492,12 +479,41 @@ const PropertyDetails: React.FC = () => {
             {/* Image Gallery */}
             <Card className="overflow-hidden">
               <div className="relative">
-                <PropertyImageGallery
-                  images={property.images}
-                  alt={property.title}
-                  className="w-full h-96"
-                  propertyId={property.id}
-                />
+                {/* Debug: Log images array */}
+                {console.log('Rendering PropertyImageGallery with images:', property.images)}
+                {property.images && property.images.length > 0 ? (
+                  <PropertyImageGallery
+                    images={property.images}
+                    alt={property.title}
+                    className="w-full h-96"
+                    propertyId={property.id}
+                  />
+                ) : property.mainImage && property.mainImage !== '/placeholder-property.jpg' ? (
+                  <div className="relative w-full h-96">
+                    <img 
+                      src={property.mainImage}
+                      alt={property.title}
+                      className="w-full h-96 object-cover"
+                      onLoad={() => console.log('Main image loaded:', property.mainImage)}
+                      onError={(e) => console.log('Main image failed to load:', property.mainImage, e)}
+                    />
+                    <div className="absolute bottom-2 left-2 bg-yellow-500 text-black px-2 py-1 text-xs rounded">
+                      Showing main image (gallery issues)
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-gray-500 mb-2">No images available</p>
+                      <p className="text-sm text-gray-400">
+                        Images array length: {property.images?.length || 0}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Main image: {property.mainImage}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Badges */}
                 <Badge 

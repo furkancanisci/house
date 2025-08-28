@@ -20,29 +20,30 @@ const fixImageUrl = (url: string | undefined | null | any): string => {
   // Check if url is not a string or is empty
   if (!url || typeof url !== 'string') return '';
   
-  // Don't process already processed URLs
-  if (url.startsWith('http://localhost:8000/') ||
+  // Don't process already processed URLs - be more thorough
+  if (url.startsWith('http://') || 
       url.startsWith('https://') ||
       url.startsWith('data:') ||
       url.startsWith('/images/')) {
+    console.log('PropertyImageGallery fixImageUrl - URL already complete:', url);
     return url;
-  }
-  
-  // Replace localhost URLs with localhost:8000
-  if (url.startsWith('http://localhost/')) {
-    return url.replace('http://localhost/', 'http://localhost:8000/');
   }
   
   // Handle relative URLs from backend (e.g., /storage/media/...)
   if (url.startsWith('/storage/') || url.startsWith('/media/')) {
-    return `http://localhost:8000${url}`;
+    const fixedUrl = `http://localhost:8000${url}`;
+    console.log('PropertyImageGallery fixImageUrl - Fixed relative URL:', url, '->', fixedUrl);
+    return fixedUrl;
   }
   
   // If it looks like a valid URL path, assume it's from the backend
   if (url.startsWith('/') && !url.startsWith('/images/')) {
-    return `http://localhost:8000${url}`;
+    const fixedUrl = `http://localhost:8000${url}`;
+    console.log('PropertyImageGallery fixImageUrl - Fixed path URL:', url, '->', fixedUrl);
+    return fixedUrl;
   }
   
+  console.log('PropertyImageGallery fixImageUrl - Returning unchanged:', url);
   return url;
 };
 
@@ -63,8 +64,23 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
 
   // Process images to ensure they're valid - handle undefined/null images
   const processedImages = (images && Array.isArray(images) && images.length > 0) 
-    ? images.map(img => fixImageUrl(img)).filter(url => url !== '') // Remove empty URLs
+    ? images.map(img => {
+        console.log('PropertyImageGallery - Processing image:', img, 'Type:', typeof img);
+        
+        // If URL is already complete (starts with http), don't process it at all
+        if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://'))) {
+          console.log('PropertyImageGallery - URL already complete, using as-is:', img);
+          return img;
+        }
+        
+        const result = fixImageUrl(img);
+        console.log('PropertyImageGallery - Fixed URL result:', img, '->', result);
+        return result;
+      }).filter(url => url !== '') // Remove empty URLs
     : [];
+    
+  console.log('PropertyImageGallery - Original images array:', images);
+  console.log('PropertyImageGallery - Final processed images:', processedImages);
   
   // Only use fallback if NO valid images exist at all
   const finalImages = processedImages.length > 0 ? processedImages : [getRandomPropertyImage(propertyId)];
