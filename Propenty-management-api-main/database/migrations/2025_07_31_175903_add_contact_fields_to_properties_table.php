@@ -11,11 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('properties', function (Blueprint $table) {
-            $table->string('contact_name')->nullable();
-            $table->string('contact_phone', 20)->nullable();
-            $table->string('contact_email')->nullable();
-        });
+        if (Schema::hasTable('properties')) {
+            Schema::table('properties', function (Blueprint $table) {
+                if (!Schema::hasColumn('properties', 'contact_name')) {
+                    $table->string('contact_name')->nullable();
+                }
+                if (!Schema::hasColumn('properties', 'contact_phone')) {
+                    $table->string('contact_phone', 20)->nullable();
+                }
+                if (!Schema::hasColumn('properties', 'contact_email')) {
+                    $table->string('contact_email')->nullable();
+                }
+            });
+        }
     }
 
     /**
@@ -23,8 +31,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('properties', function (Blueprint $table) {
-            $table->dropColumn(['contact_name', 'contact_phone', 'contact_email']);
-        });
+        if (Schema::hasTable('properties')) {
+            Schema::table('properties', function (Blueprint $table) {
+                $table->dropColumn(['contact_name', 'contact_phone', 'contact_email']);
+            });
+        }
     }
 };

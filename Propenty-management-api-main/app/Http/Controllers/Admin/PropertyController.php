@@ -43,8 +43,8 @@ class PropertyController extends Controller
             ->paginate(20)
             ->appends($request->query());
 
-        // Get filter options
-        $cities = City::orderBy('name')->pluck('name', 'name');
+        // Get filter options using correct column names
+        $cities = City::orderBy('name_en')->pluck('name_en', 'name_en');
         $propertyTypes = PropertyType::orderBy('name')->pluck('name', 'name');
         $users = User::select('id', 'first_name', 'last_name')->get()
             ->mapWithKeys(fn($user) => [$user->id => $user->full_name]);
@@ -72,14 +72,53 @@ class PropertyController extends Controller
     {
         $this->authorize('create properties');
 
-        $cities = City::orderBy('name')->get();
+        $cities = City::active()->orderBy('name_en')->get();
         $propertyTypes = PropertyType::orderBy('name')->get();
         $amenities = Amenity::active()->orderBy('category')->orderBy('name')->get()->groupBy('category');
         $users = User::select('id', 'first_name', 'last_name')->get()
             ->mapWithKeys(fn($user) => [$user->id => $user->full_name]);
+        
+        // Get unique states from cities
+        $states = City::active()
+            ->select('state_en', 'state_ar')
+            ->whereNotNull('state_en')
+            ->where('state_en', '!=', '')
+            ->distinct()
+            ->orderBy('state_en')
+            ->get()
+            ->mapWithKeys(function($city) {
+                return [$city->state_en => [
+                    'en' => $city->state_en,
+                    'ar' => $city->state_ar ?: $city->state_en
+                ]];
+            });
+        
+        // If no states found in database, provide Syria's states as fallback
+        if ($states->isEmpty()) {
+            $states = collect([
+                'Damascus' => ['en' => 'Damascus', 'ar' => 'دمشق'],
+                'Aleppo' => ['en' => 'Aleppo', 'ar' => 'حلب'],
+                'Homs' => ['en' => 'Homs', 'ar' => 'حمص'],
+                'Hama' => ['en' => 'Hama', 'ar' => 'حماة'],
+                'Latakia' => ['en' => 'Latakia', 'ar' => 'اللاذقية'],
+                'Tartus' => ['en' => 'Tartus', 'ar' => 'طرطوس'],
+                'Daraa' => ['en' => 'Daraa', 'ar' => 'درعا'],
+                'Deir ez-Zor' => ['en' => 'Deir ez-Zor', 'ar' => 'دير الزور'],
+                'Al-Hasakah' => ['en' => 'Al-Hasakah', 'ar' => 'الحسكة'],
+                'Ar-Raqqah' => ['en' => 'Ar-Raqqah', 'ar' => 'الرقة'],
+                'As-Suwayda' => ['en' => 'As-Suwayda', 'ar' => 'السويداء'],
+                'Quneitra' => ['en' => 'Quneitra', 'ar' => 'القنيطرة'],
+                'Idlib' => ['en' => 'Idlib', 'ar' => 'إدلب']
+            ]);
+        }
+        
+        // Get all neighborhoods (will be filtered by city via AJAX)
+        $neighborhoods = collect();
 
         return view('admin.properties.create', compact(
             'cities',
+            'states',
+            'neighborhoods',
             'propertyTypes',
             'amenities',
             'users'
@@ -128,6 +167,11 @@ class PropertyController extends Controller
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
         ]);
+
+        // Handle price_type requirement for rent
+        if ($validated['listing_type'] === 'rent' && empty($validated['price_type'])) {
+            $validated['price_type'] = 'monthly'; // Default to monthly for rent
+        }
 
         DB::beginTransaction();
         try {
@@ -187,7 +231,7 @@ class PropertyController extends Controller
     {
         $this->authorize('edit properties');
 
-        $cities = City::orderBy('name')->get();
+        $cities = City::orderBy('name_en')->get();
         $propertyTypes = PropertyType::orderBy('name')->get();
         $amenities = Amenity::active()->orderBy('category')->orderBy('name')->get()->groupBy('category');
         $users = User::select('id', 'first_name', 'last_name')->get()
@@ -563,5 +607,128 @@ class PropertyController extends Controller
             DB::rollback();
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Get cities by state via AJAX
+     */
+    public function getCitiesByState(Request $request)
+    {
+        $state = $request->get('state');
+        $locale = app()->getLocale();
+        
+        $cities = City::active()
+            ->when($state, function($query) use ($state, $locale) {
+                if ($locale === 'ar') {
+                    return $query->where('state_ar', $state);
+                }
+                return $query->where('state_en', $state);
+            })
+            ->orderBy('name_en')
+            ->get()
+            ->map(function($city) use ($locale) {
+                return [
+                    'id' => $city->id,
+                    'name' => $locale === 'ar' ? $city->name_ar : $city->name_en,
+                    'value' => $locale === 'ar' ? $city->name_ar : $city->name_en
+                ];
+            });
+        
+        // If no cities found in database for this state, provide fallback data
+        if ($cities->isEmpty() && $state) {
+            $fallbackCities = $this->getFallbackCitiesForState($state, $locale);
+            return response()->json($fallbackCities);
+        }
+        
+        return response()->json($cities);
+    }
+    
+    /**
+     * Get fallback cities for a given state
+     */
+    private function getFallbackCitiesForState($state, $locale = 'en')
+    {
+        $syrianCities = [
+            'Damascus' => [
+                ['name' => 'Damascus', 'name_ar' => 'دمشق'],
+                ['name' => 'Douma', 'name_ar' => 'دوما'],
+                ['name' => 'Daraya', 'name_ar' => 'داريا']
+            ],
+            'دمشق' => [
+                ['name' => 'Damascus', 'name_ar' => 'دمشق'],
+                ['name' => 'Douma', 'name_ar' => 'دوما'],
+                ['name' => 'Daraya', 'name_ar' => 'داريا']
+            ],
+            'Aleppo' => [
+                ['name' => 'Aleppo', 'name_ar' => 'حلب'],
+                ['name' => 'Afrin', 'name_ar' => 'عفرين'],
+                ['name' => 'Azaz', 'name_ar' => 'أعزاز']
+            ],
+            'حلب' => [
+                ['name' => 'Aleppo', 'name_ar' => 'حلب'],
+                ['name' => 'Afrin', 'name_ar' => 'عفرين'],
+                ['name' => 'Azaz', 'name_ar' => 'أعزاز']
+            ],
+            'Homs' => [
+                ['name' => 'Homs', 'name_ar' => 'حمص'],
+                ['name' => 'Palmyra', 'name_ar' => 'تدمر']
+            ],
+            'حمص' => [
+                ['name' => 'Homs', 'name_ar' => 'حمص'],
+                ['name' => 'Palmyra', 'name_ar' => 'تدمر']
+            ],
+            'Latakia' => [
+                ['name' => 'Latakia', 'name_ar' => 'اللاذقية'],
+                ['name' => 'Jableh', 'name_ar' => 'جبلة']
+            ],
+            'اللاذقية' => [
+                ['name' => 'Latakia', 'name_ar' => 'اللاذقية'],
+                ['name' => 'Jableh', 'name_ar' => 'جبلة']
+            ]
+        ];
+        
+        $cities = $syrianCities[$state] ?? [];
+        
+        return collect($cities)->map(function($city, $index) use ($locale) {
+            return [
+                'id' => 'fallback_' . $index,
+                'name' => $locale === 'ar' ? $city['name_ar'] : $city['name'],
+                'value' => $locale === 'ar' ? $city['name_ar'] : $city['name']
+            ];
+        })->toArray();
+    }
+    
+    /**
+     * Get neighborhoods by city via AJAX
+     */
+    public function getNeighborhoodsByCity(Request $request)
+    {
+        $cityName = $request->get('city');
+        
+        // Find city by name
+        $city = City::active()
+            ->where(function($query) use ($cityName) {
+                $query->where('name_ar', $cityName)
+                      ->orWhere('name_en', $cityName);
+            })
+            ->first();
+            
+        if (!$city) {
+            return response()->json([]);
+        }
+        
+        $neighborhoods = $city->neighborhoods()
+            ->active()
+            ->orderBy('name')
+            ->get()
+            ->map(function($neighborhood) {
+                return [
+                    'id' => $neighborhood->id,
+                    'name' => $neighborhood->name,
+                    'value' => $neighborhood->name
+                ];
+            });
+        
+        return response()->json($neighborhoods);
     }
 }

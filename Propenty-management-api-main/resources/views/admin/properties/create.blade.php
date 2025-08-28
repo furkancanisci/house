@@ -147,19 +147,16 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="city">City <span class="text-danger">*</span></label>
-                                    <input type="text" name="city" id="city" class="form-control @error('city') is-invalid @enderror" 
-                                           value="{{ old('city') }}" required>
-                                    @error('city')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="state">State <span class="text-danger">*</span></label>
-                                    <input type="text" name="state" id="state" class="form-control @error('state') is-invalid @enderror" 
-                                           value="{{ old('state') }}" required>
+                                    <label for="state">{{ __('admin.state') }} <span class="text-danger">*</span></label>
+                                    <select name="state" id="state" class="form-control @error('state') is-invalid @enderror" required>
+                                        <option value="">{{ __('admin.select') }} {{ __('admin.state') }}</option>
+                                        @foreach($states as $stateEn => $stateData)
+                                            <option value="{{ app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en'] }}" 
+                                                    {{ old('state') === (app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en']) ? 'selected' : '' }}>
+                                                {{ app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                     @error('state')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -167,10 +164,22 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="postal_code">Postal Code</label>
-                                    <input type="text" name="postal_code" id="postal_code" class="form-control @error('postal_code') is-invalid @enderror" 
-                                           value="{{ old('postal_code') }}">
-                                    @error('postal_code')
+                                    <label for="city">{{ __('admin.city') }} <span class="text-danger">*</span></label>
+                                    <select name="city" id="city" class="form-control @error('city') is-invalid @enderror" required disabled>
+                                        <option value="">{{ __('admin.select') }} {{ __('admin.state') }} {{ __('admin.first') }}</option>
+                                    </select>
+                                    @error('city')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="neighborhood">{{ __('admin.neighborhood') }}</label>
+                                    <select name="neighborhood" id="neighborhood" class="form-control @error('neighborhood') is-invalid @enderror" disabled>
+                                        <option value="">{{ __('admin.select') }} {{ __('admin.city') }} {{ __('admin.first') }}</option>
+                                    </select>
+                                    @error('neighborhood')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -180,10 +189,10 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="neighborhood">Neighborhood</label>
-                                    <input type="text" name="neighborhood" id="neighborhood" class="form-control @error('neighborhood') is-invalid @enderror" 
-                                           value="{{ old('neighborhood') }}">
-                                    @error('neighborhood')
+                                    <label for="postal_code">{{ __('admin.postal_code') ?? 'Postal Code' }}</label>
+                                    <input type="text" name="postal_code" id="postal_code" class="form-control @error('postal_code') is-invalid @enderror" 
+                                           value="{{ old('postal_code') }}">
+                                    @error('postal_code')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -191,8 +200,15 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="latitude">Latitude</label>
-                                    <input type="number" name="latitude" id="latitude" class="form-control @error('latitude') is-invalid @enderror" 
-                                           value="{{ old('latitude') }}" step="0.0000001" min="-90" max="90">
+                                    <div class="input-group">
+                                        <input type="number" name="latitude" id="latitude" class="form-control @error('latitude') is-invalid @enderror" 
+                                               value="{{ old('latitude') }}" step="0.0000001" min="-90" max="90" readonly>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" id="clearLatLng" title="Clear coordinates">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                     @error('latitude')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -201,11 +217,47 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="longitude">Longitude</label>
-                                    <input type="number" name="longitude" id="longitude" class="form-control @error('longitude') is-invalid @enderror" 
-                                           value="{{ old('longitude') }}" step="0.0000001" min="-180" max="180">
+                                    <div class="input-group">
+                                        <input type="number" name="longitude" id="longitude" class="form-control @error('longitude') is-invalid @enderror" 
+                                               value="{{ old('longitude') }}" step="0.0000001" min="-180" max="180" readonly>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-primary" id="getCurrentLocation" title="Get current location">
+                                                <i class="fas fa-crosshairs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                     @error('longitude')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Interactive Map for Location Selection -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Select Location on Map</label>
+                                    <div class="card">
+                                        <div class="card-body p-0">
+                                            <div class="map-container">
+                                                <div id="propertyMap"></div>
+                                                <div class="map-overlay">
+                                                    <div class="btn-group-vertical">
+                                                        <button type="button" class="btn btn-sm btn-primary" id="searchOnMap" title="Search address on map">
+                                                            <i class="fas fa-search"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-info" id="centerMap" title="Center map on marker">
+                                                            <i class="fas fa-crosshairs"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Click on the map to set the property location. The latitude and longitude will be automatically filled.
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -451,16 +503,92 @@
     </form>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+<style>
+    .leaflet-popup-content {
+        margin: 8px 12px;
+        line-height: 1.4;
+    }
+    .map-container {
+        margin-bottom: 1rem;
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    #propertyMap {
+        height: 400px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        position: relative;
+        z-index: 1;
+        box-sizing: border-box;
+        display: block;
+    }
+    .leaflet-container {
+        width: 100% !important;
+        height: 400px !important;
+        max-width: 100% !important;
+        position: relative !important;
+        box-sizing: border-box !important;
+        background: #f0f0f0;
+    }
+    .leaflet-map-pane {
+        width: 100% !important;
+        height: 100% !important;
+    }
+    .leaflet-tile-container {
+        width: 100% !important;
+        height: 100% !important;
+    }
+    .leaflet-tile {
+        width: 256px !important;
+        height: 256px !important;
+        max-width: none !important;
+        max-height: none !important;
+    }
+    .leaflet-control-attribution {
+        font-size: 10px;
+    }
+    .map-overlay {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+    }
+    /* Force container constraints */
+    .card .card-body .map-container {
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+    .card .card-body .map-container #propertyMap {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+</style>
+@endpush
+
 @push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
 <script>
 $(document).ready(function() {
     // Show/hide price type based on listing type
     $('#listing_type').on('change', function() {
-        if ($(this).val() === 'rent') {
+        var listingType = $(this).val();
+        if (listingType === 'rent') {
             $('#price_type').closest('.form-group').show();
+            $('#price_type').prop('required', true);
         } else {
             $('#price_type').closest('.form-group').hide();
-            $('#price_type').val('');
+            $('#price_type').val('').prop('required', false);
         }
     }).trigger('change');
 
@@ -484,6 +612,337 @@ $(document).ready(function() {
             }
         }
     });
+
+    // Cascading dropdowns for location
+    $('#state').on('change', function() {
+        var state = $(this).val();
+        var citySelect = $('#city');
+        var neighborhoodSelect = $('#neighborhood');
+        
+        // Reset city and neighborhood dropdowns
+        citySelect.html('<option value="">Loading...</option>').prop('disabled', true);
+        neighborhoodSelect.html('<option value="">Select state first</option>').prop('disabled', true);
+        
+        if (state) {
+            $.ajax({
+                url: '{{ route('admin.properties.cities-by-state') }}',
+                type: 'GET',
+                data: { state: state },
+                dataType: 'json',
+                success: function(data) {
+                    citySelect.html('<option value="">Select City</option>');
+                    
+                    if (data.length > 0) {
+                        $.each(data, function(index, city) {
+                            citySelect.append('<option value="' + city.value + '">' + city.name + '</option>');
+                        });
+                        citySelect.prop('disabled', false);
+                    } else {
+                        citySelect.html('<option value="">No cities available</option>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading cities:', error);
+                    citySelect.html('<option value="">Error loading cities</option>');
+                }
+            });
+        } else {
+            citySelect.html('<option value="">Select state first</option>').prop('disabled', true);
+        }
+    });
+
+    $('#city').on('change', function() {
+        var city = $(this).val();
+        var neighborhoodSelect = $('#neighborhood');
+        
+        // Reset neighborhood dropdown
+        neighborhoodSelect.html('<option value="">Loading...</option>').prop('disabled', true);
+        
+        if (city) {
+            $.ajax({
+                url: '{{ route('admin.properties.neighborhoods-by-city') }}',
+                type: 'GET',
+                data: { city: city },
+                dataType: 'json',
+                success: function(data) {
+                    neighborhoodSelect.html('<option value="">Select Neighborhood</option>');
+                    
+                    if (data.length > 0) {
+                        $.each(data, function(index, neighborhood) {
+                            neighborhoodSelect.append('<option value="' + neighborhood.value + '">' + neighborhood.name + '</option>');
+                        });
+                        neighborhoodSelect.prop('disabled', false);
+                    } else {
+                        neighborhoodSelect.html('<option value="">No neighborhoods available</option>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading neighborhoods:', error);
+                    neighborhoodSelect.html('<option value="">Error loading neighborhoods</option>');
+                }
+            });
+        } else {
+            neighborhoodSelect.html('<option value="">Select city first</option>').prop('disabled', true);
+        }
+    });
+
+    // Handle form validation for dependent dropdowns
+    $('form').on('submit', function(e) {
+        var state = $('#state').val();
+        var city = $('#city').val();
+        var listingType = $('#listing_type').val();
+        
+        // Check listing type
+        if (!listingType) {
+            e.preventDefault();
+            alert('Please select a listing type (For Sale or For Rent)');
+            $('#listing_type').focus();
+            return false;
+        }
+        
+        // Check state and city dependency
+        if (state && !city) {
+            e.preventDefault();
+            alert('Please select a city');
+            $('#city').focus();
+            return false;
+        }
+        
+        // Check price type for rent
+        if (listingType === 'rent' && !$('#price_type').val()) {
+            $('#price_type').val('monthly'); // Set default to monthly
+        }
+        
+        // Debug log before submission
+        console.log('Form submission data:', {
+            listing_type: listingType,
+            price_type: $('#price_type').val(),
+            state: state,
+            city: city
+        });
+    });
+
+    // Map functionality
+    let propertyMap;
+    let mapMarker;
+    let defaultLat = 35.2131; // Damascus, Syria
+    let defaultLng = 36.7011;
+    
+    // Initialize map
+    function initializeMap() {
+        // Ensure container exists and has proper dimensions
+        const mapContainer = document.getElementById('propertyMap');
+        if (!mapContainer) return;
+        
+        // Force container dimensions
+        mapContainer.style.width = '100%';
+        mapContainer.style.height = '400px';
+        mapContainer.style.maxWidth = '100%';
+        mapContainer.style.position = 'relative';
+        
+        // Create map centered on Syria (Damascus)
+        propertyMap = L.map('propertyMap', {
+            preferCanvas: false,
+            zoomControl: true,
+            attributionControl: true,
+            fadeAnimation: true,
+            zoomAnimation: true,
+            markerZoomAnimation: true
+        }).setView([defaultLat, defaultLng], 8);
+        
+        // Add OpenStreetMap tiles with proper configuration
+        const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+            minZoom: 3,
+            tileSize: 256,
+            zoomOffset: 0,
+            crossOrigin: true
+        });
+        
+        tileLayer.addTo(propertyMap);
+        
+        // Force map to refresh after tile layer is added
+        setTimeout(function() {
+            propertyMap.invalidateSize(true);
+        }, 100);
+        
+        // Add click event to set marker
+        propertyMap.on('click', function(e) {
+            setMapMarker(e.latlng.lat, e.latlng.lng);
+        });
+        
+        // Set initial marker if coordinates exist
+        let currentLat = $('#latitude').val();
+        let currentLng = $('#longitude').val();
+        if (currentLat && currentLng) {
+            setMapMarker(parseFloat(currentLat), parseFloat(currentLng));
+            propertyMap.setView([currentLat, currentLng], 15);
+        }
+    }
+    
+    // Set marker on map and update coordinates
+    function setMapMarker(lat, lng) {
+        if (mapMarker) {
+            propertyMap.removeLayer(mapMarker);
+        }
+        
+        mapMarker = L.marker([lat, lng], {
+            draggable: true
+        }).addTo(propertyMap);
+        
+        mapMarker.bindPopup(`<b>Property Location</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`);
+        
+        // Update input fields
+        $('#latitude').val(lat.toFixed(6));
+        $('#longitude').val(lng.toFixed(6));
+        
+        // Make marker draggable
+        mapMarker.on('dragend', function(e) {
+            let position = e.target.getLatLng();
+            $('#latitude').val(position.lat.toFixed(6));
+            $('#longitude').val(position.lng.toFixed(6));
+            mapMarker.setPopupContent(`<b>Property Location</b><br>Lat: ${position.lat.toFixed(6)}<br>Lng: ${position.lng.toFixed(6)}`);
+        });
+    }
+    
+    // Clear coordinates and marker
+    $('#clearLatLng').on('click', function() {
+        $('#latitude').val('');
+        $('#longitude').val('');
+        if (mapMarker) {
+            propertyMap.removeLayer(mapMarker);
+            mapMarker = null;
+        }
+    });
+    
+    // Get current location
+    $('#getCurrentLocation').on('click', function() {
+        if (navigator.geolocation) {
+            $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    let lat = position.coords.latitude;
+                    let lng = position.coords.longitude;
+                    setMapMarker(lat, lng);
+                    propertyMap.setView([lat, lng], 15);
+                    
+                    $('#getCurrentLocation').html('<i class="fas fa-crosshairs"></i>').prop('disabled', false);
+                },
+                function(error) {
+                    alert('Error getting location: ' + error.message);
+                    $('#getCurrentLocation').html('<i class="fas fa-crosshairs"></i>').prop('disabled', false);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000
+                }
+            );
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    });
+    
+    // Search address on map
+    $('#searchOnMap').on('click', function() {
+        let address = $('#street_address').val();
+        let city = $('#city').val();
+        let state = $('#state').val();
+        
+        if (!address && !city) {
+            alert('Please enter a street address or select a city first.');
+            return;
+        }
+        
+        let searchQuery = [address, city, state, 'Syria'].filter(Boolean).join(', ');
+        
+        $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+        
+        // Use OpenStreetMap Nominatim for geocoding with Syria bounds
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=3&countrycodes=sy&bounded=1&viewbox=35.7,32.3,42.4,37.3`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    let lat = parseFloat(data[0].lat);
+                    let lng = parseFloat(data[0].lon);
+                    setMapMarker(lat, lng);
+                    propertyMap.setView([lat, lng], 15);
+                } else {
+                    alert('Address not found. Please try a different address or click on the map.');
+                }
+                $('#searchOnMap').html('<i class="fas fa-search"></i>').prop('disabled', false);
+            })
+            .catch(error => {
+                console.error('Geocoding error:', error);
+                alert('Error searching for address. Please try again.');
+                $('#searchOnMap').html('<i class="fas fa-search"></i>').prop('disabled', false);
+            });
+    });
+    
+    // Center map on marker
+    $('#centerMap').on('click', function() {
+        if (mapMarker) {
+            propertyMap.setView(mapMarker.getLatLng(), 15);
+        } else {
+            propertyMap.setView([defaultLat, defaultLng], 8);
+        }
+    });
+    
+    // Update map when city changes
+    $('#city').on('change', function() {
+        let city = $(this).val();
+        if (city && !$('#latitude').val()) {
+            // Auto-search for city location if no coordinates set
+            setTimeout(function() {
+                $('#searchOnMap').click();
+            }, 500);
+        }
+    });
+    
+    // Initialize map when document is ready
+    setTimeout(function() {
+        initializeMap();
+        // Force map to resize properly
+        setTimeout(function() {
+            if (propertyMap) {
+                propertyMap.invalidateSize();
+                // Force container constraints
+                enforceMapConstraints();
+            }
+        }, 250);
+    }, 100);
+    
+    // Function to enforce map container constraints
+    function enforceMapConstraints() {
+        const mapContainer = document.getElementById('propertyMap');
+        const leafletContainer = mapContainer?.querySelector('.leaflet-container');
+        
+        if (mapContainer) {
+            mapContainer.style.width = '100%';
+            mapContainer.style.maxWidth = '100%';
+            mapContainer.style.height = '400px';
+            mapContainer.style.position = 'relative';
+        }
+        
+        if (leafletContainer) {
+            leafletContainer.style.width = '100%';
+            leafletContainer.style.maxWidth = '100%';
+            leafletContainer.style.height = '400px';
+            leafletContainer.style.position = 'relative';
+        }
+        
+        // Force map to recalculate its size
+        if (propertyMap) {
+            propertyMap.invalidateSize(true);
+        }
+    }
+    
+    // Monitor for any size changes (less frequent to avoid interference)
+    setTimeout(function() {
+        setInterval(enforceMapConstraints, 5000);
+    }, 2000);
 });
 </script>
 @endpush

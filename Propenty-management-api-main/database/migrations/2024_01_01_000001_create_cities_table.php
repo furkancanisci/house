@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name_ar'); // الاسم بالعربية
             $table->string('name_en'); // الاسم بالإنجليزية
+            $table->string('slug')->unique(); // URL slug
             $table->string('country_ar')->default('سوريا'); // البلد بالعربية
             $table->string('country_en')->default('Syria'); // البلد بالإنجليزية
             $table->string('state_ar')->nullable(); // المحافظة بالعربية
@@ -23,10 +24,6 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
-            $table->index(['name_ar', 'name_en']);
-            $table->index(['country_ar', 'country_en']);
-            $table->index(['state_ar', 'state_en']);
         });
     }
 

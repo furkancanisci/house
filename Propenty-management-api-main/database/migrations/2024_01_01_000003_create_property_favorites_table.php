@@ -13,12 +13,9 @@ return new class extends Migration
     {
         Schema::create('property_favorites', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('property_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('property_id');
             $table->timestamps();
-            
-            // Ensure a user can only favorite a property once
-            $table->unique(['user_id', 'property_id']);
         });
     }
 

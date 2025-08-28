@@ -10,6 +10,10 @@ use App\Http\Controllers\Admin\AmenityController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\PermissionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,6 +50,10 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::post('properties/{property}/restore', [PropertyController::class, 'restore'])->name('admin.properties.restore');
     Route::get('properties/export/csv', [PropertyController::class, 'exportCsv'])->name('admin.properties.export');
     Route::post('properties/import/csv', [PropertyController::class, 'importCsv'])->name('admin.properties.import');
+    
+    // AJAX routes for location data
+    Route::get('properties/ajax/cities-by-state', [PropertyController::class, 'getCitiesByState'])->name('admin.properties.cities-by-state');
+    Route::get('properties/ajax/neighborhoods-by-city', [PropertyController::class, 'getNeighborhoodsByCity'])->name('admin.properties.neighborhoods-by-city');
 
     // Categories / Property Types
     Route::resource('categories', CategoryController::class)->names('admin.categories');

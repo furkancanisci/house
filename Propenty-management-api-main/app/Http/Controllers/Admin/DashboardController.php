@@ -209,11 +209,14 @@ class DashboardController extends Controller
             ];
         }
 
-        // Properties by city (top 10)
-        $propertiesByCity = Property::select('cities.name as city_name', DB::raw('COUNT(properties.id) as count'))
-            ->join('cities', 'properties.city_id', '=', 'cities.id')
-            ->where('properties.status', 'active')
-            ->groupBy('cities.id', 'cities.name')
+        // Properties by city (top 10) - using direct city field since city_id may not be populated
+        $propertiesByCity = Property::select(
+                'city as city_name', 
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('status', 'active')
+            ->whereNotNull('city')
+            ->groupBy('city')
             ->orderBy('count', 'desc')
             ->limit(10)
             ->get()

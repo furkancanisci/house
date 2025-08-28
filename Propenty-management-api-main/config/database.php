@@ -77,12 +77,9 @@ return [
             'schema' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
             'options' => extension_loaded('pdo_pgsql') ? array_filter([
-                    PDO::ATTR_PERSISTENT => env('DB_SSLMODE', 'prefer'),
+                PDO::ATTR_PERSISTENT => false,
             ]) : [],
         ],
-
-
-
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',

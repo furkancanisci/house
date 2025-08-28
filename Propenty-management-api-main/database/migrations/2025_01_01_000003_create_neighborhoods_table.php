@@ -14,19 +14,14 @@ return new class extends Migration
         Schema::create('neighborhoods', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique();
-            $table->foreignId('city_id')->constrained()->onDelete('cascade');
+            $table->string('slug');
+            $table->unsignedBigInteger('city_id');
             $table->text('description')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->integer('properties_count')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
-            // Indexes
-            $table->index('slug');
-            $table->index('city_id');
-            $table->index('is_active');
         });
     }
 

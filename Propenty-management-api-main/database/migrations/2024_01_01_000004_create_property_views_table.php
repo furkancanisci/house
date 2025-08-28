@@ -13,16 +13,13 @@ return new class extends Migration
     {
         Schema::create('property_views', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('property_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('property_id');
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('ip_address');
             $table->string('user_agent')->nullable();
             $table->string('referrer')->nullable();
             $table->json('device_info')->nullable(); // Browser, OS, device type
             $table->timestamp('viewed_at');
-            
-            $table->index(['property_id', 'viewed_at']);
-            $table->index(['ip_address', 'viewed_at']);
         });
     }
 

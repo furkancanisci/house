@@ -14,16 +14,12 @@ return new class extends Migration
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
             $table->string('group')->default('general'); // general, listings, seo, media, maps, smtp
-            $table->string('key')->unique();
+            $table->string('key');
             $table->text('value')->nullable();
             $table->string('type')->default('string'); // string, integer, boolean, json, array
             $table->text('description')->nullable();
             $table->boolean('is_public')->default(false); // Whether setting can be exposed to frontend
             $table->timestamps();
-            
-            // Indexes
-            $table->index('group');
-            $table->index('key');
         });
     }
 

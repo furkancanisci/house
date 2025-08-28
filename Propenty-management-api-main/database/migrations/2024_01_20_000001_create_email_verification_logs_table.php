@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('email_verification_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
             $table->string('email');
-            $table->string('verification_token')->unique();
+            $table->string('verification_token');
             $table->string('status')->default('pending'); // pending, sent, verified, expired, failed
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('verified_at')->nullable();
@@ -25,12 +25,6 @@ return new class extends Migration
             $table->json('metadata')->nullable(); // Additional data like user_type, attempt_count, etc.
             $table->text('error_message')->nullable();
             $table->timestamps();
-            
-            // Indexes for performance
-            $table->index(['user_id', 'status']);
-            $table->index(['verification_token']);
-            $table->index(['expires_at']);
-            $table->index(['created_at']);
         });
     }
 

@@ -102,6 +102,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Supported Locales
+    |--------------------------------------------------------------------------
+    |
+    | List of locales supported by the application. This is used by the
+    | localization middleware to determine valid locales.
+    |
+    */
+
+    'supported_locales' => ['en', 'ar'],
+
+    /*
+    |--------------------------------------------------------------------------
     | Faker Locale
     |--------------------------------------------------------------------------
     |
@@ -170,7 +182,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        App\Providers\NeonDatabaseServiceProvider::class,
+        // App\Providers\NeonDatabaseServiceProvider::class,
     ])->toArray(),
 
     /*

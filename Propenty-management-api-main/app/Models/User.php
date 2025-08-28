@@ -68,6 +68,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'is_active',
         'remember_token',
         'email_verified_at',
+        'preferred_language',
     ];
 
     /**
@@ -88,6 +89,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      */
     protected $attributes = [
         'is_active' => true,
+        'preferred_language' => 'en',
     ];
 
     /**

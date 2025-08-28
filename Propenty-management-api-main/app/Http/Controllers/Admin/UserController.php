@@ -103,7 +103,7 @@ class UserController extends Controller
         Gate::authorize('view users');
         
         $user->load(['roles', 'properties' => function($query) {
-            $query->with('city', 'type')->latest()->take(10);
+            $query->with('city')->latest()->take(10);
         }, 'leads' => function($query) {
             $query->with('property')->latest()->take(10);
         }]);
@@ -215,7 +215,7 @@ class UserController extends Controller
         Gate::authorize('view users');
         
         $properties = $user->properties()
-                          ->with(['city', 'type', 'media'])
+                          ->with(['city', 'media'])
                           ->latest()
                           ->paginate(15);
         

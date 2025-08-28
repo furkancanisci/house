@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LanguageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +13,12 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
+// Language switching routes
+Route::prefix('language')->name('language.')->group(function () {
+    Route::post('/switch', [LanguageController::class, 'switch'])->name('switch');
+    Route::get('/current', [LanguageController::class, 'current'])->name('current');
+});
 
  
 

@@ -1,11 +1,11 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', __('admin.dashboard'))
 
-@section('content-header', 'Dashboard')
+@section('content-header', __('admin.dashboard'))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item active">Dashboard</li>
+    <li class="breadcrumb-item active">{{ __('admin.dashboard') }}</li>
 @endsection
 
 @section('content')
@@ -17,12 +17,12 @@
             <div class="small-box bg-info">
                 <div class="inner">
                     <h3>{{ $stats['properties']['total'] }}</h3>
-                    <p>Total Properties</p>
+                    <p>{{ __('admin.total_properties') }}</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-home"></i>
                 </div>
-                <a href="{{ route('admin.properties.index') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="{{ route('admin.properties.index') }}" class="small-box-footer">{{ __('admin.view_all') }} <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <!-- ./col -->
@@ -33,12 +33,12 @@
             <div class="small-box bg-success">
                 <div class="inner">
                     <h3>{{ $stats['properties']['active'] }}</h3>
-                    <p>Active Properties</p>
+                    <p>{{ __('admin.active_properties') }}</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
-                <a href="{{ route('admin.properties.index', ['filter[status]' => 'active']) }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="{{ route('admin.properties.index', ['filter[status]' => 'active']) }}" class="small-box-footer">{{ __('admin.view_all') }} <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <!-- ./col -->
@@ -49,12 +49,12 @@
             <div class="small-box bg-warning">
                 <div class="inner">
                     <h3>{{ $stats['properties']['pending'] }}</h3>
-                    <p>Pending Approvals</p>
+                    <p>{{ __('admin.pending') }} {{ __('admin.properties') }}</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-clock"></i>
                 </div>
-                <a href="{{ route('admin.moderation.index') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="{{ route('admin.moderation.index') }}" class="small-box-footer">{{ __('admin.view_all') }} <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <!-- ./col -->
@@ -65,12 +65,12 @@
             <div class="small-box bg-danger">
                 <div class="inner">
                     <h3>{{ $stats['leads']['new'] }}</h3>
-                    <p>New Leads</p>
+                    <p>{{ __('admin.new') }} {{ __('admin.leads') }}</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-user-plus"></i>
                 </div>
-                <a href="{{ route('admin.leads.index', ['filter[status]' => 'new']) }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="{{ route('admin.leads.index', ['filter[status]' => 'new']) }}" class="small-box-footer">{{ __('admin.view_all') }} <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <!-- ./col -->
@@ -82,7 +82,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Properties Added (Last 30 Days)</h3>
+                    <h3 class="card-title">{{ __('admin.properties') }} {{ __('admin.this_month') }} ({{ __('admin.last') }} 30 {{ __('admin.days') }})</h3>
                 </div>
                 <div class="card-body">
                     <canvas id="propertiesChart" style="height: 300px;"></canvas>
@@ -94,7 +94,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Properties by City</h3>
+                    <h3 class="card-title">{{ __('admin.properties') }} {{ __('admin.by') }} {{ __('admin.city') }}</h3>
                 </div>
                 <div class="card-body">
                     <canvas id="cityChart" style="height: 300px;"></canvas>
@@ -108,7 +108,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Lead Status Distribution</h3>
+                    <h3 class="card-title">{{ __('admin.leads_by_status') }}</h3>
                 </div>
                 <div class="card-body">
                     <canvas id="leadsChart" style="height: 300px;"></canvas>
@@ -120,7 +120,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Properties by Type</h3>
+                    <h3 class="card-title">{{ __('admin.properties_by_type') }}</h3>
                 </div>
                 <div class="card-body">
                     <canvas id="typeChart" style="height: 300px;"></canvas>
@@ -134,18 +134,18 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Recent Properties</h3>
+                    <h3 class="card-title">{{ __('admin.recent') }} {{ __('admin.properties') }}</h3>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Property</th>
-                                    <th>Status</th>
-                                    <th>Price</th>
-                                    <th>Owner</th>
-                                    <th>Created</th>
+                                    <th>{{ __('admin.property') }}</th>
+                                    <th>{{ __('admin.status') }}</th>
+                                    <th>{{ __('admin.price') }}</th>
+                                    <th>{{ __('admin.owner') }}</th>
+                                    <th>{{ __('admin.created_at') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -177,7 +177,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ route('admin.properties.index') }}" class="btn btn-primary btn-sm">View All Properties</a>
+                    <a href="{{ route('admin.properties.index') }}" class="btn btn-primary btn-sm">{{ __('admin.view_all') }} {{ __('admin.properties') }}</a>
                 </div>
             </div>
         </div>
@@ -186,7 +186,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Recent Leads</h3>
+                    <h3 class="card-title">{{ __('admin.recent') }} {{ __('admin.leads') }}</h3>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">

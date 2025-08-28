@@ -33,11 +33,11 @@ return new class extends Migration
             $table->date('move_in_date')->nullable();
             
             // Assignment
-            $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('assigned_to')->nullable();
             $table->timestamp('assigned_at')->nullable();
             
             // Related Property (if inquiry is about specific property)
-            $table->foreignId('property_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('property_id')->nullable();
             
             // Internal Notes
             $table->text('internal_notes')->nullable();
@@ -56,13 +56,6 @@ return new class extends Migration
             
             $table->timestamps();
             $table->softDeletes();
-            
-            // Indexes
-            $table->index('status');
-            $table->index('source');
-            $table->index('assigned_to');
-            $table->index('property_id');
-            $table->index('created_at');
         });
     }
 

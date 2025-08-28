@@ -19,8 +19,7 @@ class CityController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('name_en', 'like', "%{$search}%")
+                $q->where('name_en', 'like', "%{$search}%")
                   ->orWhere('name_ar', 'like', "%{$search}%");
             });
         }
@@ -52,7 +51,6 @@ class CityController extends Controller
         Gate::authorize('manage cities');
 
         $request->validate([
-            'name' => 'required|string|max:255',
             'name_en' => 'required|string|max:255|unique:cities',
             'name_ar' => 'required|string|max:255|unique:cities',
             'slug' => 'required|string|max:255|unique:cities',
@@ -87,7 +85,6 @@ class CityController extends Controller
         Gate::authorize('manage cities');
 
         $request->validate([
-            'name' => 'required|string|max:255',
             'name_en' => 'required|string|max:255|unique:cities,name_en,' . $city->id,
             'name_ar' => 'required|string|max:255|unique:cities,name_ar,' . $city->id,
             'slug' => 'required|string|max:255|unique:cities,slug,' . $city->id,

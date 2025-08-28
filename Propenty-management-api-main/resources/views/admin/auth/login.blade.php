@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,10 +8,66 @@
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    
+    <!-- Arabic Font Support -->
+    @if(app()->getLocale() === 'ar')
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    @endif
+    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Theme style -->
+    @if(app()->getLocale() === 'ar')
+    <!-- Bootstrap 4 RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.rtl.min.css">
+    <!-- AdminLTE RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.rtl.min.css">
+    @else
+    <!-- Bootstrap 4 LTR -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- AdminLTE LTR -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    @endif
+    
+    @if(app()->getLocale() === 'ar')
+    <style>
+        body, .login-box, .card {
+            font-family: 'Cairo', 'Source Sans Pro', sans-serif !important;
+            direction: rtl !important;
+            text-align: right !important;
+        }
+        
+        .login-box-msg {
+            text-align: center !important;
+        }
+        
+        .form-control {
+            text-align: right !important;
+        }
+        
+        .input-group .form-control:not(:last-child) {
+            border-left: 1px solid #ced4da !important;
+            border-right: 0 !important;
+        }
+        
+        .input-group-append {
+            order: -1 !important;
+        }
+        
+        .input-group-text {
+            border-right: 1px solid #ced4da !important;
+            border-left: 0 !important;
+        }
+        
+        .fas {
+            margin-left: 0.25rem !important;
+            margin-right: 0 !important;
+        }
+    </style>
+    @endif
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">

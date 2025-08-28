@@ -78,8 +78,8 @@ class Property extends Model implements HasMedia
      * @var array
      */
     protected $appends = [
-        'listing_type',
-        // Temporarily removing all accessors to debug the issue
+        // Temporarily removing to debug the issue
+        // 'listing_type',
         // 'full_address',
         // 'formatted_price',
         // 'main_image_url',
@@ -302,7 +302,9 @@ class Property extends Model implements HasMedia
 
     /**
      * Get listing type from property type relationship.
+     * TEMPORARILY DISABLED - Using direct listing_type field instead
      */
+    /* 
     public function getListingTypeAttribute(): string
     {
         if ($this->property_type_id) {
@@ -317,10 +319,13 @@ class Property extends Model implements HasMedia
         }
         return 'sale'; // default
     }
+    */
 
     /**
      * Set listing type by updating property_type_id.
+     * TEMPORARILY DISABLED - Using direct listing_type field instead
      */
+    /*
     public function setListingTypeAttribute($value)
     {
         $propertyTypeSlug = $value === 'sale' ? 'for-sale' : 'for-rent';
@@ -329,6 +334,7 @@ class Property extends Model implements HasMedia
             $this->property_type_id = $propertyType->id;
         }
     }
+    */
 
     /**
      * Get city name from relationship.
