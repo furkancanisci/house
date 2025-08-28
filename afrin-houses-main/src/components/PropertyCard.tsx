@@ -118,19 +118,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
 
   if (view === 'list') {
     return (
-      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-blue-300 lg:min-h-[280px]">
+      <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-[#067977] lg:min-h-[200px] rounded-lg">
         <div className="flex flex-col lg:flex-row lg:items-center lg:h-full">
           {/* Image Section */}
-          <div className="relative lg:flex-shrink-0 lg:self-center lg:m-3">
+          <div className="relative lg:flex-shrink-0 lg:self-center lg:m-2">
             <FixedImage
-              className="h-56 lg:h-48 w-full lg:w-72 object-cover rounded-t-lg lg:rounded-lg"
+              className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
               src={mainImage}
               alt={property.title}
             />
             {/* Listing Type Badge */}
             <Badge
-              className={`absolute top-3 left-3 ${property.listingType === 'rent' ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
-                } text-white font-medium`}
+              className={`absolute top-1.5 left-1.5 ${property.listingType === 'rent' ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-to-r from-[#067977] to-[#067977]/80'
+                } text-white font-medium shadow-lg border-0 px-2 py-1 rounded-full text-xs`}
             >
               {property.listingType === 'rent' ? t('property.listingTypes.forRent') : t('property.listingTypes.forSale')}
             </Badge>
@@ -141,37 +141,37 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                 variant="ghost"
                 size="sm"
                 onClick={handleFavoriteClick}
-                className={`absolute top-3 right-3 ${isFavorite ? 'text-red-500 bg-white/90' : 'text-gray-600 bg-white/90'
-                  } hover:text-red-500 hover:bg-white rounded-full p-2 shadow-md`}
+                className={`absolute top-1.5 right-1.5 ${isFavorite ? 'text-red-500 bg-white/95' : 'text-gray-600 bg-white/95'
+                  } hover:text-red-500 hover:bg-white rounded-full p-1.5 shadow-lg backdrop-blur-sm border border-white/20 transition-all duration-200 hover:scale-110`}
               >
-                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
+                <Heart className={`h-3 w-3 ${isFavorite ? 'fill-current' : ''}`} />
               </Button>
             )}
           </div>
 
           {/* Content Section */}
-          <div className="flex-1 p-4 lg:p-6 lg:flex lg:items-center">
+          <div className="flex-1 p-2 sm:p-3 lg:p-4 lg:flex lg:items-center">
             <div className="flex flex-col h-full lg:w-full lg:justify-center">
               {/* Header */}
-              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-4 space-y-2 lg:space-y-0">
-                <div className="flex-1 lg:pr-4">
-                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200 line-clamp-2 mb-2">
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-2 sm:mb-3 space-y-1 lg:space-y-0">
+                <div className="flex-1 lg:pr-3">
+                  <h3 className="text-base lg:text-lg font-bold text-gray-900 hover:text-[#067977] transition-colors duration-200 line-clamp-2 mb-1">
                     <Link to={`/property/${propertySlug}`}>
                       {property.title}
                     </Link>
                   </h3>
-                  <p className="text-gray-600 flex items-center text-sm">
-                    <MapPin className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                  <p className="text-gray-600 flex items-center text-xs sm:text-sm">
+                    <MapPin className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
                     <span className="line-clamp-1">
                       {property.address || `${normalizeName(property.city)}, ${normalizeName(property.state)}`}
                     </span>
                   </p>
                 </div>
-                <div className="text-left lg:text-right lg:ml-4 flex-shrink-0">
-                  <p className="text-xl lg:text-2xl font-bold text-blue-600">
+                <div className="text-left lg:text-right lg:ml-3 flex-shrink-0">
+                  <p className="text-lg lg:text-xl font-bold text-[#067977]">
                     {formatPrice(property.price, property.listingType)}
                   </p>
-                  <p className="text-xs lg:text-sm text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     {property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice')}
                   </p>
                 </div>
@@ -179,8 +179,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
 
               {/* Property Details */}
               <div className="flex flex-wrap gap-2 lg:gap-4 mb-4">
-                <div className="flex items-center bg-blue-50 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg">
-                  <Bed className="h-3 lg:h-4 w-3 lg:w-4 mr-1 lg:mr-2 text-blue-600" />
+                <div className="flex items-center bg-[#067977]/10 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg">
+          <Bed className="h-3 lg:h-4 w-3 lg:w-4 mr-1 lg:mr-2 text-[#067977]" />
                   <span className="font-semibold text-gray-800 text-sm lg:text-base">
                     {getBedrooms()}
                   </span>
@@ -232,7 +232,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                   <span>{t('property.listed')} {formatDate(property.created_at || property.datePosted)}</span>
                 </div>
                 <Link to={`/property/${propertySlug}`}>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 lg:px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-md text-sm lg:text-base w-full lg:w-auto">
+                  <Button className="bg-[#067977] hover:bg-[#067977]/90 text-white px-4 lg:px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-md text-sm lg:text-base w-full lg:w-auto">
                     {t('property.actions.viewDetails')}
                   </Button>
                 </Link>
@@ -246,14 +246,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
 
   // Grid view
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-[#067977] rounded-lg">
       <Link to={`/property/${propertySlug}`}>
         <div className="relative">
           {useGallery && images && images.length > 1 ? (
             <PropertyImageGallery
               images={images}
               alt={property.title}
-              containerClassName="h-48"
+              containerClassName="h-32 sm:h-36"
               className="w-full h-full object-cover"
               showThumbnails={false}
               enableZoom={false}
@@ -263,12 +263,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             <FixedImage
               src={mainImage}
               alt={property.title}
-              className="h-48 w-full object-cover"
+              className="h-32 sm:h-36 w-full object-cover"
             />
           )}
           <Badge
-            className={`absolute top-2 left-2 ${property.listingType === 'rent' ? 'bg-green-500' : 'bg-blue-500'
-              }`}
+            className={`absolute top-1.5 left-1.5 ${property.listingType === 'rent' ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-to-r from-[#067977] to-[#067977]/80'
+              } text-white font-medium shadow-lg border-0 px-2 py-1 rounded-full text-xs`}
           >
             {property.listingType === 'rent' ? t('property.listingTypes.forRent') : t('property.listingTypes.forSale')}
           </Badge>
@@ -276,74 +276,82 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => toggleFavorite(property.id.toString())}
-              className={`absolute top-2 right-2 ${isFavorite ? 'text-red-500' : 'text-gray-400'
-                } hover:text-red-500`}
+              onClick={handleFavoriteClick}
+              className={`absolute top-1.5 right-1.5 ${isFavorite ? 'text-red-500 bg-white/95' : 'text-gray-600 bg-white/95'
+                } hover:text-red-500 hover:bg-white rounded-full p-1.5 shadow-lg backdrop-blur-sm border border-white/20 transition-all duration-200 hover:scale-110`}
             >
-              <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
+              <Heart className={`h-3 w-3 ${isFavorite ? 'fill-current' : ''}`} />
             </Button>
           )}
         </div>
       </Link>
 
-      <CardContent className="p-4">
+      <CardContent className="p-2 sm:p-3">
         <div className="mb-2">
-          <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 line-clamp-1">
+          <h3 className="text-sm sm:text-base font-bold text-gray-900 hover:text-[#067977] line-clamp-2 mb-1 leading-tight">
             <Link to={`/property/${propertySlug}`}>
               {property.title}
             </Link>
           </h3>
-          <p className="text-xl font-bold text-blue-600">
+          <p className="text-base sm:text-lg font-bold text-[#067977]">
             {formatPrice(property.price, property.listingType)}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice')}
           </p>
         </div>
 
-        <p className="text-gray-600 mb-3 flex items-center text-sm">
-          <MapPin className="h-4 w-4 mr-1" />
-          {property.address}
+        <p className="text-gray-600 mb-2 flex items-center text-xs sm:text-sm">
+          <MapPin className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
+          <span className="line-clamp-1">{property.address || `${normalizeName(property.city)}, ${normalizeName(property.state)}`}</span>
         </p>
 
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center text-gray-600 text-sm">
-            <Bed className="h-4 w-4 mr-1" />
-            <span>{getBedrooms()} {t('property.details.bedrooms')}</span>
+        <div className="grid grid-cols-3 gap-1 mb-2">
+          <div className="flex flex-col items-center bg-[#067977]/10 px-1.5 py-1.5 rounded-lg">
+            <Bed className="h-3 w-3 text-[#067977] mb-0.5" />
+            <span className="font-semibold text-gray-800 text-xs">{getBedrooms()}</span>
+            <span className="text-xs text-gray-600 hidden sm:block">{t('property.details.bedrooms')}</span>
           </div>
-          <div className="flex items-center text-gray-600 text-sm">
-            <Bath className="h-4 w-4 mr-1" />
-            <span>{getBathrooms()} {t('property.details.bathrooms')}</span>
+          <div className="flex flex-col items-center bg-green-50 px-1.5 py-1.5 rounded-lg">
+            <Bath className="h-3 w-3 text-green-600 mb-0.5" />
+            <span className="font-semibold text-gray-800 text-xs">{getBathrooms()}</span>
+            <span className="text-xs text-gray-600 hidden sm:block">{t('property.details.bathrooms')}</span>
           </div>
-          <div className="flex items-center text-gray-600 text-sm">
-            <Square className="h-4 w-4 mr-1" />
-            {getSquareFootage().toLocaleString()}
+          <div className="flex flex-col items-center bg-purple-50 px-1.5 py-1.5 rounded-lg">
+            <Square className="h-3 w-3 text-purple-600 mb-0.5" />
+            <span className="font-semibold text-gray-800 text-xs">{getSquareFootage().toLocaleString()}</span>
+            <span className="text-xs text-gray-600 hidden sm:block">{t('property.sqft')}</span>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1 mb-3">
+        <div className="flex flex-wrap gap-1 mb-2">
           {property.features?.slice(0, 2).map((feature) => {
             const translated = t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: feature });
             const displayText = typeof translated === 'string' ? translated : feature;
             return (
-              <Badge key={feature} variant="secondary" className="text-xs">
+              <Badge key={feature} variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1.5 py-0.5">
                 {displayText}
               </Badge>
             );
           })}
 
           {(property.features?.length ?? 0) > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{property.features.length - 2}
+            <Badge variant="outline" className="text-xs text-gray-500 px-1.5 py-0.5">
+              +{property.features.length - 2} {t('property.more')}
             </Badge>
           )}
         </div>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-2 sm:p-3 pt-0">
         <Link to={`/property/${propertySlug}`} className="w-full">
-          <Button className="w-full">{t('property.actions.viewDetails')}</Button>
+          <Button className="w-full bg-[#067977] hover:bg-[#067977]/90 text-white rounded-lg transition-all duration-200 hover:shadow-md font-medium text-xs sm:text-sm py-2">
+            {t('property.actions.viewDetails')}
+          </Button>
         </Link>
       </CardFooter>
     </Card>
   );
 };
 
-export default PropertyCard;
+export default React.memo(PropertyCard);

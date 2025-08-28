@@ -1,11 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
+import { LeafletMapProvider } from './context/LeafletMapProvider';
 import { Toaster } from 'sonner';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
+import MapSearch from './pages/MapSearch';
 import HousesForRent from './pages/HousesForRent';
 import HousesForSale from './pages/HousesForSale';
 import Dashboard from './pages/Dashboard';
@@ -24,12 +26,14 @@ import './App.css';
 function App() {
   return (
     <AppProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Layout>
-            <Routes>
+      <LeafletMapProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Layout>
+              <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/search" element={<Search />} />
+              <Route path="/search/map" element={<MapSearch />} />
               <Route path="/houses-for-rent" element={<HousesForRent />} />
               <Route path="/houses-for-sale" element={<HousesForSale />} />
               <Route path="/property/:id" element={<PropertyDetails />} />
@@ -45,11 +49,12 @@ function App() {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
-            </Routes>
-          </Layout>
-          <Toaster position="top-right" />
-        </div>
-      </Router>
+              </Routes>
+            </Layout>
+            <Toaster position="top-right" />
+          </div>
+        </Router>
+      </LeafletMapProvider>
     </AppProvider>
   );
 }

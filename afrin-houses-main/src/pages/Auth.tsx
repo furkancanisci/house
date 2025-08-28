@@ -22,7 +22,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
-
+import logo from '../assets/logo.png';
 const createLoginSchema = (t: any) => z.object({
   email: z.string().email(t('auth.validation.emailRequired')),
   password: z.string().min(8, t('auth.validation.passwordMinLength')),
@@ -48,7 +48,7 @@ type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>;
 type RegisterFormData = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 const Auth: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { login, register, state } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
@@ -179,16 +179,20 @@ const Auth: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Welcome Section */}
         <div className="flex flex-col justify-center space-y-6">
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start space-x-2 mb-4">
-              <Building className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">RealEstate</span>
+              <img src={logo} alt="Logo" className="h-10 w-auto" />
+            <span className="text-2xl font-bold text-[#067977] whitespace-nowrap">
+              {i18n.language === 'ar' ? 'بيست ترند' : 
+               i18n.language === 'ku' ? 'Trend Baş' : 
+               'Best Trend'}
+            </span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-[#067977] mb-4">
               {t('auth.welcome.title')}
             </h1>
             <p className="text-lg text-gray-600 mb-8">
@@ -197,7 +201,7 @@ const Auth: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-[#067977]">
               {t('auth.welcome.whyCreateAccount')}
             </h3>
             <ul className="space-y-3">
@@ -210,11 +214,11 @@ const Auth: React.FC = () => {
             </ul>
           </div>
 
-          <div className="bg-blue-600 bg-opacity-10 rounded-lg p-6">
-            <h4 className="font-semibold text-blue-900 mb-2">
+          <div className="bg-[#067977]/10 rounded-lg p-6 border border-[#067977]/20">
+            <h4 className="font-semibold text-[#067977] mb-2">
               {t('auth.welcome.demoAccount.title')}
             </h4>
-            <p className="text-blue-800 text-sm">
+            <p className="text-[#067977]/80 text-sm">
               {t('auth.welcome.demoAccount.description')}
             </p>
           </div>
@@ -222,31 +226,31 @@ const Auth: React.FC = () => {
 
         {/* Auth Forms */}
         <div className="flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">
+          <Card className="w-full max-w-md border-[#067977]/20 shadow-lg">
+            <CardHeader className="text-center bg-[#067977]/5">
+              <CardTitle className="text-2xl text-[#067977]">
                 {activeTab === 'login' ? t('auth.signIn') : t('auth.createAccount')}
               </CardTitle>
             </CardHeader>
             
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">{t('auth.signIn')}</TabsTrigger>
-                  <TabsTrigger value="register">{t('auth.signUp')}</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#067977]/10">
+                  <TabsTrigger value="login" className="data-[state=active]:bg-[#067977] data-[state=active]:text-white">{t('auth.signIn')}</TabsTrigger>
+                  <TabsTrigger value="register" className="data-[state=active]:bg-[#067977] data-[state=active]:text-white">{t('auth.signUp')}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="login">
                   <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-email">{t('auth.email')}</Label>
+                      <Label htmlFor="login-email" className="text-[#067977] font-medium">{t('auth.email')}</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Mail className={`absolute ${i18n.language === 'ar' ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#067977]/60`} />
                         <Input
                           id="login-email"
                           type="email"
                           placeholder={t('auth.placeholders.enterEmail')}
-                          className="pl-10"
+                          className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                           {...loginForm.register('email')}
                         />
                       </div>
@@ -258,20 +262,20 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">{t('auth.password')}</Label>
+                      <Label htmlFor="login-password" className="text-[#067977] font-medium">{t('auth.password')}</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Lock className={`absolute ${i18n.language === 'ar' ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#067977]/60`} />
                         <Input
                           id="login-password"
                           type={showPassword ? 'text' : 'password'}
                           placeholder={t('auth.placeholders.enterPassword')}
-                          className="pl-10 pr-10"
+                          className={`${i18n.language === 'ar' ? 'pr-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                           {...loginForm.register('password')}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -285,7 +289,7 @@ const Auth: React.FC = () => {
 
                     <Button 
                       type="submit" 
-                      className="w-full" 
+                      className="w-full bg-[#067977] hover:bg-[#067977]/90 text-white" 
                       disabled={isLoading}
                     >
                       {isLoading ? t('auth.signingIn') : t('auth.signIn')}
@@ -297,14 +301,14 @@ const Auth: React.FC = () => {
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="register-first-name">{t('auth.firstName')}</Label>
+                        <Label htmlFor="register-first-name" className="text-[#067977] font-medium">{t('auth.firstName')}</Label>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <User className={`absolute ${i18n.language === 'ar' ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#067977]/60`} />
                           <Input
                             id="register-first-name"
                             type="text"
                             placeholder={t('auth.placeholders.enterFirstName')}
-                            className="pl-10"
+                            className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                             {...registerForm.register('first_name')}
                           />
                         </div>
@@ -315,14 +319,14 @@ const Auth: React.FC = () => {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="register-last-name">{t('auth.lastName')}</Label>
+                        <Label htmlFor="register-last-name" className="text-[#067977] font-medium">{t('auth.lastName')}</Label>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <User className={`absolute ${i18n.language === 'ar' ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#067977]/60`} />
                           <Input
                             id="register-last-name"
                             type="text"
                             placeholder={t('auth.placeholders.enterLastName')}
-                            className="pl-10"
+                            className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                             {...registerForm.register('last_name')}
                           />
                         </div>
@@ -335,14 +339,14 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-email">{t('auth.email')}</Label>
+                      <Label htmlFor="register-email" className="text-[#067977] font-medium">{t('auth.email')}</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Mail className={`absolute ${i18n.language === 'ar' ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#067977]/60`} />
                         <Input
                           id="register-email"
                           type="email"
                           placeholder={t('auth.placeholders.enterEmail')}
-                          className="pl-10"
+                          className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                           {...registerForm.register('email')}
                         />
                       </div>
@@ -354,34 +358,34 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-phone">{t('auth.phoneOptional')}</Label>
+                      <Label htmlFor="register-phone" className="text-[#067977] font-medium">{t('auth.phoneOptional')}</Label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Phone className={`absolute ${i18n.language === 'ar' ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#067977]/60`} />
                         <Input
                           id="register-phone"
                           type="tel"
                           placeholder={t('auth.placeholders.enterPhone')}
-                          className="pl-10"
+                          className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                           {...registerForm.register('phone')}
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-password">{t('auth.password')}</Label>
+                      <Label htmlFor="register-password" className="text-[#067977] font-medium">{t('auth.password')}</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Lock className={`absolute ${i18n.language === 'ar' ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#067977]/60`} />
                         <Input
                           id="register-password"
                           type={showPassword ? 'text' : 'password'}
                           placeholder={t('auth.placeholders.createPassword')}
-                          className="pl-10 pr-10"
+                          className={`${i18n.language === 'ar' ? 'pr-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                           {...registerForm.register('password')}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -394,20 +398,20 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-confirm-password">{t('auth.confirmPassword')}</Label>
+                      <Label htmlFor="register-confirm-password" className="text-[#067977] font-medium">{t('auth.confirmPassword')}</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Lock className={`absolute ${i18n.language === 'ar' ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#067977]/60`} />
                         <Input
                           id="register-confirm-password"
                           type={showConfirmPassword ? 'text' : 'password'}
                           placeholder={t('auth.placeholders.confirmPassword')}
-                          className="pl-10 pr-10"
+                          className={`${i18n.language === 'ar' ? 'pr-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                           {...registerForm.register('confirmPassword')}
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]"
                         >
                           {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -428,11 +432,11 @@ const Auth: React.FC = () => {
                         />
                         <Label htmlFor="terms" className="text-sm">
                           {t('auth.agreeToTerms')}{' '}
-                          <a href="/terms" className="text-blue-600 hover:underline">
+                          <a href="/terms" className="text-[#067977] hover:underline">
                             {t('auth.termsOfService')}
                           </a>{' '}
                           {t('auth.and')}{' '}
-                          <a href="/privacy" className="text-blue-600 hover:underline">
+                          <a href="/privacy" className="text-[#067977] hover:underline">
                             {t('auth.privacyPolicy')}
                           </a>
                         </Label>
@@ -444,7 +448,7 @@ const Auth: React.FC = () => {
                       )}
                       <Button 
                       type="submit" 
-                      className="w-full" 
+                      className="w-full bg-[#067977] hover:bg-[#067977]/90 text-white" 
                       disabled={isLoading}
                     >
                       {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
@@ -455,13 +459,13 @@ const Auth: React.FC = () => {
               </Tabs>
 
               <div className="mt-6 text-center text-sm text-gray-600">
-                By signing up, you agree to our{' '}
-                <a href="#" className="text-blue-600 hover:underline">
-                  Terms of Service
+                {t('auth.terms.bySigningUp')}{' '}
+                <a href="#" className="text-[#067977] hover:underline">
+                  {t('auth.terms.termsOfService')}
                 </a>{' '}
-                and{' '}
-                <a href="#" className="text-blue-600 hover:underline">
-                  Privacy Policy
+                {t('auth.terms.and')}{' '}
+                <a href="#" className="text-[#067977] hover:underline">
+                  {t('auth.terms.privacyPolicy')}
                 </a>
               </div>
             </CardContent>

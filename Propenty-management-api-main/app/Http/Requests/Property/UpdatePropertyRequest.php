@@ -208,7 +208,7 @@ class UpdatePropertyRequest extends FormRequest
         // Clean up amenities array if provided
         if ($this->has('amenities') && is_array($this->amenities)) {
             $this->merge([
-                'amenities' => array_filter(array_unique($this->amenities))
+                'amenities' => json_encode(array_filter(array_unique($this->amenities)))
             ]);
         }
 

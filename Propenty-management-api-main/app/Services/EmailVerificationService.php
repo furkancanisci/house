@@ -15,7 +15,7 @@ class EmailVerificationService
     /**
      * Send email verification with rate limiting and logging.
      */
-    public function sendVerificationEmail(User $user, string $ipAddress = null, string $userAgent = null): array
+    public function sendVerificationEmail(User $user, ?string $ipAddress = null, ?string $userAgent = null): array
     {
         // Check if user is already verified
         if ($user->hasVerifiedEmail()) {
@@ -97,7 +97,7 @@ class EmailVerificationService
     /**
      * Verify email with token validation.
      */
-    public function verifyEmail(User $user, string $hash, string $token, string $ipAddress = null, string $userAgent = null): array
+    public function verifyEmail(User $user, string $hash, string $token, ?string $ipAddress = null, ?string $userAgent = null): array
     {
         // Check if email is already verified
         if ($user->hasVerifiedEmail()) {
@@ -286,7 +286,7 @@ class EmailVerificationService
     /**
      * Send email with retry mechanism and exponential backoff.
      */
-    private function sendEmailWithRetry(User $user, EmailVerificationLog $verificationLog, string $ipAddress = null): array
+    private function sendEmailWithRetry(User $user, EmailVerificationLog $verificationLog, ?string $ipAddress = null): array
     {
         $maxAttempts = 3;
         $baseDelay = 1; // seconds

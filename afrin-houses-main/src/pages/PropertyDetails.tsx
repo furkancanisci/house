@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Property } from '../types';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import { useTranslation } from 'react-i18next';
+import { useLeafletMap, DEFAULT_CENTER, OSM_TILE_LAYER, createPropertyIcon } from '../context/LeafletMapProvider';
+import L from 'leaflet';
 import { 
   Heart, 
   Share2, 
@@ -20,7 +22,8 @@ import {
   Home,
   Car,
   Zap,
-  TreePine
+  TreePine,
+  File
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -28,6 +31,7 @@ import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { toast } from 'sonner';
 import { getProperty } from '../services/propertyService';
+import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import FixedImage from '../components/FixedImage';
 import PropertyImageGallery from '../components/PropertyImageGallery';
 
@@ -40,20 +44,29 @@ const PropertyDetails: React.FC = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [documentType, setDocumentType] = useState<PropertyDocumentType | null>(null);
+  const [loadingDocumentType, setLoadingDocumentType] = useState(false);
+  const { isLoaded: isMapLoaded, loadError } = useLeafletMap();
 
   const [showMap, setShowMap] = useState(false);
-
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyCO0kKndUNlmQi3B5mxy4dblg_8WYcuKuk';
 
   // Helper function to normalize location fields that might be objects
   const normalizeName = (val: any): string => {
     if (!val) return '';
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
-      const locale = i18n.language === 'ar' ? 'ar' : 'en';
+      const currentLang = i18n.language;
       const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
-      const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
-      return locale === 'ar' ? (ar || en || '') : (en || ar || '');
+      const en = (val as any).name_en ?? (val as any).en;
+      const ku = (val as any).name_ku ?? (val as any).ku;
+      
+      // Priority order: current language > English > Arabic > Kurdish > any available
+      if (currentLang === 'ar' && ar) return ar;
+      if (currentLang === 'en' && en) return en;
+      if (currentLang === 'ku' && ku) return ku;
+      
+      // Fallback priority: English > Arabic > Kurdish > any available
+      return en || ar || ku || (val as any).name || '';
     }
     return String(val);
   };
@@ -81,6 +94,8 @@ const PropertyDetails: React.FC = () => {
         console.log('Square Feet:', propertyData.details?.square_feet);
         console.log('Property Type:', propertyData.property_type);
         console.log('Listing Type:', propertyData.listing_type);
+        console.log('Document Type ID:', propertyData.document_type_id);
+        console.log('Document Type Object:', propertyData.document_type);
         console.log('All response keys:', Object.keys(propertyData));
         
         // Debug image data specifically
@@ -195,7 +210,10 @@ const PropertyDetails: React.FC = () => {
           parking: propertyData.details?.parking?.type,
           lotSize: propertyData.details?.lot_size,
           garage: propertyData.details?.parking?.type === 'garage' ? 'Yes' : 'No',
-          building: propertyData.details?.building_name
+          building: propertyData.details?.building_name,
+          // Document type information
+          document_type_id: propertyData.document_type_id,
+          documentType: propertyData.document_type
         };
         
         // Log the transformed property
@@ -208,6 +226,10 @@ const PropertyDetails: React.FC = () => {
         console.log('Images array for gallery:', transformedProperty.images);
         console.log('Media array:', transformedProperty.media);
         console.log('Main image:', transformedProperty.mainImage);
+        console.log('Document Type ID after transform:', transformedProperty.document_type_id);
+        console.log('Document Type Object after transform:', transformedProperty.documentType);
+        console.log('Raw propertyData.document_type_id:', propertyData.document_type_id);
+        console.log('Raw propertyData.document_type:', propertyData.document_type);
         console.groupEnd();
         
         setProperty(transformedProperty);
@@ -222,6 +244,62 @@ const PropertyDetails: React.FC = () => {
 
     fetchProperty();
   }, [slug, i18n.language, t]);
+
+  // Fetch document type if property has document_type_id but no document type object
+  useEffect(() => {
+    const fetchDocumentType = async () => {
+      console.log('fetchDocumentType called with:', {
+        property_document_type_id: property?.document_type_id,
+        property_documentType: property?.documentType,
+        currentLanguage: i18n.language
+      });
+      
+      if (property?.document_type_id && !property?.documentType) {
+        setLoadingDocumentType(true);
+        try {
+          console.log('Fetching document type with ID:', property.document_type_id);
+          const docType = await propertyDocumentTypeService.getPropertyDocumentTypeById(
+            Number(property.document_type_id),
+            { lang: i18n.language }
+          );
+          console.log('Fetched document type:', docType);
+          if (docType) {
+            setDocumentType(docType);
+          }
+        } catch (error) {
+          console.error('Error fetching document type:', error);
+        } finally {
+          setLoadingDocumentType(false);
+        }
+      } else if (property?.documentType) {
+        // If document type is already included in property data
+        console.log('Using document type from property data:', property.documentType);
+        setDocumentType(property.documentType);
+      } else if (property?.document_type_id) {
+        // If we have a document_type_id but no documentType, still try to fetch
+        console.log('Property has document_type_id but no documentType object, forcing fetch');
+        setLoadingDocumentType(true);
+        try {
+          const docType = await propertyDocumentTypeService.getPropertyDocumentTypeById(
+            Number(property.document_type_id),
+            { lang: i18n.language }
+          );
+          console.log('Force fetched document type:', docType);
+          if (docType) {
+            setDocumentType(docType);
+          }
+        } catch (error) {
+          console.error('Error force fetching document type:', error);
+        } finally {
+          setLoadingDocumentType(false);
+        }
+      }
+    };
+
+    if (property) {
+      fetchDocumentType();
+    }
+  }, [property, i18n.language]);
 
   if (loading) {
     return (
@@ -372,15 +450,14 @@ const PropertyDetails: React.FC = () => {
 
 
 
-  const mapContainerStyle = {
-    width: '100%',
-    height: '400px'
-  };
-
-  const center = {
-    lat: property.coordinates.lat,
-    lng: property.coordinates.lng
-  };
+  // Map configuration
+  const mapCenter: [number, number] = [
+    property.coordinates.lat,
+    property.coordinates.lng
+  ];
+  
+  // Create custom marker icon
+  const propertyMarkerIcon = createPropertyIcon(property.propertyType, property.listingType);
 
   const getFeatureIcon = (feature: string) => {
     const iconMap: Record<string, any> = {
@@ -425,7 +502,7 @@ const PropertyDetails: React.FC = () => {
                 {/* Badges */}
                 <Badge 
                   className={`absolute top-4 left-4 ${
-                    property.listingType === 'rent' ? 'bg-green-500' : 'bg-blue-500'
+                    property.listingType === 'rent' ? 'bg-green-500' : 'bg-[#067977]'
                   }`}
                 >
                   {property.listingType === 'rent' ? t('property.listingTypes.forRent') : t('property.listingTypes.forSale')}
@@ -469,7 +546,7 @@ const PropertyDetails: React.FC = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold text-blue-600">
+                    <p className="text-3xl font-bold text-[#067977]">
                       {formatPrice(property.price, property.listingType)}
                     </p>
                   </div>
@@ -608,15 +685,31 @@ const PropertyDetails: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
-                  <GoogleMap
-                    mapContainerStyle={mapContainerStyle}
-                    center={center}
-                    zoom={15}
-                  >
-                    <Marker position={center} />
-                  </GoogleMap>
-                </LoadScript>
+                {loadError ? (
+                  <div className="text-red-500 text-center p-4">
+                    Failed to load map
+                  </div>
+                ) : !isMapLoaded ? (
+                  <div className="text-center p-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    Loading map...
+                  </div>
+                ) : (
+                  <div className="h-96 rounded-lg overflow-hidden border">
+                    <MapContainer
+                      center={mapCenter}
+                      zoom={15}
+                      style={{ height: '100%', width: '100%' }}
+                      scrollWheelZoom={false}
+                    >
+                      <TileLayer
+                        url={OSM_TILE_LAYER.url}
+                        attribution={OSM_TILE_LAYER.attribution}
+                      />
+                      <Marker position={mapCenter} icon={propertyMarkerIcon} />
+                    </MapContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -701,6 +794,24 @@ const PropertyDetails: React.FC = () => {
                   <span className="text-gray-600">{t('filters.propertyType')}</span>
                   <span className="capitalize">{t(`property.types.${property.propertyType}`)}</span>
                 </div>
+                {(property.document_type_id || documentType || loadingDocumentType) && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 flex items-center gap-2">
+                      <File className="h-4 w-4" />
+                      {t('property.documentType')}
+                    </span>
+                    <span className="text-right">
+                      {loadingDocumentType ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></div>
+                          <span className="text-sm text-gray-500">{t('common.loading')}</span>
+                        </div>
+                      ) : (
+                        documentType?.name || t('property.documentTypes.unspecified')
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('property.details.bedrooms')}</span>
                   <span>{property.bedrooms}</span>
@@ -716,7 +827,7 @@ const PropertyDetails: React.FC = () => {
                 <Separator />
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 font-semibold">{t('forms.price')}</span>
-                  <span className="text-xl font-bold text-blue-600">
+                  <span className="text-xl font-bold text-[#067977]">
                     {formatPrice(property.price, property.listingType)}
                   </span>
                 </div>

@@ -12,18 +12,33 @@ i18n
   .use(initReactI18next)
   // Initialize i18next
   .init({
-    // Default language
-    lng: 'ar',
+    // Default language - check localStorage first
+    lng: localStorage.getItem('language') || 'ar',
     fallbackLng: 'en',
     debug: false,
     // Common namespace used around the app
     ns: ['translation'],
     defaultNS: 'translation',
-    supportedLngs: ['en', 'ar'],
+    supportedLngs: ['en', 'ar', 'ku'],
+    
+    // Language detection options
+    detection: {
+      // Order of language detection - prioritize localStorage
+      order: ['localStorage', 'navigator', 'htmlTag'],
+      
+      // Keys or params to lookup language from
+      lookupLocalStorage: 'language',
+      
+      // Cache user language - only use localStorage
+      caches: ['localStorage'],
+      
+      // Optional expire and domain for set cookie
+      cookieMinutes: 10080, // 7 days
+    },
+    
     interpolation: {
       escapeValue: false, // React already safes from XSS
     },
-    // Remove the dir: 'rtl' line - we'll handle this in the changeLanguage function
   });
 
 export default i18n;

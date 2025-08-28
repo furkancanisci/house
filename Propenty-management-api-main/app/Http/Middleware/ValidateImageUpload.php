@@ -15,24 +15,37 @@ class ValidateImageUpload
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if request has image uploads
-        if ($request->hasFile('main_image') || $request->hasFile('images') || $request->has('base64_images')) {
+        // Check if request has image uploads (support both camelCase and snake_case)
+        $hasMainImage = $request->hasFile('main_image') || $request->hasFile('mainImage');
+        $hasImages = $request->hasFile('images');
+        $hasBase64Images = $request->has('base64_images');
+        
+        if ($hasMainImage || $hasImages || $hasBase64Images) {
             $maxImages = config('images.upload.max_images_per_property', 20);
             $totalImages = 0;
 
-            // Count main image
-            if ($request->hasFile('main_image')) {
+            // Count main image (support both formats)
+            if ($hasMainImage) {
                 $totalImages += 1;
             }
 
-            // Count regular images
-            if ($request->hasFile('images')) {
-                $totalImages += count($request->file('images'));
+            // Count regular images - ensure safe array handling
+            if ($hasImages) {
+                $images = $request->file('images');
+                if (is_array($images)) {
+                    $totalImages += count($images);
+                } else {
+                    // Single file uploaded
+                    $totalImages += 1;
+                }
             }
 
-            // Count base64 images
-            if ($request->has('base64_images') && is_array($request->base64_images)) {
-                $totalImages += count($request->base64_images);
+            // Count base64 images - ensure safe array handling
+            if ($hasBase64Images) {
+                $base64Images = $request->base64_images;
+                if (is_array($base64Images) && !empty($base64Images)) {
+                    $totalImages += count($base64Images);
+                }
             }
 
             // Check if total exceeds limit

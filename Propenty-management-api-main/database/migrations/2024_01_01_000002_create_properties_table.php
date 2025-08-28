@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // Will add foreign key later
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('document_type_id')->nullable();
             $table->string('title');
             $table->text('description');
             $table->string('property_type'); // apartment, house, condo, townhouse, studio, loft, villa, commercial, land
@@ -57,6 +58,18 @@ return new class extends Migration
             // Timestamps
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
+            
+            // Foreign key constraints
+            $table->foreign('document_type_id')->references('id')->on('property_document_types')->onDelete('set null');
+            
+            // Indexes
+            $table->index(['user_id', 'status']);
+            $table->index(['property_type', 'listing_type']);
+            $table->index(['city', 'state']);
+            $table->index(['price', 'listing_type']);
+            $table->index(['is_featured', 'is_available']);
+            $table->index(['latitude', 'longitude']);
+            $table->fullText(['title', 'description']);
         });
     }
 

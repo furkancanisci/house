@@ -17,13 +17,20 @@
       "title": "ابحث عن منزلك المثالي",
       "subtitle": "اكتشف عقارات رائعة للإيجار والبيع. منزل أحلامك على بعد بحث واحد فقط.",
       "searchPlaceholder": "أدخل الموقع، نوع العقار، إلخ.",
-      "searchButton": "بحث"
+      "searchButton": "بحث",
+      "searchByMap": "البحث بالخريطة",
+      "exploreProperties": "استكشف العقارات",
+      "findYourHome": "اعثر على منزلك",
+      "findProperties": "اعثر على عقارات"
     },
     "stats": {
       "propertiesListed": "العقارات المدرجة",
       "happyCustomers": "عملاء سعداء", 
       "successRate": "معدل النجاح",
-      "yearsExperience": "سنوات الخبرة"
+      "yearsExperience": "سنوات الخبرة",
+      "totalProperties": "إجمالي العقارات",
+      "activeSales": "مبيعات نشطة",
+      "rentalsAvailable": "عقارات للإيجار"
     },
     "quickSearches": {
       "title": "بحث سريع",
@@ -32,7 +39,10 @@
       "luxuryCondos": "شقق فاخرة",
       "petFriendly": "مناسب للحيوانات الأليفة",
       "swimmingPool": "مسبح",
-      "garageParking": "موقف سيارات مغطى"
+      "garageParking": "موقف سيارات مغطى",
+      "modernApartments": "شقق عصرية",
+      "villaForRent": "فيلا للإيجار",
+      "affordableHomes": "منازل بأسعار معقولة"
     },
     "featuredProperties": "عقارات مميزة",
     "viewAll": "عرض الكل",
@@ -44,7 +54,23 @@
       "petFriendly": "مناسب للحيوانات الأليفة",
       "swimmingPool": "مسبح",
       "garageParking": "موقف سيارات مغطى"
-    }
+    },
+    "sections": {
+      "forRent": "عقارات للإيجار",
+      "forSale": "عقارات للبيع",
+      "trending": "العقارات الرائجة",
+      "recommended": "العقارات الموصى بها",
+      "newListings": "عقارات جديدة",
+      "popularChoices": "الخيارات الشعبية"
+    },
+    "browseAll": "تصفح جميع العقارات",
+    "loading": "جاري التحميل...",
+    "errorLoading": "خطأ في تحميل العقارات",
+    "retryLoading": "إعادة المحاولة",
+    "seeMore": "شاهد المزيد",
+    "seeLess": "شاهد أقل",
+    "popularAreas": "المناطق الشعبية",
+    "recentlyViewed": "عقارات معروضة مؤخراً"
   },
   "search": {
     "title": "نتائج البحث",
@@ -60,18 +86,37 @@
     "adjustCriteria": "جرب تعديل معايير البحث أو تصفح جميع العقارات.",
     "clearFilters": "مسح الفلاتر",
     "loadMore": "تحميل المزيد من العقارات",
+    "backToSearch": "العودة للبحث",
+    "mapSearch": "البحث بالخريطة",
+    "errorLoadingProperties": "حدث خطأ في تحميل العقارات",
     "resultsCount": "{{count}} عقارات موجودة",
     "debugInfo": "عرض {{count}} عقارات",
     "showingCount": "عرض {{count}} عقارات",
-    "sortBy": "فرز حسب",
-      "newestFirst": "الأحدث أولاً",
-      "oldestFirst": "الأقدم أولاً",
-      "priceLowToHigh": "السعر: من الأقل إلى الأعلى",
-      "priceHighToLow": "السعر: من الأعلى إلى الأقل",
-      "largestFirst": "الأكبر أولاً",
-      "smallestFirst": "الأصغر أولاً"
+    "showing": "عرض",
+    "of": "من",
+    "properties": "عقارات",
+    "searchPlaceholder": "ابحث عن عقار، موقع، نوع العقار...",
+    "sort": {
+      "relevance": "الصلة",
+      "priceAsc": "السعر: من الأقل إلى الأعلى",
+      "priceDesc": "السعر: من الأعلى إلى الأقل",
+      "newest": "الأحدث أولاً",
+      "oldest": "الأقدم أولاً"
     },
+    "view": {
+      "grid": "شبكة",
+      "list": "قائمة"
+    },
+    "messages": {
+      "noPropertiesInLocation": "لا توجد عقارات حالياً في {{location}}",
+      "noPropertiesInCityState": "لا توجد عقارات حالياً في {{city}}، {{state}}",
+      "tryDifferentLocation": "جرب البحث في محافظة أخرى أو قم بتعديل معايير البحث",
+      "clearLocationFilter": "مسح فلتر الموقع",
+      "clearAllFilters": "مسح جميع الفلاتر"
+    }
+  },
   "property": {
+    "totalPrice": "السعر الكلي",
     "month": "شهر",
     "year": "سنة",
     "forRent": "للإيجار",
@@ -176,6 +221,16 @@
     "printDetails": "طباعة التفاصيل",
     "amenities": "المميزات والمرافق",
     "propertyDetails": "تفاصيل العقار",
+    "documentType": "نوع التابو",
+    "documentTypes": {
+      "realEstate": "الطابو العقاري (الطابع العادي)",
+      "updated": "الطابو العيني (الطابع المحدث)",
+      "agricultural": "الطابو الأخضر (الطابع الزراعي)",
+      "construction": "أراضي البناء (الطابع العقاري)",
+      "temporary": "الطابو المؤقت",
+      "family": "الطابو العائلي",
+      "unspecified": "غير محدد"
+    },
     "perMonth": "شهر",
     "more": "المزيد",
     "listed": "مدرج",
@@ -227,6 +282,7 @@
     "contactInfoDescription": "ستظهر هذه المعلومات للمستأجرين/المشترين المحتملين ليتمكنوا من التواصل معك.",
     "phoneNumberPlaceholder": "(555) 123-4567",
     "emailAddressPlaceholder": "your@email.com",
+    "selectedUtilities": "المرافق المختارة",
     "note": "ملاحظة",
     "demoImagesNote": "في هذا العرض التوضيحي، سيتم تعيين صور عينة تلقائياً لعقارك. في التطبيق الحقيقي، ستقوم برفع صورك الخاصة هنا.",
     "step": "خطوة",
@@ -251,15 +307,15 @@
     "accountCreatedSuccess": "تم إنشاء الحساب بنجاح! تم إرسال رابط التحقق إلى بريدك الإلكتروني.",
     "accountCreationFailed": "فشل في إنشاء الحساب. يرجى المحاولة مرة أخرى.",
     "placeholders": {
-      "enterEmail": "أدخل بريدك الإلكتروني",
-      "enterPassword": "أدخل كلمة المرور",
-      "enterFirstName": "أدخل الاسم الأول",
-      "enterLastName": "أدخل اسم العائلة",
+      "enterEmail": "ادخل بريدك الالكتروني",
+      "enterPassword": "ادخل كلمة المرور",
+      "enterFirstName": "ادخل الاسم الاول",
+      "enterLastName": "ادخل اسم العائلة",
       "firstName": "الاسم الأول",
       "lastName": "اسم العائلة",
-      "createPassword": "إنشاء كلمة مرور",
-      "confirmPassword": "تأكيد كلمة المرور",
-      "enterPhone": "أدخل رقم هاتفك"
+      "createPassword": "انشئ كلمة مرور",
+      "confirmPassword": "اكد كلمة المرور",
+      "enterPhone": "ادخل رقم هاتفك"
     },
     "validation": {
       "emailRequired": "يرجى إدخال عنوان بريد إلكتروني صالح",
@@ -315,6 +371,10 @@
     "delete": "حذف",
     "view": "عرض"
   },
+  "pagination": {
+    "next": "التالي",
+    "previous": "السابق"
+  },
   "buttons": {
     "createListing": "إنشاء إعلان",
     "creatingListing": "جاري إنشاء الإعلان...",
@@ -327,10 +387,7 @@
     "clear": "مسح",
     "apply": "تطبيق"
   },
-  "errors": {
-    "invalidDataFormat": "تنسيق البيانات غير صحيح",
-    "failedToLoadProperties": "فشل في تحميل العقارات"
-  },
+  
   "privacyPolicy": {
     "title": "سياسة الخصوصية",
     "lastUpdated": "آخر تحديث: أغسطس 2023",
@@ -404,15 +461,68 @@
     }
   },
   "common": {
-    "currency": "ليرة تركية",
+    "currency": "SYR",
     "loading": "جاري التحميل...",
-    "backToSearch": "العودة إلى البحث",
+    "backToSearch": "عودة إلى البحث",
+    "backToHome": "العودة إلى الرئيسية",
     "linkCopied": "تم نسخ الرابط إلى الحافظة",
-    "state": "الولاية",
+    "state": "المحافظة",
+    "forSale": "بيع",
+    "forRent": "إيجار",
+    "propertyType": "نوع العقار",
+    "bedrooms": "غرف النوم",
+    "bathrooms": "حمامات",
+    "squareFeet": "متر مربع",
+    "price": "السعر",
     "city": "المدينة",
-    "selectState": "اختر الولاية",
-    "selectCity": "اختر المدينة",
-    "selectStateFirst": "الرجاء اختيار الولاية أولاً"
+    "district": "الحي",
+    "neighborhood": "الحي",
+    "address": "العنوان",
+    "selectState": "اختر المحافظة",
+    "selectStateFirst": "اختر المحافظة أولاً",
+    "properties": "عقار",
+    "property": "عقار",
+    "featured": "مميزة",
+    "trending": "رائجة",
+    "viewAll": "عرض الكل",
+    "searchPlaceholder": "ابحث عن عقار، موقع، نوع العقار...",
+    "searchButton": "بحث",
+    "or": "أو",
+    "and": "و",
+    "in": "في",
+    "near": "بالقرب من",
+    "from": "من",
+    "to": "إلى",
+    "min": "أدنى",
+    "max": "أعلى",
+    "any": "أي",
+    "all": "الكل",
+    "none": "لا شيء",
+    "yes": "نعم",
+    "no": "لا",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "update": "تحديث",
+    "create": "إنشاء",
+    "submit": "إرسال",
+    "reset": "إعادة تعيين",
+    "clear": "مسح",
+    "apply": "تطبيق",
+    "close": "إغلاق",
+    "open": "فتح",
+    "show": "إظهار",
+    "hide": "إخفاء",
+    "more": "المزيد",
+    "less": "أقل",
+    "expand": "توسيع",
+    "collapse": "طي",
+    "success": "نجح",
+    "error": "خطأ",
+    "warning": "تحذير",
+    "info": "معلومات",
+    "selectLanguage": "اختر اللغة"
   },
   "location": {
     "state": "المحافظة",
@@ -442,11 +552,14 @@
     "contactInformation": "معلومات الاتصال"
   },
   "filters": {
+    "title": "الفلاتر",
     "searchFilters": "فلاتر البحث",
     "location": "الموقع",
     "enterLocation": "أدخل المدينة أو العنوان أو الرمز البريدي",
     "listingType": "نوع الإعلان",
+    "selectListingType": "اختر نوع الإعلان",
     "propertyType": "نوع العقار",
+    "selectPropertyType": "اختر نوع العقار",
     "priceRange": "نطاق السعر",
     "minPrice": "أقل سعر",
     "maxPrice": "أعلى سعر",
@@ -455,8 +568,15 @@
     "squareFootage": "المساحة",
     "features": "المميزات",
     "any": "أي",
+    "reset": "تم إعادة تعيين الفلاتر",
+    "resetAll": "إعادة تعيين الكل",
+    "clearAll": "مسح الكل",
+    "activeFilters": "الفلاتر النشطة",
     "advancedFilters": "فلاتر متقدمة",
-    "locationPlaceholder": "أدخل المدينة أو العنوان أو الرمز البريدي"
+    "applyFilters": "تطبيق الفلاتر",
+    "locationPlaceholder": "أدخل المدينة أو العنوان أو الرمز البريدي",
+    "state": "المحافظة",
+    "city": "المدينة"
   },
   "footer": {
     "description": "شريكك الموثوق في العثور على المنزل المثالي. نحن نربط المشترين والبائعين والمستأجرين بعقارات عالية الجودة وخدمة استثنائية.",
@@ -465,9 +585,32 @@
     "listProperty": "إضافة عقار",
     "contact": "اتصل بنا",
     "contactInfo": "معلومات الاتصال",
+    "aboutUs": "من نحن",
+    "contactUs": "اتصل بنا",
+    "home": "الرئيسية",
+    "address": "شارع الملك عبد العزيز، عفرين، حلب",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني",
+    "followUs": "تابعنا",
+    "allRightsReserved": "جميع الحقوق محفوظة",
     "copyright": " 2023 العقارات. جميع الحقوق محفوظة."
   },
   "map": {
+    "title": "الخريطة",
+    "propertyLocation": "موقع العقار",
+    "searchByMap": "البحث بالخريطة",
+    "listView": "عرض القائمة",
+    "mapView": "عرض الخريطة",
+    "splitView": "العرض المقسم",
+    "drawCircle": "رسم دائرة",
+    "drawPolygon": "رسم مضلع",
+    "clearDrawing": "مسح الرسم",
+    "resetFilters": "إعادة تعيين المرشحات",
+    "resetMapArea": "إعادة تعيين منطقة الخريطة",
+    "resetArea": "إعادة تعيين المنطقة",
+    "areaReset": "تم إعادة تعيين منطقة الخريطة",
+    "searchThisArea": "البحث في هذه المنطقة",
+    "searchUpdated": "تم تحديث البحث بنجاح",
     "selectPropertyLocation": "حدد موقع العقار",
     "searchLocation": "ابحث عن موقع...",
     "useCurrentLocation": "استخدم الموقع الحالي",
@@ -484,7 +627,30 @@
     "locationAccessDenied": "تم رفض الوصول إلى الموقع",
     "locationNotAvailable": "الموقع غير متاح",
     "mapLoadError": "خطأ في تحميل الخريطة",
-    "invalidCoordinates": "إحداثيات غير صحيحة"
+    "invalidCoordinates": "إحداثيات غير صحيحة",
+    "explorePropertiesOnMap": "استكشف العقارات على الخريطة",
+    "listViewMode": "قائمة",
+    "splitViewMode": "مقسم",
+    "mapViewMode": "خريطة",
+    "searchingFor": "البحث عن:",
+    "resetAllFilters": "إعادة تعيين",
+    "filtersTitle": "الفلاتر",
+    "loadingProperties": "جاري تحميل العقارات",
+    "pleaseWaitLoading": "يرجى الانتظار بينما نجلب أحدث العقارات المتاحة...",
+    "errorLoadingType": "خطأ في تحميل {type}",
+    "retryLoading": "إعادة المحاولة",
+    "noProperties": "لم يتم العثور على عقارات",
+    "closeFullScreen": "إغلاق العرض الكامل",
+    "getCurrentLocation": "تحديد موقعي",
+    "locatingYou": "جاري التحديد...",
+    "viewDetails": "عرض التفاصيل",
+    "monthly": "شهرياً",
+    "rooms": "غرف",
+    "bathroom": "حمام",
+    "page": "صفحة",
+    "of": "من",
+    "yourCurrentLocation": "موقعك الحالي",
+    "locationAccurate": "تم تحديد موقعك بدقة"
   },
   "emailVerification": {
     "verifying": "جاري التحقق...",
@@ -494,7 +660,6 @@
     "welcomeMessage": "مرحباً بك في منصة عفرين للعقارات",
     "accountActivated": "تم تفعيل حسابك بنجاح!",
     "verifyingEmail": "جاري التحقق من البريد الإلكتروني",
-    "checkYourEmail": "تحقق من بريدك الإلكتروني",
     "verificationSuccessMessage": "تم التحقق من بريدك الإلكتروني بنجاح! يمكنك الآن الاستفادة من جميع ميزات المنصة.",
     "verificationPendingMessage": "يرجى التحقق من بريدك الإلكتروني والنقر على رابط التحقق المرسل إليك.",
     "verificationFailedMessage": "حدث خطأ أثناء التحقق من بريدك الإلكتروني. يرجى المحاولة مرة أخرى أو طلب رابط تحقق جديد.",
@@ -520,6 +685,106 @@
     "sentCount": "الرسائل المرسلة: {{count}}",
     "failedCount": "الرسائل الفاشلة: {{count}}",
     "lastAttempt": "آخر محاولة: {{date}}",
-    "pleaseWait": "يرجى الانتظار بينما نتحقق من بريدك الإلكتروني..."
+    "pleaseWait": "يرجى الانتظار بينما نتحقق من بريدك الإلكتروني...",
+    "checkYourEmail": "تحقق من بريدك الإلكتروني",
+    "checkEmailInstructions": "يرجى التحقق من بريدك الإلكتروني واتباع التعليمات لتفعيل حسابك"
+  },
+  "errors": {
+    "general": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "network": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+    "notFound": "الصفحة غير موجودة",
+    "unauthorized": "غير مخول لك الوصول إلى هذه الصفحة",
+    "validation": "يرجى التحقق من المدخلات والمحاولة مرة أخرى",
+    "server": "خطأ في الخادم. يرجى المحاولة لاحقاً",
+    "loadingProperties": "حدث خطأ في تحميل العقارات",
+    "invalidDataFormat": "تنسيق البيانات غير صحيح",
+    "failedToLoadProperties": "فشل في تحميل العقارات"
+  },
+  "housesForRent": {
+    "title": "بيوت للإيجار",
+    "propertiesForRent": "عقارات للإيجار",
+    "propertyForRent": "عقار للإيجار",
+    "loadingPropertiesForRent": "جاري تحميل العقارات للإيجار...",
+    "pleaseWait": "يرجى الانتظار قليلاً",
+    "noRentalPropertiesFound": "لم يتم العثور على عقارات للإيجار",
+    "noPropertiesMatchingCriteria": "لم نتمكن من العثور على عقارات تطابق معاييرك. جرب تعديل الفلاتر أو تحقق لاحقاً من الإعلانات الجديدة.",
+    "clearAllFilters": "مسح جميع الفلاتر",
+    "errorLoadingProperties": "خطأ في تحميل العقارات"
+  },
+  "addProperty": {
+    "stepTitles": {
+      "basicInfo": "المعلومات الأساسية",
+      "propertySpecs": "تفاصيل العقار",
+      "images": "صور العقار",
+      "features": "المميزات والخدمات",
+      "contact": "معلومات التواصل"
+    },
+    "stepDescriptions": {
+      "basicInfo": "أدخل المعلومات الأساسية للعقار",
+      "propertySpecs": "حدد المواصفات والتفاصيل الفنية",
+      "images": "أضف صور عالية الجودة للعقار",
+      "features": "اختر المميزات والخدمات المتوفرة",
+      "contact": "أدخل بيانات التواصل للمهتمين"
+    },
+    "sectionTitles": {
+      "propertyTitle": "عنوان العقار",
+      "addressLocation": "العنوان والموقع",
+      "propertyTypeAd": "نوع العقار والإعلان",
+      "priceAndCost": "السعر والتكلفة",
+      "propertySpecs": "مواصفات العقار",
+      "additionalDetails": "تفاصيل إضافية",
+      "propertyImages": "صور العقار"
+    },
+    "placeholders": {
+      "selectAdType": "اختر نوع الإعلان",
+      "selectPropertyType": "اختر نوع العقار",
+      "bedroomCount": "عدد الغرف",
+      "bathroomCount": "عدد الحمامات",
+      "areaSquareMeters": "المساحة (م²)",
+      "yearBuilt": "سنة البناء",
+      "selectParkingType": "اختر نوع المواقف"
+    },
+    "parkingTypes": {
+      "noParking": "لا يوجد مواقف",
+      "streetParking": "مواقف في الشارع",
+      "closedGarage": "جراج مغلق",
+      "privateDriveway": "ممر خاص",
+      "carShelter": "مظلة سيارات"
+    },
+    "imageUpload": {
+      "uploadHighQuality": "ارفع حتى 10 صور عالية الجودة للعقار. الصورة الأولى ستكون الصورة الرئيسية.",
+      "clickToUpload": "اضغط لرفع الصور",
+      "selectedImages": "الصور المختارة",
+      "mainImage": "الصورة الرئيسية",
+      "addMore": "إضافة المزيد",
+      "tips": {
+        "title": "نصائح للحصول على أفضل النتائج",
+        "naturalLight": "استخدم إضاءة طبيعية جيدة",
+        "differentAngles": "التقط صور من زوايا مختلفة",
+        "showFeatures": "أظهر المميزات الرئيسية للعقار",
+        "ensureQuality": "تأكد من وضوح الصور وجودتها العالية"
+      }
+    },
+    "progress": {
+      "basic": "أساسي",
+      "details": "تفاصيل",
+      "images": "صور",
+      "features": "مميزات",
+      "contact": "تواصل",
+      "addYourNewProperty": "أضف عقارك الجديد بسهولة"
+    },
+    "selectedUtilities": "المرافق المختارة",
+    "utilitiesCount": "{{count}} مرفق"
+  },
+  "housesForSale": {
+    "title": "بيوت للبيع",
+    "propertiesForSale": "عقارات للبيع",
+    "propertyForSale": "عقار للبيع",
+    "loadingPropertiesForSale": "جاري تحميل العقارات للبيع...",
+    "pleaseWait": "يرجى الانتظار قليلاً",
+    "noPropertiesForSaleFound": "لم يتم العثور على عقارات للبيع",
+    "noPropertiesMatchingCriteria": "لم نتمكن من العثور على عقارات تطابق معاييرك. جرب تعديل الفلاتر أو تحقق لاحقاً من الإعلانات الجديدة.",
+    "clearAllFilters": "مسح جميع الفلاتر",
+    "errorLoadingProperties": "خطأ في تحميل العقارات"
   }
 }

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ExtendedProperty, Property, SearchFilters as SearchFiltersType } from '../types';
 import SearchFilters from '../components/SearchFilters';
 import { Button } from '../components/ui/button';
-import { LayoutGrid, List, Loader2, X } from 'lucide-react';
+import { LayoutGrid, List, Loader2, X, MapPin } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import PropertyCard from '../components/PropertyCard';
 
@@ -72,15 +72,23 @@ const Search: React.FC = () => {
   const navigate = useNavigate();
   const { state, loadProperties, filterProperties } = useApp();
   
-  // Helper to normalize values that may be localized objects { name_ar, name_en }
+  // Helper to normalize values that may be localized objects { name_ar, name_en, name_ku }
   const normalizeName = (val: any): string => {
     if (!val) return '';
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
-      const locale = i18n.language === 'ar' ? 'ar' : 'en';
+      const currentLang = i18n.language;
       const ar = (val as any).name_ar ?? (val as any).ar ?? (val as any).name;
-      const en = (val as any).name_en ?? (val as any).en ?? (val as any).name;
-      return locale === 'ar' ? (ar || en || '') : (en || ar || '');
+      const en = (val as any).name_en ?? (val as any).en;
+      const ku = (val as any).name_ku ?? (val as any).ku;
+      
+      // Priority order: current language > English > Arabic > Kurdish > any available
+      if (currentLang === 'ar' && ar) return ar;
+      if (currentLang === 'en' && en) return en;
+      if (currentLang === 'ku' && ku) return ku;
+      
+      // Fallback priority: English > Arabic > Kurdish > any available
+      return en || ar || ku || (val as any).name || '';
     }
     return String(val);
   };
@@ -89,15 +97,16 @@ const Search: React.FC = () => {
   const [currentParams, setCurrentParams] = useState<URLSearchParams>(new URLSearchParams());
   const [newParams, setNewParams] = useState<URLSearchParams>(new URLSearchParams());
 
-  // Convert Property to ExtendedProperty
-  const toExtendedProperty = useCallback((property: Property | ExtendedProperty): ExtendedProperty => {
-    // If it's already an ExtendedProperty, return it as is
-    if ('formattedPrice' in property) {
-      return property as ExtendedProperty;
-    }
-    
-    // Otherwise, convert Property to ExtendedProperty
-    const details = property.details || {};
+  // Convert Property to ExtendedProperty - stable function to prevent re-renders
+  const toExtendedProperty = useMemo(() => {
+    return (property: Property | ExtendedProperty): ExtendedProperty => {
+      // If it's already an ExtendedProperty, return it as is
+      if ('formattedPrice' in property) {
+        return property as ExtendedProperty;
+      }
+      
+      // Otherwise, convert Property to ExtendedProperty
+      const details = property.details || {};
     const price = typeof property.price === 'string' ? parseFloat(property.price) || 0 : Number(property.price) || 0;
     const propertyType = property.property_type || 'house';
     const listingType = property.listing_type === 'rent' || property.listing_type === 'sale' ? property.listing_type : 'sale';
@@ -172,11 +181,9 @@ const Search: React.FC = () => {
                 '/placeholder-property.jpg'
     };
 
-    return extendedProperty;
+      return extendedProperty;
+    };
   }, []);
-  
-  // Use context's filtered properties directly
-  const filteredProperties = contextFilteredProperties ? contextFilteredProperties.map(prop => toExtendedProperty(prop)) : [];
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const isInitialMount = useRef(true);
@@ -281,7 +288,7 @@ const Search: React.FC = () => {
 
 
 
-  // Get filters from URL parameters
+  // Get filters from URL parameters with memoization
   const [filters, setFilters] = useState<SearchFiltersType>(() => {
     const urlFilters: URLFilterType = {};
     
@@ -293,6 +300,15 @@ const Search: React.FC = () => {
     // Convert URL params to SearchFilters
     return urlParamsToSearchFilters(urlFilters);
   });
+
+  // Create a stable hash for filters to prevent unnecessary re-renders
+  const filtersHash = useMemo(() => {
+    const keys = Object.keys(filters).sort();
+    return keys.map(key => `${key}:${filters[key as keyof SearchFiltersType]}`).join('|');
+  }, [filters]);
+  
+  // Memoize the active filters using stable hash
+  const memoizedFilters = useMemo(() => filters, [filtersHash]);
   
   // Store filters from URL params separately for reference
   const filtersFromParams = useMemo(() => {
@@ -303,12 +319,119 @@ const Search: React.FC = () => {
     return urlParamsToSearchFilters(urlFilters);
   }, [searchParams]);
 
+  // Stable filter properties function - optimized with memoization
+  const stableFilterProperties = useCallback((properties: ExtendedProperty[], filters: SearchFiltersType): ExtendedProperty[] => {
+    return properties.filter(property => {
+      // Search filter
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        const searchableText = [
+          property.title,
+          property.description,
+          property.location,
+          property.details
+        ].join(' ').toLowerCase();
+        
+        if (!searchableText.includes(searchTerm)) {
+          return false;
+        }
+      }
+
+      // Property type filter
+      if (filters.propertyType && filters.propertyType.length > 0) {
+        if (!filters.propertyType.includes(property.type)) {
+          return false;
+        }
+      }
+
+      // Listing type filter
+      if (filters.listingType && filters.listingType !== 'all') {
+        if (property.listingType !== filters.listingType) {
+          return false;
+        }
+      }
+
+      // Price range filter
+      if (filters.minPrice !== undefined && property.price < filters.minPrice) {
+        return false;
+      }
+      if (filters.maxPrice !== undefined && property.price > filters.maxPrice) {
+        return false;
+      }
+
+      // Bedrooms filter
+      if (filters.bedrooms !== undefined && property.bedrooms < filters.bedrooms) {
+        return false;
+      }
+
+      // Bathrooms filter
+      if (filters.bathrooms !== undefined && property.bathrooms < filters.bathrooms) {
+        return false;
+      }
+
+      // Square footage filter
+      if (filters.minSquareFootage !== undefined && property.squareFootage < filters.minSquareFootage) {
+        return false;
+      }
+      if (filters.maxSquareFootage !== undefined && property.squareFootage > filters.maxSquareFootage) {
+        return false;
+      }
+
+      return true;
+    });
+  }, []);
+
+  // Memoized filtered and sorted properties for performance
+  const filteredProperties = useMemo(() => {
+    if (!contextFilteredProperties) return [];
+    
+    const extendedProperties = contextFilteredProperties.map(prop => toExtendedProperty(prop));
+    
+    // Apply filtering
+    const filtered = stableFilterProperties(extendedProperties, memoizedFilters);
+    
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      const sortBy = memoizedFilters.sortBy || 'created_at';
+      const sortOrder = memoizedFilters.sortOrder || 'desc';
+      
+      let aValue: any, bValue: any;
+      
+      switch (sortBy) {
+        case 'price':
+          aValue = a.price;
+          bValue = b.price;
+          break;
+        case 'created_at':
+        case 'date':
+          aValue = new Date(a.created_at || 0).getTime();
+          bValue = new Date(b.created_at || 0).getTime();
+          break;
+        case 'squareFootage':
+          aValue = a.squareFootage;
+          bValue = b.squareFootage;
+          break;
+        default:
+          aValue = a.price;
+          bValue = b.price;
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    });
+    
+    return sorted;
+  }, [contextFilteredProperties, memoizedFilters, toExtendedProperty, stableFilterProperties]);
+
   // Current sort value derived from filters state
   const currentSortValue = useMemo(() => {
-    const by = filters?.sortBy === 'created_at' ? 'date' : (filters?.sortBy || 'date');
-    const order = filters?.sortOrder || 'desc';
+    const by = memoizedFilters?.sortBy === 'created_at' ? 'date' : (memoizedFilters?.sortBy || 'date');
+    const order = memoizedFilters?.sortOrder || 'desc';
     return `${by}-${order}`;
-  }, [filters]);
+  }, [memoizedFilters]);
 
   const previousFilters = useRef<SearchFiltersType | null>(null);
 
@@ -334,7 +457,7 @@ const Search: React.FC = () => {
     return false;
   }, []);
 
-  // Update URL with current filters
+  // Update URL with current filters - memoized to prevent unnecessary re-renders
   const updateURL = useCallback((filters: SearchFiltersType) => {
     const params = new URLSearchParams();
 
@@ -370,6 +493,8 @@ const Search: React.FC = () => {
 
   // Handle filter changes with proper typing
   const handleFilterChange = useCallback(async (newFilters: Partial<SearchFiltersType>) => {
+    console.log('Search: handleFilterChange called with:', newFilters);
+    
     // Convert string prices to numbers for the filter and ensure proper typing
     const processedFilters: SearchFiltersType = {
       ...newFilters,
@@ -391,80 +516,62 @@ const Search: React.FC = () => {
     Object.keys(processedFilters).forEach(key => {
       if (processedFilters[key as keyof SearchFiltersType] === undefined) {
         delete processedFilters[key as keyof SearchFiltersType];
-
       }
     });
 
-    // Update filters state and apply them
+    console.log('Search: Processed filters:', processedFilters);
+
+    // Update filters state
     setFilters(prevFilters => ({
       ...prevFilters,
       ...newFilters
     }));
-    
-    // Apply the new filters
-    filterProperties({
-      ...filtersFromParams,
-      ...newFilters
-    });
-
-    // Preserve existing params that are not part of the new filter set
-    currentParams.forEach((value, key) => {
-      if (!(key in newFilters)) {
-        newParams.set(key, value);
-      }
-    });
-    
-    // Include sort parameters if they exist
-    if (newFilters.sortBy && newFilters.sortOrder) {
-      const by = newFilters.sortBy === 'created_at' ? 'date' : newFilters.sortBy;
-      newParams.set('sort', `${by}-${newFilters.sortOrder}`);
-    } else if (filtersFromParams.sortBy && filtersFromParams.sortOrder) {
-      const by = filtersFromParams.sortBy === 'created_at' ? 'date' : filtersFromParams.sortBy;
-      newParams.set('sort', `${by}-${filtersFromParams.sortOrder}`);
-    }
 
     // Update URL with the new parameters
-    navigate(`?${newParams.toString()}`, { replace: true });
-  }, [navigate]);
+    const currentFilters = { ...filters, ...newFilters };
+    updateURL(currentFilters);
+    
+    // Call filterProperties from AppContext to fetch filtered data from API
+    try {
+      console.log('Search: Calling filterProperties with:', processedFilters);
+      await filterProperties(processedFilters);
+    } catch (error) {
+      console.error('Search: Error filtering properties:', error);
+    }
+  }, [filters, updateURL, filterProperties]);
 
   // Handle pagination
-  const handlePageChange = useCallback(async (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     // Create a new filters object with the updated page number
-
     const newFilters: SearchFiltersType = { 
-      ...filtersFromParams,
+      ...filters,
       page: page,
     };
     
-    await filterProperties(newFilters);
-  }, [filtersFromParams, filterProperties]);
+    // Update URL which will trigger re-filtering through useMemo
+    updateURL(newFilters);
+  }, [filters, updateURL]);
 
 
-  // Apply filters whenever allProperties or searchParams change
+  // Track initial mount for logging purposes
   useEffect(() => {
-    const applyInitialFilters = async () => {
-      if (isInitialMount.current) {
-        isInitialMount.current = false;
-        
-        // Apply filters from URL parameters on initial load
-        if (Object.keys(filtersFromParams).length > 0) {
-          console.log('Applying filters from URL:', filtersFromParams);
-          await filterProperties(filtersFromParams);
-        } else {
-          console.log('No filters in URL, loading all properties');
-          await filterProperties({});
-        }
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      
+      // Log initial filters for debugging
+      if (Object.keys(filtersFromParams).length > 0) {
+        console.log('Initial filters from URL:', filtersFromParams);
+      } else {
+        console.log('No initial filters in URL');
       }
-    };
-
-    applyInitialFilters();
-  }, [filtersFromParams, filterProperties]);
+    }
+  }, [filtersFromParams]);
 
   // Loading state component
   const LoadingState: React.FC = () => (
-    <div className="flex flex-col items-center justify-center min-h-[50vh]">
-      <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
-      <p className="text-gray-600">جاري تحميل العقارات...</p>
+    <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+      <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-[#067977] mb-3 sm:mb-4" />
+      <p className="text-gray-600 text-sm sm:text-base">يتم تحميل العقارات...</p>
     </div>
   );
 
@@ -486,17 +593,9 @@ const Search: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-6">
-          {loading 
-            ? 'جاري البحث عن العقارات...'
-            : filteredProperties.length > 0 
-              ? t('search.resultsCount', { count: filteredProperties.length })
-              : t('search.noResults')}
-        </h1>
-
-        <div className="flex flex-col md:flex-row gap-6">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6">
           {/* Filters Sidebar */}
           <div className="w-full md:w-1/4">
             <SearchFilters
@@ -507,45 +606,51 @@ const Search: React.FC = () => {
           
           {/* Results Section */}
           <div className="w-full md:w-3/4">
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-gray-600">
-                {t('search.showingCount', { count: filteredProperties.length })}
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <div className="flex justify-between items-center mb-3 sm:mb-4 lg:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+                <Button
+                  onClick={() => navigate('/search/map')}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center space-x-1 sm:space-x-2 bg-[#067977]/10 border-[#067977]/30 text-[#067977] hover:bg-[#067977]/20 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
+                >
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline font-medium">{t('search.mapSearch')}</span>
+                </Button>
+                <div className="flex items-center bg-gray-100 rounded-md p-0.5 sm:p-1">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className={`flex items-center space-x-2 transition-all duration-200 ${
+                    className={`flex items-center space-x-1 sm:space-x-2 transition-all duration-200 px-1.5 sm:px-2 py-1 text-xs sm:text-sm ${
                       viewMode === 'grid' 
                         ? 'bg-white shadow-sm text-gray-900' 
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                     aria-label="Grid view"
                   >
-                    <LayoutGrid className="h-4 w-4" />
-                    <span className="hidden sm:inline font-medium">شبكة</span>
+                    <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline font-medium">{t('search.view.grid')}</span>
                   </Button>
                   <Button
                     variant={viewMode === 'list' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('list')}
-                    className={`flex items-center space-x-2 transition-all duration-200 ${
+                    className={`flex items-center space-x-1 sm:space-x-2 transition-all duration-200 px-1.5 sm:px-2 py-1 text-xs sm:text-sm ${
                       viewMode === 'list' 
                         ? 'bg-white shadow-sm text-gray-900' 
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                     aria-label="List view"
                   >
-                    <List className="h-4 w-4" />
-                    <span className="hidden sm:inline font-medium">قائمة</span>
+                    <List className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline font-medium">{t('search.view.list')}</span>
                   </Button>
                 </div>
               </div>
-              <div className="w-64">
+              <div className="w-48 sm:w-56 lg:w-64">
                 <select
-                  className="w-full p-2 border rounded"
+                  className="w-full p-1.5 sm:p-2 border rounded text-xs sm:text-sm"
                   value={currentSortValue}
                   onChange={(e) => {
                     const sortValue = e.target.value;
@@ -575,43 +680,45 @@ const Search: React.FC = () => {
               </div>
             </div>
 
-            {filteredProperties.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="mb-6">
-                  <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {loading ? (
+              <LoadingState />
+            ) : filteredProperties.length === 0 ? (
+              <div className="text-center py-6 sm:py-8 lg:py-12">
+                <div className="mb-4 sm:mb-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto mb-3 sm:mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
                     {filtersFromParams.location && filtersFromParams.location.includes(',') ? (
                       (() => {
                         const locationParts = filtersFromParams.location.split(',').map(part => part.trim());
                         const [city, state] = locationParts;
-                        return `لا توجد عقارات حالياً في ${city}، ${state}`;
+                        return t('search.messages.noPropertiesInCityState', { city, state });
                       })()
                     ) : filtersFromParams.location ? (
-                      `لا توجد عقارات حالياً في ${filtersFromParams.location}`
+                      t('search.messages.noPropertiesInLocation', { location: filtersFromParams.location })
                     ) : (
                       t('search.noResults')
                     )}
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">
                     {filtersFromParams.location ? (
-                      'جرب البحث في محافظة أخرى أو قم بتعديل معايير البحث'
+                      t('search.messages.tryDifferentLocation')
                     ) : (
                       t('search.tryAdjustingFilters')
                     )}
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                     <Button 
                       onClick={() => {
                         handleFilterChange({ location: '' });
                       }}
                       variant="outline"
-                      className="px-6 py-2"
+                      className="px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 text-xs sm:text-sm"
                     >
-                      مسح فلتر الموقع
+                      {t('search.messages.clearLocationFilter')}
                     </Button>
                     <Button 
                       onClick={() => {
@@ -630,9 +737,9 @@ const Search: React.FC = () => {
                           sortOrder: undefined
                         });
                       }}
-                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700"
+                      className="px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 bg-[#067977] hover:bg-[#067977]/90 text-xs sm:text-sm"
                     >
-                      مسح جميع الفلاتر
+                      {t('search.messages.clearAllFilters')}
                     </Button>
                   </div>
                 </div>
@@ -651,16 +758,14 @@ const Search: React.FC = () => {
                   </div>
                 )}
               </div>
-            ) : loading ? (
-              <LoadingState />
             ) : (
               <div className={`
                 ${viewMode === 'grid' 
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
-                  : 'flex flex-col space-y-4'
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6' 
+                  : 'flex flex-col space-y-2 sm:space-y-3 lg:space-y-4'
                 }
               `}>
-                {filteredProperties.map((property) => {
+                {filteredProperties.map((property, index) => {
                   const price = typeof property.price === 'object'
                     ? Number((property.price as any)?.amount) || 0
                     : Number(property.price) || 0;
@@ -677,10 +782,13 @@ const Search: React.FC = () => {
                   const images = processPropertyImages(property);
                   const mainImage = images.length > 0 ? images[0] : '';
 
+                  // Ensure unique ID for React keys
+                  const uniqueId = property.id || `property-${index}-${Date.now()}`;
+
                   const mappedProperty: ExtendedProperty = {
                     ...property,
-                    id: property.id,
-                    slug: (property as any).slug || `property-${property.id}`,
+                    id: uniqueId,
+                    slug: (property as any).slug || `property-${uniqueId}`,
                     title: property.title || 'No Title',
                     description: property.description || '',
                     price,
@@ -727,21 +835,12 @@ const Search: React.FC = () => {
                   };
 
                   return (
-                    <div
-                      key={mappedProperty.id.toString()}
-                      className={`
-                        ${viewMode === 'grid' 
-                          ? 'transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:border-blue-300'
-                          : 'w-full'
-                        }
-                      `}
-                    >
-                      <PropertyCard
-                        property={mappedProperty}
-                        view={viewMode}
-                        useGallery={true}
-                      />
-                    </div>
+                    <PropertyCard
+                      key={`${uniqueId}-${index}`}
+                      property={mappedProperty}
+                      view={viewMode}
+                      useGallery={true}
+                    />
                   );
                 })}
               </div>

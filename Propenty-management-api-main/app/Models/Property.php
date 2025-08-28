@@ -53,6 +53,7 @@ class Property extends Model implements HasMedia
         'contact_phone',
         'contact_email',
         'published_at',
+        'document_type_id',
     ];
 
     /**
@@ -228,6 +229,14 @@ class Property extends Model implements HasMedia
     {
         return $this->belongsToMany(Amenity::class, 'property_amenities')
             ->withTimestamps();
+    }
+
+    /**
+     * Property document type.
+     */
+    public function documentType()
+    {
+        return $this->belongsTo(PropertyDocumentType::class, 'document_type_id');
     }
 
     /**

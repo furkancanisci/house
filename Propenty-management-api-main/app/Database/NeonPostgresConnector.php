@@ -4,6 +4,7 @@ namespace App\Database;
 
 use Illuminate\Database\Connectors\PostgresConnector;
 use PDO;
+use Exception;
 
 class NeonPostgresConnector extends PostgresConnector
 {
@@ -112,6 +113,40 @@ class NeonPostgresConnector extends PostgresConnector
             $options = [];
         }
 
-        return array_diff_key($this->options, $options) + $options;
+        // Add Neon-specific PDO options for better connection handling
+        $neonOptions = [
+            PDO::ATTR_TIMEOUT => $config['timeout'] ?? 60,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_PERSISTENT => false, // Disable persistent connections for Neon
+        ];
+
+        return array_merge($this->options, $neonOptions, $options);
+    }
+
+    /**
+     * Create a new PDO connection.
+     *
+     * @param  string  $dsn
+     * @param  array   $config
+     * @param  array   $options
+     * @return \PDO
+     */
+    public function createConnection($dsn, array $config, array $options)
+    {
+        [$username, $password] = [
+            $config['username'] ?? null, $config['password'] ?? null,
+        ];
+
+        try {
+            return $this->createPdoConnection(
+                $dsn, $username, $password, $options
+            );
+        } catch (Exception $e) {
+            return $this->tryAgainIfCausedByLostConnection(
+                $e, $dsn, $username, $password, $options
+            );
+        }
     }
 }

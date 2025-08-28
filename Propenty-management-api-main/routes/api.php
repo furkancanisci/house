@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\PropertyController;
+use App\Http\Controllers\Api\PropertyDocumentTypeController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Auth\AuthController;
@@ -51,12 +52,6 @@ Route::get('/overview', [DashboardController::class, 'overview']);
 Route::get('/properties', [DashboardController::class, 'properties']);
 Route::get('/favorites', [DashboardController::class, 'favorites']);
 Route::get('/analytics', [DashboardController::class, 'analytics']);
-
-// Keeping profile and notifications as protected since they're user-specific
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/profile', [DashboardController::class, 'updateProfile']);
-    Route::get('/notifications', [DashboardController::class, 'notifications']);
-});
 Route::prefix('v1')->group(function () {
     
     // Authentication Routes
@@ -114,7 +109,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/analytics', [DashboardController::class, 'analytics']);
         
         // Keeping profile and notifications as protected since they're user-specific
-   
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/profile', [DashboardController::class, 'updateProfile']);
+            Route::get('/notifications', [DashboardController::class, 'notifications']);
+        });
     });
 
     // Search and Filter Routes
@@ -140,7 +138,15 @@ Route::prefix('v1')->group(function () {
         Route::get('/', 'App\Http\Controllers\Api\CityController@index');
         Route::get('/states', 'App\Http\Controllers\Api\CityController@getStates');
         Route::get('/by-state', 'App\Http\Controllers\Api\CityController@getCitiesByState');
+        Route::get('/state/{state}', 'App\Http\Controllers\Api\CityController@getCitiesByStateParam');
         Route::get('/search', 'App\Http\Controllers\Api\CityController@search');
+    });
+
+    // Property Document Types Routes
+    Route::prefix('property-document-types')->group(function () {
+        Route::get('/', [PropertyDocumentTypeController::class, 'index']);
+        Route::get('/all-languages', [PropertyDocumentTypeController::class, 'getAllLanguages']);
+        Route::get('/{propertyDocumentType}', [PropertyDocumentTypeController::class, 'show']);
     });
 
     // Statistics and Analytics Routes

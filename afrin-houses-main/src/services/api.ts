@@ -1,8 +1,30 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig, AxiosInstance } from 'axios';
 import { authService } from './authService';
 
+// Retry configuration
+interface RetryConfig {
+  retries: number;
+  retryDelay: number;
+  retryCondition?: (error: AxiosError) => boolean;
+}
+
+const defaultRetryConfig: RetryConfig = {
+  retries: 3,
+  retryDelay: 1000,
+  retryCondition: (error: AxiosError) => {
+    return error.response?.status === 429 || 
+           error.response?.status === 503 || 
+           error.code === 'ECONNABORTED';
+  }
+};
+
+// Exponential backoff delay calculation
+const calculateDelay = (attempt: number, baseDelay: number): number => {
+  return baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+};
+
 const api: AxiosInstance = axios.create({
-  baseURL: 'https://house-6g6m.onrender.com/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -40,11 +62,12 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Response interceptor for handling errors, token refresh, and retries
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
+    const retryConfig = { ...defaultRetryConfig, ...originalRequest.retryConfig };
     
     // If the error is 401 and we haven't tried to refresh the token yet
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -95,6 +118,25 @@ api.interceptors.response.use(
       }
     }
     
+    // Handle retryable errors (429, 503, timeouts)
+    if (retryConfig.retryCondition && retryConfig.retryCondition(error)) {
+      const currentAttempt = originalRequest.__retryCount || 0;
+      
+      if (currentAttempt < retryConfig.retries) {
+        originalRequest.__retryCount = currentAttempt + 1;
+        
+        const delay = calculateDelay(currentAttempt, retryConfig.retryDelay);
+        
+        console.warn(`Request failed with ${error.response?.status || error.code}. Retrying in ${delay}ms (attempt ${currentAttempt + 1}/${retryConfig.retries})`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        return api(originalRequest);
+      } else {
+        console.error(`Request failed after ${retryConfig.retries} retries:`, error.response?.status || error.code);
+      }
+    }
+    
     // For other errors, just reject
     return Promise.reject(error);
   }
@@ -104,7 +146,7 @@ api.interceptors.response.use(
 const refreshToken = async (): Promise<string | null> => {
   try {
     const response = await axios.post(
-      'http://127.0.0.1:8000/api/v1/auth/refresh',
+      'https://house-6g6m.onrender.com/api/v1/auth/refresh',
       {},
       {
         withCredentials: true,
@@ -127,4 +169,5 @@ const refreshToken = async (): Promise<string | null> => {
   }
 };
 
+export { api };
 export default api;

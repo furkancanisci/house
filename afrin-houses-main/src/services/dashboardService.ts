@@ -130,7 +130,7 @@ export const dashboardService = {
   // Update user profile
   async updateProfile(profileData: UserProfile): Promise<User> {
     try {
-      const response = await api.post('/profile', profileData, { baseURL: 'https://house-6g6m.onrender.com/api' });
+      const response = await api.post('/profile', profileData, { baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1').replace('/v1', '') });
       return response.data.user;
     } catch (error) {
       console.error('Error updating profile:', error);

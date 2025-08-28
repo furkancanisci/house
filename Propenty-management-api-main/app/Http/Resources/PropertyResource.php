@@ -39,14 +39,12 @@ class PropertyResource extends JsonResource
             'listing_type' => $this->ensureUtf8($this->listing_type),
             
             // Property details - flat structure for frontend compatibility
-            'property_type' => $this->property_type,
             'propertyType' => $this->property_type, // Frontend expects camelCase
-            'listing_type' => $this->listing_type,
             'listingType' => $this->listing_type, // Frontend expects camelCase
-            'bedrooms' => (int) $this->bedrooms,
-            'bathrooms' => (float) $this->bathrooms,
-            'square_feet' => (int) $this->square_feet,
-            'squareFootage' => (int) $this->square_feet, // Frontend expects camelCase
+            'bedrooms' => (int) ($this->bedrooms ?? 0),
+            'bathrooms' => (float) ($this->bathrooms ?? 0),
+            'square_feet' => (int) ($this->square_feet ?? 0),
+            'squareFootage' => (int) ($this->square_feet ?? 0), // Frontend expects camelCase
             'year_built' => $this->year_built,
             'yearBuilt' => $this->year_built, // Frontend expects camelCase
             
@@ -54,8 +52,8 @@ class PropertyResource extends JsonResource
             'price' => $this->price, // Flat price for frontend
             'pricing' => [
                 'amount' => $this->price,
-                'formatted' => $this->ensureUtf8($this->formatted_price),
-                'type' => $this->ensureUtf8($this->price_type),
+                'formatted' => $this->buildFormattedPrice(),
+                'type' => $this->ensureUtf8($this->price_type ?? 'total'),
                 'currency' => 'USD',
             ],
             
@@ -67,7 +65,7 @@ class PropertyResource extends JsonResource
             'state' => $this->ensureUtf8($this->state),
             'postal_code' => $this->postal_code,
             'zip_code' => $this->postal_code, // Frontend expects zip_code
-            'country' => $this->ensureUtf8($this->country),
+            'country' => $this->ensureUtf8($this->country ?? 'Syria'),
             'neighborhood' => $this->ensureUtf8($this->neighborhood),
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
@@ -76,8 +74,8 @@ class PropertyResource extends JsonResource
                 'city' => $this->ensureUtf8($this->city),
                 'state' => $this->ensureUtf8($this->state),
                 'postal_code' => $this->ensureUtf8($this->postal_code),
-                'country' => $this->ensureUtf8($this->country),
-                'full_address' => $this->ensureUtf8($this->full_address),
+                'country' => $this->ensureUtf8($this->country ?? 'Syria'),
+                'full_address' => $this->buildFullAddress(),
                 'neighborhood' => $this->ensureUtf8($this->neighborhood),
                 'coordinates' => [
                     'latitude' => $this->latitude,
@@ -139,6 +137,17 @@ class PropertyResource extends JsonResource
             
             // User ID for ownership checks
             'user_id' => $this->user_id,
+            
+            // Document type information
+            'document_type_id' => $this->document_type_id,
+            'document_type' => $this->when($this->relationLoaded('documentType'), function () {
+                return $this->documentType ? [
+                    'id' => $this->documentType->id,
+                    'name' => $this->documentType->getLocalizedName(request()->get('lang', 'ar')),
+                    'description' => $this->documentType->getLocalizedDescription(request()->get('lang', 'ar')),
+                    'sort_order' => $this->documentType->sort_order,
+                ] : null;
+            }),
         ];
 
         // Ensure all string values in the response are properly UTF-8 encoded
@@ -157,6 +166,27 @@ class PropertyResource extends JsonResource
         if ($this->country && $this->country !== 'US') $address .= ', ' . $this->ensureUtf8($this->country);
 
         return $address;
+    }
+
+    /**
+     * Build formatted price without calling accessor
+     */
+    private function buildFormattedPrice()
+    {
+        $price = '$' . number_format($this->price);
+        
+        if ($this->listing_type === 'rent') {
+            switch ($this->price_type) {
+                case 'monthly':
+                    return $price . '/month';
+                case 'yearly':
+                    return $price . '/year';
+                default:
+                    return $price;
+            }
+        }
+
+        return $price;
     }
 
 }

@@ -30,15 +30,15 @@ class StorePropertyRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'price_type' => 'nullable|string|in:monthly,yearly,total',
             'address' => 'required|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
             'postalCode' => 'required|string|min:1|max:20',
             'country' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'neighborhood' => 'nullable|string|max:100',
-            'bedrooms' => 'required|integer|min:0',
-            'bathrooms' => 'required|integer|min:0',
+            'bedrooms' => 'required|integer|min:0|max:20',
+            'bathrooms' => 'required|integer|min:0|max:20',
             'squareFootage' => 'nullable|integer|min:0',
             'lotSize' => 'nullable|integer|min:0',
             'yearBuilt' => 'nullable|integer|min:1800|max:' . (date('Y') + 2),
@@ -57,11 +57,34 @@ class StorePropertyRequest extends FormRequest
             'contactName' => 'nullable|string|max:100',
             'contactPhone' => 'nullable|string|max:20',
             'contactEmail' => 'nullable|email|max:100',
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max, no dimension restrictions
+            'documentTypeId' => 'nullable|integer|exists:property_document_types,id',
+            'document_type_id' => 'nullable|integer|exists:property_document_types,id', // Also accept snake_case
+            'mainImage' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max, no dimension restrictions
+            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // Also accept snake_case
             'images' => 'nullable|array|max:20', // Maximum 20 images
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max per image, no dimension restrictions
             'base64_images' => 'nullable|array|max:20', // Maximum 20 base64 images
             'base64_images.*' => 'string|regex:/^data:image\/(jpeg|jpg|png|webp);base64,/', // Valid base64 image format
         ];
+    }
+    
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation()
+    {
+        // Merge data to support both camelCase and snake_case field names
+        $this->merge([
+            // Handle document type ID (support both formats)
+            'documentTypeId' => $this->documentTypeId ?? $this->document_type_id ?? null,
+            'document_type_id' => $this->documentTypeId ?? $this->document_type_id ?? null,
+            
+            // Handle main image (support both formats)
+            'mainImage' => $this->mainImage ?? $this->main_image ?? null,
+            'main_image' => $this->mainImage ?? $this->main_image ?? null,
+            
+            // Handle amenities - convert to JSON if it's an array
+            'amenities' => $this->amenities && is_array($this->amenities) ? json_encode($this->amenities) : $this->amenities,
+        ]);
     }
 }

@@ -152,8 +152,8 @@ const Dashboard: React.FC = () => {
       title: 'Total Properties',
       value: stats?.totalProperties || 0,
       icon: HomeIcon,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      color: 'text-[#067977]',
+      bgColor: 'bg-[#067977]/10',
     },
     {
       title: 'For Rent',
@@ -186,7 +186,7 @@ const Dashboard: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-16 h-16 border-4 border-[#067977] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -299,7 +299,7 @@ const Dashboard: React.FC = () => {
                                 <Badge variant={property.listingType === 'rent' ? 'default' : 'secondary'}>
                                   For {property.listingType === 'rent' ? 'Rent' : 'Sale'}
                                 </Badge>
-                                <span className="text-xl font-bold text-blue-600">
+                                <span className="text-xl font-bold text-[#067977]">
                                   ${property.price?.toLocaleString() || '0'}
                                   {property.listingType === 'rent' && '/month'}
                                 </span>

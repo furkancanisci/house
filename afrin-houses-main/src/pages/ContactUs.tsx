@@ -20,8 +20,8 @@ const ContactUs: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Office Address */}
               <div className="flex flex-col items-center text-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="bg-blue-100 p-3 rounded-full mb-3">
-                  <MapPin className="h-6 w-6 text-blue-600" />
+                <div className="bg-[#067977]/10 p-3 rounded-full mb-3">
+                  <MapPin className="h-6 w-6 text-[#067977]" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-1">Our Office</h3>
                 <p className="text-gray-600 text-sm">
@@ -32,8 +32,8 @@ const ContactUs: React.FC = () => {
 
               {/* Phone */}
               <div className="flex flex-col items-center text-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="bg-blue-100 p-3 rounded-full mb-3">
-                  <Phone className="h-6 w-6 text-blue-600" />
+                <div className="bg-[#067977]/10 p-3 rounded-full mb-3">
+                  <Phone className="h-6 w-6 text-[#067977]" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-1">Phone</h3>
                 <p className="text-gray-600 text-sm">+1 (555) 123-4567</p>
@@ -42,8 +42,8 @@ const ContactUs: React.FC = () => {
 
               {/* Email */}
               <div className="flex flex-col items-center text-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="bg-blue-100 p-3 rounded-full mb-3">
-                  <Mail className="h-6 w-6 text-blue-600" />
+                <div className="bg-[#067977]/10 p-3 rounded-full mb-3">
+                  <Mail className="h-6 w-6 text-[#067977]" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-1">Email</h3>
                 <p className="text-gray-600 text-sm">info@realestate.com</p>
@@ -52,8 +52,8 @@ const ContactUs: React.FC = () => {
 
               {/* Business Hours */}
               <div className="flex flex-col items-center text-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="bg-blue-100 p-3 rounded-full mb-3">
-                  <Clock className="h-6 w-6 text-blue-600" />
+                <div className="bg-[#067977]/10 p-3 rounded-full mb-3">
+                  <Clock className="h-6 w-6 text-[#067977]" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-1">Business Hours</h3>
                 <p className="text-gray-600 text-sm">

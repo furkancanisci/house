@@ -76,7 +76,7 @@ const ApiTestComponent: React.FC = () => {
         <button
           onClick={runTests}
           disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          className="bg-[#067977] text-white px-4 py-2 rounded hover:bg-[#067977]/90 disabled:opacity-50"
         >
           {loading ? 'Testing...' : 'Test API Connection'}
         </button>
