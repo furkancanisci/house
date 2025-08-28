@@ -13,7 +13,9 @@ return new class extends Migration
 
             $table->string('model_type');
             $table->unsignedBigInteger('model_id');
-            $table->uuid('uuid')->nullable();
+            $table->uuid('uuid')->nullable()->unique();
+            $table->string('collection_name');
+            $table->string('name');
             $table->string('file_name');
             $table->string('mime_type')->nullable();
             $table->string('disk');
@@ -23,8 +25,10 @@ return new class extends Migration
             $table->json('custom_properties');
             $table->json('generated_conversions');
             $table->json('responsive_images');
-            $table->unsignedInteger('order_column')->nullable();
+            $table->unsignedInteger('order_column')->nullable()->index();
             $table->timestamps();
+            
+            $table->index(['model_type', 'model_id']);
         });
     }
     

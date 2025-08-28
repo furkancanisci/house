@@ -19,19 +19,30 @@ const fixImageUrl = (url: string | undefined | null | any, propertyId?: string |
   // Check if url is not a string or is empty
   if (!url || typeof url !== 'string') return getRandomPropertyImage(propertyId);
   
-  // Don't process already processed URLs
-  if (url.startsWith('http://localhost:8000/') ||
+  // Don't process already processed URLs - be more thorough
+  if (url.startsWith('http://') || 
       url.startsWith('https://') ||
       url.startsWith('data:') ||
       url.startsWith('/images/')) {
+    console.log('FixedImage fixImageUrl - URL already complete:', url);
     return url;
   }
   
-  // Replace localhost URLs with localhost:8000
-  if (url.startsWith('http://localhost/')) {
-    return url.replace('http://localhost/', 'http://localhost:8000/');
+  // Handle relative URLs from backend (e.g., /storage/media/...)
+  if (url.startsWith('/storage/') || url.startsWith('/media/')) {
+    const fixedUrl = `http://localhost:8000${url}`;
+    console.log('FixedImage fixImageUrl - Fixed relative URL:', url, '->', fixedUrl);
+    return fixedUrl;
   }
   
+  // If it looks like a valid URL path, assume it's from the backend
+  if (url.startsWith('/') && !url.startsWith('/images/')) {
+    const fixedUrl = `http://localhost:8000${url}`;
+    console.log('FixedImage fixImageUrl - Fixed path URL:', url, '->', fixedUrl);
+    return fixedUrl;
+  }
+  
+  console.log('FixedImage fixImageUrl - Returning unchanged:', url);
   return url;
 };
 

@@ -81,29 +81,30 @@ export const fixImageUrl = (url: string | undefined | null | any): string => {
   // Check if url is not a string or is empty
   if (!url || typeof url !== 'string') return '';
   
-  // Don't process already processed URLs
-  if (url.startsWith('http://localhost:8000/') ||
+  // Don't process already processed URLs - be more thorough
+  if (url.startsWith('http://') || 
       url.startsWith('https://') ||
       url.startsWith('data:') ||
       url.startsWith('/images/')) {
+    console.log('fixImageUrl - URL already complete, returning as-is:', url);
     return url;
-  }
-  
-  // Replace localhost URLs with localhost:8000
-  if (url.startsWith('http://localhost/')) {
-    return url.replace('http://localhost/', 'http://localhost:8000/');
   }
   
   // Handle relative URLs from backend (e.g., /storage/media/...)
   if (url.startsWith('/storage/') || url.startsWith('/media/')) {
-    return `http://localhost:8000${url}`;
+    const fixedUrl = `http://localhost:8000${url}`;
+    console.log('fixImageUrl - Fixed relative URL:', url, '->', fixedUrl);
+    return fixedUrl;
   }
   
   // If it looks like a valid URL path, assume it's from the backend
   if (url.startsWith('/') && !url.startsWith('/images/')) {
-    return `http://localhost:8000${url}`;
+    const fixedUrl = `http://localhost:8000${url}`;
+    console.log('fixImageUrl - Fixed path URL:', url, '->', fixedUrl);
+    return fixedUrl;
   }
   
+  console.log('fixImageUrl - Returning URL unchanged:', url);
   return url;
 };
 
@@ -134,38 +135,55 @@ export const processPropertyImages = (
   let mainImage = '';
   let images: string[] = [];
 
-  // Try to get main image from various sources
-  const possibleMainImages = [
-    property.mainImage,
-    property.main_image_url,
-    property.main_image,
-    property.image,
-    property.thumbnail,
-  ].filter(Boolean);
-
-  if (possibleMainImages.length > 0) {
-    mainImage = fixImageUrl(possibleMainImages[0]);
+  // Check if images is an object with main and gallery (API v2 structure)
+  if (property.images && typeof property.images === 'object' && !Array.isArray(property.images)) {
+    // Handle nested structure from API
+    if (property.images.main) {
+      mainImage = fixImageUrl(property.images.main);
+    }
+    if (property.images.gallery && Array.isArray(property.images.gallery)) {
+      images = property.images.gallery.map((url: string) => fixImageUrl(url)).filter(Boolean);
+    }
   }
 
-  // Try to get images array from various sources
-  const possibleImageArrays = [
-    property.images,
-    property.gallery_urls,
-    property.gallery,
-    property.media,
-  ].filter(Array.isArray);
+  // If no main image found from nested structure, try flat structure
+  if (!mainImage) {
+    // Try to get main image from various sources
+    const possibleMainImages = [
+      property.mainImage,
+      property.main_image_url,
+      property.main_image,
+      property.image,
+      property.thumbnail,
+    ].filter(Boolean);
 
-  if (possibleImageArrays.length > 0) {
-    const imageArray = possibleImageArrays[0];
-    images = imageArray
-      .map((item: any) => {
-        if (typeof item === 'string') return fixImageUrl(item);
-        if (item && typeof item === 'object') {
-          return fixImageUrl(item.url || item.src || item.image);
-        }
-        return null;
-      })
-      .filter(Boolean);
+    if (possibleMainImages.length > 0) {
+      mainImage = fixImageUrl(possibleMainImages[0]);
+    }
+  }
+
+  // If images array is still empty, try to get from flat structure
+  if (images.length === 0) {
+    // Try to get images array from various sources
+    const possibleImageArrays = [
+      Array.isArray(property.images) ? property.images : null,
+      property.gallery_urls,
+      property.gallery,
+      property.media,
+    ].filter(Array.isArray);
+
+    if (possibleImageArrays.length > 0) {
+      const imageArray = possibleImageArrays[0];
+      images = imageArray
+        .map((item: any) => {
+          if (typeof item === 'string') return fixImageUrl(item);
+          if (item && typeof item === 'object') {
+            return fixImageUrl(item.url || item.src || item.image);
+          }
+          return null;
+        })
+        .filter(Boolean);
+    }
   }
 
   // If no main image, try to use first image from array

@@ -4,35 +4,37 @@ import api from './api';
 const fixImageUrl = (url: string | null | undefined | any): string => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://house-6g6m.onrender.com';
   
+  console.log('propertyService fixImageUrl - Input:', url, 'BaseUrl:', baseUrl);
+  
   // Return production placeholder if no URL is provided
   if (!url || typeof url !== 'string') {
     return `${baseUrl}/placeholder-property.jpg`;
   }
   
+  // If URL is already complete and correct, return as-is (MOST IMPORTANT FIX)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    console.log('propertyService fixImageUrl - URL already complete, returning as-is:', url);
+    return url;
+  }
+  
   // Handle relative paths
   if (url.startsWith('/')) {
-    return `${baseUrl}${url}`;
+    const result = `${baseUrl}${url}`;
+    console.log('propertyService fixImageUrl - Fixed relative path:', url, '->', result);
+    return result;
   }
   
   // Handle storage paths
   if (url.startsWith('storage/')) {
-    return `${baseUrl}/storage/${url.replace('storage/', '')}`;
-  }
-  
-  // Handle localhost URLs
-  if (url.includes('localhost')) {
-    return url
-      .replace('http://localhost:8000', baseUrl)
-      .replace('http://localhost', baseUrl);
-  }
-  
-  // If it's already a full URL, return as is
-  if (url.startsWith('http')) {
-    return url;
+    const result = `${baseUrl}/${url}`;
+    console.log('propertyService fixImageUrl - Fixed storage path:', url, '->', result);
+    return result;
   }
   
   // Default case - prepend base URL
-  return `${baseUrl}/${url}`;
+  const result = `${baseUrl}/${url}`;
+  console.log('propertyService fixImageUrl - Default case:', url, '->', result);
+  return result;
 };
 
 // Utility function to fix image objects
@@ -391,36 +393,46 @@ export const getFeaturedProperties = async (params: FeaturedPropertiesParams = {
 
 export const createProperty = async (propertyData: any) => {
   try {
-    console.log('Starting createProperty with data:', JSON.parse(JSON.stringify(propertyData, (key, value) => 
-      value instanceof File ? `[File ${value.name}]` : value
-    )));
+    // Check if propertyData is already FormData
+    let formData: FormData;
     
-    const formData = new FormData();
-    
-    // Add all property data to FormData
-    Object.keys(propertyData).forEach(key => {
-      if (key === 'amenities' && Array.isArray(propertyData[key])) {
-        // Handle amenities array
-        propertyData[key].forEach((amenity: string, index: number) => {
-          formData.append(`amenities[${index}]`, amenity);
-        });
-      } else if (key === 'images' && Array.isArray(propertyData[key])) {
-        // Handle image files
-        propertyData[key].forEach((file: File) => {
-          formData.append('images[]', file);
-        });
-      } else if (key === 'mainImage' && propertyData[key] instanceof File) {
-        // Handle main image file
-        formData.append('main_image', propertyData[key]);
-      } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
-        // Handle boolean values properly for Laravel validation
-        if (typeof propertyData[key] === 'boolean') {
-          formData.append(key, propertyData[key] ? '1' : '0');
-        } else {
-          formData.append(key, propertyData[key].toString());
+    if (propertyData instanceof FormData) {
+      // If it's already FormData, use it directly
+      formData = propertyData;
+      console.log('Using FormData directly from caller');
+    } else {
+      // If it's a plain object, convert it to FormData
+      console.log('Starting createProperty with data:', JSON.parse(JSON.stringify(propertyData, (key, value) => 
+        value instanceof File ? `[File ${value.name}]` : value
+      )));
+      
+      formData = new FormData();
+      
+      // Add all property data to FormData
+      Object.keys(propertyData).forEach(key => {
+        if (key === 'amenities' && Array.isArray(propertyData[key])) {
+          // Handle amenities array
+          propertyData[key].forEach((amenity: string, index: number) => {
+            formData.append(`amenities[${index}]`, amenity);
+          });
+        } else if (key === 'images' && Array.isArray(propertyData[key])) {
+          // Handle image files
+          propertyData[key].forEach((file: File) => {
+            formData.append('images[]', file);
+          });
+        } else if (key === 'mainImage' && propertyData[key] instanceof File) {
+          // Handle main image file
+          formData.append('main_image', propertyData[key]);
+        } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
+          // Handle boolean values properly for Laravel validation
+          if (typeof propertyData[key] === 'boolean') {
+            formData.append(key, propertyData[key] ? '1' : '0');
+          } else {
+            formData.append(key, propertyData[key].toString());
+          }
         }
-      }
-    });
+      });
+    }
     
     // Log FormData contents for debugging
     console.log('FormData contents:');

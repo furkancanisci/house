@@ -209,7 +209,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
 
               {/* Features */}
               <div className="flex flex-wrap gap-1 lg:gap-2 mb-3 lg:mb-4">
-                {property.features?.slice(0, 3).map((feature) => {
+                {Array.isArray(property.features) && property.features.slice(0, 3).map((feature) => {
                   const translated = t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: feature });
                   const displayText = typeof translated === 'string' ? translated : feature;
                   return (
@@ -218,7 +218,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                     </Badge>
                   );
                 })}
-                {(property.features?.length ?? 0) > 3 && (
+                {Array.isArray(property.features) && property.features.length > 3 && (
                   <Badge variant="outline" className="text-xs text-gray-500 px-2 py-1">
                     +{property.features.length - 3} {t('property.more')}
                   </Badge>
@@ -325,7 +325,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
         </div>
 
         <div className="flex flex-wrap gap-1 mb-2">
-          {property.features?.slice(0, 2).map((feature) => {
+          {Array.isArray(property.features) && property.features.slice(0, 2).map((feature) => {
             const translated = t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: feature });
             const displayText = typeof translated === 'string' ? translated : feature;
             return (
