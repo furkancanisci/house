@@ -83,7 +83,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   console.log('PropertyImageGallery - Final processed images:', processedImages);
   
   // Only use fallback if NO valid images exist at all
-  const finalImages = processedImages.length > 0 ? processedImages : [getRandomPropertyImage(propertyId)];
+  const finalImages = processedImages.length > 0 ? processedImages : ['/images/placeholder-property.svg'];
 
   const currentImage = finalImages[currentImageIndex];
   const currentImageState = imageLoadStates[currentImageIndex] || { loaded: false, error: false, loading: true };
@@ -156,14 +156,14 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
           </div>
         )}
 
-        {/* Error State */}
+        {/* Error State - Show placeholder image instead of error icon */}
         {currentImageState.error && (
-          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
-            <div className="text-center p-4">
-              <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">Image not available</p>
-            </div>
-          </div>
+          <img
+            src="/images/placeholder-property.svg"
+            alt="Property placeholder"
+            className={`w-full h-full object-cover ${className}`}
+            style={{ filter: 'opacity(0.7)' }}
+          />
         )}
 
         <img

@@ -9,7 +9,8 @@ import {
   Grid, 
   List,
   Filter,
-  SortAsc
+  SortAsc,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -20,18 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import { getFavoriteProperties } from '../services/propertyService';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'date-added' | 'price-asc' | 'price-desc' | 'title-asc';
 
 const Favorites: React.FC = () => {
   const { state } = useApp();
-  const { user, properties, favorites } = state;
+  const { user } = state;
   const navigate = useNavigate();
   const [favoriteProperties, setFavoriteProperties] = useState<ExtendedProperty[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('date-added');
   const [filterType, setFilterType] = useState<'all' | 'rent' | 'sale'>('all');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -39,10 +42,17 @@ const Favorites: React.FC = () => {
       return;
     }
 
-    // Get favorited properties
-    let favProps = properties
-      .filter(p => favorites.includes(p.id.toString()))
-      .map(property => ({
+    const loadFavorites = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Loading favorite properties from API...');
+        
+        // Fetch favorite properties from the API
+        const favoritesFromAPI = await getFavoriteProperties();
+        console.log('Favorite properties loaded:', favoritesFromAPI);
+        
+        // Transform the properties to ExtendedProperty format
+        let favProps = favoritesFromAPI.map((property: any) => ({
         ...property,
         propertyType: property.property_type,
         listingType: property.listing_type,
@@ -67,22 +77,22 @@ const Favorites: React.FC = () => {
         slug: (property as any).slug || `property-${property.id}`,
         property_type: property.propertyType,
         listing_type: property.listingType,
-        square_feet: property.squareFootage,
-        year_built: (property as any).yearBuilt || new Date().getFullYear(),
-        media: (property.images || []).map((url, index) => ({
+        square_feet: property.square_feet || 0,
+        year_built: property.year_built || new Date().getFullYear(),
+        media: (property.images || []).map((url: string, index: number) => ({
           id: index,
           url,
           type: 'image'
         }))
       }));
 
-    // Apply filter
-    if (filterType !== 'all') {
-      favProps = favProps.filter(p => p.listingType === filterType);
-    }
+      // Apply filter
+      if (filterType !== 'all') {
+        favProps = favProps.filter(p => p.listingType === filterType);
+      }
 
-    // Apply sort
-    switch (sortBy) {
+      // Apply sort
+      switch (sortBy) {
       case 'price-asc':
         favProps.sort((a, b) => {
           const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price as string) || 0;
@@ -113,7 +123,16 @@ const Favorites: React.FC = () => {
     }
 
     setFavoriteProperties(favProps);
-  }, [user, properties, favorites, sortBy, filterType, navigate]);
+    } catch (error) {
+      console.error('Failed to load favorite properties:', error);
+      setFavoriteProperties([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+    loadFavorites();
+  }, [user, sortBy, filterType, navigate]);
 
   const getSortLabel = (option: SortOption): string => {
     const labels: Record<SortOption, string> = {
@@ -143,7 +162,20 @@ const Favorites: React.FC = () => {
           </p>
         </div>
 
-        {favoriteProperties.length === 0 ? (
+        {isLoading ? (
+          /* Loading State */
+          <Card>
+            <CardContent className="text-center py-16">
+              <Loader2 className="h-16 w-16 text-gray-400 animate-spin mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Loading your favorites...
+              </h3>
+              <p className="text-gray-600">
+                Please wait while we fetch your saved properties.
+              </p>
+            </CardContent>
+          </Card>
+        ) : favoriteProperties.length === 0 ? (
           /* Empty State */
           <Card>
             <CardContent className="text-center py-16">

@@ -29,7 +29,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
-import { toast } from 'sonner';
+import { notification, notificationMessages } from '../services/notificationService';
 import { getProperty } from '../services/propertyService';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import FixedImage from '../components/FixedImage';
@@ -223,7 +223,7 @@ const PropertyDetails: React.FC = () => {
       } catch (err) {
         console.error('Error fetching property:', err);
         setError('Failed to load property details');
-        toast.error('Failed to load property details');
+        notification.error('Failed to load property details');
       } finally {
         setLoading(false);
       }
@@ -394,7 +394,7 @@ const PropertyDetails: React.FC = () => {
 
   const handleToggleFavorite = async () => {
     if (!user) {
-      toast.error(t('messages.signInToSaveFavorites'));
+      notification.error(t('messages.signInToSaveFavorites'));
       navigate('/auth');
       return;
     }
@@ -402,9 +402,9 @@ const PropertyDetails: React.FC = () => {
     try {
       // Ensure property.id is passed as a string
       const wasFavorited = await toggleFavorite(propertyId);
-      toast.success(wasFavorited ? t('messages.addedToFavorites') : t('messages.removedFromFavorites'));
+      notification.success(wasFavorited ? t('messages.addedToFavorites') : t('messages.removedFromFavorites'));
     } catch (error) {
-      toast.error('Failed to update favorite');
+      notification.error('Failed to update favorite');
     }
   };
 
@@ -418,21 +418,21 @@ const PropertyDetails: React.FC = () => {
         });
       } catch (error) {
         navigator.clipboard.writeText(window.location.href);
-        toast.success(t('messages.linkCopied'));
+        notification.success(t('messages.linkCopied'));
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast.success(t('messages.linkCopied'));
+      notification.success(t('messages.linkCopied'));
     }
   };
 
   const handleContactOwner = () => {
     if (!user) {
-      toast.error(t('messages.signInToContact'));
+      notification.error(t('messages.signInToContact'));
       navigate('/auth');
       return;
     }
-    toast.success(t('messages.contactInfoDisplayed'));
+    notification.success(t('messages.contactInfoDisplayed'));
   };
 
 
@@ -502,15 +502,14 @@ const PropertyDetails: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
-                    <div className="text-center">
-                      <p className="text-gray-500 mb-2">No images available</p>
-                      <p className="text-sm text-gray-400">
-                        Images array length: {property.images?.length || 0}
-                      </p>
-                      <p className="text-sm text-gray-400">
-                        Main image: {property.mainImage}
-                      </p>
+                  <div className="relative w-full h-96 bg-gray-100 flex items-center justify-center">
+                    <img 
+                      src="/images/placeholder-property.svg"
+                      alt="لا توجد صور متاحة"
+                      className="w-full h-96 object-contain opacity-60"
+                    />
+                    <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded text-sm">
+                      {t('property.noImagesAvailable', 'لا توجد صور متاحة')}
                     </div>
                   </div>
                 )}

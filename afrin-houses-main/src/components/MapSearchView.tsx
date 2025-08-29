@@ -21,7 +21,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { toast } from 'sonner';
+import { notification } from '../services/notificationService';
 import { Property, SearchFilters } from '../types';
 import PropertyCard from './PropertyCard';
 import SearchFiltersComponent from './SearchFilters';
@@ -187,7 +187,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setLocationError('الموقع الجغرافي غير مدعوم في هذا المتصفح');
-      toast.error('الموقع الجغرافي غير مدعوم في هذا المتصفح');
+      notification.error('الموقع الجغرافي غير مدعوم في هذا المتصفح');
       return;
     }
     
@@ -202,7 +202,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
         setMapCenter(newLocation);
         setMapZoom(15);
         setIsLocating(false);
-        toast.success('تم تحديد موقعك بنجاح');
+        notification.success('تم تحديد موقعك بنجاح');
       },
       (error) => {
         let errorMessage = 'فشل في تحديد الموقع';
@@ -219,7 +219,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
         }
         setLocationError(errorMessage);
         setIsLocating(false);
-        toast.error(errorMessage);
+        notification.error(errorMessage);
       },
       {
         enableHighAccuracy: true,
@@ -385,7 +385,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
     // Simulate cities reload
     setTimeout(() => {
       setIsLoadingCities(false);
-      toast.success(t('map.searchUpdated'));
+      notification.success(t('map.searchUpdated'));
     }, 1500);
   }, []);
   

@@ -16,8 +16,8 @@ class DashboardController extends Controller
      */
     public function __construct()
     {
-        // Apply auth middleware to all methods except for testing
-        $this->middleware('auth:sanctum')->except(['properties', 'favorites']);
+        // Apply auth middleware to all methods
+        $this->middleware('auth:sanctum');
     }
 
     // In DashboardController.php

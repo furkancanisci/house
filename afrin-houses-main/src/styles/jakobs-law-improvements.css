@@ -1,0 +1,342 @@
+/* Jakob's Law UI/UX Improvements
+   Following standard patterns from popular applications */
+
+/* ============================================
+   1. BUTTON IMPROVEMENTS
+   Following Material Design & iOS patterns
+   ============================================ */
+
+/* Primary buttons - Similar to Google/Apple patterns */
+button:not([disabled]):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+button:not([disabled]):active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Disabled state - Clear visual feedback */
+button:disabled,
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading state for buttons */
+button[data-loading="true"] {
+  position: relative;
+  color: transparent;
+}
+
+button[data-loading="true"]::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-left: -8px;
+  margin-top: -8px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: button-loading-spinner 0.6s linear infinite;
+}
+
+@keyframes button-loading-spinner {
+  from {
+    transform: rotate(0turn);
+  }
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* ============================================
+   2. FORM FIELD IMPROVEMENTS
+   Following Google Material & iOS patterns
+   ============================================ */
+
+/* Input focus states - Clear visual feedback */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #067977;
+  box-shadow: 0 0 0 3px rgba(6, 121, 119, 0.1);
+}
+
+/* Invalid input states */
+input:invalid:not(:placeholder-shown),
+textarea:invalid:not(:placeholder-shown) {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+/* Valid input states */
+input:valid:not(:placeholder-shown):not([type="email"]),
+textarea:valid:not(:placeholder-shown) {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+}
+
+/* ============================================
+   3. CARD HOVER EFFECTS
+   Following Pinterest/Instagram patterns
+   ============================================ */
+
+.property-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+              0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Image zoom on hover - Instagram pattern */
+.property-card img {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.property-card:hover img {
+  transform: scale(1.05);
+}
+
+/* ============================================
+   4. DROPDOWN IMPROVEMENTS
+   Following Dropdown patterns from major apps
+   ============================================ */
+
+/* Dropdown animation */
+[data-state="open"] {
+  animation: slideDown 0.2s ease-out;
+}
+
+[data-state="closed"] {
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* ============================================
+   5. NAVIGATION IMPROVEMENTS
+   Following standard navigation patterns
+   ============================================ */
+
+/* Active nav link indicator */
+nav a[aria-current="page"] {
+  position: relative;
+}
+
+nav a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #067977;
+}
+
+/* Nav link hover effect */
+nav a:not([aria-current="page"]):hover {
+  background-color: rgba(6, 121, 119, 0.05);
+}
+
+/* ============================================
+   6. TOAST NOTIFICATION IMPROVEMENTS
+   Following Slack/Discord patterns
+   ============================================ */
+
+/* Toast enter animation */
+.sonner-toast {
+  animation: toast-slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Toast exit animation */
+.sonner-toast[data-removed="true"] {
+  animation: toast-slide-out 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   7. LOADING STATES
+   Following YouTube/Netflix patterns
+   ============================================ */
+
+/* Skeleton loading animation */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================
+   8. MODAL/DIALOG IMPROVEMENTS
+   Following standard modal patterns
+   ============================================ */
+
+/* Modal backdrop blur - iOS pattern */
+.modal-backdrop {
+  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal enter animation */
+.modal-content {
+  animation: modal-zoom-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modal-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   9. ACCESSIBILITY IMPROVEMENTS
+   Following WCAG guidelines
+   ============================================ */
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #067977;
+  outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #067977;
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 100;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* ============================================
+   10. RESPONSIVE TOUCH TARGETS
+   Following mobile-first patterns
+   ============================================ */
+
+/* Minimum touch target size - 44x44px (iOS HIG) */
+@media (pointer: coarse) {
+  button,
+  a,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ============================================
+   11. SMOOTH SCROLLING
+   ============================================ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scroll padding for fixed header */
+html {
+  scroll-padding-top: 80px;
+}
+
+/* ============================================
+   12. PROPERTY GRID AUTO-SCROLL INDICATOR
+   ============================================ */
+
+.property-grid-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.property-grid-container::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-indicator {
+  animation: scroll-progress 10s linear infinite;
+}
+
+@keyframes scroll-progress {
+  0% {
+    width: 20%;
+    transform: translateX(0);
+  }
+  100% {
+    width: 20%;
+    transform: translateX(400%);
+  }
+}

@@ -86,7 +86,6 @@ export const fixImageUrl = (url: string | undefined | null | any): string => {
       url.startsWith('https://') ||
       url.startsWith('data:') ||
       url.startsWith('/images/')) {
-    console.log('fixImageUrl - URL already complete, returning as-is:', url);
     return url;
   }
   
@@ -193,11 +192,9 @@ export const processPropertyImages = (
 
   // Only use fallback images if NO real images exist at all
   if (!mainImage && images.length === 0) {
-    const type = propertyType || property.propertyType || property.property_type || property.type || 'apartment';
-    mainImage = getFallbackImage(type, property.id);
-    // Add a few more fallback images for gallery if no real images exist
-    const typeImages = PROPERTY_TYPE_IMAGES[type.toLowerCase()] || PROPERTY_IMAGES;
-    images = typeImages.slice(0, 3);
+    // Use simple placeholder instead of random images for consistency
+    mainImage = PLACEHOLDER_IMAGE;
+    images = [PLACEHOLDER_IMAGE];
   } else if (!mainImage && images.length > 0) {
     // If we have gallery images but no main image, use the first gallery image as main
     mainImage = images[0];
