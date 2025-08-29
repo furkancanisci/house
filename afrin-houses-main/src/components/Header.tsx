@@ -39,6 +39,10 @@ const Header: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+    // Show logout notification
+    import('../services/notificationService').then(({ notification }) => {
+      notification.success('Logged out successfully');
+    });
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -102,28 +106,28 @@ const Header: React.FC = () => {
 
           {/* User Actions - Responsive */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-3 flex-shrink-0">
-            {/* Language Dropdown - Compact on smaller screens */}
+            {/* Language Dropdown - Following standard dropdown patterns */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex items-center space-x-1 text-[#067977] hover:text-[#067977]/80 hover:bg-[#067977]/10 border border-[#067977]/20 hover:border-[#067977]/40 px-2 lg:px-3"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-[#067977] hover:bg-gray-50 border border-gray-200 hover:border-[#067977]/40 px-2 lg:px-3 transition-all duration-200"
                 >
-                  <Globe className="h-3 w-3 lg:h-4 lg:w-4 text-[#067977]" />
-                  <span className="text-xs lg:text-sm">{getCurrentLanguage().nativeName}</span>
-                  <ChevronDown className="h-2 w-2 lg:h-3 lg:w-3 text-[#067977] ml-1" />
+                  <Globe className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="text-xs lg:text-sm font-medium">{getCurrentLanguage().nativeName}</span>
+                  <ChevronDown className="h-2 w-2 lg:h-3 lg:w-3 ml-1 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36 lg:w-40">
+              <DropdownMenuContent align="end" className="w-36 lg:w-40 bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden">
                 {languages.map((lang) => (
                   <DropdownMenuItem
                     key={lang.code}
                     onClick={() => handleLanguageSelect(lang.code)}
-                    className={`cursor-pointer flex items-center space-x-2 ${
+                    className={`cursor-pointer flex items-center space-x-2 px-3 py-2 transition-colors duration-150 ${
                       language === lang.code
                         ? 'bg-[#067977]/10 text-[#067977] font-medium'
-                        : 'hover:bg-gray-50'
+                        : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
                     }`}
                   >
                     <Globe className="h-3 w-3" />
@@ -139,7 +143,7 @@ const Header: React.FC = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* List Property Button - More compact */}
+            {/* List Property Button - Following CTA patterns */}
             <Button
               variant="outline"
               size="sm"
@@ -150,7 +154,7 @@ const Header: React.FC = () => {
                   navigate('/auth');
                 }
               }}
-              className="flex items-center space-x-1 text-[#067977] border-[#067977] hover:bg-[#067977] hover:text-white transition-colors px-2 lg:px-3 text-xs lg:text-sm"
+              className="flex items-center space-x-1 text-[#067977] border-[#067977] hover:bg-[#067977] hover:text-white transition-all duration-200 transform hover:scale-105 px-2 lg:px-3 text-xs lg:text-sm font-medium shadow-sm hover:shadow-md"
             >
               <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
               <span className="hidden lg:block">{t('navigation.listProperty')}</span>
@@ -160,29 +164,32 @@ const Header: React.FC = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-1 lg:space-x-2 px-2 lg:px-3">
-                    <User className="h-3 w-3 lg:h-4 lg:w-4" />
-                    <span className="text-xs lg:text-sm max-w-[80px] lg:max-w-none truncate">{user.name}</span>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-1 lg:space-x-2 px-2 lg:px-3 hover:bg-gray-50 transition-colors duration-200">
+                    <div className="w-7 h-7 lg:w-8 lg:h-8 bg-[#067977] rounded-full flex items-center justify-center">
+                      <User className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
+                    </div>
+                    <span className="text-xs lg:text-sm max-w-[80px] lg:max-w-none truncate font-medium">{user.name}</span>
+                    <ChevronDown className="h-2 w-2 lg:h-3 lg:w-3 ml-1 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44 lg:w-48">
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                    <User className="mr-2 h-4 w-4" />
-                    {t('navigation.dashboard')}
+                <DropdownMenuContent align="end" className="w-44 lg:w-48 bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden">
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')} className="cursor-pointer hover:bg-gray-50 transition-colors duration-150 px-3 py-2">
+                    <User className="mr-2 h-4 w-4 text-gray-500" />
+                    <span className="text-gray-700">{t('navigation.dashboard')}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/favorites')}>
-                    <Heart className="mr-2 h-4 w-4" />
-                    {t('navigation.favorites')}
+                  <DropdownMenuItem onClick={() => navigate('/favorites')} className="cursor-pointer hover:bg-gray-50 transition-colors duration-150 px-3 py-2">
+                    <Heart className="mr-2 h-4 w-4 text-gray-500" />
+                    <span className="text-gray-700">{t('navigation.favorites')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    {t('navigation.logout')}
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-red-50 transition-colors duration-150 px-3 py-2">
+                    <LogOut className="mr-2 h-4 w-4 text-red-500" />
+                    <span className="text-red-600">{t('navigation.logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={() => navigate('/auth')} size="sm" className="bg-[#067977] hover:bg-[#067977]/90 text-white px-2 lg:px-4 text-xs lg:text-sm">
+              <Button onClick={() => navigate('/auth')} size="sm" className="bg-[#067977] hover:bg-[#067977]/90 text-white px-2 lg:px-4 text-xs lg:text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md">
                 {t('navigation.login')}
               </Button>
             )}

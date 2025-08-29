@@ -45,7 +45,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
-import { toast } from 'sonner';
+import { notification, notificationMessages } from '../services/notificationService';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
 import PropertyLocationMap from '../components/PropertyLocationMap';
@@ -454,11 +454,11 @@ const AddProperty: React.FC = () => {
       } else {
         console.log('Validation failed, staying on current step');
         // Show validation errors to user
-        toast.error('Please fill in all required fields correctly');
+        notification.error('Please fill in all required fields correctly');
       }
     } catch (error) {
       console.error('Error during validation:', error);
-      toast.error('Validation error occurred');
+      notification.error('Validation error occurred');
     }
   };
 
@@ -469,7 +469,7 @@ const AddProperty: React.FC = () => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length + selectedImages.length > 10) {
-      toast.error('Maximum 10 images allowed');
+      notification.error('Maximum 10 images allowed');
       return;
     }
 
@@ -624,7 +624,7 @@ const AddProperty: React.FC = () => {
         // Clear localStorage after successful submission
         clearFormDataFromStorage();
         
-        toast.success('تمت إضافة العقار بنجاح!');
+        notification.success('تمت إضافة العقار بنجاح!');
         console.log('Navigating to dashboard...');
         navigate('/dashboard');
       } catch (apiError) {
@@ -645,7 +645,7 @@ const AddProperty: React.FC = () => {
 
       // Show detailed error in console and toast
       console.error('Error details:', errorMessage);
-      toast.error(errorMessage, {
+      notification.error(errorMessage, {
         duration: 5000,
         position: 'top-center',
         style: { direction: 'rtl' }

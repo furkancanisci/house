@@ -9,7 +9,8 @@ import {
   Square,
   MapPin,
   Calendar,
-  DollarSign
+  DollarSign,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardFooter } from './ui/card';
@@ -18,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import FixedImage from './FixedImage';
 import PropertyImageGallery from './PropertyImageGallery';
 import { processPropertyImages } from '../lib/imageUtils';
+import { notification } from '../services/notificationService';
 
 interface PropertyCardProps {
   property: ExtendedProperty;
@@ -28,7 +30,7 @@ interface PropertyCardProps {
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', useGallery = false }) => {
   const { state, toggleFavorite } = useApp();
   const { t, i18n } = useTranslation();
-  const isFavorite = state.favorites.includes(property.id);
+  const isFavorite = state.favorites.includes(property.id.toString());
   const user = state.user;
 
   // Debug: Log the property data to understand the structure (only in development)
@@ -62,12 +64,33 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await toggleFavorite(property.id);
+    
+    if (!user) {
+      notification.info('Please login to save favorites');
+      return;
+    }
+    
+    try {
+      const result = await toggleFavorite(property.id);
+      if (isFavorite) {
+        notification.success('Removed from favorites');
+      } else {
+        notification.success('Added to favorites', {
+          action: {
+            label: 'View Favorites',
+            onClick: () => window.location.href = '/favorites'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      notification.error('Failed to update favorite. Please try again.');
+    }
   };
 
-  const processedImages = useGallery ? processPropertyImages(property) : { mainImage: property.mainImage || '/placeholder-property.jpg', images: [] };
+  const processedImages = useGallery ? processPropertyImages(property) : { mainImage: property.mainImage || '/images/placeholder-property.svg', images: [] };
   const images = processedImages.images || [];
-  const mainImage = processedImages.mainImage || property.mainImage || '/placeholder-property.jpg';
+  const mainImage = processedImages.mainImage || property.mainImage || '/images/placeholder-property.svg';
 
   const propertySlug = property.slug || `property-${property.id}`;
 
@@ -135,18 +158,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
               {property.listingType === 'rent' ? t('property.listingTypes.forRent') : t('property.listingTypes.forSale')}
             </Badge>
 
-            {/* Favorite Button */}
-            {user && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleFavoriteClick}
-                className={`absolute top-1.5 right-1.5 ${isFavorite ? 'text-red-500 bg-white/95' : 'text-gray-600 bg-white/95'
-                  } hover:text-red-500 hover:bg-white rounded-full p-1.5 shadow-lg backdrop-blur-sm border border-white/20 transition-all duration-200 hover:scale-110`}
-              >
-                <Heart className={`h-3 w-3 ${isFavorite ? 'fill-current' : ''}`} />
-              </Button>
-            )}
+            {/* Favorite Button - Always visible for better UX */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleFavoriteClick}
+              className={`absolute top-1.5 right-1.5 ${isFavorite ? 'text-red-500 bg-white' : 'text-gray-600 bg-white/90'
+                } hover:text-red-500 hover:bg-white rounded-full p-2 shadow-lg backdrop-blur-sm border border-gray-200 transition-all duration-200 hover:scale-110 hover:shadow-xl`}
+              aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''} transition-colors duration-200`} />
+            </Button>
           </div>
 
           {/* Content Section */}

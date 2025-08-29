@@ -16,8 +16,10 @@ interface FixedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 
 // Utility function to fix image URLs
 const fixImageUrl = (url: string | undefined | null | any, propertyId?: string | number): string => {
-  // Check if url is not a string or is empty
-  if (!url || typeof url !== 'string') return getRandomPropertyImage(propertyId);
+  // Check if url is not a string or is empty - return placeholder
+  if (!url || typeof url !== 'string') {
+    return '/images/placeholder-property.svg';
+  }
   
   // Don't process already processed URLs - be more thorough
   if (url.startsWith('http://') || 
@@ -74,9 +76,11 @@ const FixedImage: React.FC<FixedImageProps> = ({
   }, [src, hasError, propertyId]);
 
   const handleError = () => {
-    if (!hasError && !currentSrc.startsWith('/images/properties/')) {
+    console.log('FixedImage - Image failed to load:', currentSrc);
+    if (!hasError) {
       setHasError(true);
-      setCurrentSrc(getRandomPropertyImage(propertyId));
+      // Use placeholder image when original fails to load
+      setCurrentSrc('/images/placeholder-property.svg');
       setImageLoaded(false);
       setIsLoading(true);
     }

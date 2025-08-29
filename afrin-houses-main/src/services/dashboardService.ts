@@ -113,18 +113,13 @@ export const dashboardService = {
 
   // Get user's favorite properties
   async getFavoriteProperties(): Promise<any[]> {
-    // Temporary mock data while backend issue is being fixed
-    return [];
-    
-    /* TODO: Uncomment when backend issue is fixed
     try {
-      const response = await api.get('/dashboard/favorites');
-      return response.data;
+      const response = await api.get('/favorites');
+      return response.data.data || [];
     } catch (error) {
       console.error('Error fetching favorite properties:', error);
       return [];
     }
-    */
   },
 
   // Update user profile

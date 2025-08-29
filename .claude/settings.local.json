@@ -7,7 +7,8 @@
       "Bash(composer install:*)",
       "Bash(composer:*)",
       "Bash(php:*)",
-      "Bash(where psql)"
+      "Bash(where psql)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

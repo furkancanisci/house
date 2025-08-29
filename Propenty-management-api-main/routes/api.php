@@ -95,7 +95,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/{property}', [PropertyController::class, 'update'])->middleware('validate.image');
         Route::delete('/{property}', [PropertyController::class, 'destroy']);
         Route::delete('/{property}/images/{mediaId}', [PropertyController::class, 'deleteImage']);
-        Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite']);
+        Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite'])->middleware('auth:sanctum');
         Route::get('/{property}/analytics', [PropertyController::class, 'analytics']);
     });
 

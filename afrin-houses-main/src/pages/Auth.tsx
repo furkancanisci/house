@@ -21,7 +21,7 @@ import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { toast } from 'sonner';
+import { notification, notificationMessages } from '../services/notificationService';
 import logo from '../assets/logo.png';
 const createLoginSchema = (t: any) => z.object({
   email: z.string().email(t('auth.validation.emailRequired')),
@@ -92,10 +92,10 @@ const Auth: React.FC = () => {
     try {
       const success = await login(data.email, data.password);
       if (success) {
-        toast.success(t('auth.welcomeBack'));
+        notification.success(notificationMessages.loginSuccess);
         navigate(from, { replace: true });
       } else {
-        toast.error(t('auth.invalidCredentials'));
+        notification.error(notificationMessages.loginError);
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -118,7 +118,7 @@ const Auth: React.FC = () => {
         errorMessage = error.message;
       }
       
-      toast.error(errorMessage);
+      notification.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -137,11 +137,11 @@ const Auth: React.FC = () => {
         terms_accepted: data.terms_accepted,
       });
       if (success) {
-        toast.success(t('auth.accountCreatedSuccess'));
+        notification.success(t('auth.accountCreatedSuccess'));
         // Don't navigate immediately, let user verify email first
         setActiveTab('login');
       } else {
-        toast.error(t('auth.accountCreationFailed'));
+        notification.error(t('auth.accountCreationFailed'));
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -164,7 +164,7 @@ const Auth: React.FC = () => {
         errorMessage = error.message;
       }
       
-      toast.error(errorMessage);
+      notification.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -698,13 +698,25 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // Load user's favorites
   const loadUserFavorites = async () => {
     try {
-      if (!state.user) return;
+      if (!state.user) {
+        console.log('DEBUG: No user found, skipping favorites load');
+        return;
+      }
       
+      console.log('DEBUG: Loading user favorites...');
       const favorites = await getFavoriteProperties();
+      console.log('DEBUG: Favorites response:', favorites);
+      
       const favoriteIds = favorites.map((prop: any) => prop.id.toString());
+      console.log('DEBUG: Favorite IDs:', favoriteIds);
+      
       dispatch({ type: 'SET_FAVORITES', payload: favoriteIds });
     } catch (error: any) {
       console.error('Failed to load user favorites:', error);
+      // If we get a 401, the user might not be authenticated properly
+      if (error?.response?.status === 401) {
+        console.error('Authentication error when loading favorites');
+      }
     }
   };
 

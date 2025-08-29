@@ -29,7 +29,7 @@ const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: true, // Required for Sanctum authentication
   timeout: 60000, // Increased timeout to 60 seconds to handle image uploads
 });
 
@@ -145,14 +145,16 @@ api.interceptors.response.use(
 // Function to refresh the access token
 const refreshToken = async (): Promise<string | null> => {
   try {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1';
     const response = await axios.post(
-      'https://house-6g6m.onrender.com/api/v1/auth/refresh',
+      `${baseURL}/auth/refresh`,
       {},
       {
         withCredentials: true,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       }
     );

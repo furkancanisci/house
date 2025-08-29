@@ -28,7 +28,7 @@ import {
 } from './ui/collapsible';
 import { Checkbox } from './ui/checkbox';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { notification } from '../services/notificationService';
 import LocationSelector from './LocationSelector';
 import { cityService } from '@/services/cityService';
 

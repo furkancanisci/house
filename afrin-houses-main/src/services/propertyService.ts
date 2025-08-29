@@ -1,19 +1,23 @@
 import api from './api';
 
-// Utility function to fix image URLs
-const fixImageUrl = (url: string | null | undefined | any): string => {
+// Utility function to fix image URLs with fallback support
+const fixImageUrl = (url: string | null | undefined | any, fallbackType?: string): string => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://house-6g6m.onrender.com';
   
   console.log('propertyService fixImageUrl - Input:', url, 'BaseUrl:', baseUrl);
   
-  // Return production placeholder if no URL is provided
+  // Return appropriate placeholder if no URL is provided
   if (!url || typeof url !== 'string') {
+    // For local development, use local placeholder
+    if (baseUrl.includes('localhost')) {
+      return '/images/placeholder-property.svg';
+    }
+    // For production, use production placeholder
     return `${baseUrl}/placeholder-property.jpg`;
   }
   
   // If URL is already complete and correct, return as-is (MOST IMPORTANT FIX)
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    console.log('propertyService fixImageUrl - URL already complete, returning as-is:', url);
     return url;
   }
   
@@ -539,7 +543,7 @@ export const toggleFavorite = async (id: number) => {
 
 export const getFavoriteProperties = async () => {
   try {
-    const response = await api.get('/dashboard/favorites');
+    const response = await api.get('/favorites');
     const properties = response.data.data || [];
     
     // Fix image URLs in all favorite properties
