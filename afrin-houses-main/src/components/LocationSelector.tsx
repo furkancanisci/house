@@ -258,18 +258,18 @@ const LocationSelector: FC<LocationSelectorProps> = ({
               onValueChange={handleStateChange}
               disabled={loading.states}
             >
-              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-[#067977] focus:border-[#067977] transition-all duration-200 bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 hover:from-[#067977]/20 hover:to-[#067977]/10">
+              <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200">
                 <SelectValue 
                   placeholder={t('location.selectState')} 
                   className="text-gray-700 font-medium"
                 />
               </SelectTrigger>
-              <SelectContent className="bg-white border-2 border-gray-100 shadow-lg">
+              <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
                 {states.map((state) => (
                   <SelectItem 
                     key={state} 
                     value={state}
-                    className="hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 py-3 px-4 cursor-pointer"
+                    className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer"
                   >
                     <span className="font-medium text-gray-800">{state}</span>
                   </SelectItem>
@@ -292,7 +292,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
               }}
               disabled={!selectedState || loading.cities}
             >
-              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-green-400 focus:border-green-500 transition-all duration-200 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed">
+              <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 <SelectValue>
                   {(() => {
                     
@@ -317,7 +317,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
                   })()} 
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-white border-2 border-gray-100 shadow-lg">
+              <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
                 {(() => {
                   console.log('LocationSelector: Rendering SelectContent with cities:', cities.length);
                   console.log('LocationSelector: Cities data:', cities.map(c => ({ id: c.id, name: c.name, state: c.state })));
@@ -341,7 +341,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
                       <SelectItem 
                         key={`city-${city.id}-${city.name}`} 
                         value={cityValue}
-                        className="hover:bg-green-50 focus:bg-green-100 transition-colors duration-150 py-3 px-4 cursor-pointer"
+                        className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer"
                       >
                         <span className="font-medium text-gray-800">
                           {cityDisplayName}

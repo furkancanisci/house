@@ -120,12 +120,22 @@
                 </li>
                 @endcanany
 
-                <!-- Amenities -->
-                @can('view amenities')
+                <!-- Features -->
+                @can('view features')
                 <li class="nav-item">
-                    <a href="{{ route('admin.amenities.index') }}" class="nav-link {{ request()->routeIs('admin.amenities*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-list-check"></i>
-                        <p>{{ __('admin.amenities') }}</p>
+                    <a href="{{ route('admin.features.index') }}" class="nav-link {{ request()->routeIs('admin.features*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-star"></i>
+                        <p>{{ __('admin.features') }}</p>
+                    </a>
+                </li>
+                @endcan
+
+                <!-- Utilities -->
+                @can('view utilities')
+                <li class="nav-item">
+                    <a href="{{ route('admin.utilities.index') }}" class="nav-link {{ request()->routeIs('admin.utilities*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-tools"></i>
+                        <p>{{ __('admin.utilities') }}</p>
                     </a>
                 </li>
                 @endcan

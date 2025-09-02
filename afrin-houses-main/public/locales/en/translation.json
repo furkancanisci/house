@@ -348,6 +348,11 @@
     "summary": "Property Summary",
     "quickActions": "Quick Actions",
     "printDetails": "Print Details",
+    "featuresAndUtilities": "Features & Utilities",
+    "propertyFeatures": "Property Features",
+    "propertyUtilities": "Property Utilities",
+    "noFeaturesAvailable": "No features available",
+    "noUtilitiesAvailable": "No utilities available",
     "amenities": "Features & Amenities",
     "documentType": "Document Type",
     "documentTypes": {
@@ -364,7 +369,13 @@
     "listed": "Listed",
     "minSqFt": "Min sq ft",
     "maxSqFt": "Max sq ft",
-    "sqft": "sqft"
+    "sqft": "sqft",
+    "contact": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "owner": "Property Owner"
+    }
   },
   "privacyPolicy": {
     "title": "Privacy Policy",
@@ -437,6 +448,12 @@
       "title": "Contact Us",
       "content": "If you have any questions about our use of cookies, please contact us at privacy@example.com."
     }
+  },
+  "contact": {
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "owner": "Property Owner"
   },
   "common": {
     "currency": "SYR",
@@ -748,6 +765,13 @@
       "and": "and",
       "privacyPolicy": "Privacy Policy",
       "bySigningUp": "By signing up, you agree to our"
+    },
+    "requireAuth": {
+      "title": "Authentication Required",
+      "addPropertyMessage": "Please sign in to add a new property listing. Creating an account is quick and free!",
+      "viewOwnerContactMessage": "Please sign in to view owner contact information and get in touch with property owners.",
+      "loginSuccess": "Successfully logged in! You can now proceed with your action.",
+      "signUpSuccess": "Account created successfully! You can now add your property."
     },
     "agreeToTerms": "I agree to the",
     "termsOfService": "Terms of Service",

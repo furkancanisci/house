@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             PropertyDocumentTypeSeeder::class,
+            FeaturesAndUtilitiesSeeder::class,
             UserSeeder::class,
             PropertySeeder::class,
             PropertyFavoriteSeeder::class,

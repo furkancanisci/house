@@ -73,9 +73,11 @@ class UpdatePropertyRequest extends FormRequest
             'is_available' => 'sometimes|nullable|boolean',
             'available_from' => 'sometimes|nullable|date|after_or_equal:today',
             
-            // Amenities and Features
-            'amenities' => ['nullable', 'array'],
-            'amenities.*' => ['string'], // Temporarily removed validation
+            // Features
+            'features' => 'sometimes|nullable|array',
+            'features.*' => 'integer|exists:features,id',
+            'utilities' => 'sometimes|nullable|array',
+            'utilities.*' => 'integer|exists:utilities,id',
             'nearby_places' => 'sometimes|nullable|array',
             'nearby_places.*.name' => 'required_with:nearby_places|string|max:100',
             'nearby_places.*.type' => 'required_with:nearby_places|string|max:50',
@@ -147,8 +149,6 @@ class UpdatePropertyRequest extends FormRequest
             'latitude.between' => 'Latitude must be between -90 and 90.',
             'longitude.numeric' => 'Longitude must be a valid number.',
             'longitude.between' => 'Longitude must be between -180 and 180.',
-            'amenities.array' => 'Amenities must be provided as a list.',
-            'amenities.*.in' => 'One or more selected amenities are invalid.',
             'contactName.required' => 'Contact name is required.',
             'contactName.string' => 'Contact name must be a valid string.',
             'contactName.max' => 'Contact name cannot exceed 100 characters.',
@@ -205,11 +205,22 @@ class UpdatePropertyRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Clean up amenities array if provided
-        if ($this->has('amenities') && is_array($this->amenities)) {
-            $this->merge([
-                'amenities' => json_encode(array_filter(array_unique($this->amenities)))
-            ]);
+        // Handle features array if provided
+        if ($this->has('features')) {
+            $features = $this->input('features');
+            if (is_array($features)) {
+                $features = array_map('intval', array_filter($features));
+                $this->merge(['features' => $features]);
+            }
+        }
+        
+        // Handle utilities array if provided
+        if ($this->has('utilities')) {
+            $utilities = $this->input('utilities');
+            if (is_array($utilities)) {
+                $utilities = array_map('intval', array_filter($utilities));
+                $this->merge(['utilities' => $utilities]);
+            }
         }
 
         // Convert boolean fields

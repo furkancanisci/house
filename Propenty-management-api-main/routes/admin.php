@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\AmenityController;
+use App\Http\Controllers\Admin\FeatureController;
+use App\Http\Controllers\Admin\UtilityController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\MediaController;
@@ -65,9 +67,13 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::post('cities/{city}/neighborhoods', [CityController::class, 'storeNeighborhood'])->name('admin.cities.neighborhoods.store');
     Route::delete('neighborhoods/{neighborhood}', [CityController::class, 'destroyNeighborhood'])->name('admin.neighborhoods.destroy');
 
-    // Amenities
-    Route::resource('amenities', AmenityController::class)->names('admin.amenities');
-    Route::post('amenities/bulk-action', [AmenityController::class, 'bulkAction'])->name('admin.amenities.bulk');
+    // Features
+    Route::resource('features', FeatureController::class)->names('admin.features');
+    Route::post('features/bulk-action', [FeatureController::class, 'bulkAction'])->name('admin.features.bulk');
+
+    // Utilities
+    Route::resource('utilities', UtilityController::class)->names('admin.utilities');
+    Route::post('utilities/bulk-action', [UtilityController::class, 'bulkAction'])->name('admin.utilities.bulk');
 
     // Users & Agents Management
     Route::resource('users', UserController::class)->names('admin.users');
@@ -120,6 +126,10 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::get('reports/users', [ReportController::class, 'users'])->name('admin.reports.users');
     Route::get('reports/revenue', [ReportController::class, 'revenue'])->name('admin.reports.revenue');
     Route::get('reports/export/{type}', [ReportController::class, 'export'])->name('admin.reports.export');
+
+    // AJAX routes for location dropdowns
+    Route::get('get-cities', [CityController::class, 'getCitiesByState'])->name('admin.get-cities');
+    Route::get('get-neighborhoods', [CityController::class, 'getNeighborhoodsByCity'])->name('admin.get-neighborhoods');
 
     // Roles & Permissions (SuperAdmin only)
     Route::middleware('role:SuperAdmin')->group(function () {

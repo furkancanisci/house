@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useForm, Controller } from 'react-hook-form';
@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Property, SearchFilters } from '../types';
 import { useTranslation } from 'react-i18next';
+import { useAuthCheck } from '../hooks/useAuthCheck';
+import AuthModal from '../components/AuthModal';
 import {
   ArrowLeft,
   ArrowRight,
@@ -51,6 +53,40 @@ import LocationSelector from '../components/LocationSelector';
 import PropertyLocationMap from '../components/PropertyLocationMap';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
+import api from '../services/api';
+
+// Types for features and utilities
+interface Feature {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  name_ku: string;
+  description_ar?: string;
+  description_en?: string;
+  description_ku?: string;
+  category?: string;
+  category_label?: string;
+  icon?: string;
+  slug: string;
+  sort_order?: number;
+  is_active: boolean;
+}
+
+interface Utility {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  name_ku: string;
+  description_ar?: string;
+  description_en?: string;
+  description_ku?: string;
+  category?: string;
+  category_label?: string;
+  icon?: string;
+  slug: string;
+  sort_order?: number;
+  is_active: boolean;
+}
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required').max(255, 'Title cannot exceed 255 characters'),
@@ -110,12 +146,13 @@ const AddProperty: React.FC = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(() => {
+  const { isAuthenticated, showAuthModal, openAuthModal, closeAuthModal, requireAuth } = useAuthCheck();
+  const [selectedFeatures, setSelectedFeatures] = useState<number[]>(() => {
     // Restore selected features from localStorage
     const savedFeatures = localStorage.getItem('addProperty_selectedFeatures');
     return savedFeatures ? JSON.parse(savedFeatures) : [];
   });
-  const [selectedUtilities, setSelectedUtilities] = useState<string[]>(() => {
+  const [selectedUtilities, setSelectedUtilities] = useState<number[]>(() => {
     // Restore selected utilities from localStorage
     const savedUtilities = localStorage.getItem('addProperty_selectedUtilities');
     return savedUtilities ? JSON.parse(savedUtilities) : [];
@@ -125,6 +162,11 @@ const AddProperty: React.FC = () => {
     // Restore image preview URLs from localStorage
     const savedPreviewUrls = localStorage.getItem('addProperty_imagePreviewUrls');
     return savedPreviewUrls ? JSON.parse(savedPreviewUrls) : [];
+  });
+  const [mainImageIndex, setMainImageIndex] = useState<number>(() => {
+    // Restore main image index from localStorage
+    const savedMainImageIndex = localStorage.getItem('addProperty_mainImageIndex');
+    return savedMainImageIndex ? parseInt(savedMainImageIndex, 10) : 0;
   });
   const [currentStep, setCurrentStep] = useState(() => {
     // Restore current step from localStorage on page refresh
@@ -245,6 +287,11 @@ const AddProperty: React.FC = () => {
     localStorage.setItem('addProperty_imagePreviewUrls', JSON.stringify(imagePreviewUrls));
   }, [imagePreviewUrls]);
 
+  // Save main image index to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('addProperty_mainImageIndex', mainImageIndex.toString());
+  }, [mainImageIndex]);
+
   // Save location data to localStorage
   React.useEffect(() => {
     localStorage.setItem('addProperty_selectedCity', selectedCity);
@@ -284,99 +331,77 @@ const AddProperty: React.FC = () => {
     loadDocumentTypes();
   }, [i18n.language]);
 
-  const availableFeatures = [
-    'Air Conditioning',
-    'Heating',
-    'Dishwasher',
-    'Laundry in Unit',
-    'Laundry in Building',
-    'Balcony',
-    'Patio',
-    'Garden',
-    'Roof Deck',
-    'Terrace',
-    'Fireplace',
-    'Hardwood Floors',
-    'Carpet',
-    'Tile Floors',
-    'High Ceilings',
-    'Walk-in Closet',
-    'Storage',
-    'Basement',
-    'Attic',
-    'Garage',
-    'Parking',
-    'Elevator',
-    'Doorman',
-    'Concierge',
-    'Security System',
-    'Intercom',
-    'Video Security',
-    'Gym',
-    'Pool',
-    'Hot Tub',
-    'Sauna',
-    'Tennis Court',
-    'Basketball Court',
-    'Playground',
-    'Dog Park',
-    'Pet Friendly',
-    'No Pets',
-    'Furnished',
-    'Unfurnished',
-    'Internet',
-    'Cable TV',
-    'Utilities Included',
-    'Recently Renovated',
-    'New Construction',
-    'Outdoor Kitchen',
-    'Master Suite',
-    'Updated Kitchen',
-    'Updated Bathroom',
-    'Close to Transit',
-    'Ocean View',
-    'City View',
-    'Private Elevator',
-    'Spa',
-    'Wine Cellar',
-    'Smart Home',
-    'Historic Details',
-    'Bay Windows',
-    'Crown Molding',
-    'Community Pool',
-    'Washer/Dryer',
-    'In-Unit Laundry',
-    'Rooftop Deck',
-    'Fitness Center',
-    'Single Story',
-    'Large Backyard',
-    'Desert Landscaping',
-  ];
+  // Load features and utilities when component mounts or language changes
+  useEffect(() => {
+    fetchFeatures();
+    fetchUtilities();
+  }, [i18n.language]);
 
-  const availableUtilities = [
-    'Electricity',
-    'Water',
-    'Gas',
-    'Internet',
-    'Cable TV',
-    'Trash Collection',
-    'Sewer',
-    'Heat',
-    'Air Conditioning',
-    'Hot Water',
-    'Electricity Included',
-    'Water Included',
-    'Gas Included',
-    'Internet Included',
-    'Cable TV Included',
-    'All Utilities Included',
-  ];
+  // State for features and utilities from API
+  const [availableFeatures, setAvailableFeatures] = useState<Feature[]>([]);
+  const [availableUtilities, setAvailableUtilities] = useState<Utility[]>([]);
+  const [loadingFeatures, setLoadingFeatures] = useState(false);
+  const [loadingUtilities, setLoadingUtilities] = useState(false);
+  const [featuresError, setFeaturesError] = useState<string | null>(null);
+  const [utilitiesError, setUtilitiesError] = useState<string | null>(null);
 
-  const handleFeatureToggle = (feature: string) => {
+  // Fetch features from API
+  const fetchFeatures = async () => {
+    setLoadingFeatures(true);
+    setFeaturesError(null);
+    try {
+      const response = await api.get('/features', {
+        params: { 
+          active: 1,
+          lang: i18n.language 
+        },
+        headers: {
+          'Accept-Language': i18n.language,
+        },
+      });
+      
+      setAvailableFeatures(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching features:', error);
+      setFeaturesError('Failed to load features');
+      notification.error('Failed to load features');
+    } finally {
+      setLoadingFeatures(false);
+    }
+  };
+
+  // Fetch utilities from API
+  const fetchUtilities = async () => {
+    setLoadingUtilities(true);
+    setUtilitiesError(null);
+    try {
+      const response = await api.get('/utilities', {
+        params: { 
+          active: 1,
+          lang: i18n.language 
+        },
+        headers: {
+          'Accept-Language': i18n.language,
+        },
+      });
+      
+      setAvailableUtilities(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching utilities:', error);
+      setUtilitiesError('Failed to load utilities');
+      notification.error('Failed to load utilities');
+    } finally {
+      setLoadingUtilities(false);
+    }
+  };
+
+  const handleFeatureToggle = (featureId: number) => {
     setSelectedFeatures(prev => {
-      const newFeatures = prev.includes(feature)
-        ? prev.filter(f => f !== feature)
-        : [...prev, feature];
+      const newFeatures = prev.includes(featureId)
+        ? prev.filter(f => f !== featureId)
+        : [...prev, featureId];
+      // Save to localStorage
+      localStorage.setItem('addProperty_selectedFeatures', JSON.stringify(newFeatures));
       return newFeatures;
     });
   };
@@ -399,11 +424,13 @@ const AddProperty: React.FC = () => {
     });
   };
 
-  const handleUtilityToggle = (utility: string) => {
+  const handleUtilityToggle = (utilityId: number) => {
     setSelectedUtilities(prev => {
-      const newUtilities = prev.includes(utility)
-        ? prev.filter(u => u !== utility)
-        : [...prev, utility];
+      const newUtilities = prev.includes(utilityId)
+        ? prev.filter(u => u !== utilityId)
+        : [...prev, utilityId];
+      // Save to localStorage
+      localStorage.setItem('addProperty_selectedUtilities', JSON.stringify(newUtilities));
       return newUtilities;
     });
   };
@@ -426,20 +453,17 @@ const AddProperty: React.FC = () => {
     setValue('longitude', location.longitude);
   };
 
-  // Helper function to get feature translation with fallback
-  const getFeatureTranslation = (feature: string): string => {
-    // Convert feature name to translation key format
-    const translationKey = feature.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
 
-    // Try to get translation, fallback to original feature name if not found
-    const translation = t(`property.features.${translationKey}`, { defaultValue: feature });
-
-    // Ensure we always return a string
-    return typeof translation === 'string' ? translation : feature;
-  };
 
   const nextStep = async () => {
     console.log('Next button clicked, current step:', currentStep);
+    
+    // Prevent moving beyond the last step
+    if (currentStep >= totalSteps) {
+      console.log('Already at the last step, cannot proceed further');
+      return;
+    }
+    
     const fieldsToValidate = getFieldsForStep(currentStep);
     console.log('Fields to validate:', fieldsToValidate);
 
@@ -473,21 +497,59 @@ const AddProperty: React.FC = () => {
       return;
     }
 
-    setSelectedImages(prev => [...prev, ...files]);
+    const newImages = [...selectedImages, ...files];
+    setSelectedImages(newImages);
+
+    // If this is the first image, set it as main image
+    if (selectedImages.length === 0 && files.length > 0) {
+      setMainImageIndex(0);
+    }
 
     // Create preview URLs
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreviewUrls(prev => [...prev, e.target?.result as string]);
-      };
-      reader.readAsDataURL(file);
+    const newPreviewUrls = [...imagePreviewUrls];
+    const promises: Promise<string>[] = [];
+    
+    files.forEach((file) => {
+      const promise = new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      });
+      promises.push(promise);
     });
+
+    // Wait for all files to be processed, then update preview URLs
+    Promise.all(promises).then((urls) => {
+      setImagePreviewUrls([...imagePreviewUrls, ...urls]);
+    });
+
+    // Clear the input value to allow re-uploading the same file
+    event.target.value = '';
   };
 
   const removeImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
     setImagePreviewUrls(prev => prev.filter((_, i) => i !== index));
+    
+    // Adjust main image index if necessary
+    if (index === mainImageIndex) {
+      // If removing the main image, set the first remaining image as main
+      setMainImageIndex(0);
+    } else if (index < mainImageIndex) {
+      // If removing an image before the main image, adjust the index
+      setMainImageIndex(prev => prev - 1);
+    }
+    
+    // If no images left, reset main image index
+    if (selectedImages.length <= 1) {
+      setMainImageIndex(0);
+    }
+  };
+
+  const selectMainImage = (index: number) => {
+    setMainImageIndex(index);
   };
 
   const getFieldsForStep = (step: number) => {
@@ -511,6 +573,12 @@ const AddProperty: React.FC = () => {
     if (isSubmitting) {
       console.log('Form submission already in progress');
       return; // Prevent multiple submissions
+    }
+
+    // Check authentication before proceeding
+    if (!isAuthenticated) {
+      openAuthModal();
+      return;
     }
 
     // Ensure numeric fields are properly converted
@@ -575,7 +643,8 @@ const AddProperty: React.FC = () => {
         is_featured: false,
         is_available: true,
         availableDate: data.availableDate || new Date().toISOString(),
-        amenities: Array.isArray(selectedFeatures) ? selectedFeatures : [],
+        features: Array.isArray(selectedFeatures) ? selectedFeatures : [],
+        utilities: Array.isArray(selectedUtilities) ? selectedUtilities : [],
         contactName: data.contactName || '',
         contactPhone: data.contactPhone || '',
         contactEmail: data.contactEmail || '',
@@ -589,10 +658,10 @@ const AddProperty: React.FC = () => {
       Object.keys(propertyData).forEach(key => {
         const value = propertyData[key];
         if (value !== null && value !== undefined) {
-          if (key === 'amenities' && Array.isArray(value)) {
-            // Handle amenities array
-            value.forEach((amenity: string, index: number) => {
-              formDataToSend.append(`amenities[${index}]`, amenity);
+          if ((key === 'features' || key === 'utilities') && Array.isArray(value)) {
+            // Handle features and utilities arrays
+            value.forEach((id: number, index: number) => {
+              formDataToSend.append(`${key}[${index}]`, String(id));
             });
           } else if (typeof value === 'boolean') {
             // Handle boolean values
@@ -605,14 +674,16 @@ const AddProperty: React.FC = () => {
       });
 
       // Add images to FormData
-      if (selectedImages[0]) {
-        formDataToSend.append('main_image', selectedImages[0]);
+      if (selectedImages[mainImageIndex]) {
+        formDataToSend.append('main_image', selectedImages[mainImageIndex]);
       }
 
-      // Add gallery images (excluding the first one which is main)
-      for (let i = 1; i < selectedImages.length; i++) {
-        formDataToSend.append('images[]', selectedImages[i]);
-      }
+      // Add gallery images (excluding the main image)
+      selectedImages.forEach((image, index) => {
+        if (index !== mainImageIndex) {
+          formDataToSend.append('images[]', image);
+        }
+      });
 
       console.log('Prepared property data for submission');
 
@@ -783,20 +854,20 @@ const AddProperty: React.FC = () => {
                     control={control}
                     render={({ field }) => (
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger className="h-8 text-sm border rounded-lg hover:border-purple-300 focus:ring-2 focus:ring-purple-100">
+                        <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200">
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-3 w-3 text-purple-600" />
                             <SelectValue placeholder={t('addProperty.placeholders.selectAdType')} />
                           </div>
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="rent" className="text-sm py-2">
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
+                          <SelectItem value="rent" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <div className="w-1.5 h-1.5 bg-[#067977] rounded-full"></div>
                               {t('property.listingTypes.forRent')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="sale" className="text-sm py-2">
+                          <SelectItem value="sale" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                               {t('property.listingTypes.forSale')}
@@ -817,26 +888,26 @@ const AddProperty: React.FC = () => {
                     control={control}
                     render={({ field }) => (
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger className="h-8 text-sm border rounded-lg hover:border-purple-300 focus:ring-2 focus:ring-purple-100">
+                        <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200">
                           <div className="flex items-center gap-1">
                             <Home className="h-3 w-3 text-purple-600" />
                             <SelectValue placeholder={t('addProperty.placeholders.selectPropertyType')} />
                           </div>
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="apartment" className="text-sm py-2">
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
+                          <SelectItem value="apartment" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <Building className="h-3 w-3 text-[#067977]" />
                               {t('property.types.apartment')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="house" className="text-sm py-2">
+                          <SelectItem value="house" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <Home className="h-3 w-3 text-green-600" />
                               {t('property.types.house')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="villa" className="text-sm py-2">
+                          <SelectItem value="villa" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <Star className="h-3 w-3 text-yellow-600" />
                               {t('property.types.villa')}
@@ -848,7 +919,7 @@ const AddProperty: React.FC = () => {
                               {t('property.types.condo')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="townhouse" className="text-sm py-2">
+                          <SelectItem value="townhouse" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <Home className="h-3 w-3 text-indigo-600" />
                               {t('property.types.townhouse')}
@@ -1103,38 +1174,38 @@ const AddProperty: React.FC = () => {
                   control={control}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
-                      <SelectTrigger className="h-8 text-sm border rounded-lg hover:border-orange-300 focus:ring-2 focus:ring-orange-100">
+                      <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200">
                         <div className="flex items-center gap-1">
                           <Car className="h-3 w-3 text-orange-600" />
                           <SelectValue placeholder={t('addProperty.placeholders.selectParkingType')} />
                         </div>
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none" className="text-sm py-2">
+                      <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
+                        <SelectItem value="none" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
                             {t('addProperty.parkingTypes.noParking')}
                           </div>
                         </SelectItem>
-                        <SelectItem value="street" className="text-sm py-2">
+                        <SelectItem value="street" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
                             {t('addProperty.parkingTypes.streetParking')}
                           </div>
                         </SelectItem>
-                        <SelectItem value="garage" className="text-sm py-2">
+                        <SelectItem value="garage" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                             {t('addProperty.parkingTypes.closedGarage')}
                           </div>
                         </SelectItem>
-                        <SelectItem value="driveway" className="text-sm py-2">
+                        <SelectItem value="driveway" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-[#067977] rounded-full"></div>
                             {t('addProperty.parkingTypes.privateDriveway')}
                           </div>
                         </SelectItem>
-                        <SelectItem value="carport" className="text-sm py-2">
+                        <SelectItem value="carport" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
                             {t('addProperty.parkingTypes.carShelter')}
@@ -1198,30 +1269,56 @@ const AddProperty: React.FC = () => {
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {imagePreviewUrls.map((url, index) => (
                       <div key={index} className="relative group">
-                        <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow-md">
+                        <div 
+                          className={`relative overflow-hidden rounded-xl border-2 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer ${
+                            index === mainImageIndex 
+                              ? 'border-[#067977] ring-2 ring-[#067977]/30 bg-[#067977]/5' 
+                              : 'border-gray-200 hover:border-purple-300'
+                          }`}
+                          onClick={() => selectMainImage(index)}
+                        >
                           <FixedImage
                             src={url}
                             alt={`Preview ${index + 1}`}
                             className="w-full h-32 object-cover"
-                            showLoadingSpinner={true}
+                            showLoadingSpinner={false}
                           />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200"></div>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200"></div>
+                          
+                          {/* Remove button */}
                           <button
                             type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage(index);
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-10"
                           >
-                            <X className="h-4 w-4" />
+                            <X className="h-3 w-3" />
                           </button>
-                          {index === 0 && (
-                            <div className="absolute bottom-3 left-3 bg-gradient-to-r from-[#067977] to-[#067977]/80 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-lg flex items-center gap-1">
+                          
+                          {/* Main image indicator */}
+                          {index === mainImageIndex && (
+                            <div className="absolute bottom-2 left-2 bg-gradient-to-r from-[#067977] to-[#067977]/90 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg flex items-center gap-1 z-10">
                               <Star className="h-3 w-3 fill-current" />
-                              {t('addProperty.imageUpload.mainImage')}
+                              <span className="hidden sm:inline">{t('addProperty.imageUpload.mainImage')}</span>
+                              <span className="sm:hidden">رئيسية</span>
                             </div>
                           )}
-                          <div className="absolute top-3 left-3 bg-white/90 text-gray-700 text-xs px-2 py-1 rounded-full font-medium">
+                          
+                          {/* Image number */}
+                          <div className="absolute top-2 left-2 bg-white/90 text-gray-700 text-xs px-2 py-1 rounded-full font-medium">
                             {index + 1}
                           </div>
+                          
+                          {/* Click to select indicator */}
+                          {index !== mainImageIndex && (
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+                              <div className="bg-white/90 text-gray-700 text-xs px-3 py-1.5 rounded-full font-medium shadow-lg">
+                                انقر لجعلها رئيسية
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1280,20 +1377,32 @@ const AddProperty: React.FC = () => {
               <p className="text-xs text-gray-600 mb-2">
                 {t('forms.selectAllFeatures')}
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
-                {availableFeatures.map((feature) => (
-                  <div key={feature} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={feature}
-                      checked={selectedFeatures.includes(feature)}
-                      onCheckedChange={() => handleFeatureToggle(feature)}
-                    />
-                    <Label htmlFor={feature} className="text-xs">
-                      {getFeatureTranslation(feature)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+              {loadingFeatures ? (
+                <div className="flex items-center justify-center p-8 border rounded-lg">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#067977]"></div>
+                  <span className="ml-2 text-sm text-gray-600">{t('common.loading')}...</span>
+                </div>
+              ) : featuresError ? (
+                <div className="p-4 border rounded-lg bg-red-50 border-red-200">
+                  <p className="text-sm text-red-600">{featuresError}</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                  {availableFeatures.map((feature) => (
+                    <div key={feature.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`feature-${feature.id}`}
+                        checked={selectedFeatures.includes(feature.id)}
+                        onCheckedChange={() => handleFeatureToggle(feature.id)}
+                      />
+                      <Label htmlFor={`feature-${feature.id}`} className="text-xs">
+                        {i18n.language === 'ar' ? feature.name_ar : 
+                         i18n.language === 'ku' ? feature.name_ku : feature.name_en}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-gray-500 mt-2">
                 {t('forms.selectedFeatures')}: {selectedFeatures.length} {t('forms.features')}
               </p>
@@ -1303,24 +1412,36 @@ const AddProperty: React.FC = () => {
               <Label className="text-sm font-medium text-gray-700 mb-3 block">
                 {t('property.details.utilities')}
               </Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
-                {availableUtilities.map((utility) => (
-                  <div key={utility} className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <Checkbox
-                      id={`utility-${utility}`}
-                      checked={selectedUtilities.includes(utility)}
-                      onCheckedChange={() => handleUtilityToggle(utility)}
-                      className="data-[state=checked]:bg-[#067977] data-[state=checked]:border-[#067977]"
-                    />
-                    <Label
-                      htmlFor={`utility-${utility}`}
-                      className="text-xs font-medium text-gray-700 cursor-pointer hover:text-[#067977] transition-colors"
-                    >
-                      {utility}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+              {loadingUtilities ? (
+                <div className="flex items-center justify-center p-8 border rounded-lg">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#067977]"></div>
+                  <span className="ml-2 text-sm text-gray-600">{t('common.loading')}...</span>
+                </div>
+              ) : utilitiesError ? (
+                <div className="p-4 border rounded-lg bg-red-50 border-red-200">
+                  <p className="text-sm text-red-600">{utilitiesError}</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+                  {availableUtilities.map((utility) => (
+                    <div key={utility.id} className="flex items-center space-x-2 rtl:space-x-reverse">
+                      <Checkbox
+                        id={`utility-${utility.id}`}
+                        checked={selectedUtilities.includes(utility.id)}
+                        onCheckedChange={() => handleUtilityToggle(utility.id)}
+                        className="data-[state=checked]:bg-[#067977] data-[state=checked]:border-[#067977]"
+                      />
+                      <Label
+                        htmlFor={`utility-${utility.id}`}
+                        className="text-xs font-medium text-gray-700 cursor-pointer hover:text-[#067977] transition-colors"
+                      >
+                        {i18n.language === 'ar' ? utility.name_ar : 
+                         i18n.language === 'ku' ? utility.name_ku : utility.name_en}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-gray-500 mt-2">
                 {t('addProperty.selectedUtilities')}: {selectedUtilities.length}
               </p>
@@ -1592,6 +1713,19 @@ const AddProperty: React.FC = () => {
           </div>
         </form>
       </div>
+      
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={closeAuthModal}
+        title={t('auth.requireAuth.title')}
+        message={t('auth.requireAuth.addPropertyMessage')}
+        onSuccess={() => {
+          closeAuthModal();
+          // After successful login, the form will be automatically submitted
+          // since the user is now authenticated
+        }}
+      />
     </div>
   );
 };

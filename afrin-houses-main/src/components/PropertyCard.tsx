@@ -61,6 +61,36 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     return String(val);
   };
 
+  // Helper to get feature name from either string or object
+  const getFeatureName = (feature: any): string => {
+    // Handle null or undefined
+    if (feature === null || feature === undefined) {
+      return '';
+    }
+    
+    // Handle string features
+    if (typeof feature === 'string') {
+      return feature;
+    }
+    
+    // Handle object features
+    if (typeof feature === 'object' && feature !== null) {
+      try {
+        // Try to get the name based on current language
+        const locale = i18n.language;
+        if (locale === 'ar' && feature.name_ar) return feature.name_ar;
+        if (locale === 'ku' && feature.name_ku) return feature.name_ku;
+        return feature.name_en || feature.name || '';
+      } catch (error) {
+        console.error('Error getting feature name:', error, feature);
+        return '';
+      }
+    }
+    
+    // Convert other types to string
+    return String(feature);
+  };
+
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -231,11 +261,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
 
               {/* Features */}
               <div className="flex flex-wrap gap-1 lg:gap-2 mb-3 lg:mb-4">
-                {Array.isArray(property.features) && property.features.slice(0, 3).map((feature) => {
-                  const translated = t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: feature });
-                  const displayText = typeof translated === 'string' ? translated : feature;
+                {Array.isArray(property.features) && property.features.slice(0, 3).map((feature, index) => {
+                  const featureName = getFeatureName(feature);
+                  // Ensure featureName is a valid string before processing
+                  const safeFeatureName = typeof featureName === 'string' ? featureName : '';
+                  const translated = safeFeatureName 
+                    ? t(`property.features.${safeFeatureName.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: safeFeatureName })
+                    : safeFeatureName;
+                  const displayText = typeof translated === 'string' ? translated : safeFeatureName;
                   return (
-                    <Badge key={feature} variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1">
+                    <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1">
                       {displayText}
                     </Badge>
                   );
@@ -347,11 +382,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
         </div>
 
         <div className="flex flex-wrap gap-1 mb-2">
-          {Array.isArray(property.features) && property.features.slice(0, 2).map((feature) => {
-            const translated = t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: feature });
-            const displayText = typeof translated === 'string' ? translated : feature;
+          {Array.isArray(property.features) && property.features.slice(0, 2).map((feature, index) => {
+            const featureName = getFeatureName(feature);
+            // Ensure featureName is a valid string before processing
+            const safeFeatureName = typeof featureName === 'string' ? featureName : '';
+            const translated = safeFeatureName 
+              ? t(`property.features.${safeFeatureName.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: safeFeatureName })
+              : safeFeatureName;
+            const displayText = typeof translated === 'string' ? translated : safeFeatureName;
             return (
-              <Badge key={feature} variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1.5 py-0.5">
+              <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1.5 py-0.5">
                 {displayText}
               </Badge>
             );

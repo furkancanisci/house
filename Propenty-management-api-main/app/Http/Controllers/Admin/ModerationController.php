@@ -67,7 +67,7 @@ class ModerationController extends Controller
     {
         Gate::authorize('moderate properties');
 
-        $property->load(['user', 'media', 'amenities']);
+        $property->load(['user', 'media']);
 
         return view('admin.moderation.show', compact('property'));
     }

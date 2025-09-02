@@ -66,6 +66,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'phone',
         'avatar_url',
         'is_active',
+        'is_verified',
         'remember_token',
         'email_verified_at',
         'preferred_language',
@@ -80,6 +81,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'is_verified' => 'boolean',
     ];
 
     /**
@@ -141,7 +143,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function getAvatarThumbnailUrlAttribute(): ?string
     {
         $media = $this->getFirstMedia('avatar');
-        return $media ? $media->getUrl('thumb') : null;
+        return $media ? ($media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : $media->getUrl()) : null;
     }
 
     /**

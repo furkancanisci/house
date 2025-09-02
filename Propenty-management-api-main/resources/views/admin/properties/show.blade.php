@@ -183,23 +183,6 @@
                         </div>
                     </div>
 
-                    <!-- Amenities -->
-                    @if($property->amenities && $property->amenities->count() > 0)
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <h5>Amenities</h5>
-                            <div class="row">
-                                @foreach($property->amenities as $amenity)
-                                <div class="col-md-6 col-lg-4 mb-2">
-                                    <span class="badge badge-secondary">
-                                        <i class="fas fa-check"></i> {{ is_string($amenity) ? $amenity : $amenity->name }}
-                                    </span>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    @endif
 
                     <!-- Nearby Places -->
                     @if($property->nearby_places && is_array($property->nearby_places) && count($property->nearby_places) > 0)

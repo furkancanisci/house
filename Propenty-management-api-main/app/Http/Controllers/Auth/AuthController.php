@@ -633,11 +633,29 @@ class AuthController extends Controller
     }
 
     /**
-     * Resend verification email (alias for sendVerificationEmail with additional checks).
+     * Resend verification email (handles both authenticated and unauthenticated requests).
      */
     public function resendVerificationEmail(Request $request): JsonResponse
     {
+        // Handle both authenticated and unauthenticated requests
         $user = $request->user();
+        
+        if (!$user) {
+            // For unauthenticated requests, require email parameter
+            $request->validate([
+                'email' => 'required|email|exists:users,email'
+            ]);
+            
+            $user = User::where('email', $request->email)->first();
+            
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not found.',
+                    'success' => false,
+                    'code' => 'USER_NOT_FOUND'
+                ], 404);
+            }
+        }
         
         // Additional validation for resend requests
         if ($user->hasVerifiedEmail()) {
@@ -668,8 +686,33 @@ class AuthController extends Controller
             return response()->json($response, $statusCode);
         }
 
-        // Use the same service method as sendVerificationEmail
-        return $this->sendVerificationEmail($request);
+        // Send verification email using the service
+        $result = $this->emailVerificationService->sendVerificationEmail(
+            $user,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        $statusCode = match($result['code']) {
+            'ALREADY_VERIFIED' => 200,
+            'RATE_LIMITED' => 429,
+            'EMAIL_SENT' => 200,
+            'SEND_FAILED' => 500,
+            default => 500
+        };
+
+        $response = [
+            'message' => $result['message'],
+            'success' => $result['success'],
+            'code' => $result['code']
+        ];
+
+        // Add retry information for rate limited requests
+        if ($result['code'] === 'RATE_LIMITED') {
+            $response['retry_after'] = $result['retry_after'];
+        }
+
+        return response()->json($response, $statusCode);
     }
 
     /**

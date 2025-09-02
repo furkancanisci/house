@@ -93,9 +93,9 @@ const EnhancedDocumentTypeSelect: React.FC<EnhancedDocumentTypeSelectProps> = me
       >
         <SelectTrigger
           className={cn(
-            "h-12 text-base border-2 rounded-xl bg-white",
-            "border-gray-200 hover:border-purple-300 focus:border-purple-500",
-            "focus:ring-2 focus:ring-purple-100",
+            "h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5",
+            "border-gray-200 hover:border-purple-500 focus:border-[#067977]",
+            "focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200",
             disabled && "opacity-50 cursor-not-allowed",
             error && "border-red-500 focus:border-red-500 focus:ring-red-100",
             loading && "cursor-wait"
@@ -117,7 +117,7 @@ const EnhancedDocumentTypeSelect: React.FC<EnhancedDocumentTypeSelectProps> = me
         </SelectTrigger>
 
         <SelectContent
-          className="bg-white border border-gray-200 rounded-lg shadow-lg"
+          className="bg-white border-2 border-gray-100 rounded-xl shadow-lg"
           style={{ maxHeight: `${maxHeight}px` }}
         >
           {/* Loading State */}
@@ -153,9 +153,9 @@ const EnhancedDocumentTypeSelect: React.FC<EnhancedDocumentTypeSelectProps> = me
                 key={docType.id}
                 value={docType.id.toString()}
                 className={cn(
-                  "relative flex w-full cursor-default select-none items-center rounded-sm p-3 sm:p-4 min-h-[56px] text-sm outline-none",
-                  "hover:bg-purple-50 focus:bg-purple-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-                  isSelected && "bg-purple-100 border-r-4 border-purple-500"
+                  "relative flex w-full cursor-pointer select-none items-center rounded-sm py-3 px-4 min-h-[56px] text-sm outline-none",
+                  "hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                  isSelected && "bg-[#067977]/20 border-r-4 border-[#067977]"
                 )}
               >
                 <SelectPrimitive.ItemText asChild>

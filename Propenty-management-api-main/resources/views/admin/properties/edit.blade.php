@@ -42,17 +42,12 @@
                                     <label for="property_type">Property Type <span class="text-danger">*</span></label>
                                     <select name="property_type" id="property_type" class="form-control @error('property_type') is-invalid @enderror" required>
                                         <option value="">Select Type</option>
-                                        @foreach($propertyTypes as $type)
-                                            <option value="{{ $type->name }}" {{ old('property_type', $property->property_type) === $type->name ? 'selected' : '' }}>
-                                                {{ $type->name }}
+                                        @foreach($propertyTypes as $propertyType)
+                                            <option value="{{ $propertyType->name }}" 
+                                                    {{ old('property_type', $property->property_type) === $propertyType->name ? 'selected' : '' }}>
+                                                {{ $propertyType->name }}
                                             </option>
                                         @endforeach
-                                        <option value="house" {{ old('property_type', $property->property_type) === 'house' ? 'selected' : '' }}>House</option>
-                                        <option value="apartment" {{ old('property_type', $property->property_type) === 'apartment' ? 'selected' : '' }}>Apartment</option>
-                                        <option value="condo" {{ old('property_type', $property->property_type) === 'condo' ? 'selected' : '' }}>Condo</option>
-                                        <option value="townhouse" {{ old('property_type', $property->property_type) === 'townhouse' ? 'selected' : '' }}>Townhouse</option>
-                                        <option value="land" {{ old('property_type', $property->property_type) === 'land' ? 'selected' : '' }}>Land</option>
-                                        <option value="commercial" {{ old('property_type', $property->property_type) === 'commercial' ? 'selected' : '' }}>Commercial</option>
                                     </select>
                                     @error('property_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -151,20 +146,34 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="city">City <span class="text-danger">*</span></label>
-                                    <input type="text" name="city" id="city" class="form-control @error('city') is-invalid @enderror" 
-                                           value="{{ old('city', $property->city) }}" required>
-                                    @error('city')
+                                    <label for="state">{{ __('admin.state') ?? 'State' }} <span class="text-danger">*</span></label>
+                                    <select name="state" id="state" class="form-control @error('state') is-invalid @enderror" required>
+                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.state') ?? 'State' }}</option>
+                                        @foreach($states as $stateEn => $stateData)
+                                            <option value="{{ app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en'] }}" 
+                                                    {{ old('state', $property->state) === (app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en']) ? 'selected' : '' }}>
+                                                {{ app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('state')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="state">State <span class="text-danger">*</span></label>
-                                    <input type="text" name="state" id="state" class="form-control @error('state') is-invalid @enderror" 
-                                           value="{{ old('state', $property->state) }}" required>
-                                    @error('state')
+                                    <label for="city">{{ __('admin.city') ?? 'City' }} <span class="text-danger">*</span></label>
+                                    <select name="city" id="city" class="form-control @error('city') is-invalid @enderror" required>
+                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.city') ?? 'City' }}</option>
+                                        @foreach($cities as $city)
+                                            <option value="{{ app()->getLocale() === 'ar' ? $city->name_ar : $city->name_en }}" 
+                                                    {{ old('city', $property->city) === (app()->getLocale() === 'ar' ? $city->name_ar : $city->name_en) ? 'selected' : '' }}>
+                                                {{ app()->getLocale() === 'ar' ? $city->name_ar : $city->name_en }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('city')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -184,9 +193,16 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="neighborhood">Neighborhood</label>
-                                    <input type="text" name="neighborhood" id="neighborhood" class="form-control @error('neighborhood') is-invalid @enderror" 
-                                           value="{{ old('neighborhood', $property->neighborhood) }}">
+                                    <label for="neighborhood">{{ __('admin.neighborhood') ?? 'Neighborhood' }}</label>
+                                    <select name="neighborhood" id="neighborhood" class="form-control @error('neighborhood') is-invalid @enderror">
+                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.neighborhood') ?? 'Neighborhood' }}</option>
+                                        @foreach($neighborhoods as $neighborhood)
+                                            <option value="{{ app()->getLocale() === 'ar' ? $neighborhood->name_ar : $neighborhood->name_en }}" 
+                                                    {{ old('neighborhood', $property->neighborhood) === (app()->getLocale() === 'ar' ? $neighborhood->name_ar : $neighborhood->name_en) ? 'selected' : '' }}>
+                                                {{ app()->getLocale() === 'ar' ? $neighborhood->name_ar : $neighborhood->name_en }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                     @error('neighborhood')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -317,7 +333,7 @@
                             @foreach($property->media as $media)
                             <div class="col-md-3 mb-3">
                                 <div class="position-relative">
-                                    <img src="{{ $media->getUrl('medium') ?? $media->getUrl() }}" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">
+                                    <img src="{{ $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl() }}" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">
                                     <div class="custom-control custom-checkbox position-absolute" style="top: 5px; right: 5px; background: rgba(255,255,255,0.8); border-radius: 3px; padding: 2px;">
                                         <input type="checkbox" name="remove_images[]" value="{{ $media->id }}" class="custom-control-input" id="remove_{{ $media->id }}">
                                         <label class="custom-control-label text-danger" for="remove_{{ $media->id }}" style="font-size: 12px;">Remove</label>
@@ -402,6 +418,24 @@
                     </div>
                 </div>
 
+                <!-- Property Owner Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Current Property Owner</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <img src="{{ $property->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($property->user->full_name ?? 'User') }}" 
+                                 class="img-circle elevation-2 mb-3" alt="User Image" style="width: 80px; height: 80px;">
+                            <h5>{{ $property->user->full_name ?? 'Unknown User' }}</h5>
+                            <p class="text-muted">{{ $property->user->email ?? '' }}</p>
+                            @if($property->user->phone)
+                            <p><i class="fas fa-phone"></i> {{ $property->user->phone }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Contact Information -->
                 <div class="card">
                     <div class="card-header">
@@ -437,31 +471,6 @@
                     </div>
                 </div>
 
-                <!-- Amenities -->
-                @if($amenities->count() > 0)
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Amenities</h3>
-                    </div>
-                    <div class="card-body">
-                        @foreach($amenities as $category => $categoryAmenities)
-                        <div class="mb-3">
-                            <h6>{{ ucfirst($category) }} Features</h6>
-                            @foreach($categoryAmenities as $amenity)
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" name="amenities_list[]" id="amenity_{{ $amenity->id }}" 
-                                       class="custom-control-input" value="{{ $amenity->id }}"
-                                       {{ in_array($amenity->id, old('amenities_list', $property->amenities->pluck('id')->toArray())) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="amenity_{{ $amenity->id }}">
-                                    {{ $amenity->name }}
-                                </label>
-                            </div>
-                            @endforeach
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
 
                 <!-- Form Actions -->
                 <div class="card">
@@ -510,6 +519,62 @@ $(document).ready(function() {
                     reader.readAsDataURL(file);
                 }
             }
+        }
+    });
+
+    // Handle state change to update cities
+    $('#state').on('change', function() {
+        var selectedState = $(this).val();
+        var citySelect = $('#city');
+        var neighborhoodSelect = $('#neighborhood');
+        
+        // Clear city and neighborhood dropdowns
+        citySelect.html('<option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.city') ?? 'City' }}</option>');
+        neighborhoodSelect.html('<option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.neighborhood') ?? 'Neighborhood' }}</option>');
+        
+        if (selectedState) {
+            // Make AJAX request to get cities for the selected state
+            $.ajax({
+                url: '{{ route('admin.get-cities') }}',
+                type: 'GET',
+                data: { state: selectedState },
+                success: function(cities) {
+                    $.each(cities, function(index, city) {
+                        var cityName = '{{ app()->getLocale() }}' === 'ar' ? city.name_ar : city.name_en;
+                        citySelect.append('<option value="' + cityName + '">' + cityName + '</option>');
+                    });
+                },
+                error: function() {
+                    console.log('Error loading cities');
+                }
+            });
+        }
+    });
+
+    // Handle city change to update neighborhoods
+    $('#city').on('change', function() {
+        var selectedCity = $(this).val();
+        var neighborhoodSelect = $('#neighborhood');
+        
+        // Clear neighborhood dropdown
+        neighborhoodSelect.html('<option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.neighborhood') ?? 'Neighborhood' }}</option>');
+        
+        if (selectedCity) {
+            // Make AJAX request to get neighborhoods for the selected city
+            $.ajax({
+                url: '{{ route('admin.get-neighborhoods') }}',
+                type: 'GET',
+                data: { city: selectedCity },
+                success: function(neighborhoods) {
+                    $.each(neighborhoods, function(index, neighborhood) {
+                        var neighborhoodName = '{{ app()->getLocale() }}' === 'ar' ? neighborhood.name_ar : neighborhood.name_en;
+                        neighborhoodSelect.append('<option value="' + neighborhoodName + '">' + neighborhoodName + '</option>');
+                    });
+                },
+                error: function() {
+                    console.log('Error loading neighborhoods');
+                }
+            });
         }
     });
 });
