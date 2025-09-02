@@ -35,6 +35,7 @@ interface AuthService {
   resetPassword(data: { token: string; email: string; password: string; password_confirmation: string }): Promise<{ message: string }>;
   isTokenValid(userData: any): boolean;
   updateUser(userData: Partial<User>): Promise<{ user: User; message: string }>;
+  resendVerificationEmail(email?: string): Promise<{ message: string }>;
 }
 
 export const authService: AuthService = {
@@ -237,6 +238,18 @@ export const authService: AuthService = {
       return response.data;
     } catch (error) {
       console.error('Update user error:', error);
+      throw error;
+    }
+  },
+
+  // Resend email verification
+  async resendVerificationEmail(email?: string): Promise<{ message: string }> {
+    try {
+      const requestData = email ? { email } : {};
+      const response = await api.post('/auth/resend-verification', requestData);
+      return response.data;
+    } catch (error) {
+      console.error('Resend verification email error:', error);
       throw error;
     }
   },

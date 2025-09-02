@@ -5,6 +5,9 @@ import { Property } from '../types';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import { useTranslation } from 'react-i18next';
 import { useLeafletMap, DEFAULT_CENTER, OSM_TILE_LAYER, createPropertyIcon } from '../context/LeafletMapProvider';
+import { useAuthCheck } from '../hooks/useAuthCheck';
+import AuthModal from '../components/AuthModal';
+import EmailActivationModal from '../components/EmailActivationModal';
 import L from 'leaflet';
 import { 
   Heart, 
@@ -34,6 +37,10 @@ import { getProperty } from '../services/propertyService';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import FixedImage from '../components/FixedImage';
 import PropertyImageGallery from '../components/PropertyImageGallery';
+import FeaturesAndUtilities from '../components/FeaturesAndUtilities';
+import { FeatureService } from '../services/featureService';
+import { UtilityService } from '../services/utilityService';
+import { Feature, Utility } from '../types';
 
 const PropertyDetails: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -41,12 +48,18 @@ const PropertyDetails: React.FC = () => {
   const navigate = useNavigate();
   const { state, toggleFavorite } = useApp();
   const { favorites, user } = state;
+  const { isAuthenticated, showAuthModal, openAuthModal, closeAuthModal, requireAuth, showActivationModal, closeActivationModal, requireVerifiedEmail } = useAuthCheck();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [documentType, setDocumentType] = useState<PropertyDocumentType | null>(null);
   const [loadingDocumentType, setLoadingDocumentType] = useState(false);
   const { isLoaded: isMapLoaded, loadError } = useLeafletMap();
+  const [features, setFeatures] = useState<Feature[]>([]);
+  const [utilities, setUtilities] = useState<Utility[]>([]);
+  const [loadingFeatures, setLoadingFeatures] = useState(false);
+  const [loadingUtilities, setLoadingUtilities] = useState(false);
+  const [minLoadingTime, setMinLoadingTime] = useState(true);
 
   const [showMap, setShowMap] = useState(false);
 
@@ -126,7 +139,39 @@ const PropertyDetails: React.FC = () => {
           bathrooms: propertyData.bathrooms ? parseFloat(propertyData.bathrooms) : 0,
           squareFootage: propertyData.square_feet || propertyData.squareFootage || Number(propertyData.details?.square_feet) || 0,
           year_built: propertyData.year_built || propertyData.yearBuilt,
-          features: propertyData.features || (Array.isArray(propertyData.amenities) ? propertyData.amenities : []),
+          features: (() => {
+            // Handle features that come as objects with id, name_ar, name_en, etc.
+            if (Array.isArray(propertyData.features)) {
+              return propertyData.features.map((feature: any) => {
+                if (typeof feature === 'object' && feature.id) {
+                  return feature.id; // Extract just the ID for matching
+                }
+                return feature;
+              });
+            }
+            // Fallback to amenities if features not available
+            if (Array.isArray(propertyData.amenities)) {
+              return propertyData.amenities.map((amenity: any) => {
+                if (typeof amenity === 'object' && amenity.id) {
+                  return amenity.id;
+                }
+                return amenity;
+              });
+            }
+            return [];
+          })(),
+          utilities: (() => {
+            // Handle utilities that come as objects with id, name_ar, name_en, etc.
+            if (Array.isArray(propertyData.utilities)) {
+              return propertyData.utilities.map((utility: any) => {
+                if (typeof utility === 'object' && utility.id) {
+                  return utility.id; // Extract just the ID for matching
+                }
+                return utility;
+              });
+            }
+            return [];
+          })(),
           media: (() => {
             // Handle both the old format (images.gallery) and new format (media array)
             if (propertyData.media && Array.isArray(propertyData.media)) {
@@ -217,6 +262,7 @@ const PropertyDetails: React.FC = () => {
         console.log('Document Type Object after transform:', transformedProperty.documentType);
         console.log('Raw propertyData.document_type_id:', propertyData.document_type_id);
         console.log('Raw propertyData.document_type:', propertyData.document_type);
+
         console.groupEnd();
         
         setProperty(transformedProperty);
@@ -287,6 +333,40 @@ const PropertyDetails: React.FC = () => {
       fetchDocumentType();
     }
   }, [property, i18n.language]);
+
+  // Minimum loading time effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinLoadingTime(false);
+    }, 800); // Show loading for at least 800ms
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch features and utilities
+  useEffect(() => {
+    const fetchFeaturesAndUtilities = async () => {
+      try {
+        setLoadingFeatures(true);
+        setLoadingUtilities(true);
+        
+        const [featuresData, utilitiesData] = await Promise.all([
+          FeatureService.getFeatures(i18n.language),
+          UtilityService.getUtilities(i18n.language)
+        ]);
+        
+        setFeatures(featuresData);
+        setUtilities(utilitiesData);
+      } catch (error) {
+        console.error('Error fetching features and utilities:', error);
+      } finally {
+        setLoadingFeatures(false);
+        setLoadingUtilities(false);
+      }
+    };
+
+    fetchFeaturesAndUtilities();
+  }, [i18n.language]);
 
   if (loading) {
     return (
@@ -428,11 +508,20 @@ const PropertyDetails: React.FC = () => {
 
   const handleContactOwner = () => {
     if (!user) {
-      notification.error(t('messages.signInToContact'));
-      navigate('/auth');
-      return;
+      // Show auth modal when user is not logged in
+      openAuthModal();
+    } else {
+      // When user is logged in, scroll to the contact information
+      const contactCard = document.getElementById('property-contact-card');
+      if (contactCard) {
+        contactCard.scrollIntoView({ behavior: 'smooth' });
+        // Add a temporary highlight effect
+        contactCard.classList.add('ring-2', 'ring-blue-500');
+        setTimeout(() => {
+          contactCard.classList.remove('ring-2', 'ring-blue-500');
+        }, 2000);
+      }
     }
-    notification.success(t('messages.contactInfoDisplayed'));
   };
 
 
@@ -479,8 +568,6 @@ const PropertyDetails: React.FC = () => {
             {/* Image Gallery */}
             <Card className="overflow-hidden">
               <div className="relative">
-                {/* Debug: Log images array */}
-                {console.log('Rendering PropertyImageGallery with images:', property.images)}
                 {property.images && property.images.length > 0 ? (
                   <PropertyImageGallery
                     images={property.images}
@@ -505,7 +592,7 @@ const PropertyDetails: React.FC = () => {
                   <div className="relative w-full h-96 bg-gray-100 flex items-center justify-center">
                     <img 
                       src="/images/placeholder-property.svg"
-                      alt="لا توجد صور متاحة"
+                      alt={t('property.noImagesAvailable', 'لا توجد صور متاحة')}
                       className="w-full h-96 object-contain opacity-60"
                     />
                     <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded text-sm">
@@ -602,37 +689,14 @@ const PropertyDetails: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Features & Amenities */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('steps.features')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {(property.features || [])
-                    .filter(feature => {
-                      // Skip empty or null features
-                      if (!feature) return false;
-                      // Check if translation exists for this feature
-                      const featureKey = feature.toLowerCase().replace(/\s+/g, '');
-                      const translation = t(`property.features.${featureKey}`, {defaultValue: ''});
-                      return translation !== '';
-                    })
-                    .map((feature) => {
-                      const featureKey = feature.toLowerCase().replace(/\s+/g, '');
-                      const Icon = getFeatureIcon(feature);
-                      const translation = t(`property.features.${featureKey}`, { defaultValue: feature });
-                      
-                      return (
-                        <div key={feature} className="flex items-center space-x-2">
-                          <Icon className="h-5 w-5 text-green-600" />
-                          <span className="text-gray-700">{typeof translation === 'string' ? translation : feature}</span>
-                        </div>
-                      );
-                    })}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Enhanced Features and Utilities Section */}
+            <FeaturesAndUtilities 
+              features={features}
+              utilities={utilities}
+              propertyFeatures={property.features || []}
+              propertyUtilities={property.utilities || []}
+              loading={(loadingFeatures || loadingUtilities) || minLoadingTime}
+            />
 
             {/* Property Details */}
             <Card>
@@ -702,12 +766,12 @@ const PropertyDetails: React.FC = () => {
               <CardContent>
                 {loadError ? (
                   <div className="text-red-500 text-center p-4">
-                    Failed to load map
+                    {t('map.failedToLoad', 'Failed to load map')}
                   </div>
                 ) : !isMapLoaded ? (
                   <div className="text-center p-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                    Loading map...
+                    {t('map.loading', 'Loading map...')}
                   </div>
                 ) : (
                   <div className="h-96 rounded-lg overflow-hidden border">
@@ -732,7 +796,7 @@ const PropertyDetails: React.FC = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Contact Card */}
-            <Card>
+            <Card id="property-contact-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <User className="h-5 w-5 mr-2" />
@@ -740,18 +804,82 @@ const PropertyDetails: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* ... existing contact code ... */}
+                {user ? (
+                  // Show contact information when user is logged in
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
+                        <User className="h-8 w-8 text-gray-500" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-lg">{property.contact.name}</p>
+                        <p className="text-sm text-gray-500">{t('property.owner')}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {property.contact.phone && (
+                        <div className="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center mr-3 mt-1">
+                            <Phone className="h-5 w-5 text-gray-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-500">{t('property.contact.phone')}</p>
+                            <a 
+                              href={`tel:${property.contact.phone}`} 
+                              className="text-blue-600 hover:underline break-all"
+                            >
+                              {property.contact.phone}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {property.contact.email && (
+                        <div className="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center mr-3 mt-1">
+                            <Mail className="h-5 w-5 text-gray-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-500">{t('property.contact.email')}</p>
+                            <a 
+                              href={`mailto:${property.contact.email}`} 
+                              className="text-blue-600 hover:underline break-words"
+                            >
+                              {property.contact.email}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  // Show login prompt when user is not logged in
+                  <div className="text-center space-y-4 py-4">
+                    <div className="bg-gray-100 rounded-full p-4 w-20 h-20 mx-auto flex items-center justify-center">
+                      <User className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-1">
+                        {t('auth.signIn')}
+                      </h3>
+                      <p className="text-gray-600">
+                        {t('messages.signInToViewContactInfo')}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 
                 <Button 
                   onClick={handleContactOwner}
                   className="w-full"
                   size="lg"
                 >
-                  {t('property.actions.contactOwner')}
+                  {user ? t('property.actions.contactOwner') : t('auth.signIn')}
                 </Button>
                 
                 {!user && (
-                  <p className="text-sm text-gray-500 text-center">
+                  <p className="text-sm text-gray-500 text-center mt-2">
                     {t('messages.signInToContact')}
                   </p>
                 )}
@@ -798,7 +926,7 @@ const PropertyDetails: React.FC = () => {
               <CardHeader>
                 <CardTitle>{t('property.summary')}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">{t('filters.listingType')}</span>
                   <Badge variant={property.listingType === 'rent' ? 'default' : 'secondary'}>
@@ -839,6 +967,36 @@ const PropertyDetails: React.FC = () => {
                   <span className="text-gray-600">{t('property.details.squareFootage')}</span>
                   <span>{(property.squareFootage || 0).toLocaleString()}</span>
                 </div>
+                
+                {/* Owner Information Section */}
+                {user && property.contact && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">{t('property.contact.owner')}</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <User className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                        <span className="truncate">{property.contact.name}</span>
+                      </div>
+                      {property.contact.phone && (
+                        <div className="flex items-center text-sm">
+                          <Phone className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                          <a href={`tel:${property.contact.phone}`} className="text-blue-600 hover:underline truncate">
+                            {property.contact.phone}
+                          </a>
+                        </div>
+                      )}
+                      {property.contact.email && (
+                        <div className="flex items-start text-sm">
+                          <Mail className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0 mt-0.5" />
+                          <a href={`mailto:${property.contact.email}`} className="text-blue-600 hover:underline break-words">
+                            {property.contact.email}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <Separator />
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 font-semibold">{t('forms.price')}</span>
@@ -851,6 +1009,26 @@ const PropertyDetails: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={closeAuthModal}
+        title={t('auth.requireAuth.title')}
+        message={t('auth.requireAuth.viewOwnerContactMessage')}
+        onSuccess={() => {
+          closeAuthModal();
+          // After successful login, show contact information
+          notification.success(t('auth.requireAuth.loginSuccess'));
+        }}
+      />
+      
+      {/* Email Activation Modal */}
+      <EmailActivationModal
+        isOpen={showActivationModal}
+        onClose={closeActivationModal}
+        userEmail={user?.email}
+      />
     </div>
   );
 };

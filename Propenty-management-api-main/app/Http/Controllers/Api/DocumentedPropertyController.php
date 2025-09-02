@@ -41,7 +41,7 @@ class DocumentedPropertyController extends Controller
      * @queryParam price_max number Filter by maximum price. Example: 5000
      * @queryParam bedrooms string Filter by number of bedrooms (use '4+' for 4 or more). Example: 2
      * @queryParam bathrooms string Filter by number of bathrooms (use '3+' for 3 or more). Example: 2
-     * @queryParam amenities string|array Filter by amenities. Example: ["Air Conditioning","Pool"]
+
      * @queryParam search string Search term to match against title, description, or address. Example: downtown
      * @queryParam sort string Field to sort by (price, created_at, etc). Example: price
      * @queryParam per_page integer Number of results per page. Example: 12
@@ -88,7 +88,7 @@ class DocumentedPropertyController extends Controller
      * @bodyParam is_featured boolean Whether the property is featured. Example: false
      * @bodyParam is_available boolean Whether the property is available. Example: true
      * @bodyParam available_from date The date the property becomes available. Example: 2023-07-01
-     * @bodyParam amenities array An array of amenities available at the property. Example: ["Air Conditioning", "Dishwasher", "Laundry in Unit"]
+
      * @bodyParam main_image file The main image of the property (JPEG, PNG, WebP max 5MB).
      * @bodyParam images array An array of additional property images (max 20, JPEG, PNG, WebP max 5MB each).
      *
@@ -131,7 +131,7 @@ class DocumentedPropertyController extends Controller
      *         "spaces": 1
      *       }
      *     },
-     *     "amenities": ["Air Conditioning", "Dishwasher", "Laundry in Unit"],
+
      *     "status": "draft",
      *     "is_featured": false,
      *     "is_available": true,

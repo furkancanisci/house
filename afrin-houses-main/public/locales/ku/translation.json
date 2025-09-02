@@ -134,6 +134,17 @@
             "temporary": "Tabuya Demkî",
             "family": "Tabuya Malbatî",
             "unspecified": "Nehatiye Diyarkirin"
+        },
+        "featuresAndUtilities": "Taybetmendî û Karûbar",
+        "propertyFeatures": "Taybetmendiyên Mîlkê",
+        "propertyUtilities": "Karûbarên Mîlkê",
+        "noFeaturesAvailable": "Tu taybetmendî tune",
+        "noUtilitiesAvailable": "Tu karûbar tune",
+        "contact": {
+            "name": "Nav",
+            "phone": "Telefon",
+            "email": "Email",
+            "owner": "Xwediyê Mîlkê"
         }
     },
     "auth": {
@@ -372,5 +383,11 @@
         "noPropertiesOnMap": "Li ser vê nexşeyê tu mîlk nîne",
         "zoomToArea": "Bo qada ku tu dixwazî nêzîk bike",
         "searchThisArea": "Li vê qadê lêbigere"
+    },
+    "contact": {
+        "name": "Nav",
+        "phone": "Telefon",
+        "email": "Email",
+        "owner": "Xwediyê Mîlkê"
     }
 }

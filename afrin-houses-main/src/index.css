@@ -1,9 +1,9 @@
+/* Jakob's Law UI/UX improvements */
+@import './styles/jakobs-law-improvements.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Jakob's Law UI/UX improvements */
-@import './styles/jakobs-law-improvements.css';
 
 @layer base {
   :root {

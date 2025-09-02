@@ -45,10 +45,8 @@ class ImageProcessingService
     public function validateImage(UploadedFile $file): array
     {
         $errors = [];
-        $maxFileSize = $this->getMaxFileSize();
         $supportedFormats = $this->getSupportedFormats();
-        $minWidth = config('images.upload.min_width', 400);
-        $minHeight = config('images.upload.min_height', 300);
+        $maxFileSize = $this->getMaxFileSize();
         $maxWidth = config('images.upload.max_width', 8000);
         $maxHeight = config('images.upload.max_height', 6000);
         $allowedMimeTypes = config('images.upload.allowed_mime_types', ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
@@ -77,9 +75,7 @@ class ImageProcessingService
                 $width = $imageInfo[0];
                 $height = $imageInfo[1];
                 
-                if ($width < $minWidth || $height < $minHeight) {
-                    $errors[] = "Image dimensions too small. Minimum size is {$minWidth}x{$minHeight} pixels.";
-                }
+                // Minimum dimension check removed - only checking maximum file size
                 
                 // Check maximum dimensions
                 if ($width > $maxWidth || $height > $maxHeight) {
@@ -198,8 +194,6 @@ class ImageProcessingService
     {
         $supportedFormats = $this->getSupportedFormats();
         $maxFileSize = $this->getMaxFileSize();
-        $minWidth = config('images.upload.min_width', 400);
-        $minHeight = config('images.upload.min_height', 300);
         
         // Extract image data and format
         if (!preg_match('/^data:image\/(\w+);base64,/', $base64Data, $matches)) {
@@ -230,10 +224,7 @@ class ImageProcessingService
             // Load and validate image using Intervention Image v2
             $image = Image::make($tempPath);
             
-            // Check minimum dimensions
-            if ($image->width() < $minWidth || $image->height() < $minHeight) {
-                throw new \InvalidArgumentException("Image dimensions must be at least {$minWidth}x{$minHeight} pixels");
-            }
+            // Minimum dimension check removed - only checking maximum file size
             
             $processedImages = [];
             $qualitySettings = $this->getQualitySettings();

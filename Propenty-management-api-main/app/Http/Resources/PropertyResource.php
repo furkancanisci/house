@@ -84,8 +84,30 @@ class PropertyResource extends JsonResource
             ],
             
             // Features - ensure always returns array
-            'amenities' => $this->getAmenitiesArray(),
-            'features' => $this->getAmenitiesArray(), // Frontend expects features
+            'features' => $this->when($this->relationLoaded('features'), function () {
+                return $this->features->map(function ($feature) {
+                    return [
+                        'id' => $feature->id,
+                        'name_ar' => $feature->name_ar,
+                        'name_en' => $feature->name_en,
+                        'name_ku' => $feature->name_ku,
+                        'icon' => $feature->icon,
+                        'category' => $feature->category,
+                    ];
+                })->toArray();
+            }),
+            'utilities' => $this->when($this->relationLoaded('utilities'), function () {
+                return $this->utilities->map(function ($utility) {
+                    return [
+                        'id' => $utility->id,
+                        'name_ar' => $utility->name_ar,
+                        'name_en' => $utility->name_en,
+                        'name_ku' => $utility->name_ku,
+                        'icon' => $utility->icon,
+                        'category' => $utility->category,
+                    ];
+                })->toArray();
+            }),
             'nearby_places' => is_array($this->nearby_places) ? $this->nearby_places : 
                             (is_string($this->nearby_places) ? json_decode($this->nearby_places, true) : []),
             
@@ -155,26 +177,6 @@ class PropertyResource extends JsonResource
         return $this->ensureUtf8($data);
     }
 
-    /**
-     * Get amenities as array
-     */
-    private function getAmenitiesArray()
-    {
-        // Check if amenities is already an array
-        if (is_array($this->amenities)) {
-            return $this->amenities;
-        }
-        
-        // If it's a JSON string, decode it
-        if (is_string($this->amenities)) {
-            $decoded = json_decode($this->amenities, true);
-            return is_array($decoded) ? $decoded : [];
-        }
-        
-        // If it's null or any other type, return empty array
-        return [];
-    }
-    
     /**
      * Build full address without calling accessor
      */

@@ -54,6 +54,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit amenities',
             'delete amenities',
             
+            // Features
+            'view features',
+            'create features',
+            'edit features',
+            'delete features',
+            
+            // Utilities
+            'view utilities',
+            'create utilities',
+            'edit utilities',
+            'delete utilities',
+            
             // Users
             'view users',
             'create users',
@@ -132,6 +144,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'create amenities',
             'edit amenities',
             'delete amenities',
+            'view features',
+            'create features',
+            'edit features',
+            'delete features',
+            'view utilities',
+            'create utilities',
+            'edit utilities',
+            'delete utilities',
             'view users',
             'create users',
             'edit users',
@@ -168,6 +188,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view categories',
             'view cities',
             'view amenities',
+            'view features',
+            'view utilities',
             'view users',
             'view leads',
             'view media',
@@ -186,6 +208,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view categories',
             'view cities',
             'view amenities',
+            'view features',
+            'view utilities',
             'view leads',
             'edit leads',
             'view media',
@@ -199,6 +223,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view categories',
             'view cities',
             'view amenities',
+            'view features',
+            'view utilities',
         ]);
 
         // Create SuperAdmin user if it doesn't exist

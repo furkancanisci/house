@@ -27,6 +27,9 @@ import {
 // Add to the imports
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
+import { useAuthCheck } from '../hooks/useAuthCheck';
+import AuthModal from './AuthModal';
+import EmailActivationModal from './EmailActivationModal';
 
 const Header: React.FC = () => {
   const { state, logout, changeLanguage } = useApp();
@@ -35,6 +38,14 @@ const Header: React.FC = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
+  const { 
+    showAuthModal, 
+    showActivationModal, 
+    closeAuthModal, 
+    closeActivationModal, 
+    requireAuth, 
+    requireVerifiedEmail 
+  } = useAuthCheck();
 
   const handleLogout = () => {
     logout();
@@ -148,11 +159,9 @@ const Header: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                if (user) {
+                requireVerifiedEmail(() => {
                   navigate('/add-property');
-                } else {
-                  navigate('/auth');
-                }
+                });
               }}
               className="flex items-center space-x-1 text-[#067977] border-[#067977] hover:bg-[#067977] hover:text-white transition-all duration-200 transform hover:scale-105 px-2 lg:px-3 text-xs lg:text-sm font-medium shadow-sm hover:shadow-md"
             >
@@ -231,11 +240,9 @@ const Header: React.FC = () => {
               {/* List Property Button - Mobile */}
               <button
                 onClick={() => {
-                  if (user) {
+                  requireVerifiedEmail(() => {
                     navigate('/add-property');
-                  } else {
-                    navigate('/auth');
-                  }
+                  });
                   setMobileMenuOpen(false);
                 }}
                 className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#067977] hover:bg-gray-50 w-full text-left"
@@ -311,6 +318,25 @@ const Header: React.FC = () => {
           </div>
         )}
       </nav>
+      
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={closeAuthModal}
+        title={t('auth.requireAuth.title')}
+        message={t('auth.requireAuth.addPropertyMessage')}
+        onSuccess={() => {
+          closeAuthModal();
+          navigate('/add-property');
+        }}
+      />
+      
+      {/* Email Activation Modal */}
+      <EmailActivationModal
+        isOpen={showActivationModal}
+        onClose={closeActivationModal}
+        userEmail={user?.email}
+      />
     </header>
   );
 };

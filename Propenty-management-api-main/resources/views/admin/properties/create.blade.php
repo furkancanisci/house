@@ -461,31 +461,6 @@
                     </div>
                 </div>
 
-                <!-- Amenities -->
-                @if($amenities->count() > 0)
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Amenities</h3>
-                    </div>
-                    <div class="card-body">
-                        @foreach($amenities as $category => $categoryAmenities)
-                        <div class="mb-3">
-                            <h6>{{ ucfirst($category) }} Features</h6>
-                            @foreach($categoryAmenities as $amenity)
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" name="amenities_list[]" id="amenity_{{ $amenity->id }}" 
-                                       class="custom-control-input" value="{{ $amenity->id }}"
-                                       {{ in_array($amenity->id, old('amenities_list', [])) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="amenity_{{ $amenity->id }}">
-                                    {{ $amenity->name }}
-                                </label>
-                            </div>
-                            @endforeach
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
 
                 <!-- Form Actions -->
                 <div class="card">
