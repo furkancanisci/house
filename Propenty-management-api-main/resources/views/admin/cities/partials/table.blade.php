@@ -6,6 +6,8 @@
                 <th>Name</th>
                 <th>English Name</th>
                 <th>Arabic Name</th>
+                <th>Kurdish Name</th>
+                <th>Governorate</th>
                 <th>Slug</th>
                 <th>Neighborhoods</th>
                 <th>Properties</th>
@@ -21,6 +23,14 @@
                 <td>{{ $city->name }}</td>
                 <td>{{ $city->name_en }}</td>
                 <td>{{ $city->name_ar }}</td>
+                <td>{{ $city->name_ku ?? 'غير محدد' }}</td>
+                <td>
+                    @if($city->governorate)
+                        <span class="badge badge-primary">{{ $city->governorate->name }}</span>
+                    @else
+                        <span class="text-muted">No Governorate</span>
+                    @endif
+                </td>
                 <td>
                     <code>{{ $city->slug }}</code>
                 </td>
@@ -71,7 +81,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="10" class="text-center">No cities found.</td>
+                <td colspan="12" class="text-center">No cities found.</td>
             </tr>
             @endforelse
         </tbody>

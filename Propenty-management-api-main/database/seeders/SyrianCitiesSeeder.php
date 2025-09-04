@@ -19,6 +19,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Damascus',
                 'name_ar' => 'دمشق',
+                'name_ku' => 'دیمەشق',
                 'state_en' => 'Damascus',
                 'state_ar' => 'دمشق',
                 'country_en' => 'Syria',
@@ -30,6 +31,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Douma',
                 'name_ar' => 'دوما',
+                'name_ku' => 'دووما',
                 'state_en' => 'Damascus',
                 'state_ar' => 'دمشق',
                 'country_en' => 'Syria',
@@ -43,6 +45,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Aleppo',
                 'name_ar' => 'حلب',
+                'name_ku' => 'حەلەب',
                 'state_en' => 'Aleppo',
                 'state_ar' => 'حلب',
                 'country_en' => 'Syria',
@@ -54,6 +57,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Afrin',
                 'name_ar' => 'عفرين',
+                'name_ku' => 'عەفرین',
                 'state_en' => 'Aleppo',
                 'state_ar' => 'حلب',
                 'country_en' => 'Syria',
@@ -67,6 +71,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Homs',
                 'name_ar' => 'حمص',
+                'name_ku' => 'حمس',
                 'state_en' => 'Homs',
                 'state_ar' => 'حمص',
                 'country_en' => 'Syria',
@@ -78,6 +83,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Palmyra',
                 'name_ar' => 'تدمر',
+                'name_ku' => 'تەدمور',
                 'state_en' => 'Homs',
                 'state_ar' => 'حمص',
                 'country_en' => 'Syria',
@@ -91,6 +97,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Hama',
                 'name_ar' => 'حماة',
+                'name_ku' => 'حەما',
                 'state_en' => 'Hama',
                 'state_ar' => 'حماة',
                 'country_en' => 'Syria',
@@ -104,6 +111,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Latakia',
                 'name_ar' => 'اللاذقية',
+                'name_ku' => 'لازقیە',
                 'state_en' => 'Latakia',
                 'state_ar' => 'اللاذقية',
                 'country_en' => 'Syria',
@@ -115,6 +123,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Jableh',
                 'name_ar' => 'جبلة',
+                'name_ku' => 'جەبلە',
                 'state_en' => 'Latakia',
                 'state_ar' => 'اللاذقية',
                 'country_en' => 'Syria',
@@ -128,6 +137,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Tartus',
                 'name_ar' => 'طرطوس',
+                'name_ku' => 'تەرتووس',
                 'state_en' => 'Tartus',
                 'state_ar' => 'طرطوس',
                 'country_en' => 'Syria',
@@ -141,6 +151,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Daraa',
                 'name_ar' => 'درعا',
+                'name_ku' => 'دەرعا',
                 'state_en' => 'Daraa',
                 'state_ar' => 'درعا',
                 'country_en' => 'Syria',
@@ -154,6 +165,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Idlib',
                 'name_ar' => 'إدلب',
+                'name_ku' => 'ئیدلیب',
                 'state_en' => 'Idlib',
                 'state_ar' => 'إدلب',
                 'country_en' => 'Syria',

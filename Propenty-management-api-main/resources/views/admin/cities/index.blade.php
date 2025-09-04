@@ -28,7 +28,7 @@
                 <!-- Filter Form -->
                 <form method="GET" class="mb-3" id="filterForm">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <input type="text" name="search" class="form-control" 
                                        placeholder="Search cities..." 
@@ -37,6 +37,19 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
+                                <select name="governorate_id" class="form-control">
+                                    <option value="">All Governorates</option>
+                                    @foreach($governorates as $governorate)
+                                        <option value="{{ $governorate->id }}" 
+                                                {{ request('governorate_id') == $governorate->id ? 'selected' : '' }}>
+                                            {{ $governorate->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
                                 <select name="is_active" class="form-control">
                                     <option value="">All Status</option>
                                     <option value="1" {{ request('is_active') == '1' ? 'selected' : '' }}>Active</option>
@@ -44,13 +57,18 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <button type="submit" class="btn btn-info">
                                 <i class="fas fa-filter"></i> Filter
                             </button>
                             <a href="{{ route('admin.cities.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Clear
                             </a>
+                            @can('manage cities')
+                            <a href="{{ route('admin.cities.create') }}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Add City
+                            </a>
+                            @endcan
                         </div>
                     </div>
                 </form>

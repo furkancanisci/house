@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class City extends Model
+class Governorate extends Model
 {
     use HasFactory;
 
@@ -19,11 +19,6 @@ class City extends Model
         'name_en',
         'name_ku',
         'slug',
-        'governorate_id',
-        'country_ar',
-        'country_en',
-        'state_ar',
-        'state_en',
         'latitude',
         'longitude',
         'is_active',
@@ -41,7 +36,7 @@ class City extends Model
     ];
 
     /**
-     * Get the city name based on locale
+     * Get the governorate name based on locale
      */
     public function getName($locale = 'ar')
     {
@@ -74,23 +69,7 @@ class City extends Model
     }
 
     /**
-     * Get the country name based on locale
-     */
-    public function getCountry($locale = 'ar')
-    {
-        return $locale === 'ar' ? $this->country_ar : $this->country_en;
-    }
-
-    /**
-     * Get the state name based on locale
-     */
-    public function getState($locale = 'ar')
-    {
-        return $locale === 'ar' ? $this->state_ar : $this->state_en;
-    }
-
-    /**
-     * Scope for active cities
+     * Scope for active governorates
      */
     public function scopeActive($query)
     {
@@ -98,52 +77,50 @@ class City extends Model
     }
 
     /**
-     * Scope for filtering by country
+     * Cities in this governorate
      */
-    public function scopeByCountry($query, $country, $locale = 'ar')
+    public function cities()
     {
-        $field = $locale === 'ar' ? 'country_ar' : 'country_en';
-        return $query->where($field, $country);
+        return $this->hasMany(City::class);
     }
 
     /**
-     * Scope for filtering by state
+     * Active cities in this governorate
      */
-    public function scopeByState($query, $state, $locale = 'ar')
+    public function activeCities()
     {
-        $field = $locale === 'ar' ? 'state_ar' : 'state_en';
-        return $query->where($field, $state);
+        return $this->hasMany(City::class)->where('is_active', true);
     }
 
     /**
-     * Properties in this city
+     * Properties in this governorate
      */
     public function properties()
     {
-        return $this->hasMany(Property::class, 'city', 'name_ar');
+        return $this->hasMany(Property::class);
     }
 
     /**
-     * Neighborhoods in this city
+     * Get cities count for this governorate
      */
-    public function neighborhoods()
+    public function getCitiesCountAttribute()
     {
-        return $this->hasMany(Neighborhood::class);
+        return $this->cities()->count();
     }
 
     /**
-     * Governorate that this city belongs to
+     * Get active cities count for this governorate
      */
-    public function governorate()
+    public function getActiveCitiesCountAttribute()
     {
-        return $this->belongsTo(Governorate::class);
+        return $this->activeCities()->count();
     }
 
     /**
-     * Scope for filtering by governorate
+     * Get properties count for this governorate
      */
-    public function scopeByGovernorate($query, $governorateId)
+    public function getPropertiesCountAttribute()
     {
-        return $query->where('governorate_id', $governorateId);
+        return $this->properties()->count();
     }
 }

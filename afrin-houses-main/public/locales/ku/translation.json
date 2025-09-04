@@ -1,16 +1,15 @@
 {
     "appName": "Mîlka Nîştimanî",
     "navigation": {
-        "home": "Serrûpel",
-        "search": "Lêgerîn",
-        "housesForRent": "Malên bo Kirê",
-        "housesForSale": "Malên bo Firotinê",
-        "favorites": "Bijartî",
-        "listProperty": "Mîlk Zêde Bike",
-        "dashboard": "Kontrolpanel",
-        "logout": "Derkeve",
-        "login": "Têkeve",
-        "register": "Qeydkirin"
+        "home": "Mal",
+        "about": "Derbarê",
+        "contact": "Têkilî",
+        "favorites": "Bijarte",
+        "listProperty": "Xanî Zêde bike",
+        "dashboard": "Panela Kontrolê",
+        "logout": "Derketin",
+        "login": "Têketin",
+        "register": "Hesab Çêke"
     },
     "location": {
         "state": "Dewat",

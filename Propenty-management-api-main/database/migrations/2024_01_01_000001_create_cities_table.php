@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name_ar'); // الاسم بالعربية
             $table->string('name_en'); // الاسم بالإنجليزية
+            $table->string('name_ku')->nullable(); // الاسم بالكردية
             $table->string('slug')->unique(); // URL slug
             $table->string('country_ar')->default('سوريا'); // البلد بالعربية
             $table->string('country_en')->default('Syria'); // البلد بالإنجليزية

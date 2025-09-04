@@ -143,6 +143,94 @@
                             @enderror
                         </div>
 
+                        <!-- Hidden fields for foreign keys -->
+                        <input type="hidden" name="governorate_id" id="governorate_id" value="{{ old('governorate_id', $property->governorate_id) }}">
+                        <input type="hidden" name="city_id" id="city_id" value="{{ old('city_id', $property->city_id) }}">
+                        <input type="hidden" name="neighborhood_id" id="neighborhood_id" value="{{ old('neighborhood_id', $property->neighborhood_id) }}">
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="governorate">{{ __('admin.governorate') ?? 'Governorate' }} <span class="text-danger">*</span></label>
+                                    <select name="governorate" id="governorate" class="form-control @error('governorate') is-invalid @enderror" required>
+                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.governorate') ?? 'Governorate' }}</option>
+                                        @foreach($governorates as $governorate)
+                                            <option value="{{ $governorate->id }}" 
+                                                    data-name-ar="{{ $governorate->name_ar }}" 
+                                                    data-name-en="{{ $governorate->name_en }}"
+                                                    data-name-ku="{{ $governorate->name_ku }}"
+                                                    {{ old('governorate_id', $property->governorate_id) == $governorate->id ? 'selected' : '' }}>
+                                                @if(app()->getLocale() === 'ku')
+                                                    {{ $governorate->name_ku ?: $governorate->name_ar }}
+                                                @elseif(app()->getLocale() === 'ar')
+                                                    {{ $governorate->name_ar }}
+                                                @else
+                                                    {{ $governorate->name_en }}
+                                                @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('governorate')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="city">{{ __('admin.city') ?? 'City' }} <span class="text-danger">*</span></label>
+                                    <select name="city" id="city" class="form-control @error('city') is-invalid @enderror" required>
+                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.city') ?? 'City' }}</option>
+                                        @foreach($cities as $city)
+                                            <option value="{{ $city->id }}" 
+                                                    data-governorate-id="{{ $city->governorate_id }}"
+                                                    data-name-ar="{{ $city->name_ar }}" 
+                                                    data-name-en="{{ $city->name_en }}"
+                                                    data-name-ku="{{ $city->name_ku }}"
+                                                    {{ old('city_id', $property->city_id) == $city->id ? 'selected' : '' }}>
+                                                @if(app()->getLocale() === 'ku')
+                                                    {{ $city->name_ku ?: $city->name_ar }}
+                                                @elseif(app()->getLocale() === 'ar')
+                                                    {{ $city->name_ar }}
+                                                @else
+                                                    {{ $city->name_en }}
+                                                @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('city')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="neighborhood">{{ __('admin.neighborhood') ?? 'Neighborhood' }}</label>
+                                    <select name="neighborhood" id="neighborhood" class="form-control @error('neighborhood') is-invalid @enderror">
+                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.neighborhood') ?? 'Neighborhood' }}</option>
+                                        @foreach($neighborhoods as $neighborhood)
+                                            <option value="{{ $neighborhood->id }}" 
+                                                    data-city-id="{{ $neighborhood->city_id }}"
+                                                    data-name-ar="{{ $neighborhood->name_ar }}" 
+                                                    data-name-en="{{ $neighborhood->name_en }}"
+                                                    data-name-ku="{{ $neighborhood->name_ku }}"
+                                                    {{ old('neighborhood_id', $property->neighborhood_id) == $neighborhood->id ? 'selected' : '' }}>
+                                                @if(app()->getLocale() === 'ku')
+                                                    {{ $neighborhood->name_ku ?: $neighborhood->name_ar }}
+                                                @elseif(app()->getLocale() === 'ar')
+                                                    {{ $neighborhood->name_ar }}
+                                                @else
+                                                    {{ $neighborhood->name_en }}
+                                                @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('neighborhood')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -163,47 +251,10 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="city">{{ __('admin.city') ?? 'City' }} <span class="text-danger">*</span></label>
-                                    <select name="city" id="city" class="form-control @error('city') is-invalid @enderror" required>
-                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.city') ?? 'City' }}</option>
-                                        @foreach($cities as $city)
-                                            <option value="{{ app()->getLocale() === 'ar' ? $city->name_ar : $city->name_en }}" 
-                                                    {{ old('city', $property->city) === (app()->getLocale() === 'ar' ? $city->name_ar : $city->name_en) ? 'selected' : '' }}>
-                                                {{ app()->getLocale() === 'ar' ? $city->name_ar : $city->name_en }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('city')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
                                     <label for="postal_code">Postal Code</label>
                                     <input type="text" name="postal_code" id="postal_code" class="form-control @error('postal_code') is-invalid @enderror" 
                                            value="{{ old('postal_code', $property->postal_code) }}">
                                     @error('postal_code')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="neighborhood">{{ __('admin.neighborhood') ?? 'Neighborhood' }}</label>
-                                    <select name="neighborhood" id="neighborhood" class="form-control @error('neighborhood') is-invalid @enderror">
-                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.neighborhood') ?? 'Neighborhood' }}</option>
-                                        @foreach($neighborhoods as $neighborhood)
-                                            <option value="{{ app()->getLocale() === 'ar' ? $neighborhood->name_ar : $neighborhood->name_en }}" 
-                                                    {{ old('neighborhood', $property->neighborhood) === (app()->getLocale() === 'ar' ? $neighborhood->name_ar : $neighborhood->name_en) ? 'selected' : '' }}>
-                                                {{ app()->getLocale() === 'ar' ? $neighborhood->name_ar : $neighborhood->name_en }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('neighborhood')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -522,30 +573,46 @@ $(document).ready(function() {
         }
     });
 
-    // Handle state change to update cities
-    $('#state').on('change', function() {
-        var selectedState = $(this).val();
+    // Store original options for filtering
+    var originalCities = $('#city').html();
+    var originalNeighborhoods = $('#neighborhood').html();
+    
+    // Handle governorate change to update cities
+    $('#governorate').on('change', function() {
+        var selectedGovernorateId = $(this).val();
         var citySelect = $('#city');
         var neighborhoodSelect = $('#neighborhood');
+        
+        // Update hidden field
+        $('#governorate_id').val(selectedGovernorateId);
         
         // Clear city and neighborhood dropdowns
         citySelect.html('<option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.city') ?? 'City' }}</option>');
         neighborhoodSelect.html('<option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.neighborhood') ?? 'Neighborhood' }}</option>');
+        $('#city_id').val('');
+        $('#neighborhood_id').val('');
         
-        if (selectedState) {
-            // Make AJAX request to get cities for the selected state
-            $.ajax({
-                url: '{{ route('admin.get-cities') }}',
-                type: 'GET',
-                data: { state: selectedState },
-                success: function(cities) {
-                    $.each(cities, function(index, city) {
-                        var cityName = '{{ app()->getLocale() }}' === 'ar' ? city.name_ar : city.name_en;
-                        citySelect.append('<option value="' + cityName + '">' + cityName + '</option>');
-                    });
-                },
-                error: function() {
-                    console.log('Error loading cities');
+        if (selectedGovernorateId) {
+            // Filter cities based on selected governorate
+            $(originalCities).filter('option').each(function() {
+                var cityGovernorateId = $(this).data('governorate-id');
+                if (cityGovernorateId == selectedGovernorateId && $(this).val() !== '') {
+                    var option = $(this).clone();
+                    // Update option text based on current locale
+                    var locale = '{{ app()->getLocale() }}';
+                    var nameKu = $(this).data('name-ku');
+                    var nameAr = $(this).data('name-ar');
+                    var nameEn = $(this).data('name-en');
+                    
+                    if (locale === 'ku') {
+                        option.text(nameKu || nameAr);
+                    } else if (locale === 'ar') {
+                        option.text(nameAr);
+                    } else {
+                        option.text(nameEn);
+                    }
+                    
+                    citySelect.append(option);
                 }
             });
         }
@@ -553,29 +620,78 @@ $(document).ready(function() {
 
     // Handle city change to update neighborhoods
     $('#city').on('change', function() {
-        var selectedCity = $(this).val();
+        var selectedCityId = $(this).val();
         var neighborhoodSelect = $('#neighborhood');
+        
+        // Update hidden field
+        $('#city_id').val(selectedCityId);
         
         // Clear neighborhood dropdown
         neighborhoodSelect.html('<option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.neighborhood') ?? 'Neighborhood' }}</option>');
+        $('#neighborhood_id').val('');
         
-        if (selectedCity) {
-            // Make AJAX request to get neighborhoods for the selected city
-            $.ajax({
-                url: '{{ route('admin.get-neighborhoods') }}',
-                type: 'GET',
-                data: { city: selectedCity },
-                success: function(neighborhoods) {
-                    $.each(neighborhoods, function(index, neighborhood) {
-                        var neighborhoodName = '{{ app()->getLocale() }}' === 'ar' ? neighborhood.name_ar : neighborhood.name_en;
-                        neighborhoodSelect.append('<option value="' + neighborhoodName + '">' + neighborhoodName + '</option>');
-                    });
-                },
-                error: function() {
-                    console.log('Error loading neighborhoods');
+        if (selectedCityId) {
+            // Filter neighborhoods based on selected city
+            $(originalNeighborhoods).filter('option').each(function() {
+                var neighborhoodCityId = $(this).data('city-id');
+                if (neighborhoodCityId == selectedCityId && $(this).val() !== '') {
+                    var option = $(this).clone();
+                    // Update option text based on current locale
+                    var locale = '{{ app()->getLocale() }}';
+                    var nameKu = $(this).data('name-ku');
+                    var nameAr = $(this).data('name-ar');
+                    var nameEn = $(this).data('name-en');
+                    
+                    if (locale === 'ku') {
+                        option.text(nameKu || nameAr);
+                    } else if (locale === 'ar') {
+                        option.text(nameAr);
+                    } else {
+                        option.text(nameEn);
+                    }
+                    
+                    neighborhoodSelect.append(option);
                 }
             });
         }
+    });
+
+    // Handle neighborhood change
+    $('#neighborhood').on('change', function() {
+        var selectedNeighborhoodId = $(this).val();
+        $('#neighborhood_id').val(selectedNeighborhoodId);
+    });
+
+    // Initialize dropdowns on page load
+    function initializeDropdowns() {
+        var currentGovernorateId = $('#governorate_id').val();
+        var currentCityId = $('#city_id').val();
+        var currentNeighborhoodId = $('#neighborhood_id').val();
+        
+        if (currentGovernorateId) {
+            $('#governorate').val(currentGovernorateId).trigger('change');
+            
+            setTimeout(function() {
+                if (currentCityId) {
+                    $('#city').val(currentCityId).trigger('change');
+                    
+                    setTimeout(function() {
+                        if (currentNeighborhoodId) {
+                            $('#neighborhood').val(currentNeighborhoodId);
+                        }
+                    }, 100);
+                }
+            }, 100);
+        }
+    }
+    
+    // Call initialization
+    initializeDropdowns();
+
+    // Handle state change to update cities (legacy support)
+    $('#state').on('change', function() {
+        var selectedState = $(this).val();
+        // This can be used for additional state-based logic if needed
     });
 });
 </script>

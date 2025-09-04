@@ -11,19 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('neighborhoods', function (Blueprint $table) {
+        Schema::create('governorates', function (Blueprint $table) {
             $table->id();
             $table->string('name_ar'); // الاسم بالعربية
             $table->string('name_en'); // الاسم بالإنجليزية
             $table->string('name_ku')->nullable(); // الاسم بالكردية
-            $table->string('slug');
-            $table->unsignedBigInteger('city_id');
-            $table->text('description')->nullable();
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
-            $table->integer('properties_count')->default(0);
-            $table->boolean('is_active')->default(true);
+            $table->string('slug')->unique(); // URL slug
+            $table->decimal('latitude', 10, 7)->nullable(); // خط العرض
+            $table->decimal('longitude', 10, 7)->nullable(); // خط الطول
+            $table->boolean('is_active')->default(true); // حالة التفعيل
             $table->timestamps();
+
+            // إنشاء الفهارس
+            $table->index('name_ar');
+            $table->index('name_en');
+            $table->index('name_ku');
+            $table->index('slug');
+            $table->index('is_active');
         });
     }
 
@@ -32,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('neighborhoods');
+        Schema::dropIfExists('governorates');
     }
 };
