@@ -48,8 +48,6 @@ class StorePropertyRequest extends FormRequest
             'is_featured' => 'nullable|boolean',
             'is_available' => 'nullable|boolean',
             'availableDate' => 'nullable|date',
-            'amenities' => 'nullable|array',
-            'amenities.*' => 'string',
             'nearby_places' => 'nullable|array',
             'nearby_places.*.name' => 'required|string',
             'nearby_places.*.type' => 'required|string',
@@ -65,6 +63,12 @@ class StorePropertyRequest extends FormRequest
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max per image, no dimension restrictions
             'base64_images' => 'nullable|array|max:20', // Maximum 20 base64 images
             'base64_images.*' => 'string|regex:/^data:image\/(jpeg|jpg|png|webp);base64,/', // Valid base64 image format
+            
+            // Features and Utilities
+            'features' => 'nullable|array',
+            'features.*' => 'integer|exists:features,id',
+            'utilities' => 'nullable|array',
+            'utilities.*' => 'integer|exists:utilities,id',
         ];
     }
     
@@ -159,23 +163,49 @@ class StorePropertyRequest extends FormRequest
             $data['images'] = $this->file('images');
         }
         
-        // Handle amenities - check if it's coming as array indices from FormData
-        $amenities = [];
+        // Handle features - check if it's coming as array indices from FormData
+        $features = [];
         $index = 0;
-        while ($this->has("amenities[{$index}]")) {
-            $amenities[] = $this->input("amenities[{$index}]");
+        while ($this->has("features[{$index}]")) {
+            $features[] = (int) $this->input("features[{$index}]");
             $index++;
         }
         
-        // If no indexed amenities, try getting as regular field
-        if (empty($amenities)) {
-            $amenities = $this->input('amenities');
-            if ($amenities && !is_array($amenities)) {
-                // If amenities is a JSON string, decode it
-                $amenities = json_decode($amenities, true) ?? [];
+        // If no indexed features, try getting as regular field
+        if (empty($features)) {
+            $features = $this->input('features');
+            if ($features && !is_array($features)) {
+                // If features is a JSON string, decode it
+                $features = json_decode($features, true) ?? [];
+            }
+            // Convert to integers
+            if (is_array($features)) {
+                $features = array_map('intval', $features);
             }
         }
-        $data['amenities'] = $amenities;
+        $data['features'] = $features;
+        
+        // Handle utilities - check if it's coming as array indices from FormData
+        $utilities = [];
+        $index = 0;
+        while ($this->has("utilities[{$index}]")) {
+            $utilities[] = (int) $this->input("utilities[{$index}]");
+            $index++;
+        }
+        
+        // If no indexed utilities, try getting as regular field
+        if (empty($utilities)) {
+            $utilities = $this->input('utilities');
+            if ($utilities && !is_array($utilities)) {
+                // If utilities is a JSON string, decode it
+                $utilities = json_decode($utilities, true) ?? [];
+            }
+            // Convert to integers
+            if (is_array($utilities)) {
+                $utilities = array_map('intval', $utilities);
+            }
+        }
+        $data['utilities'] = $utilities;
         
         // Handle nearby places
         if ($this->has('nearby_places') || $this->has('nearbyPlaces')) {
@@ -214,7 +244,6 @@ class StorePropertyRequest extends FormRequest
         \Illuminate\Support\Facades\Log::info('StorePropertyRequest - Prepared Data', [
             'data' => $data,
             'has_main_image' => isset($data['mainImage']),
-            'amenities_count' => is_array($data['amenities'] ?? null) ? count($data['amenities']) : 0,
             'data_keys' => array_keys($data)
         ]);
         

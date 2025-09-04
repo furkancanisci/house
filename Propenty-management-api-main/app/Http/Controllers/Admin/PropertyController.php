@@ -74,9 +74,8 @@ class PropertyController extends Controller
 
         $cities = City::active()->orderBy('name_en')->get();
         $propertyTypes = PropertyType::orderBy('name')->get();
-        $amenities = Amenity::active()->orderBy('category')->orderBy('name')->get()->groupBy('category');
-        $users = User::select('id', 'first_name', 'last_name')->get()
-            ->mapWithKeys(fn($user) => [$user->id => $user->full_name]);
+        $users = User::select('id', 'first_name', 'last_name', 'email')->get()
+            ->mapWithKeys(fn($user) => [$user->id => $user->full_name . ' (' . $user->email . ')']);
         
         // Get unique states from cities
         $states = City::active()
@@ -120,7 +119,6 @@ class PropertyController extends Controller
             'states',
             'neighborhoods',
             'propertyTypes',
-            'amenities',
             'users'
         ));
     }
@@ -157,8 +155,6 @@ class PropertyController extends Controller
             'is_featured' => 'boolean',
             'is_available' => 'boolean',
             'available_from' => 'nullable|date|after_or_equal:today',
-            'amenities' => 'nullable|array',
-            'amenities.*' => 'string',
             'nearby_places' => 'nullable|array',
             'contact_name' => 'nullable|string|max:100',
             'contact_phone' => 'nullable|string|max:20',
@@ -176,12 +172,6 @@ class PropertyController extends Controller
         DB::beginTransaction();
         try {
             $property = Property::create($validated);
-
-            // Handle amenities
-            if ($request->has('amenities_list')) {
-                $amenityIds = Amenity::whereIn('id', $request->amenities_list)->pluck('id');
-                $property->amenities()->sync($amenityIds);
-            }
 
             // Handle image uploads
             if ($request->hasFile('images')) {
@@ -219,7 +209,7 @@ class PropertyController extends Controller
     {
         $this->authorize('view properties');
 
-        $property->load(['user', 'media', 'amenities', 'views', 'favoritedByUsers']);
+        $property->load(['user', 'media', 'views', 'favoritedByUsers']);
 
         return view('admin.properties.show', compact('property'));
     }
@@ -233,17 +223,45 @@ class PropertyController extends Controller
 
         $cities = City::orderBy('name_en')->get();
         $propertyTypes = PropertyType::orderBy('name')->get();
-        $amenities = Amenity::active()->orderBy('category')->orderBy('name')->get()->groupBy('category');
-        $users = User::select('id', 'first_name', 'last_name')->get()
-            ->mapWithKeys(fn($user) => [$user->id => $user->full_name]);
+        $users = User::select('id', 'first_name', 'last_name', 'email')->get()
+            ->mapWithKeys(fn($user) => [$user->id => $user->full_name . ' (' . $user->email . ')']);
 
-        $property->load(['amenities', 'media']);
+        // Add states data for dropdowns (same as in create method)
+        $states = collect([
+            'Damascus' => ['en' => 'Damascus', 'ar' => 'دمشق'],
+            'Aleppo' => ['en' => 'Aleppo', 'ar' => 'حلب'],
+            'Homs' => ['en' => 'Homs', 'ar' => 'حمص'],
+            'Hama' => ['en' => 'Hama', 'ar' => 'حماة'],
+            'Latakia' => ['en' => 'Latakia', 'ar' => 'اللاذقية'],
+            'Tartus' => ['en' => 'Tartus', 'ar' => 'طرطوس'],
+            'Daraa' => ['en' => 'Daraa', 'ar' => 'درعا'],
+            'Deir ez-Zor' => ['en' => 'Deir ez-Zor', 'ar' => 'دير الزور'],
+            'Al-Hasakah' => ['en' => 'Al-Hasakah', 'ar' => 'الحسكة'],
+            'Ar-Raqqah' => ['en' => 'Ar-Raqqah', 'ar' => 'الرقة'],
+            'As-Suwayda' => ['en' => 'As-Suwayda', 'ar' => 'السويداء'],
+            'Quneitra' => ['en' => 'Quneitra', 'ar' => 'القنيطرة'],
+            'Idlib' => ['en' => 'Idlib', 'ar' => 'إدلب']
+        ]);
+        
+        // Get neighborhoods for the current city
+        $neighborhoods = collect();
+        if ($property->city) {
+            $city = City::where('name_en', $property->city)
+                       ->orWhere('name_ar', $property->city)
+                       ->first();
+            if ($city) {
+                $neighborhoods = $city->neighborhoods;
+            }
+        }
+
+        $property->load(['user', 'media', 'city', 'propertyType']);
 
         return view('admin.properties.edit', compact(
             'property',
             'cities',
+            'states',
+            'neighborhoods',
             'propertyTypes',
-            'amenities',
             'users'
         ));
     }
@@ -280,8 +298,6 @@ class PropertyController extends Controller
             'is_featured' => 'boolean',
             'is_available' => 'boolean',
             'available_from' => 'nullable|date|after_or_equal:today',
-            'amenities' => 'nullable|array',
-            'amenities.*' => 'string',
             'nearby_places' => 'nullable|array',
             'contact_name' => 'nullable|string|max:100',
             'contact_phone' => 'nullable|string|max:20',
@@ -296,14 +312,6 @@ class PropertyController extends Controller
         DB::beginTransaction();
         try {
             $property->update($validated);
-
-            // Handle amenities
-            if ($request->has('amenities_list')) {
-                $amenityIds = Amenity::whereIn('id', $request->amenities_list)->pluck('id');
-                $property->amenities()->sync($amenityIds);
-            } else {
-                $property->amenities()->detach();
-            }
 
             // Remove selected images
             if ($request->has('remove_images')) {

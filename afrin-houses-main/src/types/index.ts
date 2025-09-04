@@ -36,6 +36,7 @@ export interface Property {
   // Additional fields
   slug?: string;
   features?: string[];
+  utilities?: string[];
   latitude?: number | string;
   longitude?: number | string;
   
@@ -165,6 +166,40 @@ export interface SearchFilters {
   // Pagination
   page?: number;
   perPage?: number;
+}
+
+// Feature interface with multilingual support (Kurmanji dialect)
+export interface Feature {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  name_ku: string; // Kurmanji dialect
+  description_ar?: string;
+  description_en?: string;
+  description_ku?: string; // Kurmanji dialect
+  category?: string;
+  category_label?: string;
+  icon?: string;
+  slug: string;
+  sort_order?: number;
+  is_active: boolean;
+}
+
+// Utility interface with multilingual support (Kurmanji dialect)
+export interface Utility {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  name_ku: string; // Kurmanji dialect
+  description_ar?: string;
+  description_en?: string;
+  description_ku?: string; // Kurmanji dialect
+  category?: string;
+  category_label?: string;
+  icon?: string;
+  slug: string;
+  sort_order?: number;
+  is_active: boolean;
 }
 
 export interface PropertyFormData {

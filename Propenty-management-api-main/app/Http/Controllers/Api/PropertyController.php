@@ -145,8 +145,8 @@ class PropertyController extends Controller
         // Start building the query
         $query = Property::query();
         
-        // Ensure only active properties are returned
-        $query->where('status', 'active');
+        // Ensure only active and available properties are returned
+        $query->active();
         
         // Apply listing type filter - support both camelCase and snake_case
         $listingType = $request->input('listing_type') ?: $request->input('listingType');
@@ -194,14 +194,20 @@ class PropertyController extends Controller
             $query = LocationService::buildLocationQuery($query, $location);
         }
 
-        // Apply features/amenities filter
-        $features = $request->input('features') ?: $request->input('amenities');
-        if ($features && is_array($features) && !empty($features)) {
-            foreach ($features as $feature) {
-                if (!empty($feature)) {
-                    $query->whereJsonContains('amenities', $feature);
-                }
-            }
+        // Apply features filter
+        if ($request->has('features') && !empty($request->features)) {
+            $features = is_array($request->features) ? $request->features : [$request->features];
+            $query->whereHas('features', function ($q) use ($features) {
+                $q->whereIn('features.id', $features)->where('features.is_active', true);
+            });
+        }
+        
+        // Apply utilities filter
+        if ($request->has('utilities') && !empty($request->utilities)) {
+            $utilities = is_array($request->utilities) ? $request->utilities : [$request->utilities];
+            $query->whereHas('utilities', function ($q) use ($utilities) {
+                $q->whereIn('utilities.id', $utilities)->where('utilities.is_active', true);
+            });
         }
 
         // Apply search query - check both 'search', 'q', and 'searchQuery' parameters
@@ -220,8 +226,7 @@ class PropertyController extends Controller
                   ->orWhereRaw('LOWER(city) LIKE ?', [$searchTerm])
                   ->orWhereRaw('LOWER(state) LIKE ?', [$searchTerm])
                   ->orWhereRaw('LOWER(street_address) LIKE ?', [$searchTerm])
-                  ->orWhereRaw('LOWER(neighborhood) LIKE ?', [$searchTerm])
-                  ->orWhereRaw('LOWER(amenities::text) LIKE ?', [$searchTerm]);
+                  ->orWhereRaw('LOWER(neighborhood) LIKE ?', [$searchTerm]);
             });
         }
 
@@ -266,13 +271,13 @@ class PropertyController extends Controller
             'id', 'title', 'description', 'slug', 'property_type', 'listing_type',
             'bedrooms', 'bathrooms', 'square_feet', 'year_built', 'price', 'price_type',
             'street_address', 'city', 'state', 'postal_code', 'neighborhood',
-            'latitude', 'longitude', 'amenities', 'nearby_places', 'status', 'is_featured',
+            'latitude', 'longitude', 'nearby_places', 'status', 'is_featured',
             'is_available', 'available_from', 'published_at', 'views_count',
             'user_id', 'document_type_id', 'created_at', 'updated_at'
         ]);
 
         // Load relationships
-        $query->with(['documentType']);
+        $query->with(['documentType', 'features', 'utilities']);
 
         // Paginate the results
         $perPage = $request->input('per_page', 12);
@@ -348,13 +353,7 @@ class PropertyController extends Controller
             unset($mappedData['images']);
             unset($mappedData['base64_images']);
             
-            // Convert amenities array to JSON for PostgreSQL
-            if (isset($mappedData['amenities']) && is_array($mappedData['amenities'])) {
-                $mappedData['amenities'] = json_encode($mappedData['amenities']);
-            } elseif (!isset($mappedData['amenities'])) {
-                $mappedData['amenities'] = json_encode([]);
-            }
-            
+
             // Convert nearby_places array to JSON for PostgreSQL
             if (isset($mappedData['nearby_places']) && is_array($mappedData['nearby_places'])) {
                 $mappedData['nearby_places'] = json_encode($mappedData['nearby_places']);
@@ -362,12 +361,16 @@ class PropertyController extends Controller
                 $mappedData['nearby_places'] = json_encode([]);
             }
             
+            // Extract features and utilities before creating property
+            $features = $mappedData['features'] ?? [];
+            $utilities = $mappedData['utilities'] ?? [];
+            unset($mappedData['features'], $mappedData['utilities']);
+            
             // Log the data being inserted for debugging
             \Illuminate\Support\Facades\Log::info('Creating property with data', [
                 'mapped_data_keys' => array_keys($mappedData),
                 'user_id' => $mappedData['user_id'],
                 'title' => $mappedData['title'] ?? 'N/A',
-                'amenities' => $mappedData['amenities'] ?? '[]',
                 'has_main_image' => $request->hasFile('main_image') || $request->hasFile('mainImage'),
                 'has_images' => $request->hasFile('images'),
                 'has_base64_images' => $request->has('base64_images'),
@@ -541,12 +544,20 @@ class PropertyController extends Controller
             }
             
             // Load the property with its relationships
-            $property->load(['user', 'media', 'documentType']);
+            $property->load(['user', 'media', 'documentType', 'features', 'utilities']);
+            
+            // Sync features and utilities relationships
+            if (!empty($features)) {
+                $property->features()->sync($features);
+            }
+            if (!empty($utilities)) {
+                $property->utilities()->sync($utilities);
+            }
             
             // Return the response
             return response()->json([
                 'message' => 'Property created successfully',
-                'property' => new PropertyResource($property)
+                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'documentType', 'features', 'utilities']))
             ], 201);
             
         } catch (\Exception $e) {
@@ -563,6 +574,13 @@ class PropertyController extends Controller
      */
     public function show(Request $request, Property $property): JsonResponse
     {
+        // Check if property is active and available for public viewing
+        if ($property->status !== 'active' || !$property->is_available) {
+            return response()->json([
+                'message' => 'Property not found or not available.',
+            ], 404);
+        }
+
         try {
             // Record property view - but don't let it fail the entire request
             PropertyView::recordView($property, $request);
@@ -589,8 +607,11 @@ class PropertyController extends Controller
             'request_path' => $request->path()
         ]);
 
+        // Load relationships for the property detail view
+        $property->load(['user', 'media', 'favoritedByUsers', 'documentType', 'features', 'utilities']);
+
         return response()->json([
-            'property' => new PropertyResource($property->load(['user', 'media', 'favoritedByUsers', 'documentType'])),
+            'property' => new PropertyResource($property),
         ]);
     }
 
@@ -623,7 +644,20 @@ class PropertyController extends Controller
             // Map camelCase field names to snake_case database column names
             $mappedData = $this->mapFieldNames($request->validated());
             
+            // Extract features and utilities before updating property
+            $features = $mappedData['features'] ?? null;
+            $utilities = $mappedData['utilities'] ?? null;
+            unset($mappedData['features'], $mappedData['utilities']);
+            
             $property->update($mappedData);
+            
+            // Sync features and utilities relationships if provided
+            if ($features !== null) {
+                $property->features()->sync($features);
+            }
+            if ($utilities !== null) {
+                $property->utilities()->sync($utilities);
+            }
 
             // Handle main image upload
             if ($request->hasFile('main_image')) {
@@ -688,9 +722,12 @@ class PropertyController extends Controller
                 }
             }
 
+            // Load relationships for the updated property
+            $property->load(['user', 'media', 'favoritedByUsers', 'documentType', 'features', 'utilities']);
+
             return response()->json([
                 'message' => 'Property updated successfully.',
-                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers', 'documentType'])),
+                'property' => new PropertyResource($property),
             ]);
             
         } catch (\Exception $e) {
@@ -771,7 +808,7 @@ class PropertyController extends Controller
             ->where('property_type_id', $property->property_type_id)
             ->where('city_id', $property->city_id)
             ->active()
-            ->with(['user', 'media', 'favoritedByUsers'])
+            ->with(['user', 'media', 'favoritedByUsers', 'features', 'utilities'])
             ->take($request->get('limit', 4))
             ->get();
 
@@ -872,7 +909,7 @@ class PropertyController extends Controller
 
             return response()->json([
                 'message' => 'Image deleted successfully.',
-                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers'])),
+                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'favoritedByUsers', 'features', 'utilities'])),
             ]);
             
         } catch (\Exception $e) {
@@ -919,82 +956,7 @@ class PropertyController extends Controller
     }
 
     /**
-     * Get available property amenities.
+     * Get available amenities for properties.
      */
-    public function amenities(): JsonResponse
-    {
-        // This would typically come from a database or config
-        $amenities = [
-            'Air Conditioning',
-            'Heating',
-            'Dishwasher',
-            'Laundry in Unit',
-            'Laundry in Building',
-            'Balcony',
-            'Patio',
-            'Garden',
-            'Roof Deck',
-            'Terrace',
-            'Fireplace',
-            'Hardwood Floors',
-            'Carpet',
-            'Tile Floors',
-            'High Ceilings',
-            'Walk-in Closet',
-            'Storage',
-            'Basement',
-            'Attic',
-            'Garage',
-            'Parking',
-            'Elevator',
-            'Doorman',
-            'Concierge',
-            'Security System',
-            'Intercom',
-            'Video Security',
-            'Gym',
-            'Pool',
-            'Hot Tub',
-            'Sauna',
-            'Tennis Court',
-            'Basketball Court',
-            'Playground',
-            'Dog Park',
-            'Pet Friendly',
-            'No Pets',
-            'Furnished',
-            'Unfurnished',
-            'Internet',
-            'Cable TV',
-            'Utilities Included',
-            'Recently Renovated',
-            'New Construction',
-            'Outdoor Kitchen',
-            'Master Suite',
-            'Updated Kitchen',
-            'Updated Bathroom',
-            'Close to Transit',
-            'Ocean View',
-            'City View',
-            'Private Elevator',
-            'Spa',
-            'Wine Cellar',
-            'Smart Home',
-            'Historic Details',
-            'Bay Windows',
-            'Crown Molding',
-            'Community Pool',
-            'Washer/Dryer',
-            'In-Unit Laundry',
-            'Rooftop Deck',
-            'Fitness Center',
-            'Single Story',
-            'Large Backyard',
-            'Desert Landscaping',
-        ];
 
-        return response()->json([
-            'amenities' => $amenities,
-        ]);
-    }
 }

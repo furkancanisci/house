@@ -165,21 +165,27 @@
       "pool": "مسبح"
     },
     "features": {
-      "parking": "موقف سيارات",
-      "pool": "مسبح",
-      "gym": "صالة رياضية",
-      "petFriendly": "مناسب للحيوانات الأليفة",
-      "balcony": "شرفة",
+      "airconditioning": "تكييف هواء",
+      "heating": "تدفئة",
+      "petfriendly": "مناسب للحيوانات الأليفة",
+      "dishwasher": "غسالة أطباق",
       "garden": "حديقة",
       "fireplace": "مدفأة",
-      "dishwasher": "غسالة أطباق",
-      "airConditioning": "تكييف هواء",
-      "laundryInUnit": "غسيل داخل الوحدة",
-      "elevator": "مصعد",
-      "garage": "كراج",
-      "hardwoodFloors": "أرضيات خشبية",
-      "patio": "فناء",
+      "carpet": "سجادة",
       "storage": "تخزين",
+      "pool": "مسبح",
+      "garage": "كراج",
+      "parking": "موقف سيارات",
+      "balcony": "شرفة",
+      "laundryinunit": "غسيل داخل الوحدة",
+      "elevator": "مصعد",
+      "furnished": "مفروش",
+      "wheelchairaccessible": "مناسب لكراسي الماء",
+      "doorman": "بواب",
+      "gym": "صالة رياضية",
+      "hardwoodFloors": "أرضيات خشبية",
+      "walkInClosets": "خزانات ملابس",
+      "patio": "فناء",
       "highCeilings": "أسقف عالية",
       "updatedKitchen": "مطبخ محدث",
       "updatedBathroom": "حمام محدث",
@@ -187,7 +193,7 @@
       "oceanView": "إطلالة على المحيط",
       "cityView": "إطلالة على المدينة",
       "privateElevator": "مصعد خاص",
-      "concierge": "بواب",
+      "concierge": "خدمة الاستقبال",
       "spa": "سبا",
       "wineCellar": "قبو نبيذ",
       "smartHome": "منزل ذكي",
@@ -220,6 +226,11 @@
     "summary": "ملخص العقار",
     "quickActions": "إجراءات سريعة",
     "printDetails": "طباعة التفاصيل",
+    "featuresAndUtilities": "المميزات والمرافق",
+    "propertyFeatures": "مميزات العقار",
+    "propertyUtilities": "مرافق العقار",
+    "noFeaturesAvailable": "لا توجد مميزات متاحة",
+    "noUtilitiesAvailable": "لا توجد مرافق متاحة",
     "amenities": "المميزات والمرافق",
     "propertyDetails": "تفاصيل العقار",
     "documentType": "نوع التابو",
@@ -238,7 +249,13 @@
     "minSqFt": "الحد الأدنى للمساحة",
     "maxSqFt": "الحد الأقصى للمساحة",
     "sqft": "قدم مربع",
-    "notFound": "العقار غير موجود"
+    "notFound": "العقار غير موجود",
+    "contact": {
+      "name": "الاسم",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "owner": "مالك العقار"
+    }
   },
   "forms": {
     "propertyTitle": "عنوان العقار",
@@ -291,8 +308,10 @@
     "complete": "مكتمل"
   },
   "auth": {
+    "needHelp": "احتاج مساعدة",
     "signIn": "تسجيل الدخول",
     "signUp": "إنشاء حساب",
+    "contactSupport": "تواصل معنا",
     "createAccount": "إنشاء حساب",
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
@@ -349,6 +368,13 @@
       "privacyPolicy": "سياسة الخصوصية",
       "bySigningUp": "بالتسجيل، فإنك توافق على"
     },
+    "requireAuth": {
+      "title": "مطلوب تسجيل الدخول",
+      "addPropertyMessage": "يرجى تسجيل الدخول لإضافة إعلان عقار جديد. إنشاء حساب سريع ومجاني!",
+      "viewOwnerContactMessage": "يرجى تسجيل الدخول لعرض معلومات التواصل مع مالك العقار والتواصل معه.",
+      "loginSuccess": "تم تسجيل الدخول بنجاح! يمكنك الآن المتابعة مع العملية.",
+      "signUpSuccess": "تم إنشاء الحساب بنجاح! يمكنك الآن إضافة عقارك."
+    },
     "agreeToTerms": "أوافق على",
     "termsOfService": "شروط الخدمة",
     "and": "و",
@@ -359,6 +385,18 @@
       "contactOwners": "تواصل مع أصحاب العقارات مباشرة",
       "manageListings": "إدارة إعلانات العقارات الخاصة بك",
       "exclusiveDeals": "الوصول إلى عروض حصرية"
+    },
+    "emailActivation": {
+      "title": "تفعيل البريد الإلكتروني مطلوب",
+      "message": "يرجى تفعيل حسابك للمتابعة. لقد أرسلنا رسالة تفعيل إلى بريدك الإلكتروني.",
+      "spamNote": "يرجى التحقق من مجلد الرسائل غير المرغوب فيها (Spam) في حال عدم ظهور البريد في صندوق الوارد الرئيسي.",
+      "resendButton": "إعادة إرسال بريد التفعيل",
+      "resending": "جاري الإرسال...",
+      "resendSuccess": "تم إرسال بريد التفعيل بنجاح! يرجى التحقق من بريدك الإلكتروني.",
+      "resendError": "فشل في إرسال البريد. يرجى المحاولة مرة أخرى.",
+      "close": "إغلاق",
+      "needHelp": "تحتاج مساعدة؟",
+      "contactSupport": "تواصل معنا"
     }
   },
   "dashboard": {
@@ -461,7 +499,14 @@
       "content": "إذا كان لديك أي أسئلة حول استخدامنا لملفات تعريف الارتباط، يرجى الاتصال بنا على privacy@example.com."
     }
   },
+  "contact": {
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني",
+    "owner": "مالك العقار"
+  },
   "common": {
+    "understood": "تمام",
     "currency": "SYR",
     "loading": "جاري التحميل...",
     "backToSearch": "عودة إلى البحث",

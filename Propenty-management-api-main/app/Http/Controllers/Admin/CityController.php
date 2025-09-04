@@ -151,4 +151,52 @@ class CityController extends Controller
 
         return back()->with('success', 'Neighborhood deleted successfully.');
     }
+
+    /**
+     * Get cities by state for AJAX requests
+     */
+    public function getCitiesByState(Request $request)
+    {
+        $state = $request->get('state');
+        
+        if (!$state) {
+            return response()->json([]);
+        }
+
+        // Since we're using a hardcoded states array, we'll return all cities
+        // In a real-world scenario, you might want to filter cities by state
+        $cities = City::where('is_active', true)
+                     ->orderBy('name_en')
+                     ->get(['id', 'name_en', 'name_ar']);
+
+        return response()->json($cities);
+    }
+
+    /**
+     * Get neighborhoods by city for AJAX requests
+     */
+    public function getNeighborhoodsByCity(Request $request)
+    {
+        $cityName = $request->get('city');
+        
+        if (!$cityName) {
+            return response()->json([]);
+        }
+
+        // Find the city by name (either English or Arabic)
+        $city = City::where('name_en', $cityName)
+                   ->orWhere('name_ar', $cityName)
+                   ->first();
+
+        if (!$city) {
+            return response()->json([]);
+        }
+
+        $neighborhoods = $city->neighborhoods()
+                             ->where('is_active', true)
+                             ->orderBy('name_en')
+                             ->get(['id', 'name_en', 'name_ar']);
+
+        return response()->json($neighborhoods);
+    }
 }

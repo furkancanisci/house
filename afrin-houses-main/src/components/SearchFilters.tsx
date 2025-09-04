@@ -287,7 +287,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
               });
             } catch (error) {
               console.error('Error loading cities:', error);
-              toast.error('خطأ في تحميل المدن');
+              notification.error('خطأ في تحميل المدن');
               setCities([]);
             }
           }, 500);
@@ -311,7 +311,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       }
     } catch (error) {
       console.error(`Error handling ${type} change:`, error);
-      toast.error(`خطأ في معالجة ${type === 'state' ? 'الولاية' : 'المدينة'}`);
+      notification.error(`خطأ في معالجة ${type === 'state' ? 'الولاية' : 'المدينة'}`);
     }
   }, [onFiltersChange, formValues]);
 
@@ -699,7 +699,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                           onCheckedChange={() => handleFeatureToggle(feature)}
                         />
                         <Label htmlFor={featureId} className="text-sm">
-                          {t(`property.features.${feature.toLowerCase().replace(/\s+/g, '')}`, feature)}
+                          {(() => {
+                            // Ensure feature is a string before processing
+                            const featureName = typeof feature === 'string' ? feature : '';
+                            return featureName 
+                              ? t(`property.features.${featureName.toLowerCase().replace(/\s+/g, '')}`, featureName)
+                              : featureName;
+                          })()}
                         </Label>
                       </div>
                     );

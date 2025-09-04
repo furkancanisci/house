@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\PropertyDocumentTypeController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\UtilityController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +62,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
             ->name('verification.verify');
         Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
+        Route::post('/email/resend-verification', [AuthController::class, 'resendVerificationEmail']);
         
         // User info route - made public for now
         Route::get('/me', [AuthController::class, 'me']);
@@ -70,7 +73,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/logout-all', [AuthController::class, 'logoutAll']);
             Route::post('/refresh', [AuthController::class, 'refresh']);
             Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail']);
-            Route::post('/email/resend-verification', [AuthController::class, 'resendVerificationEmail']);
             Route::get('/email/verification-status', [AuthController::class, 'getVerificationStatus']);
         });
     });
@@ -140,6 +142,40 @@ Route::prefix('v1')->group(function () {
         Route::get('/', [PropertyDocumentTypeController::class, 'index']);
         Route::get('/all-languages', [PropertyDocumentTypeController::class, 'getAllLanguages']);
         Route::get('/{propertyDocumentType}', [PropertyDocumentTypeController::class, 'show']);
+    });
+
+    // Features Routes
+    Route::prefix('features')->group(function () {
+        Route::get('/', [FeatureController::class, 'index']);
+        Route::get('/categories', [FeatureController::class, 'getCategories']);
+        Route::get('/by-category/{category}', [FeatureController::class, 'getByCategory']);
+        Route::get('/{feature}', [FeatureController::class, 'show']);
+        
+        // Admin routes (protected)
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/', [FeatureController::class, 'store']);
+            Route::put('/{feature}', [FeatureController::class, 'update']);
+            Route::delete('/{feature}', [FeatureController::class, 'destroy']);
+            Route::patch('/{feature}/toggle-status', [FeatureController::class, 'toggleStatus']);
+            Route::patch('/sort-order', [FeatureController::class, 'updateSortOrder']);
+        });
+    });
+
+    // Utilities Routes
+    Route::prefix('utilities')->group(function () {
+        Route::get('/', [UtilityController::class, 'index']);
+        Route::get('/categories', [UtilityController::class, 'getCategories']);
+        Route::get('/by-category/{category}', [UtilityController::class, 'getByCategory']);
+        Route::get('/{utility}', [UtilityController::class, 'show']);
+        
+        // Admin routes (protected)
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/', [UtilityController::class, 'store']);
+            Route::put('/{utility}', [UtilityController::class, 'update']);
+            Route::delete('/{utility}', [UtilityController::class, 'destroy']);
+            Route::patch('/{utility}/toggle-status', [UtilityController::class, 'toggleStatus']);
+            Route::patch('/sort-order', [UtilityController::class, 'updateSortOrder']);
+        });
     });
 
     // Statistics and Analytics Routes

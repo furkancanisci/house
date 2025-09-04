@@ -4,8 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Jakob's Law UI/UX improvements */
-
 @layer base {
   :root {
     --radius: 0.5rem;

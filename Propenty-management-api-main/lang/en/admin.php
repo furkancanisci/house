@@ -19,6 +19,8 @@ return [
     'property_types' => 'Property Types',
     'amenities' => 'Amenities',
     'moderation' => 'Moderation',
+    'features' => 'Features',
+    'utilities' => 'Utilities',
     
     'user_management' => 'User Management',
     'users' => 'Users & Agents',

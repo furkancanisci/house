@@ -47,7 +47,7 @@ class Property extends Model implements HasMedia
         'is_available',
         'available_from',
         'slug',
-        'amenities_json',
+
         'nearby_places',
         'contact_name',
         'contact_phone',
@@ -62,8 +62,7 @@ class Property extends Model implements HasMedia
      * @var array<string, string>
      */
     protected $casts = [
-        'amenities' => 'array',
-        'amenities_json' => 'array',
+
         'nearby_places' => 'array',
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
@@ -141,9 +140,41 @@ class Property extends Model implements HasMedia
      */
     public function registerMediaConversions(?Media $media = null): void
     {
-        // No conversions - keep only original images
-        // This prevents creation of thumbnail, medium, large, full versions
-        // All images will be served in their original format and size
+        // Define all required conversions based on config/images.php
+        $this->addMediaConversion('small')
+            ->width(300)
+            ->height(200)
+            ->quality(75)
+            ->format('webp')
+            ->performOnCollections('images', 'main_image');
+
+        $this->addMediaConversion('thumbnail')
+            ->width(400)
+            ->height(300)
+            ->quality(80)
+            ->format('webp')
+            ->performOnCollections('images', 'main_image');
+
+        $this->addMediaConversion('medium')
+            ->width(800)
+            ->height(533)
+            ->quality(85)
+            ->format('webp')
+            ->performOnCollections('images', 'main_image');
+
+        $this->addMediaConversion('large')
+            ->width(1200)
+            ->height(800)
+            ->quality(88)
+            ->format('webp')
+            ->performOnCollections('images', 'main_image');
+
+        $this->addMediaConversion('full')
+            ->width(1920)
+            ->height(1280)
+            ->quality(92)
+            ->format('webp')
+            ->performOnCollections('images', 'main_image');
     }
 
     /**
@@ -188,11 +219,20 @@ class Property extends Model implements HasMedia
     }
 
     /**
-     * The amenities associated with this property.
+     * The features associated with this property.
      */
-    public function amenities()
+    public function features()
     {
-        return $this->belongsToMany(Amenity::class, 'property_amenities')
+        return $this->belongsToMany(Feature::class, 'property_features')
+            ->withTimestamps();
+    }
+
+    /**
+     * The utilities associated with this property.
+     */
+    public function utilities()
+    {
+        return $this->belongsToMany(Utility::class, 'property_utilities')
             ->withTimestamps();
     }
 
@@ -262,11 +302,11 @@ class Property extends Model implements HasMedia
             return [
                 'id' => $media->id,
                 'original' => $media->getUrl(),
-                'full' => $media->getUrl('full'),
-                'large' => $media->getUrl('large'),
-                'medium' => $media->getUrl('medium'),
-                'thumbnail' => $media->getUrl('thumbnail'),
-                'small' => $media->getUrl('small'),
+                'full' => $media->hasGeneratedConversion('full') ? $media->getUrl('full') : $media->getUrl(),
+                'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
+                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
+                'thumbnail' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+                'small' => $media->hasGeneratedConversion('small') ? $media->getUrl('small') : $media->getUrl(),
                 'alt_text' => $media->name ?? 'Property Image',
                 'file_size' => $media->size,
                 'mime_type' => $media->mime_type,
@@ -385,82 +425,6 @@ class Property extends Model implements HasMedia
     }
 
     /**
-     * Available amenities list.
-     */
-    public static function getAvailableAmenities(): array
-    {
-        return [
-            'Air Conditioning',
-            'Heating',
-            'Dishwasher',
-            'Laundry in Unit',
-            'Laundry in Building',
-            'Balcony',
-            'Patio',
-            'Garden',
-            'Roof Deck',
-            'Terrace',
-            'Fireplace',
-            'Hardwood Floors',
-            'Carpet',
-            'Tile Floors',
-            'High Ceilings',
-            'Walk-in Closet',
-            'Storage',
-            'Basement',
-            'Attic',
-            'Garage',
-            'Parking',
-            'Elevator',
-            'Doorman',
-            'Concierge',
-            'Security System',
-            'Intercom',
-            'Video Security',
-            'Gym',
-            'Pool',
-            'Hot Tub',
-            'Sauna',
-            'Tennis Court',
-            'Basketball Court',
-            'Playground',
-            'Dog Park',
-            'Pet Friendly',
-            'No Pets',
-            'Furnished',
-            'Unfurnished',
-            'Internet',
-            'Cable TV',
-            'Utilities Included',
-            'Recently Renovated',
-            'New Construction',
-            'Outdoor Kitchen',
-            'Master Suite',
-            'Updated Kitchen',
-            'Updated Bathroom',
-            'Close to Transit',
-            'Ocean View',
-            'City View',
-            'Private Elevator',
-            'Spa',
-            'Wine Cellar',
-            'Smart Home',
-            'Historic Details',
-            'Bay Windows',
-            'Crown Molding',
-            'Community Pool',
-            'Playground',
-            'Washer/Dryer',
-            'In-Unit Laundry',
-            'Rooftop Deck',
-            'Fitness Center',
-            'Single Story',
-            'Large Backyard',
-            'Desert Landscaping',
-        ];
-    }
-
-    /**
      * Scope for filtering by property type.
      */
     public function scopeOfType(Builder $query, $type): Builder
@@ -544,18 +508,6 @@ class Property extends Model implements HasMedia
 
         if ($state) {
             $query->where('state', 'like', "%{$state}%");
-        }
-
-        return $query;
-    }
-
-    /**
-     * Scope for filtering by amenities.
-     */
-    public function scopeWithAmenities(Builder $query, array $amenities): Builder
-    {
-        foreach ($amenities as $amenity) {
-            $query->whereJsonContains('amenities', $amenity);
         }
 
         return $query;

@@ -134,6 +134,7 @@ const Auth: React.FC = () => {
         email: data.email,
         phone: data.phone || '',
         password: data.password,
+        password_confirmation: data.confirmPassword,
         terms_accepted: data.terms_accepted,
       });
       if (success) {
