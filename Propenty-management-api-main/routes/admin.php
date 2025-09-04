@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CityController;
+use App\Http\Controllers\Admin\GovernorateController;
 use App\Http\Controllers\Admin\AmenityController;
 use App\Http\Controllers\Admin\FeatureController;
 use App\Http\Controllers\Admin\UtilityController;
@@ -62,7 +63,16 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::post('categories/{category}/restore', [CategoryController::class, 'restore'])->name('admin.categories.restore');
 
     // Locations Management
+    // Governorates
+    Route::resource('governorates', GovernorateController::class)->names('admin.governorates');
+    Route::post('governorates/{governorate}/toggle-status', [GovernorateController::class, 'toggleStatus'])->name('admin.governorates.toggle-status');
+    Route::get('governorates/ajax/filter', [GovernorateController::class, 'filter'])->name('admin.governorates.filter');
+    Route::get('governorates/ajax/active', [GovernorateController::class, 'getActiveGovernorates'])->name('admin.governorates.active');
+    Route::get('governorates/{governorate}/cities', [GovernorateController::class, 'getCities'])->name('admin.governorates.cities');
+    
+    // Cities
     Route::resource('cities', CityController::class)->names('admin.cities');
+    Route::post('cities/{city}/toggle-status', [CityController::class, 'toggleStatus'])->name('admin.cities.toggle-status');
     Route::get('cities/{city}/neighborhoods', [CityController::class, 'neighborhoods'])->name('admin.cities.neighborhoods');
     Route::post('cities/{city}/neighborhoods', [CityController::class, 'storeNeighborhood'])->name('admin.cities.neighborhoods.store');
     Route::delete('neighborhoods/{neighborhood}', [CityController::class, 'destroyNeighborhood'])->name('admin.neighborhoods.destroy');
@@ -129,6 +139,7 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
 
     // AJAX routes for location dropdowns
     Route::get('get-cities', [CityController::class, 'getCitiesByState'])->name('admin.get-cities');
+    Route::get('get-cities-by-governorate', [CityController::class, 'getCitiesByGovernorate'])->name('admin.get-cities-by-governorate');
     Route::get('get-neighborhoods', [CityController::class, 'getNeighborhoodsByCity'])->name('admin.get-neighborhoods');
 
     // Roles & Permissions (SuperAdmin only)

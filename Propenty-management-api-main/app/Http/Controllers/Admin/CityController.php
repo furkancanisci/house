@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\City;
+use App\Models\Governorate;
 use App\Models\Neighborhood;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -14,7 +15,7 @@ class CityController extends Controller
     {
         Gate::authorize('view cities');
 
-        $query = City::withCount(['neighborhoods', 'properties']);
+        $query = City::with('governorate')->withCount(['neighborhoods', 'properties']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -24,11 +25,16 @@ class CityController extends Controller
             });
         }
 
+        if ($request->filled('governorate_id')) {
+            $query->where('governorate_id', $request->governorate_id);
+        }
+
         if ($request->filled('is_active')) {
             $query->where('is_active', $request->is_active);
         }
 
         $cities = $query->orderBy('created_at', 'desc')->paginate(15);
+        $governorates = Governorate::active()->orderBy('name_ar')->get();
 
         if ($request->ajax()) {
             return response()->json([
@@ -37,13 +43,17 @@ class CityController extends Controller
             ]);
         }
 
-        return view('admin.cities.index', compact('cities'));
+        return view('admin.cities.index', compact('cities', 'governorates'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         Gate::authorize('manage cities');
-        return view('admin.cities.create');
+        
+        $governorates = Governorate::active()->orderBy('name_ar')->get();
+        $selectedGovernorate = $request->get('governorate_id');
+        
+        return view('admin.cities.create', compact('governorates', 'selectedGovernorate'));
     }
 
     public function store(Request $request)
@@ -53,7 +63,11 @@ class CityController extends Controller
         $request->validate([
             'name_en' => 'required|string|max:255|unique:cities',
             'name_ar' => 'required|string|max:255|unique:cities',
+            'name_ku' => 'nullable|string|max:255',
             'slug' => 'required|string|max:255|unique:cities',
+            'governorate_id' => 'nullable|exists:governorates,id',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean'
         ]);
 
@@ -67,7 +81,7 @@ class CityController extends Controller
     {
         Gate::authorize('view cities');
         
-        $city->load(['neighborhoods' => function($query) {
+        $city->load(['governorate', 'neighborhoods' => function($query) {
             $query->withCount('properties');
         }]);
         
@@ -77,7 +91,10 @@ class CityController extends Controller
     public function edit(City $city)
     {
         Gate::authorize('manage cities');
-        return view('admin.cities.edit', compact('city'));
+        
+        $governorates = Governorate::active()->orderBy('name_ar')->get();
+        
+        return view('admin.cities.edit', compact('city', 'governorates'));
     }
 
     public function update(Request $request, City $city)
@@ -87,7 +104,11 @@ class CityController extends Controller
         $request->validate([
             'name_en' => 'required|string|max:255|unique:cities,name_en,' . $city->id,
             'name_ar' => 'required|string|max:255|unique:cities,name_ar,' . $city->id,
+            'name_ku' => 'nullable|string|max:255',
             'slug' => 'required|string|max:255|unique:cities,slug,' . $city->id,
+            'governorate_id' => 'nullable|exists:governorates,id',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean'
         ]);
 
@@ -129,6 +150,7 @@ class CityController extends Controller
             'name' => 'required|string|max:255',
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
+            'name_ku' => 'nullable|string|max:255',
             'slug' => 'required|string|max:255|unique:neighborhoods',
             'is_active' => 'boolean'
         ]);
@@ -153,7 +175,26 @@ class CityController extends Controller
     }
 
     /**
-     * Get cities by state for AJAX requests
+     * Get cities by governorate for AJAX requests
+     */
+    public function getCitiesByGovernorate(Request $request)
+    {
+        $governorateId = $request->get('governorate_id');
+        
+        if (!$governorateId) {
+            return response()->json([]);
+        }
+
+        $cities = City::where('governorate_id', $governorateId)
+                     ->where('is_active', true)
+                     ->orderBy('name_ar')
+                     ->get(['id', 'name_en', 'name_ar']);
+
+        return response()->json($cities);
+    }
+
+    /**
+     * Get cities by state for AJAX requests (legacy method)
      */
     public function getCitiesByState(Request $request)
     {
@@ -163,13 +204,28 @@ class CityController extends Controller
             return response()->json([]);
         }
 
-        // Since we're using a hardcoded states array, we'll return all cities
-        // In a real-world scenario, you might want to filter cities by state
+        // Legacy method - return all active cities
         $cities = City::where('is_active', true)
-                     ->orderBy('name_en')
+                     ->orderBy('name_ar')
                      ->get(['id', 'name_en', 'name_ar']);
 
         return response()->json($cities);
+    }
+
+    /**
+     * Toggle city status via AJAX
+     */
+    public function toggleStatus(City $city)
+    {
+        Gate::authorize('manage cities');
+        
+        $city->update(['is_active' => !$city->is_active]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => $city->is_active ? 'تم تفعيل المدينة بنجاح' : 'تم إلغاء تفعيل المدينة بنجاح',
+            'is_active' => $city->is_active
+        ]);
     }
 
     /**

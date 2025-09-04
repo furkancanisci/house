@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\City;
+use App\Models\Governorate;
+use App\Models\Neighborhood;
 use App\Models\PropertyType;
 use App\Models\User;
 use App\Models\Amenity;
@@ -221,6 +223,8 @@ class PropertyController extends Controller
     {
         $this->authorize('edit properties');
 
+        // Load governorates, cities, and property types
+        $governorates = \App\Models\Governorate::orderBy('name_ar')->get();
         $cities = City::orderBy('name_en')->get();
         $propertyTypes = PropertyType::orderBy('name')->get();
         $users = User::select('id', 'first_name', 'last_name', 'email')->get()
@@ -245,7 +249,12 @@ class PropertyController extends Controller
         
         // Get neighborhoods for the current city
         $neighborhoods = collect();
-        if ($property->city) {
+        if ($property->city_id) {
+            $neighborhoods = \App\Models\Neighborhood::where('city_id', $property->city_id)
+                                                    ->orderBy('name_ar')
+                                                    ->get();
+        } elseif ($property->city) {
+            // Fallback for old data using text field
             $city = City::where('name_en', $property->city)
                        ->orWhere('name_ar', $property->city)
                        ->first();
@@ -254,10 +263,12 @@ class PropertyController extends Controller
             }
         }
 
-        $property->load(['user', 'media', 'city', 'propertyType']);
+        // Load relationships including the new ones
+        $property->load(['user', 'media', 'city', 'governorate', 'neighborhood', 'propertyType']);
 
         return view('admin.properties.edit', compact(
             'property',
+            'governorates',
             'cities',
             'states',
             'neighborhoods',

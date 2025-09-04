@@ -54,6 +54,11 @@ class Property extends Model implements HasMedia
         'contact_email',
         'published_at',
         'document_type_id',
+        
+        // Foreign key fields
+        'governorate_id',
+        'city_id',
+        'neighborhood_id',
     ];
 
     /**
@@ -186,11 +191,27 @@ class Property extends Model implements HasMedia
     }
 
     /**
+     * The governorate relationship.
+     */
+    public function governorate()
+    {
+        return $this->belongsTo(\App\Models\Governorate::class);
+    }
+
+    /**
      * The city relationship.
      */
     public function city()
     {
         return $this->belongsTo(\App\Models\City::class);
+    }
+
+    /**
+     * The neighborhood relationship.
+     */
+    public function neighborhood()
+    {
+        return $this->belongsTo(\App\Models\Neighborhood::class);
     }
 
     /**

@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { 
   Home, 
-  Search, 
   Heart, 
   Plus, 
   User, 
@@ -11,9 +10,9 @@ import {
   Menu, 
   X,
   Building,
-  Key,
-  DollarSign,
-  ChevronDown
+  ChevronDown,
+  Info,
+  Mail
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { Button } from './ui/button';
@@ -60,9 +59,8 @@ const Header: React.FC = () => {
 
   const navItems = [
     { path: '/', label: t('navigation.home'), icon: Home },
-    { path: '/search', label: t('navigation.search'), icon: Search },
-    { path: '/houses-for-rent', label: t('navigation.housesForRent'), icon: Key },
-    { path: '/houses-for-sale', label: t('navigation.housesForSale'), icon: DollarSign },
+    { path: '/about', label: t('navigation.about'), icon: Info },
+    { path: '/contact', label: t('navigation.contact'), icon: Mail },
     ...(user ? [{ path: '/favorites', label: t('navigation.favorites'), icon: Heart }] : []),
   ];
 

@@ -16,7 +16,9 @@ class Neighborhood extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'name_ar',
+        'name_en',
+        'name_ku',
         'slug',
         'city_id',
         'description',
@@ -38,6 +40,39 @@ class Neighborhood extends Model
     ];
 
     /**
+     * Get the neighborhood name based on locale
+     */
+    public function getName($locale = 'ar')
+    {
+        switch ($locale) {
+            case 'ku':
+                return $this->name_ku ?: $this->name_ar;
+            case 'en':
+                return $this->name_en;
+            case 'ar':
+            default:
+                return $this->name_ar;
+        }
+    }
+
+    /**
+     * Get the name attribute (default to Arabic name for backward compatibility)
+     */
+    public function getNameAttribute()
+    {
+        $locale = app()->getLocale();
+        switch ($locale) {
+            case 'ku':
+                return $this->attributes['name_ku'] ?: $this->attributes['name_ar'] ?: $this->attributes['name_en'];
+            case 'en':
+                return $this->attributes['name_en'] ?: $this->attributes['name_ar'];
+            case 'ar':
+            default:
+                return $this->attributes['name_ar'] ?: $this->attributes['name_en'];
+        }
+    }
+
+    /**
      * Boot the model.
      */
     protected static function boot()
@@ -46,13 +81,17 @@ class Neighborhood extends Model
 
         static::creating(function ($neighborhood) {
             if (empty($neighborhood->slug)) {
-                $neighborhood->slug = Str::slug($neighborhood->name . '-' . $neighborhood->city->name);
+                $name = $neighborhood->name_ar ?: $neighborhood->name_en;
+                $cityName = $neighborhood->city ? $neighborhood->city->name_ar : '';
+                $neighborhood->slug = Str::slug($name . '-' . $cityName);
             }
         });
 
         static::updating(function ($neighborhood) {
-            if ($neighborhood->isDirty('name') && !$neighborhood->isDirty('slug')) {
-                $neighborhood->slug = Str::slug($neighborhood->name . '-' . $neighborhood->city->name);
+            if (($neighborhood->isDirty('name_ar') || $neighborhood->isDirty('name_en')) && !$neighborhood->isDirty('slug')) {
+                $name = $neighborhood->name_ar ?: $neighborhood->name_en;
+                $cityName = $neighborhood->city ? $neighborhood->city->name_ar : '';
+                $neighborhood->slug = Str::slug($name . '-' . $cityName);
             }
         });
     }
@@ -104,6 +143,9 @@ class Neighborhood extends Model
      */
     public function getFullLocationAttribute(): string
     {
-        return $this->name . ', ' . $this->city->name;
+        $locale = app()->getLocale();
+        $neighborhoodName = $this->getName($locale);
+        $cityName = $this->city ? $this->city->getName($locale) : '';
+        return $neighborhoodName . ', ' . $cityName;
     }
 }

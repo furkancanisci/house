@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             PropertyDocumentTypeSeeder::class,
             FeaturesAndUtilitiesSeeder::class,
+            GovernorateSeeder::class,
             UserSeeder::class,
             PropertySeeder::class,
             PropertyFavoriteSeeder::class,
