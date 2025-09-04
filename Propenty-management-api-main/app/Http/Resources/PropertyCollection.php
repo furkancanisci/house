@@ -14,62 +14,36 @@ class PropertyCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
+        // Check if this is a paginated result
+        if ($this->resource instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            // This is a paginated result
+            return [
+                'data' => $this->collection->map(function ($property) {
+                    return new PropertyResource($property);
+                })->values()->toArray(),
+                'meta' => [
+                    'total' => $this->resource->total(),
+                    'count' => $this->resource->count(),
+                    'per_page' => $this->resource->perPage(),
+                    'current_page' => $this->resource->currentPage(),
+                    'total_pages' => $this->resource->lastPage(),
+                    'has_more_pages' => $this->resource->hasMorePages(),
+                ],
+                'links' => [
+                    'first' => $this->resource->url(1),
+                    'last' => $this->resource->url($this->resource->lastPage()),
+                    'prev' => $this->resource->previousPageUrl(),
+                    'next' => $this->resource->nextPageUrl(),
+                    'self' => $this->resource->url($this->resource->currentPage()),
+                ]
+            ];
+        }
+        
+        // For simple collections, return a simpler structure
         return [
-            'data' => $this->collection,
-            'meta' => [
-                'total' => $this->total(),
-                'count' => $this->count(),
-                'per_page' => $this->perPage(),
-                'current_page' => $this->currentPage(),
-                'total_pages' => $this->lastPage(),
-                'has_more_pages' => $this->hasMorePages(),
-            ],
-            'links' => [
-                'first' => $this->url(1),
-                'last' => $this->url($this->lastPage()),
-                'prev' => $this->previousPageUrl(),
-                'next' => $this->nextPageUrl(),
-                'self' => $this->url($this->currentPage()),
-            ],
-            'filters' => [
-                'available_property_types' => [
-                    'apartment',
-                    'house', 
-                    'condo',
-                    'townhouse',
-                    'studio',
-                    'loft',
-                    'villa',
-                    'commercial',
-                    'land'
-                ],
-                'available_listing_types' => [
-                    'rent',
-                    'sale'
-                ],
-                'bedroom_options' => [
-                    0, 1, 2, 3, '4+'
-                ],
-                'bathroom_options' => [
-                    1, 2, '3+'
-                ],
-                'price_ranges' => [
-                    'rent' => [
-                        ['min' => 0, 'max' => 1000, 'label' => 'Under $1,000'],
-                        ['min' => 1000, 'max' => 2000, 'label' => '$1,000 - $2,000'],
-                        ['min' => 2000, 'max' => 3000, 'label' => '$2,000 - $3,000'],
-                        ['min' => 3000, 'max' => 5000, 'label' => '$3,000 - $5,000'],
-                        ['min' => 5000, 'max' => null, 'label' => 'Over $5,000'],
-                    ],
-                    'sale' => [
-                        ['min' => 0, 'max' => 100000, 'label' => 'Under $100K'],
-                        ['min' => 100000, 'max' => 300000, 'label' => '$100K - $300K'],
-                        ['min' => 300000, 'max' => 500000, 'label' => '$300K - $500K'],
-                        ['min' => 500000, 'max' => 1000000, 'label' => '$500K - $1M'],
-                        ['min' => 1000000, 'max' => null, 'label' => 'Over $1M'],
-                    ],
-                ],
-            ],
+            'data' => $this->collection->map(function ($property) {
+                return new PropertyResource($property);
+            })->values()->toArray(),
         ];
     }
 
@@ -85,5 +59,14 @@ class PropertyCollection extends ResourceCollection
             'message' => 'Properties retrieved successfully.',
             'timestamp' => now()->toISOString(),
         ];
+    }
+    
+    /**
+     * Customize the pagination information.
+     */
+    public function paginationInformation($request, $paginated, $default)
+    {
+        // Use the default pagination information
+        return $default;
     }
 }

@@ -61,7 +61,8 @@
       "trending": "Trending Properties",
       "recommended": "Recommended Properties",
       "newListings": "New Listings",
-      "popularChoices": "Popular Choices"
+      "popularChoices": "Popular Choices",
+      "featured": "Featured Properties"
     },
     "browseAll": "Browse All Properties",
     "loading": "Loading...",

@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Property;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -21,10 +22,23 @@ class DashboardController extends Controller
     }
 
     // In DashboardController.php
-public function statsRaw()
+public function statsRaw(Request $request)
 {
     try {
-        $userId = auth('sanctum')->id() ?? 1; // Fallback to 1 for testing
+        $user = $request->user();
+        
+        // Return empty stats if no authenticated user
+        if (!$user) {
+            return response()->json([
+                'totalProperties' => 0,
+                'forRent' => 0,
+                'forSale' => 0,
+                'favoriteProperties' => 0,
+                'myProperties' => 0
+            ]);
+        }
+        
+        $userId = $user->id;
         
         $stats = \DB::selectOne("
             SELECT
@@ -63,6 +77,26 @@ public function statsRaw()
     {
         $user = $request->user();
         
+        // Return empty overview if no authenticated user
+        if (!$user) {
+            return response()->json([
+                'user' => null,
+                'stats' => [
+                    'total_properties' => 0,
+                    'active_properties' => 0,
+                    'draft_properties' => 0,
+                    'pending_properties' => 0,
+                    'sold_rented_properties' => 0,
+                    'total_favorites' => 0,
+                    'total_views' => 0,
+                    'this_month_views' => 0,
+                ],
+                'recent_activity' => [],
+                'chart_data' => [],
+            ]);
+        }
+        
+        // Optimize stats queries to prevent memory issues
         $stats = [
             'total_properties' => $user->properties()->count(),
             'active_properties' => $user->properties()->where('status', 'active')->count(),
@@ -74,57 +108,39 @@ public function statsRaw()
             'total_favorites' => $user->favoriteProperties()->count(),
             'total_views' => $user->properties()->sum('views_count'),
             'this_month_views' => $user->properties()
-                ->withCount(['views' => function ($query) {
-                    $query->where('viewed_at', '>=', now()->startOfMonth());
-                }])
-                ->get()
-                ->sum('views_count'),
+                ->join('property_views', 'properties.id', '=', 'property_views.property_id')
+                ->where('property_views.viewed_at', '>=', now()->startOfMonth())
+                ->count(),
         ];
 
-        // Recent activity - latest property views
-        $recentActivity = $user->properties()
-            ->with('views.user')
-            ->get()
-            ->flatMap(function ($property) {
-                return $property->views->take(5)->map(function ($view) use ($property) {
-                    return [
-                        'type' => 'view',
-                        'property_title' => $property->title,
-                        'property_id' => $property->id,
-                        'user_name' => $view->user ? $view->user->full_name : 'Anonymous',
-                        'viewed_at' => $view->viewed_at,
-                    ];
-                });
-            })
-            ->sortByDesc('viewed_at')
-            ->take(10)
-            ->values();
+        // Recent activity - limit to 5 most recent views to prevent memory issues
+        $recentActivity = \DB::select("
+            SELECT 
+                'view' as type,
+                p.title as property_title,
+                p.id as property_id,
+                COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous') as user_name,
+                pv.viewed_at
+            FROM property_views pv
+            JOIN properties p ON pv.property_id = p.id
+            LEFT JOIN users u ON pv.user_id = u.id
+            WHERE p.user_id = ?
+            ORDER BY pv.viewed_at DESC
+            LIMIT 5
+        ", [$user->id]);
 
-        // Performance chart data (last 30 days)
-        $chartData = $user->properties()
-            ->with(['views' => function ($query) {
-                $query->where('viewed_at', '>=', now()->subDays(30))
-                    ->selectRaw('property_id, DATE(viewed_at) as date, COUNT(*) as views')
-                    ->groupBy('property_id', 'date');
-            }])
-            ->get()
-            ->flatMap(function ($property) {
-                return $property->views->map(function ($view) use ($property) {
-                    return [
-                        'date' => $view->date,
-                        'views' => $view->views,
-                        'property_title' => $property->title,
-                    ];
-                });
-            })
-            ->groupBy('date')
-            ->map(function ($group, $date) {
-                return [
-                    'date' => $date,
-                    'total_views' => $group->sum('views'),
-                ];
-            })
-            ->values();
+        // Performance chart data (last 7 days only to prevent memory issues)
+        $chartData = \DB::select("
+            SELECT 
+                DATE(pv.viewed_at) as date,
+                COUNT(*) as total_views
+            FROM property_views pv
+            JOIN properties p ON pv.property_id = p.id
+            WHERE p.user_id = ?
+            AND pv.viewed_at >= CURRENT_DATE - INTERVAL '7 days'
+            GROUP BY DATE(pv.viewed_at)
+            ORDER BY date ASC
+        ", [$user->id]);
 
         return response()->json([
             'user' => new UserResource($user),
@@ -143,7 +159,20 @@ public function statsRaw()
     public function stats(Request $request)
 {
     try {
-        $userId = 1;
+        $user = $request->user();
+        
+        // Return empty stats if no authenticated user
+        if (!$user) {
+            return response()->json([
+                'totalProperties' => 0,
+                'forRent' => 0,
+                'forSale' => 0,
+                'favoriteProperties' => 0,
+                'myProperties' => 0
+            ]);
+        }
+        
+        $userId = $user->id;
         
         // Use DB::selectOne to get a single row
         $stats = \DB::selectOne("
@@ -172,69 +201,19 @@ public function statsRaw()
 }
 
     /**
-     * Get user's properties.
-     */
-    public function properties(Request $request): PropertyCollection
-    {
-        $user = $request->user();
-        
-        // Debug logging
-        \Log::info('Dashboard properties request', [
-            'user_id' => $user ? $user->id : 'null',
-            'user_email' => $user ? $user->email : 'null',
-            'has_token' => $request->bearerToken() ? 'yes' : 'no'
-        ]);
-        
-        if (!$user) {
-            // For testing purposes, use user ID 1 if no authenticated user
-            $user = \App\Models\User::find(1);
-            if (!$user) {
-                return new PropertyCollection(Property::where('id', -1)->paginate(0));
-            }
-        }
-
-        $query = $user->properties()->with(['media']);
-
-        // Filter by status if provided
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Search functionality
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%");
-            });
-        }
-
-        // Sort options
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
-
-        $properties = $query->paginate($request->get('per_page', 10));
-        
-        // Debug logging
-        \Log::info('User properties query result', [
-            'user_id' => $user->id,
-            'properties_count' => $properties->count(),
-            'total_properties' => $properties->total()
-        ]);
-
-        return new PropertyCollection($properties);
-    }
-
-    /**
      * Get user's favorite properties.
      */
     public function favorites(Request $request): PropertyCollection
     {
-        $query = $request->user()
-            ->favoriteProperties()
-            ->with(['user', 'media'])
+        $user = $request->user();
+        
+        // Return empty collection if no authenticated user
+        if (!$user) {
+            return new PropertyCollection(Property::where('id', -1)->paginate(0));
+        }
+        
+        $query = $user->favoriteProperties()
+            ->with(['user:id,first_name,last_name,email', 'media:id,model_id,model_type,collection_name,file_name,file_size,mime_type,manipulations,custom_properties,generated_conversions']) // Select only necessary columns
             ->where('status', 'active');
 
         // Search functionality
@@ -250,9 +229,25 @@ public function statsRaw()
         // Sort options
         $sortBy = $request->get('sort_by', 'property_favorites.created_at');
         $sortOrder = $request->get('sort_order', 'desc');
+        
+        // Validate sort parameters
+        $allowedSortColumns = ['property_favorites.created_at', 'created_at', 'updated_at', 'price', 'title'];
+        $allowedSortOrders = ['asc', 'desc'];
+        
+        if (!in_array($sortBy, $allowedSortColumns)) {
+            $sortBy = 'property_favorites.created_at';
+        }
+        
+        if (!in_array($sortOrder, $allowedSortOrders)) {
+            $sortOrder = 'desc';
+        }
+        
         $query->orderBy($sortBy, $sortOrder);
 
-        $properties = $query->paginate($request->get('per_page', 10));
+        // Limit the number of results to prevent memory issues
+        $perPage = min($request->get('per_page', 10), 50); // Max 50 items per page
+
+        $properties = $query->paginate($perPage);
 
         return new PropertyCollection($properties);
     }
@@ -263,65 +258,87 @@ public function statsRaw()
     public function analytics(Request $request): JsonResponse
     {
         $user = $request->user();
-        $properties = $user->properties()->with('propertyType')->get();
-
-        // Overall analytics
-        $analytics = [
-            'total_properties' => $properties->count(),
-            'total_views' => $properties->sum('views_count'),
-            'total_favorites' => $user->favoriteProperties()->count(),
-            'average_price' => $properties->avg('price'),
-            'properties_by_type' => $properties->groupBy(function($property) {
-                    return $property->propertyType?->name ?? 'Unknown';
-                })
-                ->map(function ($group, $type) {
-                    return [
-                        'type' => $type,
-                        'count' => $group->count(),
-                        'total_views' => $group->sum('views_count'),
-                    ];
-                })
-                ->values(),
-            'properties_by_status' => $properties->groupBy('status')
-                ->map(function ($group, $status) {
-                    return [
-                        'status' => $status,
-                        'count' => $group->count(),
-                    ];
-                })
-                ->values(),
-            'top_performing_properties' => $properties
-                ->sortByDesc('views_count')
-                ->take(5)
-                ->map(function ($property) {
-                    return [
-                        'id' => $property->id,
-                        'title' => $property->title,
-                        'views_count' => $property->views_count,
-                        'favorites_count' => $property->favoritedByUsers()->count(),
-                    ];
-                })
-                ->values(),
-        ];
-
-        // Monthly views trend (last 12 months)
-        $monthlyViews = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $views = $properties->sum(function ($property) use ($date) {
-                return $property->views()
-                    ->whereYear('viewed_at', $date->year)
-                    ->whereMonth('viewed_at', $date->month)
-                    ->count();
-            });
-            
-            $monthlyViews[] = [
-                'month' => $date->format('M Y'),
-                'views' => $views,
-            ];
+        
+        // Return empty analytics if no authenticated user
+        if (!$user) {
+            return response()->json([
+                'analytics' => [
+                    'total_properties' => 0,
+                    'total_views' => 0,
+                    'total_favorites' => 0,
+                    'average_price' => 0,
+                    'properties_by_type' => [],
+                    'properties_by_status' => [],
+                    'top_performing_properties' => [],
+                    'monthly_views' => []
+                ]
+            ]);
         }
+        
+        // Optimize analytics queries to prevent memory issues
+        $totalProperties = $user->properties()->count();
+        $totalViews = $user->properties()->sum('views_count');
+        $totalFavorites = $user->favoriteProperties()->count();
+        $averagePrice = $user->properties()->avg('price');
+        
+        // Properties by type
+        $propertiesByType = \DB::select("
+            SELECT 
+                COALESCE(pt.name, 'Unknown') as type,
+                COUNT(*) as count,
+                SUM(p.views_count) as total_views
+            FROM properties p
+            LEFT JOIN property_types pt ON p.property_type_id = pt.id
+            WHERE p.user_id = ?
+            GROUP BY pt.name
+        ", [$user->id]);
+        
+        // Properties by status
+        $propertiesByStatus = \DB::select("
+            SELECT 
+                status,
+                COUNT(*) as count
+            FROM properties
+            WHERE user_id = ?
+            GROUP BY status
+        ", [$user->id]);
+        
+        // Top performing properties (top 5 by views)
+        $topPerformingProperties = \DB::select("
+            SELECT 
+                id,
+                title,
+                views_count,
+                (SELECT COUNT(*) FROM property_favorites pf WHERE pf.property_id = properties.id) as favorites_count
+            FROM properties
+            WHERE user_id = ?
+            ORDER BY views_count DESC
+            LIMIT 5
+        ", [$user->id]);
+        
+        // Monthly views trend (last 7 days only to prevent memory issues)
+        $monthlyViews = \DB::select("
+            SELECT 
+                TO_CHAR(viewed_at, 'Mon YYYY') as month,
+                COUNT(*) as views
+            FROM property_views pv
+            JOIN properties p ON pv.property_id = p.id
+            WHERE p.user_id = ?
+            AND pv.viewed_at >= CURRENT_DATE - INTERVAL '7 days'
+            GROUP BY TO_CHAR(viewed_at, 'Mon YYYY')
+            ORDER BY month ASC
+        ", [$user->id]);
 
-        $analytics['monthly_views'] = $monthlyViews;
+        $analytics = [
+            'total_properties' => $totalProperties,
+            'total_views' => $totalViews,
+            'total_favorites' => $totalFavorites,
+            'average_price' => $averagePrice,
+            'properties_by_type' => $propertiesByType,
+            'properties_by_status' => $propertiesByStatus,
+            'top_performing_properties' => $topPerformingProperties,
+            'monthly_views' => $monthlyViews,
+        ];
 
         return response()->json([
             'analytics' => $analytics,
@@ -333,37 +350,104 @@ public function statsRaw()
      */
     public function updateProfile(Request $request): JsonResponse
     {
-        $request->validate([
-            'first_name' => 'sometimes|required|string|max:255',
-            'last_name' => 'sometimes|required|string|max:255',
-            'phone' => 'sometimes|nullable|string|max:20',
-            'date_of_birth' => 'sometimes|nullable|date|before:today',
-            'gender' => 'sometimes|nullable|in:male,female,other',
-            'bio' => 'sometimes|nullable|string|max:1000',
-            'avatar' => 'sometimes|nullable|image|mimes:jpeg,png,webp|max:2048',
-        ]);
+        try {
+            \Log::info('=== PROFILE UPDATE START ===');
+            
+            $user = $request->user();
+            
+            // Debug: Check if we have a user
+            if (!$user) {
+                \Log::info('No user found in updateProfile request');
+                return response()->json([
+                    'error' => 'Authentication required'
+                ], 401);
+            }
+            
+            \Log::info('User found: ' . $user->id);
+            \Log::info('Request data: ', $request->all());
+            
+            // Validate the request data
+            $validatedData = $request->validate([
+                'first_name' => 'sometimes|string|max:255',
+                'last_name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
+            ]);
+            
+            \Log::info('Validated data: ', $validatedData);
+            
+            // Update the user using raw SQL query
+            if (!empty($validatedData)) {
+                $updateFields = [];
+                $updateValues = [];
+                
+                foreach ($validatedData as $key => $value) {
+                    $updateFields[] = "$key = ?";
+                    $updateValues[] = $value;
+                }
+                
+                // Add updated_at timestamp
+                $updateFields[] = "updated_at = ?";
+                $updateValues[] = now();
+                
+                $updateQuery = "UPDATE users SET " . implode(', ', $updateFields) . " WHERE id = ?";
+                $updateValues[] = $user->id;
+                
+                \Log::info('Update query: ' . $updateQuery);
+                \Log::info('Update values: ', $updateValues);
+                
+                DB::statement($updateQuery, $updateValues);
+                
+                // Refresh the user model to get updated data
+                $user = $user->fresh();
+                
+                \Log::info('User updated successfully');
+            }
 
-        $user = $request->user();
-        $user->update($request->only([
-            'first_name',
-            'last_name',
-            'phone',
-            'date_of_birth',
-            'gender',
-            'bio',
-        ]));
-
-        // Handle avatar upload
-        if ($request->hasFile('avatar')) {
-            $user->clearMediaCollection('avatar');
-            $user->addMediaFromRequest('avatar')
-                ->toMediaCollection('avatar');
+            \Log::info('Returning success response');
+            \Log::info('=== PROFILE UPDATE END ===');
+            
+            return response()->json([
+                'message' => 'Profile updated successfully.',
+                'user' => new UserResource($user),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error updating profile: ' . $e->getMessage(), [
+                'errors' => $e->errors(),
+                'exception' => $e,
+            ]);
+            
+            return response()->json([
+                'error' => 'Validation error',
+                'message' => 'The given data was invalid.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error updating profile: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'An error occurred while updating profile',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        } catch (\Error $e) {
+            \Log::error('Error updating profile (Error): ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'A fatal error occurred while updating profile',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Profile updated successfully.',
-            'user' => new UserResource($user->fresh()),
-        ]);
     }
 
     /**
@@ -372,6 +456,14 @@ public function statsRaw()
     public function notifications(Request $request): JsonResponse
     {
         $user = $request->user();
+        
+        // Return empty notifications if no authenticated user
+        if (!$user) {
+            return response()->json([
+                'notifications' => [],
+                'unread_count' => 0,
+            ]);
+        }
         
         // Mock notifications - you can implement actual notification system
         $notifications = [

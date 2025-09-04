@@ -225,7 +225,15 @@ export const authService: AuthService = {
   // Update user profile
   async updateUser(userData: Partial<User>): Promise<{ user: User; message: string }> {
     try {
-      const response = await api.post('/profile', userData, { baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1').replace('/v1', '') });
+      console.log('Sending profile update data:', userData);
+      console.log('API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1');
+      
+      // Let's log the full request details
+      const requestUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1'}/dashboard/profile`;
+      console.log('Full request URL:', requestUrl);
+      
+      const response = await api.post('/dashboard/profile', userData);
+      console.log('Profile update response:', response.data);
       
       // Update the stored user data in localStorage
       const currentUser = this.getStoredUser();
@@ -235,8 +243,11 @@ export const authService: AuthService = {
       }
       
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Update user error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
       throw error;
     }
   },

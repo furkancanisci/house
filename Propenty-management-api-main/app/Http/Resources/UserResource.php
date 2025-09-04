@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
 
 class UserResource extends JsonResource
 {
@@ -27,8 +28,8 @@ class UserResource extends JsonResource
             'user_type' => $this->user_type,
             'is_verified' => $this->is_verified,
             'is_active' => $this->is_active,
-            'email_verified_at' => $this->email_verified_at?->toISOString(),
-            'last_login_at' => $this->last_login_at?->toISOString(),
+            'email_verified_at' => $this->getEmailVerifiedAt(),
+            'last_login_at' => $this->getLastLoginAt(),
             'avatar' => [
                 'url' => $this->avatar_url,
                 'thumbnail' => $this->avatar_thumbnail_url,
@@ -46,9 +47,105 @@ class UserResource extends JsonResource
                 'can_view_analytics' => $this->isPropertyOwner(),
                 'can_manage_listings' => $this->isPropertyOwner(),
             ],
-            'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
+            'created_at' => $this->getCreatedAt(),
+            'updated_at' => $this->getUpdatedAt(),
         ];
+    }
+
+    /**
+     * Get email verified at timestamp
+     */
+    private function getEmailVerifiedAt()
+    {
+        if (!$this->email_verified_at) {
+            return null;
+        }
+        
+        // If it's already a Carbon/DateTime object
+        if (is_object($this->email_verified_at) && method_exists($this->email_verified_at, 'toISOString')) {
+            return $this->email_verified_at->toISOString();
+        }
+        
+        // If it's a string, try to parse it
+        if (is_string($this->email_verified_at)) {
+            try {
+                return Carbon::parse($this->email_verified_at)->toISOString();
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get last login at timestamp
+     */
+    private function getLastLoginAt()
+    {
+        if (!$this->last_login_at) {
+            return null;
+        }
+        
+        // If it's already a Carbon/DateTime object
+        if (is_object($this->last_login_at) && method_exists($this->last_login_at, 'toISOString')) {
+            return $this->last_login_at->toISOString();
+        }
+        
+        // If it's a string, try to parse it
+        if (is_string($this->last_login_at)) {
+            try {
+                return Carbon::parse($this->last_login_at)->toISOString();
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get created at timestamp
+     */
+    private function getCreatedAt()
+    {
+        // If it's already a Carbon/DateTime object
+        if (is_object($this->created_at) && method_exists($this->created_at, 'toISOString')) {
+            return $this->created_at->toISOString();
+        }
+        
+        // If it's a string, try to parse it
+        if (is_string($this->created_at)) {
+            try {
+                return Carbon::parse($this->created_at)->toISOString();
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get updated at timestamp
+     */
+    private function getUpdatedAt()
+    {
+        // If it's already a Carbon/DateTime object
+        if (is_object($this->updated_at) && method_exists($this->updated_at, 'toISOString')) {
+            return $this->updated_at->toISOString();
+        }
+        
+        // If it's a string, try to parse it
+        if (is_string($this->updated_at)) {
+            try {
+                return Carbon::parse($this->updated_at)->toISOString();
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+        
+        return null;
     }
 
     /**

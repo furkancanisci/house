@@ -144,6 +144,9 @@ class AuthController extends Controller
         // Create a refresh token (stored in database)
         $refreshToken = $user->createToken('refresh_token', ['refresh'], now()->addDays(30))->plainTextToken;
         
+        // Store user ID in session for web authentication as well
+        session(['user_id' => $user->id]);
+        
         return response()
             ->json([
                 'message' => 'Login successful.',
@@ -162,7 +165,7 @@ class AuthController extends Controller
                 config('app.env') === 'production',
                 true, // httpOnly
                 false,
-                'strict'
+                'lax' // Changed to lax for better CSRF protection
             ));
     }
 

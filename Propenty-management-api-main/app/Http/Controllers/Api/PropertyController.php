@@ -21,12 +21,7 @@ class PropertyController extends Controller
     /**
      * Create a new controller instance.
      */
-    public function __construct()
-    {
-        // Apply authentication middleware to all methods except public endpoints
-        // For production, you may want to require authentication for 'store' as well
-        $this->middleware('auth:sanctum')->except(['index', 'show', 'amenities', 'featured', 'testCreate', 'store', 'update']);
-    }
+    
 
     /**
      * Map camelCase field names to snake_case database column names
@@ -77,11 +72,9 @@ class PropertyController extends Controller
     {
         return response()->json([
             'status' => 'OK',
-            'message' => 'Property Management API is running',
-            'timestamp' => now()->toISOString(),
-            'version' => '1.0.0',
         ]);
     }
+
 
     /**
      * Simple test property creation without validation
@@ -307,8 +300,18 @@ class PropertyController extends Controller
             // Map camelCase field names to snake_case database column names
             $mappedData = $this->mapFieldNames($validatedData);
             
+            // Get the authenticated user
+            $user = request()->user();
+            
+            // Check if user is authenticated
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthenticated.',
+                ], 401);
+            }
+            
             // Add user_id to the data
-            $mappedData['user_id'] = auth()->id() ?? 1; // Fallback to user 1 if not authenticated
+            $mappedData['user_id'] = $user->id;
             
             // Set default status if not provided
             $mappedData['status'] = $mappedData['status'] ?? 'active';
@@ -597,18 +600,20 @@ class PropertyController extends Controller
     public function update(UpdatePropertyRequest $request, Property $property): JsonResponse
     {
         try {
+            // Get the authenticated user
+            $user = request()->user();
+            
             // Debug logging
             \Illuminate\Support\Facades\Log::info('Property update request', [
                 'property_id' => $property->id,
                 'property_title' => $property->title,
-                'user_id' => auth()->id(),
+                'user_id' => $user ? $user->id : null,
                 'property_user_id' => $property->user_id,
                 'request_data_keys' => array_keys($request->all()),
                 'validated_data_keys' => array_keys($request->validated())
             ]);
             
             // Check if user owns the property (skip in development)
-            $user = auth()->user();
             if ($user && $property->user_id !== $user->id) {
                 return response()->json([
                     'message' => 'Unauthorized. You can only update your own properties.',
@@ -704,7 +709,8 @@ class PropertyController extends Controller
     {
         try {
             // Check if user owns the property
-            if (auth()->id() && $property->user_id !== auth()->id()) {
+            $user = request()->user();
+            if ($user && $property->user_id !== $user->id) {
                 return response()->json([
                     'message' => 'Unauthorized. You can only delete your own properties.',
                 ], 403);
@@ -733,16 +739,27 @@ class PropertyController extends Controller
      */
     public function featured(Request $request): PropertyCollection
     {
-        $limit = $request->input('limit', 6);
-        
-        $properties = Property::where('is_featured', true)
-            ->where('status', 'active')
-            ->where('is_available', true)
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
+        try {
+            $limit = $request->input('limit', 6);
+            
+            $properties = Property::where('is_featured', true)
+                ->where('status', 'active')
+                ->where('is_available', true)
+                ->orderBy('created_at', 'desc')
+                ->paginate($limit);
 
-        return new PropertyCollection($properties);
+            // Log the properties for debugging
+            \Log::info('Featured properties query result', [
+                'count' => $properties->count(),
+                'items' => $properties->items()
+            ]);
+
+            return new PropertyCollection($properties);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching featured properties: ' . $e->getMessage());
+            // Return empty paginated collection on error
+            return new PropertyCollection(Property::where('id', -1)->paginate(0));
+        }
     }
 
     /**
@@ -764,24 +781,67 @@ class PropertyController extends Controller
     /**
      * Toggle property favorite status.
      */
+
+     
     public function toggleFavorite(Property $property): JsonResponse
     {
-        $user = auth()->user();
-        
-        if ($user->favoriteProperties()->where('property_id', $property->id)->exists()) {
-            $user->favoriteProperties()->detach($property->id);
-            $message = 'Property removed from favorites.';
-            $is_favorited = false;
-        } else {
-            $user->favoriteProperties()->attach($property->id);
-            $message = 'Property added to favorites.';
-            $is_favorited = true;
-        }
+        try {
+            // Get the authenticated user
+            $user = request()->user();
+            
+       
+            
+            // Check if user is authenticated
+            if (!$user) {
+                // Try alternative method to get user
+                $user = auth()->user();
+          
+                if (!$user) {
+                    return response()->json([
+                        'message' => 'Unauthenticated.',
+                        'debug' => [
+                            'auth_header' => request()->header('Authorization'),
+                            'session_id' => session()->getId()
+                        ]
+                    ], 401);
+                }
+            }
+            
+            // Check if property exists
+            if (!$property) {
+                return response()->json([
+                    'message' => 'Property not found.',
+                ], 404);
+            }
+            
+            // Check if the property is already favorited by the user
+            // SQL equivalent: SELECT COUNT(*) > 0 AS is_already_favorited FROM property_favorites WHERE user_id = ? AND property_id = ?;
+            $isAlreadyFavorited = $user->favoriteProperties()->where('property_id', $property->id)->exists();
+            
+            if ($isAlreadyFavorited) {
+                // SQL equivalent: DELETE FROM property_favorites WHERE user_id = ? AND property_id = ?;
+                $user->favoriteProperties()->detach($property->id);
+                $message = 'Property removed from favorites.';
+                $is_favorited = false;
+            } else {
+                // SQL equivalent: INSERT INTO property_favorites (user_id, property_id, created_at, updated_at) VALUES (?, ?, NOW(), NOW());
+                $user->favoriteProperties()->attach($property->id);
+                $message = 'Property added to favorites.';
+                $is_favorited = true;
+            }
 
-        return response()->json([
-            'message' => $message,
-            'is_favorited' => $is_favorited,
-        ]);
+            return response()->json([
+                'message' => $message,
+                'is_favorited' => $is_favorited,
+            ]);
+        } catch (\Exception $e) {
+           
+            
+            return response()->json([
+                'message' => 'An error occurred while toggling favorite status.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -791,7 +851,8 @@ class PropertyController extends Controller
     {
         try {
             // Check if user owns the property
-            if ($property->user_id !== auth()->id()) {
+            $user = request()->user();
+            if (!$user || $property->user_id !== $user->id) {
                 return response()->json([
                     'message' => 'Unauthorized. You can only delete images from your own properties.',
                 ], 403);
@@ -828,7 +889,8 @@ class PropertyController extends Controller
     public function analytics(Property $property): JsonResponse
     {
         // Check if user owns the property
-        if ($property->user_id !== auth()->id()) {
+        $user = request()->user();
+        if (!$user || $property->user_id !== $user->id) {
             return response()->json([
                 'message' => 'Unauthorized. You can only view analytics for your own properties.',
             ], 403);

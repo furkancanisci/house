@@ -47,7 +47,7 @@ class Cors
             'Access-Control-Allow-Headers'     => 'Content-Type, X-Auth-Token, Origin, Authorization, X-Requested-With, Accept, X-CSRF-TOKEN',
             'Access-Control-Allow-Credentials' => 'true',
             'Access-Control-Max-Age'           => '86400',
-            'Access-Control-Expose-Headers'    => 'Authorization',
+            'Access-Control-Expose-Headers'    => 'Authorization, X-Requested-With',
             'Vary'                             => 'Origin',
         ];
 

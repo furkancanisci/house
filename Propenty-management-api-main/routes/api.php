@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Route;
 // In routes/api.php
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/stats-raw', [DashboardController::class, 'statsRaw']);
+    Route::get('/test', [PropertyController::class, 'test']);
 });
 
 // Health check
@@ -33,9 +34,7 @@ Route::get('/health', function () {
         'timestamp' => now()->toISOString(),
         'version' => '1.0.0',
     ]);
-});
-
-
+})->middleware('auth:sanctum');
 
 Route::get('/testt', function () {
     return response()->json([
@@ -44,14 +43,9 @@ Route::get('/testt', function () {
         'timestamp' => now()->toISOString(),
         'version' => '1.0.0',
     ]);
-});
+})->middleware('auth:sanctum');
 
 // API Version 1
-
-Route::get('/overview', [DashboardController::class, 'overview']);
-Route::get('/properties', [DashboardController::class, 'properties']);
-Route::get('/favorites', [DashboardController::class, 'favorites']);
-Route::get('/analytics', [DashboardController::class, 'analytics']);
 Route::prefix('v1')->group(function () {
     
     // Authentication Routes
@@ -86,33 +80,32 @@ Route::prefix('v1')->group(function () {
         Route::get('/', [PropertyController::class, 'index']);
         Route::get('/featured', [PropertyController::class, 'featured']);
         Route::get('/amenities', [PropertyController::class, 'amenities']);
-        Route::get('/{property:slug}', [PropertyController::class, 'show']);
-        Route::get('/{property}/show', [PropertyController::class, 'show']); // Alternative route for ID
+        Route::get('/test', [PropertyController::class, 'test']);
+
+        // More specific routes should come first to avoid conflicts
+        Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite']);
+        Route::get('/{property}/analytics', [PropertyController::class, 'analytics'])->middleware('auth:sanctum');
+        Route::delete('/{property}/images/{mediaId}', [PropertyController::class, 'deleteImage'])->middleware('auth:sanctum');
         Route::get('/{property:slug}/similar', [PropertyController::class, 'similar']);
+        Route::get('/{property}/show', [PropertyController::class, 'show']); // Alternative route for ID
+        Route::get('/{property:slug}', [PropertyController::class, 'show']);
         
         // Write operations - keeping these for future reference but making them public for now
-        Route::post('/', [PropertyController::class, 'store'])->middleware('validate.image');
-        Route::put('/{property}', [PropertyController::class, 'update'])->middleware('validate.image');
-        Route::delete('/{property}', [PropertyController::class, 'destroy']);
-        Route::delete('/{property}/images/{mediaId}', [PropertyController::class, 'deleteImage']);
-        Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite'])->middleware('auth:sanctum');
-        Route::get('/{property}/analytics', [PropertyController::class, 'analytics']);
+        Route::post('/', [PropertyController::class, 'store'])->middleware(['auth:sanctum', 'validate.image']);
+        Route::put('/{property}', [PropertyController::class, 'update'])->middleware(['auth:sanctum', 'validate.image']);
+        Route::delete('/{property}', [PropertyController::class, 'destroy'])->middleware('auth:sanctum');
+
     });
 
-    // Dashboard Routes - Made public for now
+    // Dashboard Routes - All require authentication
     Route::prefix('dashboard')->group(function () {
         Route::get('/overview', [DashboardController::class, 'overview']);
-        Route::get('/stats', [DashboardController::class, 'stats']); // auth yok
-
-        Route::get('/properties', [DashboardController::class, 'properties']);
+        Route::get('/stats', [DashboardController::class, 'stats']);
+        // Removed the properties route as requested
         Route::get('/favorites', [DashboardController::class, 'favorites']);
         Route::get('/analytics', [DashboardController::class, 'analytics']);
-        
-        // Keeping profile and notifications as protected since they're user-specific
-        Route::middleware('auth:sanctum')->group(function () {
-            Route::post('/profile', [DashboardController::class, 'updateProfile']);
-            Route::get('/notifications', [DashboardController::class, 'notifications']);
-        });
+        Route::post('/profile', [DashboardController::class, 'updateProfile']);
+        Route::get('/notifications', [DashboardController::class, 'notifications']);
     });
 
     // Search and Filter Routes

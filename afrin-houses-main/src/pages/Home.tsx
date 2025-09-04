@@ -21,7 +21,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { useTranslation } from 'react-i18next';
-import { getProperties } from '../services/propertyService';
+import { getProperties, getFeaturedProperties } from '../services/propertyService';
 import { processPropertyImages } from '../lib/imageUtils';
 import leftTopOrnament from '../assets/left top_bb.png';
 import rightBottomOrnament from '../assets/right_bottom_bb.png';
@@ -32,6 +32,7 @@ const Home: React.FC = () => {
   const [rentalProperties, setRentalProperties] = useState<Property[]>([]);
   const [saleProperties, setSaleProperties] = useState<Property[]>([]);
   const [trendingProperties, setTrendingProperties] = useState<Property[]>([]);
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [allProperties, setAllProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,10 +68,17 @@ const Home: React.FC = () => {
           sortOrder: 'desc'
         });
         
+        // Fetch featured properties
+        const featuredResponse = await getFeaturedProperties({
+          limit: 10
+        });
+        
         console.log('API Response:', response);
+        console.log('Featured Properties Response:', featuredResponse);
         
         // Handle the response structure - getProperties might return an array or an object with data
         const allProps = Array.isArray(response) ? response : (response?.data || []);
+        const featuredProps = Array.isArray(featuredResponse) ? featuredResponse : (featuredResponse?.data || []);
         
         if (!Array.isArray(allProps)) {
           console.error('Invalid properties data:', allProps);
@@ -91,6 +99,7 @@ const Home: React.FC = () => {
         setRentalProperties(rental);
         setSaleProperties(sale);
         setTrendingProperties(trending);
+        setFeaturedProperties(featuredProps);
         
         // Use all properties for the grid
         setAllProperties(allProps);
@@ -236,11 +245,12 @@ const Home: React.FC = () => {
   // Property Grid Component with Auto-Scrolling
   const PropertyGrid: React.FC<{
     allProperties: Property[];
+    featuredProperties: Property[];
     createExtendedProperty: (property: Property) => ExtendedProperty;
-  }> = ({ allProperties, createExtendedProperty }) => {
+  }> = ({ allProperties, featuredProperties, createExtendedProperty }) => {
     const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
     
-    // Shuffle and distribute properties into 3 rows
+    // Shuffle array function
     const shuffleArray = (array: Property[]) => {
       const shuffled = [...array];
       for (let i = shuffled.length - 1; i > 0; i--) {
@@ -250,12 +260,17 @@ const Home: React.FC = () => {
       return shuffled;
     };
 
-    const shuffledProperties = shuffleArray(allProperties);
-    const propertiesPerRow = Math.ceil(shuffledProperties.length / 3);
+    // Create rows - first row is featured properties if available
+    const firstRowProperties = featuredProperties.length > 0 ? featuredProperties : 
+                             (allProperties.length > 0 ? allProperties.slice(0, Math.min(5, allProperties.length)) : []);
+    
+    const remainingProperties = allProperties.filter(p => !firstRowProperties.includes(p));
+    const propertiesPerRow = Math.max(1, Math.ceil(remainingProperties.length / 2));
+    
     const rows = [
-      shuffledProperties.slice(0, propertiesPerRow),
-      shuffledProperties.slice(propertiesPerRow, propertiesPerRow * 2),
-      shuffledProperties.slice(propertiesPerRow * 2)
+      firstRowProperties,
+      remainingProperties.slice(0, propertiesPerRow),
+      remainingProperties.slice(propertiesPerRow)
     ];
 
     // Auto-scroll functionality
@@ -284,7 +299,11 @@ const Home: React.FC = () => {
       };
     }, []);
 
-    const rowTitles = [t('home.sections.recommended'), t('home.sections.trending'), t('home.sections.popularChoices')];
+    const rowTitles = [
+      featuredProperties.length > 0 ? t('home.sections.featured') : t('home.sections.recommended'),
+      t('home.sections.trending'), 
+      t('home.sections.popularChoices')
+    ];
     const rowIcons = [HomeIcon, TrendingUp, Award];
     const rowColors = ['text-primary-600', 'text-primary-700', 'text-primary-800'];
 
@@ -449,11 +468,8 @@ const Home: React.FC = () => {
       </section>
 
       {/* Premium Listings */}
-
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -476,6 +492,7 @@ const Home: React.FC = () => {
           ) : (
             <PropertyGrid 
               allProperties={allProperties}
+              featuredProperties={featuredProperties}
               createExtendedProperty={createExtendedProperty}
             />
           )}

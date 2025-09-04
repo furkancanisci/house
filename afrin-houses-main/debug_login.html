@@ -15,7 +15,6 @@
 <body>
     <h1>Frontend Login Debug Test</h1>
     <button onclick="testLogin()">Test Login with Property Owner</button>
-    <button onclick="testGetUserProperties()">Test Get User Properties</button>
     <button onclick="clearLogs()">Clear Logs</button>
     
     <div id="logs"></div>
@@ -71,40 +70,6 @@
                 }
             } catch (error) {
                 log(`Login error: ${error.message}`, 'error');
-            }
-        }
-
-        async function testGetUserProperties() {
-            try {
-                if (!accessToken) {
-                    accessToken = localStorage.getItem('access_token');
-                    if (!accessToken) {
-                        log('No access token found. Please login first.', 'error');
-                        return;
-                    }
-                }
-
-                log('Testing getUserProperties endpoint...', 'info');
-
-                const response = await fetch(`${API_BASE_URL}/dashboard/properties`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Accept': 'application/json'
-                    }
-                });
-
-                const data = await response.json();
-                
-                if (response.ok) {
-                    log(`Properties fetched successfully!`, 'success');
-                    log(`Properties count: ${data.data ? data.data.length : 'Unknown'}`, 'info');
-                    log(`Properties data: ${JSON.stringify(data, null, 2)}`, 'info');
-                } else {
-                    log(`Get properties failed: ${JSON.stringify(data)}`, 'error');
-                }
-            } catch (error) {
-                log(`Get properties error: ${error.message}`, 'error');
             }
         }
 

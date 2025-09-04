@@ -1,5 +1,4 @@
 import React, { ReactNode } from 'react';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 // Fix for default markers in react-leaflet
@@ -9,6 +8,9 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+// Import leaflet CSS dynamically to avoid Vite issues
+import('leaflet/dist/leaflet.css');
 
 // Simple hook without context to avoid render2 error
 export const useLeafletMap = () => {

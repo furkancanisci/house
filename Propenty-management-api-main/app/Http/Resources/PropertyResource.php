@@ -65,7 +65,7 @@ class PropertyResource extends JsonResource
             'state' => $this->ensureUtf8($this->state),
             'postal_code' => $this->postal_code,
             'zip_code' => $this->postal_code, // Frontend expects zip_code
-            'country' => $this->ensureUtf8($this->country ?? 'Syria'),
+            'country' => $this->ensureUtf8('Syria'), // Hardcoded since country field was removed
             'neighborhood' => $this->ensureUtf8($this->neighborhood),
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
@@ -74,7 +74,7 @@ class PropertyResource extends JsonResource
                 'city' => $this->ensureUtf8($this->city),
                 'state' => $this->ensureUtf8($this->state),
                 'postal_code' => $this->ensureUtf8($this->postal_code),
-                'country' => $this->ensureUtf8($this->country ?? 'Syria'),
+                'country' => $this->ensureUtf8('Syria'), // Hardcoded since country field was removed
                 'full_address' => $this->buildFullAddress(),
                 'neighborhood' => $this->ensureUtf8($this->neighborhood),
                 'coordinates' => [
@@ -98,17 +98,35 @@ class PropertyResource extends JsonResource
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
             
-            // Media - simplified to avoid memory issues
+            // Media - optimized to prevent memory issues
             'images' => [
-                'main' => $this->getFirstMedia('main_image')?->getUrl() ?: 
-                         ($this->getFirstMedia('images')?->getUrl() ?: null),
-                'gallery' => $this->getMedia('images')->map(function($media) {
-                    return $media->getUrl();
-                })->toArray(),
-                'count' => $this->getMedia('images')->count(),
+                'main' => $this->whenLoaded('media', function() {
+                    $mainImage = $this->getFirstMedia('main_image');
+                    if ($mainImage) {
+                        return $mainImage->getUrl();
+                    }
+                    
+                    $firstImage = $this->getFirstMedia('images');
+                    return $firstImage ? $firstImage->getUrl() : null;
+                }),
+                'gallery' => $this->whenLoaded('media', function() {
+                    return $this->getMedia('images')->map(function($media) {
+                        return $media->getUrl();
+                    })->toArray();
+                }),
+                'count' => $this->whenLoaded('media', function() {
+                    return $this->getMedia('images')->count();
+                }),
             ],
-            'mainImage' => $this->getFirstMedia('main_image')?->getUrl() ?: 
-                          ($this->getFirstMedia('images')?->getUrl() ?: '/placeholder-property.jpg'),
+            'mainImage' => $this->whenLoaded('media', function() {
+                $mainImage = $this->getFirstMedia('main_image');
+                if ($mainImage) {
+                    return $mainImage->getUrl();
+                }
+                
+                $firstImage = $this->getFirstMedia('images');
+                return $firstImage ? $firstImage->getUrl() : '/placeholder-property.jpg';
+            }),
             
             // Statistics - simplified
             'stats' => [
@@ -120,9 +138,9 @@ class PropertyResource extends JsonResource
             
             // Contact information
             'contact' => [
-                'name' => $this->ensureUtf8($this->contact_name),
-                'phone' => $this->contact_phone,
-                'email' => $this->contact_email,
+                'name' => $this->ensureUtf8($this->contact_name ?? ''),
+                'phone' => $this->contact_phone ?? '',
+                'email' => $this->contact_email ?? '',
             ],
             
             // Owner information
@@ -184,7 +202,7 @@ class PropertyResource extends JsonResource
         if ($this->city) $address .= ', ' . $this->ensureUtf8($this->city);
         if ($this->state) $address .= ', ' . $this->ensureUtf8($this->state);
         if ($this->postal_code) $address .= ' ' . $this->postal_code;
-        if ($this->country && $this->country !== 'US') $address .= ', ' . $this->ensureUtf8($this->country);
+        $address .= ', Syria'; // Hardcoded since country field was removed
 
         return $address;
     }

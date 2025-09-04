@@ -311,10 +311,16 @@ class Property extends Model implements HasMedia
     */
 
     /**
-     * Get city name from relationship.
+     * Get city name from relationship or direct field.
      */
     public function getCityAttribute()
     {
+        // First check if we have a direct value in the city field
+        if (!empty($this->attributes['city'])) {
+            return $this->attributes['city'];
+        }
+        
+        // Fall back to relationship if direct field is empty
         if ($this->relationLoaded('city') && $this->getRelation('city')) {
             $city = $this->getRelation('city');
             return $city->name ?? $city->name_en ?? $city->name_ar;
@@ -327,10 +333,16 @@ class Property extends Model implements HasMedia
     }
 
     /**
-     * Get state from city relationship.
+     * Get state from city relationship or direct field.
      */
     public function getStateAttribute()
     {
+        // First check if we have a direct value in the state field
+        if (!empty($this->attributes['state'])) {
+            return $this->attributes['state'];
+        }
+        
+        // Fall back to relationship if direct field is empty
         if ($this->relationLoaded('city') && $this->getRelation('city')) {
             return $this->getRelation('city')->state ?? 'Syria';
         }
@@ -341,10 +353,16 @@ class Property extends Model implements HasMedia
     }
 
     /**
-     * Get property type name from relationship.
+     * Get property type name from relationship or direct field.
      */
     public function getPropertyTypeAttribute()
     {
+        // First check if we have a direct value in the property_type field
+        if (!empty($this->attributes['property_type'])) {
+            return $this->attributes['property_type'];
+        }
+        
+        // Fall back to relationship if direct field is empty
         if ($this->relationLoaded('propertyType') && $this->getRelation('propertyType')) {
             return $this->getRelation('propertyType')->name;
         }
@@ -603,34 +621,13 @@ class Property extends Model implements HasMedia
     }
 
     /**
-     * Ensure proper UTF-8 encoding for text fields
+     * Ensure proper UTF-8 encoding for a string
      */
-    private function ensureUtf8($value)
+    protected function ensureUtf8($value)
     {
-        if (is_null($value)) {
-            return null;
+        if (is_string($value)) {
+            return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
         }
-        
-        if (!is_string($value)) {
-            return $value;
-        }
-        
-        // Check if the string is already valid UTF-8
-        if (mb_check_encoding($value, 'UTF-8')) {
-            return $value;
-        }
-        
-        // Try to convert from common encodings to UTF-8
-        $encodings = ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'];
-        
-        foreach ($encodings as $encoding) {
-            $converted = mb_convert_encoding($value, 'UTF-8', $encoding);
-            if (mb_check_encoding($converted, 'UTF-8')) {
-                return $converted;
-            }
-        }
-        
-        // If all else fails, remove invalid characters
-        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+        return $value;
     }
 }

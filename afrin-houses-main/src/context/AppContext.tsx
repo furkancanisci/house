@@ -7,8 +7,7 @@ import {
   updateProperty as updatePropertyAPI, 
   deleteProperty as deletePropertyAPI,
   toggleFavorite as toggleFavoriteAPI,
-  getFavoriteProperties,
-  getUserProperties
+  getFavoriteProperties
 } from '../services/propertyService';
 import authService from '../services/authService';
 
@@ -398,7 +397,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       
       // Reload user properties from backend to ensure synchronization
       if (state.user) {
-        await loadUserProperties();
+        // Endpoint has been removed from backend
       }
     } catch (error: any) {
       console.error('Failed to add property:', error);
@@ -596,8 +595,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // Load user's properties and favorites
       console.log('DEBUG: Loading properties...');
       await loadProperties();
-      console.log('DEBUG: Loading user properties...');
-      await loadUserProperties();
       console.log('DEBUG: Loading user favorites...');
       await loadUserFavorites();
       console.log('DEBUG: Login process completed');
@@ -720,82 +717,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  // Load user's properties
-  const loadUserProperties = async () => {
-    try {
-      if (!state.user) {
-        console.log('DEBUG: No user found, skipping loadUserProperties');
-        return;
-      }
-      
-      console.log('DEBUG: Loading user properties for user:', state.user.id);
-      const userProperties = await getUserProperties();
-      console.log('DEBUG: Received user properties from API:', userProperties);
-      
-      // Transform user properties to frontend format
-      const transformedUserProperties = userProperties.map((property: any) => ({
-        id: property.id.toString(),
-        slug: property.slug,
-        title: property.title,
-        address: property.location?.full_address || `${property.street_address || ''}, ${getLocaleName(property.city) || ''}, ${getLocaleName(property.state) || ''} ${property.postal_code || ''}`,
-        price: property.price?.amount || property.price || 0,
-        propertyType: property.property_type,
-        listingType: property.listing_type,
-        bedrooms: property.details?.bedrooms || property.bedrooms || 0,
-        bathrooms: property.details?.bathrooms || property.bathrooms || 0,
-        squareFootage: property.details?.square_feet || property.square_feet || 0,
-        description: property.description || '',
-        features: property.amenities || [],
-        images: property.images?.gallery?.map((img: any) => img.url) || [],
-        mainImage: property.images?.main || property.main_image || '/placeholder-property.jpg',
-        yearBuilt: property.details?.year_built || property.year_built,
-        coordinates: {
-          lat: property.location?.coordinates?.latitude || property.latitude || 0,
-          lng: property.location?.coordinates?.longitude || property.longitude || 0
-        },
-        contact: {
-          name: property.owner?.full_name || property.contact_name || 'Agent',
-          phone: property.owner?.phone || property.contact_phone || '',
-          email: property.owner?.email || property.contact_email || ''
-        },
-        datePosted: property.created_at,
-        availableDate: property.available_from,
-        petPolicy: property.details?.pet_policy || property.pet_policy,
-        parking: property.details?.parking?.type || property.parking_type,
-        lotSize: property.details?.lot_size || property.lot_size,
-        garage: (property.details?.parking?.type === 'garage' || property.parking_type === 'garage') ? 'Yes' : 'No',
-        building: property.details?.building_name || property.building_name
-      }));
-      
-      const propertyIds = transformedUserProperties.map((prop: any) => prop.id.toString());
-      console.log('DEBUG: Extracted property IDs:', propertyIds);
-      
-      // Add user properties to main properties array if they don't exist
-      const existingPropertyIds = state.properties.map(p => p.id);
-      const newProperties = transformedUserProperties.filter(prop => !existingPropertyIds.includes(prop.id));
-      
-      if (newProperties.length > 0) {
-        console.log('DEBUG: Adding new user properties to main array:', newProperties);
-        const updatedProperties = [...state.properties, ...newProperties];
-        dispatch({ type: 'SET_PROPERTIES', payload: updatedProperties });
-      }
-      
-      // Update user with their property IDs
-      const updatedUser = { 
-        ...state.user, 
-        properties: propertyIds 
-      };
-      
-      console.log('DEBUG: Updating user with properties:', updatedUser);
-      dispatch({ 
-        type: 'SET_USER', 
-        payload: updatedUser
-      });
-    } catch (error: any) {
-      console.error('Failed to load user properties:', error);
-    }
-  };
-
   // Initialize app - check for existing session and load data
   useEffect(() => {
     let isMounted = true;
@@ -877,11 +798,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
               console.log('DEBUG: Setting authenticated user in state:', frontendUser);
               dispatch({ type: 'SET_USER', payload: frontendUser });
               
-              // Load user's favorites and properties in parallel
+              // Load user's favorites in parallel
               console.log('DEBUG: Loading user data...');
               await Promise.all([
-                loadUserFavorites(),
-                loadUserProperties()
+                loadUserFavorites()
               ]);
             } else {
               console.log('DEBUG: No user data found, clearing auth data');
@@ -1006,5 +926,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     updateUser
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+    </AppContext.Provider>
+  );
 };

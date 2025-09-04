@@ -2,7 +2,7 @@ import api from './api';
 
 // Utility function to fix image URLs with fallback support
 const fixImageUrl = (url: string | null | undefined | any, fallbackType?: string): string => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://house-6g6m.onrender.com';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://house-6g6m.onrender.com/';
   
   console.log('propertyService fixImageUrl - Input:', url, 'BaseUrl:', baseUrl);
   
@@ -533,17 +533,35 @@ export const deleteProperty = async (id: number) => {
 
 export const toggleFavorite = async (id: number) => {
   try {
+    console.log('Toggling favorite for property ID:', id);
+    
+    // Get current token for debugging
+    const token = localStorage.getItem('token');
+    console.log('Current auth token:', token ? 'Present' : 'Missing');
+    
     const response = await api.post(`/properties/${id}/favorite`);
+    console.log('Toggle favorite response:', response.data);
+    
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error toggling favorite:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
+    
+    // If it's an auth error, clear local auth data
+    if (error.response?.status === 401) {
+      console.log('Authentication error, clearing local auth data');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+    
     throw error;
   }
 };
 
 export const getFavoriteProperties = async () => {
   try {
-    const response = await api.get('/favorites');
+    const response = await api.get('/dashboard/favorites');
     const properties = response.data.data || [];
     
     // Fix image URLs in all favorite properties
@@ -566,68 +584,10 @@ export const getFavoriteProperties = async () => {
       
       return property;
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching favorite properties:', error);
-    throw error;
-  }
-};
-
-export const getUserProperties = async () => {
-  try {
-    const response = await api.get('/dashboard/properties');
-    const properties = response.data.data || [];
-    
-    console.log('Raw user properties from API:', properties);
-    
-    // Transform and fix image URLs in all user properties
-    return properties.map((property: any) => {
-      // Fix image URLs
-      let mainImage = '/placeholder-property.jpg';
-      if (property.images) {
-        const fixedImages = { ...property.images };
-        
-        // Fix main image URL
-        if (fixedImages.main) {
-          fixedImages.main = fixImageUrl(fixedImages.main);
-          mainImage = fixedImages.main;
-        }
-        
-        // Fix gallery image URLs
-        if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
-          fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
-          if (fixedImages.gallery.length > 0 && !mainImage) {
-            mainImage = fixedImages.gallery[0];
-          }
-        }
-        
-        property.images = fixedImages;
-      }
-      
-      // Transform the property to match the expected format in Dashboard
-      return {
-        id: property.id,
-        title: property.title || 'Untitled Property',
-        description: property.description || '',
-        price: typeof property.price === 'object' ? property.price.amount : property.price,
-        address: property.location?.full_address || property.address || `${property.city || ''}, ${property.state || ''}`.trim(),
-        city: property.city,
-        state: property.state,
-        listingType: property.listing_type || property.listingType,
-        propertyType: property.property_type || property.propertyType,
-        bedrooms: property.bedrooms || 0,
-        bathrooms: property.bathrooms || 0,
-        squareFootage: property.square_feet || property.squareFootage || 0,
-        mainImage: mainImage,
-        images: property.images,
-        status: property.status,
-        created_at: property.created_at,
-        updated_at: property.updated_at,
-        slug: property.slug
-      };
-    });
-  } catch (error) {
-    console.error('Error fetching user properties:', error);
-    throw error;
+    // Return empty array as fallback
+    return [];
   }
 };
 
