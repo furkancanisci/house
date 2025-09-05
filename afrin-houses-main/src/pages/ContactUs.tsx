@@ -12,7 +12,7 @@ const ContactForm: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -242,7 +242,7 @@ const ContactUs: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">ساعات العمل</h3>
                   <p className="text-gray-600 text-base leading-relaxed">
-                    الإثنين - الجمعة: 9:00 ص - 6:00 م<br />
+                    الاثنين - الجمعة: 9:00 ص - 6:00 م<br />
                     السبت: 10:00 ص - 4:00 م
                   </p>
                   <p className="text-[#067977] font-bold mt-3 text-base flex items-center">

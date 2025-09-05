@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   CheckCircle2, 
   XCircle, 
@@ -137,7 +137,7 @@ const FormFieldWithValidation: React.FC<FormFieldWithValidationProps> = ({
             disabled={disabled}
             maxLength={maxLength}
             className={fieldClasses}
-            aria-invalid={hasError}
+            aria-invalid={!!hasError}
             aria-describedby={`${name}-error ${name}-help`}
           />
         ) : (
@@ -159,7 +159,7 @@ const FormFieldWithValidation: React.FC<FormFieldWithValidationProps> = ({
             max={max}
             autoComplete={autoComplete}
             className={`${fieldClasses} pr-10`}
-            aria-invalid={hasError}
+            aria-invalid={!!hasError}
             aria-describedby={`${name}-error ${name}-help`}
           />
         )}

@@ -114,6 +114,7 @@ export const notificationMessages = {
   loginError: 'Invalid email or password',
   logoutSuccess: 'Logged out successfully',
   registerSuccess: 'Account created successfully',
+  registerError: 'Failed to create account. Please try again',
   emailVerified: 'Email verified successfully',
   passwordResetSent: 'Password reset link sent to your email',
   
@@ -144,4 +145,6 @@ export const notificationMessages = {
   processing: 'Processing...',
   copied: 'Copied to clipboard',
 };
+
+
 

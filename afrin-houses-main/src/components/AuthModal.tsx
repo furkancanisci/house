@@ -147,7 +147,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         onSuccess?.();
         onClose();
       } else {
-        notification.error(notificationMessages.registerError);
+        notification.error(notificationMessages.actionError);
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -196,7 +196,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
           </CardHeader>
           
           <CardContent className="p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')}>
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#067977]/10">
                 <TabsTrigger value="login" className="data-[state=active]:bg-[#067977] data-[state=active]:text-white">
                   {t('auth.signIn')}

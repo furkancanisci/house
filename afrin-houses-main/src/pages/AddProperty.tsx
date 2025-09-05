@@ -717,9 +717,7 @@ const AddProperty: React.FC = () => {
       // Show detailed error in console and toast
       console.error('Error details:', errorMessage);
       notification.error(errorMessage, {
-        duration: 5000,
-        position: 'top-center',
-        style: { direction: 'rtl' }
+        duration: 5000
       });
     }
   };
