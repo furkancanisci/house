@@ -103,6 +103,73 @@
                         @enderror
                     </div>
 
+                    @can('manage permissions')
+                    <div class="form-group">
+                        <label>Direct Permissions (Optional)</label>
+                        <small class="form-text text-muted mb-2">
+                            These permissions will be assigned directly to the user in addition to their role permissions.
+                        </small>
+                        
+                        <div class="permissions-container">
+                            @if($groupedPermissions->count() > 0)
+                                <div class="row">
+                                    <div class="col-12 mb-2">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="selectAllPerms">
+                                            <label class="custom-control-label small font-weight-bold" for="selectAllPerms">
+                                                Select All Direct Permissions
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                        <div class="row">
+                                            @foreach($groupedPermissions as $category => $categoryPermissions)
+                                            <div class="col-md-6 mb-3">
+                                                <h6 class="text-primary">
+                                                    <i class="fas fa-{{ $category == 'dashboard' ? 'tachometer-alt' : ($category == 'users' ? 'users' : ($category == 'properties' ? 'home' : 'cog')) }}"></i>
+                                                    {{ ucfirst($category) }}
+                                                    <span class="badge badge-secondary">{{ $categoryPermissions->count() }}</span>
+                                                </h6>
+                                                @foreach($categoryPermissions as $permission)
+                                                <div class="custom-control custom-checkbox mb-1">
+                                                    <input type="checkbox" class="custom-control-input direct-permission-checkbox" 
+                                                           name="direct_permissions[]" value="{{ $permission->id }}" 
+                                                           id="direct-permission-{{ $permission->id }}"
+                                                           {{ $user->hasDirectPermission($permission->name) ? 'checked' : '' }}>
+                                                    <label class="custom-control-label small" for="direct-permission-{{ $permission->id }}">
+                                                        {{ $permission->name }}
+                                                        @if($user->hasPermissionTo($permission->name) && !$user->hasDirectPermission($permission->name))
+                                                            <small class="text-muted">(via role)</small>
+                                                        @endif
+                                                    </label>
+                                                </div>
+                                                @endforeach
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info mt-2">
+                                    <i class="fas fa-info-circle"></i>
+                                    <small>
+                                        <strong>Note:</strong> Direct permissions override role-based permissions. 
+                                        Use sparingly for special cases only.
+                                    </small>
+                                </div>
+                            @else
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    No permissions available for direct assignment.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endcan
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -341,6 +408,67 @@ $(document).ready(function() {
             $(this).siblings('.invalid-feedback').remove();
         }
     });
+
+    // Direct Permissions Management
+    @can('manage permissions')
+    // Select all direct permissions
+    $('#selectAllPerms').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.direct-permission-checkbox').prop('checked', isChecked);
+        updatePermissionsInfo();
+    });
+
+    // Individual permission checkbox change
+    $('.direct-permission-checkbox').on('change', function() {
+        updatePermissionsInfo();
+        
+        // Update select all checkbox
+        const totalPermissions = $('.direct-permission-checkbox').length;
+        const checkedPermissions = $('.direct-permission-checkbox:checked').length;
+        $('#selectAllPerms').prop('checked', checkedPermissions === totalPermissions);
+    });
+
+    function updatePermissionsInfo() {
+        const selectedCount = $('.direct-permission-checkbox:checked').length;
+        
+        if (selectedCount > 0) {
+            if (!$('#directPermInfo').length) {
+                $('.permissions-container .alert-info').after(
+                    '<div id="directPermInfo" class="alert alert-warning mt-2">' +
+                    '<i class="fas fa-exclamation-triangle"></i> ' +
+                    '<span id="directPermCount">' + selectedCount + '</span> direct permission(s) selected. ' +
+                    'These will be granted in addition to role permissions.' +
+                    '</div>'
+                );
+            } else {
+                $('#directPermCount').text(selectedCount);
+            }
+        } else {
+            $('#directPermInfo').remove();
+        }
+    }
+
+    // Initialize permissions info
+    updatePermissionsInfo();
+
+    // Role change warning for direct permissions
+    $('#role').on('change', function() {
+        const selectedPerms = $('.direct-permission-checkbox:checked').length;
+        if (selectedPerms > 0) {
+            if (!$('#roleChangeWarning').length) {
+                $(this).after(
+                    '<div id="roleChangeWarning" class="alert alert-info mt-2">' +
+                    '<i class="fas fa-info-circle"></i> ' +
+                    'This user has ' + selectedPerms + ' direct permission(s) assigned. ' +
+                    'Role change will not affect direct permissions.' +
+                    '</div>'
+                );
+            }
+        } else {
+            $('#roleChangeWarning').remove();
+        }
+    });
+    @endcan
 });
 </script>
 @endpush

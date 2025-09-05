@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -116,7 +117,14 @@ class UserController extends Controller
         Gate::authorize('edit users');
         
         $roles = Role::all();
-        return view('admin.users.edit', compact('user', 'roles'));
+        
+        // Get permissions for direct assignment
+        $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy(function($permission) {
+            return explode(' ', $permission->name)[1] ?? 'general';
+        });
+        
+        return view('admin.users.edit', compact('user', 'roles', 'permissions', 'groupedPermissions'));
     }
 
     public function update(Request $request, User $user)
@@ -137,7 +145,9 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|exists:roles,name',
             'is_active' => 'boolean',
-            'email_verified' => 'boolean'
+            'email_verified' => 'boolean',
+            'direct_permissions' => 'array',
+            'direct_permissions.*' => 'exists:permissions,id'
         ]);
 
         $userData = [
@@ -157,6 +167,15 @@ class UserController extends Controller
         
         if (auth()->user()->can('assign roles')) {
             $user->syncRoles([$request->role]);
+        }
+        
+        // Handle direct permissions
+        if (auth()->user()->can('manage permissions')) {
+            if ($request->has('direct_permissions')) {
+                $user->syncPermissions($request->direct_permissions);
+            } else {
+                $user->syncPermissions([]);
+            }
         }
 
         return redirect()->route('admin.users.index')
@@ -260,5 +279,67 @@ class UserController extends Controller
         auth()->loginUsingId($originalUserId);
 
         return redirect()->route('admin.users.index')->with('success', 'Stopped impersonating user.');
+    }
+
+    public function bulkAction(Request $request)
+    {
+        Gate::authorize('assign roles');
+
+        $request->validate([
+            'users' => 'required|array|min:1',
+            'users.*' => 'exists:users,id',
+            'action' => 'required|in:assign_role,remove_role,activate,deactivate',
+            'role' => 'required_if:action,assign_role,remove_role|exists:roles,name'
+        ]);
+
+        $userIds = $request->users;
+        $action = $request->action;
+        $role = $request->role;
+
+        // Exclude current user from bulk actions
+        $userIds = array_filter($userIds, function($id) {
+            return $id != auth()->id();
+        });
+
+        if (empty($userIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot perform bulk actions on your own account.'
+            ], 400);
+        }
+
+        $users = User::whereIn('id', $userIds)->get();
+        $count = $users->count();
+
+        switch ($action) {
+            case 'assign_role':
+                foreach ($users as $user) {
+                    $user->syncRoles([$role]);
+                }
+                $message = "Successfully assigned '{$role}' role to {$count} user(s).";
+                break;
+
+            case 'remove_role':
+                foreach ($users as $user) {
+                    $user->removeRole($role);
+                }
+                $message = "Successfully removed '{$role}' role from {$count} user(s).";
+                break;
+
+            case 'activate':
+                User::whereIn('id', $userIds)->update(['is_active' => true]);
+                $message = "Successfully activated {$count} user(s).";
+                break;
+
+            case 'deactivate':
+                User::whereIn('id', $userIds)->update(['is_active' => false]);
+                $message = "Successfully deactivated {$count} user(s).";
+                break;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message
+        ]);
     }
 }

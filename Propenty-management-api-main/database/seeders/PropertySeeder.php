@@ -57,7 +57,6 @@ class PropertySeeder extends Seeder
                 'document_type_id' => 1,
                 'parking_type' => 'garage',
                 'parking_spaces' => 1,
-                'amenities' => ['Air Conditioning', 'Dishwasher', 'Laundry in Unit', 'Balcony', 'Hardwood Floors', 'High Ceilings', 'Elevator', 'Gym', 'Roof Deck', 'Internet'],
                 'status' => 'active'
             ],
             [
@@ -81,7 +80,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2019,
                 'parking_type' => 'garage',
                 'parking_spaces' => 1,
-                'amenities' => ['تكييف', 'تدفئة', 'مطبخ مجهز', 'إطلالة جبلية', 'انترنت', 'أمان'],
                 'status' => 'active'
             ],
             [
@@ -105,7 +103,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2021,
                 'parking_type' => 'garage',
                 'parking_spaces' => 3,
-                'amenities' => ['تكييف', 'تدفئة', 'حديقة', 'مسبح', 'مدفأة', 'أرضية رخام', 'مخزن', 'كراج', 'أمان', 'انترنت'],
                 'status' => 'active',
                 'document_type_id' => 3
             ],
@@ -130,7 +127,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2017,
                 'parking_type' => 'driveway',
                 'parking_spaces' => 2,
-                'amenities' => ['تدفئة', 'فناء', 'قريب من المواصلات', 'هدوء', 'مخزن'],
                 'status' => 'active',
                 'document_type_id' => 4
             ],
@@ -155,7 +151,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2018,
                 'parking_type' => 'garage',
                 'parking_spaces' => 3,
-                'amenities' => ['Air Conditioning', 'Heating', 'Dishwasher', 'Garden', 'Fireplace', 'Hardwood Floors', 'Walk-in Closet', 'Storage', 'Garage', 'Pool', 'Security System'],
                 'status' => 'active',
                 'document_type_id' => 5
             ],
@@ -179,7 +174,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2015,
                 'parking_type' => 'street',
                 'parking_spaces' => 0,
-                'amenities' => ['Air Conditioning', 'Hardwood Floors', 'High Ceilings', 'Internet', 'Recently Renovated'],
                 'status' => 'active',
                 'document_type_id' => 6
             ],
@@ -204,7 +198,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2010,
                 'parking_type' => 'driveway',
                 'parking_spaces' => 2,
-                'amenities' => ['Air Conditioning', 'Heating', 'Dishwasher', 'Garden', 'Fireplace', 'Carpet', 'Storage', 'Pet Friendly'],
                 'status' => 'active',
                 'document_type_id' => 7
             ],
@@ -228,7 +221,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2019,
                 'parking_type' => 'garage',
                 'parking_spaces' => 1,
-                'amenities' => ['Air Conditioning', 'Dishwasher', 'Balcony', 'Hardwood Floors', 'High Ceilings', 'Elevator', 'Doorman', 'Concierge', 'Pool', 'Internet'],
                 'status' => 'active',
                 'document_type_id' => 8
             ],
@@ -252,7 +244,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 1890,
                 'parking_type' => 'street',
                 'parking_spaces' => 0,
-                'amenities' => ['Heating', 'Fireplace', 'Hardwood Floors', 'High Ceilings', 'Storage', 'Recently Renovated'],
                 'status' => 'active',
                 'document_type_id' => 8
             ],
@@ -276,7 +267,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2016,
                 'parking_type' => 'garage',
                 'parking_spaces' => 1,
-                'amenities' => ['Air Conditioning', 'High Ceilings', 'Storage', 'Internet', 'New Construction'],
                 'status' => 'active',
                 'document_type_id' => 9
             ],
@@ -300,7 +290,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2012,
                 'parking_type' => 'garage',
                 'parking_spaces' => 4,
-                'amenities' => ['Air Conditioning', 'Heating', 'Elevator', 'Security System', 'Internet'],
                 'status' => 'active',
                 'document_type_id' => 10
             ],
@@ -325,7 +314,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2018,
                 'parking_type' => 'street',
                 'parking_spaces' => 1,
-                'amenities' => ['تكييف', 'تدفئة', 'مطبخ مجهز', 'انترنت', 'أمان'],
                 'status' => 'active',
                 'document_type_id' => 3
             ],
@@ -350,7 +338,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2020,
                 'parking_type' => 'garage',
                 'parking_spaces' => 2,
-                'amenities' => ['تكييف', 'تدفئة', 'حديقة', 'مدفأة', 'أرضية رخام', 'مخزن', 'كراج', 'أمان'],
                 'status' => 'active',
                 'document_type_id' => 3
             ],
@@ -375,7 +362,6 @@ class PropertySeeder extends Seeder
                 'year_built' => 2015,
                 'parking_type' => 'driveway',
                 'parking_spaces' => 1,
-                'amenities' => ['تدفئة', 'فناء', 'إطلالة جبلية', 'هدوء', 'قريب من الطبيعة'],
                 'status' => 'active',
                 'document_type_id' => 1
             ],
@@ -393,7 +379,6 @@ class PropertySeeder extends Seeder
             $data['slug'] = $slug;
             $data['published_at'] = $publishedAt;
             $data['views_count'] = $viewsCount;
-            $data['amenities'] = json_encode($data['amenities']);
             $data['nearby_places'] = json_encode([
                 ['name' => 'Starbucks', 'type' => 'cafe', 'distance' => 0.2],
                 ['name' => 'Metro Station', 'type' => 'transport', 'distance' => 0.3],
@@ -455,7 +440,6 @@ class PropertySeeder extends Seeder
             $data['bathrooms'] = 1;
             $data['square_feet'] = 1000;
             $data['year_built'] = 2020;
-            $data['amenities'] = json_encode(['Air Conditioning', 'Heating']);
             
             // Build and execute raw SQL
             $columns = implode(', ', array_keys($data));
