@@ -8,6 +8,23 @@ export class FeatureService {
   private static readonly BASE_URL = '/features';
 
   /**
+   * Get localized name for a feature based on language
+   * @param feature - Feature object
+   * @param language - Language code (ar, en, ku)
+   * @returns Localized name string
+   */
+  static getLocalizedName(feature: Feature, language: string): string {
+    switch (language) {
+      case 'ar':
+        return feature.name_ar || feature.name_en || '';
+      case 'ku':
+        return feature.name_ku || feature.name_en || '';
+      default:
+        return feature.name_en || feature.name_ar || '';
+    }
+  }
+
+  /**
    * Fetch all active features
    * @param language - Language code (ar, en, ku)
    * @returns Promise<Feature[]>
@@ -136,3 +153,4 @@ export const getFeatures = FeatureService.getFeatures;
 export const getFeatureById = FeatureService.getFeatureById;
 export const getFeaturesByCategory = FeatureService.getFeaturesByCategory;
 export const searchFeatures = FeatureService.searchFeatures;
+export const getLocalizedName = FeatureService.getLocalizedName;

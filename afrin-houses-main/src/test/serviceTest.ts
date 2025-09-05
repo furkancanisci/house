@@ -1,6 +1,7 @@
 // Test file for feature and utility services
-import featureService, { Feature } from '../services/featureService';
-import utilityService, { Utility } from '../services/utilityService';
+import featureService, { getLocalizedName as getFeatureLocalizedName } from '../services/featureService';
+import utilityService, { getLocalizedName as getUtilityLocalizedName } from '../services/utilityService';
+import { Feature, Utility } from '../types';
 
 /**
  * Test function for feature service
@@ -26,9 +27,9 @@ async function testFeatureService() {
       
       // Test localized name function
       console.log('🌐 Localized names:');
-      console.log('  Arabic:', featureService.getLocalizedName(firstFeature, 'ar'));
-      console.log('  English:', featureService.getLocalizedName(firstFeature, 'en'));
-      console.log('  Kurdish (Kurmanji):', featureService.getLocalizedName(firstFeature, 'ku'));
+      console.log('  Arabic:', getFeatureLocalizedName(firstFeature, 'ar'));
+      console.log('  English:', getFeatureLocalizedName(firstFeature, 'en'));
+      console.log('  Kurdish (Kurmanji):', getFeatureLocalizedName(firstFeature, 'ku'));
     }
     
     // Test fetching features in English
@@ -70,9 +71,9 @@ async function testUtilityService() {
       
       // Test localized name function
       console.log('🌐 Localized names:');
-      console.log('  Arabic:', utilityService.getLocalizedName(firstUtility, 'ar'));
-      console.log('  English:', utilityService.getLocalizedName(firstUtility, 'en'));
-      console.log('  Kurdish (Kurmanji):', utilityService.getLocalizedName(firstUtility, 'ku'));
+      console.log('  Arabic:', getUtilityLocalizedName(firstUtility, 'ar'));
+      console.log('  English:', getUtilityLocalizedName(firstUtility, 'en'));
+      console.log('  Kurdish (Kurmanji):', getUtilityLocalizedName(firstUtility, 'ku'));
     }
     
     // Test fetching utilities in English

@@ -80,7 +80,7 @@ class NotificationService {
    * Custom notification with HTML content
    */
   custom(content: React.ReactNode, options?: NotificationOptions) {
-    return toast.custom(content, {
+    return toast.custom(content as any, {
       duration: options?.duration || 5000,
     });
   }
@@ -144,3 +144,4 @@ export const notificationMessages = {
   processing: 'Processing...',
   copied: 'Copied to clipboard',
 };
+

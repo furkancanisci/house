@@ -8,6 +8,23 @@ export class UtilityService {
   private static readonly BASE_URL = '/utilities';
 
   /**
+   * Get localized name for a utility based on language
+   * @param utility - Utility object
+   * @param language - Language code (ar, en, ku)
+   * @returns Localized name string
+   */
+  static getLocalizedName(utility: Utility, language: string): string {
+    switch (language) {
+      case 'ar':
+        return utility.name_ar || utility.name_en || '';
+      case 'ku':
+        return utility.name_ku || utility.name_en || '';
+      default:
+        return utility.name_en || utility.name_ar || '';
+    }
+  }
+
+  /**
    * Fetch all active utilities
    * @param language - Language code (ar, en, ku)
    * @returns Promise<Utility[]>
@@ -136,3 +153,4 @@ export const getUtilities = UtilityService.getUtilities;
 export const getUtilityById = UtilityService.getUtilityById;
 export const getUtilitiesByCategory = UtilityService.getUtilitiesByCategory;
 export const searchUtilities = UtilityService.searchUtilities;
+export const getLocalizedName = UtilityService.getLocalizedName;
