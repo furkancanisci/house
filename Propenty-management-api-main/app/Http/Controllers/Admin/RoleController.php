@@ -29,11 +29,12 @@ class RoleController extends Controller
     {
         Gate::authorize('manage roles');
 
-        $permissions = Permission::all()->groupBy(function($permission) {
+        $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy(function($permission) {
             return explode(' ', $permission->name)[1] ?? 'general';
         });
 
-        return view('admin.roles.create', compact('permissions'));
+        return view('admin.roles.create', compact('permissions', 'groupedPermissions'));
     }
 
     /**
@@ -71,8 +72,16 @@ class RoleController extends Controller
         Gate::authorize('manage roles');
 
         $role->load(['permissions', 'users']);
+        
+        $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy(function($permission) {
+            return explode(' ', $permission->name)[1] ?? 'general';
+        });
+        
+        $totalRoles = Role::count();
+        $totalUsers = \App\Models\User::count();
 
-        return view('admin.roles.show', compact('role'));
+        return view('admin.roles.show', compact('role', 'permissions', 'groupedPermissions', 'totalRoles', 'totalUsers'));
     }
 
     /**
@@ -84,11 +93,12 @@ class RoleController extends Controller
 
         $role->load('permissions');
         
-        $permissions = Permission::all()->groupBy(function($permission) {
+        $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy(function($permission) {
             return explode(' ', $permission->name)[1] ?? 'general';
         });
 
-        return view('admin.roles.edit', compact('role', 'permissions'));
+        return view('admin.roles.edit', compact('role', 'permissions', 'groupedPermissions'));
     }
 
     /**

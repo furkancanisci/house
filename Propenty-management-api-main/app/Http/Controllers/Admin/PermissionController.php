@@ -34,9 +34,12 @@ class PermissionController extends Controller
     {
         Gate::authorize('manage permissions');
 
-        $roles = Role::all();
+        // Get existing categories
+        $existingCategories = Permission::all()->map(function($permission) {
+            return explode(' ', $permission->name)[1] ?? 'general';
+        })->unique()->values();
 
-        return view('admin.permissions.create', compact('roles'));
+        return view('admin.permissions.create', compact('existingCategories'));
     }
 
     /**
@@ -74,8 +77,22 @@ class PermissionController extends Controller
         Gate::authorize('manage permissions');
 
         $permission->load(['roles']);
+        
+        // Get current category
+        $currentCategory = explode(' ', $permission->name)[1] ?? 'general';
+        
+        // Get related permissions in same category
+        $relatedPermissions = Permission::where('id', '!=', $permission->id)
+            ->get()
+            ->filter(function($p) use ($currentCategory) {
+                $category = explode(' ', $p->name)[1] ?? 'general';
+                return $category === $currentCategory;
+            });
+            
+        $totalRoles = Role::count();
+        $totalUsers = \App\Models\User::count();
 
-        return view('admin.permissions.show', compact('permission'));
+        return view('admin.permissions.show', compact('permission', 'currentCategory', 'relatedPermissions', 'totalRoles', 'totalUsers'));
     }
 
     /**
@@ -86,9 +103,16 @@ class PermissionController extends Controller
         Gate::authorize('manage permissions');
 
         $permission->load('roles');
-        $roles = Role::all();
+        
+        // Get current category
+        $currentCategory = explode(' ', $permission->name)[1] ?? 'general';
+        
+        // Get existing categories
+        $existingCategories = Permission::all()->map(function($p) {
+            return explode(' ', $p->name)[1] ?? 'general';
+        })->unique()->values();
 
-        return view('admin.permissions.edit', compact('permission', 'roles'));
+        return view('admin.permissions.edit', compact('permission', 'currentCategory', 'existingCategories'));
     }
 
     /**

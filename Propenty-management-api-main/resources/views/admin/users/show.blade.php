@@ -87,6 +87,42 @@
                                     @endif
                                 </td>
                             </tr>
+                            @can('manage permissions')
+                            <tr>
+                                <td><strong>Direct Permissions:</strong></td>
+                                <td>
+                                    @if($user->getDirectPermissions()->count() > 0)
+                                        @foreach($user->getDirectPermissions() as $permission)
+                                            <span class="badge badge-warning mr-1 mb-1">
+                                                <i class="fas fa-key"></i>
+                                                {{ $permission->name }}
+                                            </span>
+                                        @endforeach
+                                        <br>
+                                        <small class="text-muted">
+                                            These permissions are directly assigned ({{ $user->getDirectPermissions()->count() }} total)
+                                        </small>
+                                    @else
+                                        <span class="text-muted">None assigned directly</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Permissions:</strong></td>
+                                <td>
+                                    @if($user->getAllPermissions()->count() > 0)
+                                        <span class="badge badge-success">
+                                            {{ $user->getAllPermissions()->count() }} permissions
+                                        </span>
+                                        <small class="text-muted">
+                                            ({{ $user->getPermissionsViaRoles()->count() }} from roles + {{ $user->getDirectPermissions()->count() }} direct)
+                                        </small>
+                                    @else
+                                        <span class="badge badge-secondary">No permissions</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endcan
                             <tr>
                                 <td><strong>Status:</strong></td>
                                 <td>

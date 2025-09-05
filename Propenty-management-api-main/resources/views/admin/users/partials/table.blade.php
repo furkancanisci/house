@@ -2,6 +2,14 @@
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
+                @can('assign roles')
+                <th width="30px">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="selectAllCheckbox">
+                        <label class="custom-control-label" for="selectAllCheckbox"></label>
+                    </div>
+                </th>
+                @endcan
                 <th>Avatar</th>
                 <th>Name</th>
                 <th>Email</th>
@@ -18,6 +26,15 @@
         <tbody>
             @forelse($users as $user)
             <tr>
+                @can('assign roles')
+                <td>
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input user-checkbox" id="user-{{ $user->id }}" 
+                               value="{{ $user->id }}" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
+                        <label class="custom-control-label" for="user-{{ $user->id }}"></label>
+                    </div>
+                </td>
+                @endcan
                 <td>
                     <div class="user-block">
                         <img class="img-circle" 
@@ -136,7 +153,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="11" class="text-center">No users found.</td>
+                <td colspan="{{ can('assign roles') ? '12' : '11' }}" class="text-center">No users found.</td>
             </tr>
             @endforelse
         </tbody>

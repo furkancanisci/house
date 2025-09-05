@@ -89,6 +89,7 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::resource('users', UserController::class)->names('admin.users');
     Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('admin.users.toggle-status');
     Route::post('users/{user}/assign-role', [UserController::class, 'assignRole'])->name('admin.users.assign-role');
+    Route::post('users/bulk-action', [UserController::class, 'bulkAction'])->name('admin.users.bulk-action');
     Route::get('users/{user}/properties', [UserController::class, 'properties'])->name('admin.users.properties');
     Route::get('users/{user}/leads', [UserController::class, 'leads'])->name('admin.users.leads');
     Route::post('users/{user}/impersonate', [UserController::class, 'impersonate'])->name('admin.users.impersonate');
@@ -127,6 +128,8 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::post('settings/media', [SettingsController::class, 'updateMedia'])->name('admin.settings.media');
     Route::post('settings/maps', [SettingsController::class, 'updateMaps'])->name('admin.settings.maps');
     Route::post('settings/smtp', [SettingsController::class, 'updateSmtp'])->name('admin.settings.smtp');
+    Route::post('settings/social', [SettingsController::class, 'updateSocial'])->name('admin.settings.social');
+    Route::post('settings/security', [SettingsController::class, 'updateSecurity'])->name('admin.settings.security');
     Route::post('settings/test-email', [SettingsController::class, 'testEmail'])->name('admin.settings.test-email');
     Route::post('settings/cache-clear', [SettingsController::class, 'clearCache'])->name('admin.settings.cache-clear');
 
