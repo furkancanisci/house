@@ -444,7 +444,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
             <div className="overflow-hidden rounded-lg">
               <div className="relative">
                 <img 
-                  src={property.images?.[0] || '/placeholder-property.jpg'} 
+                  src={property.images?.[0] || '/images/placeholder-property.svg'} 
                   alt={property.title}
                   className="w-full h-36 object-cover"
                 />

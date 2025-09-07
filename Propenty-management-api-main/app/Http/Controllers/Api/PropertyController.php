@@ -21,7 +21,10 @@ class PropertyController extends Controller
     /**
      * Create a new controller instance.
      */
-    
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->except(['index', 'show', 'featured']);
+    }
 
     /**
      * Map camelCase field names to snake_case database column names

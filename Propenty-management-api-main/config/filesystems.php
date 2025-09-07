@@ -56,6 +56,16 @@ return [
             'throw' => false,
         ],
 
+        'bunny' => [
+            'driver' => 'bunny',
+            'storage_zone' => env('BUNNY_STORAGE_ZONE'),
+            'api_key' => env('BUNNY_API_KEY'),
+            'pull_zone' => env('BUNNY_PULL_ZONE'),
+            'region' => env('BUNNY_REGION', 'de'), // Default to Germany region
+            'cdn_url' => env('BUNNY_CDN_URL'),
+            'throw' => false,
+        ],
+
     ],
 
     /*

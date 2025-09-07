@@ -53,8 +53,7 @@
             "trending": "Mîlkên Popular",
             "recommended": "Mîlkên Pêşniyarkî",
             "newListings": "Lîstikên Nû",
-            "popularChoices": "Hilbijartinên Popular",
-            "featured": "Mîlkên Taybet"
+            "popularChoices": "Hilbijartinên Popular"
         },
         "browseAll": "Hemû Mîlkan Bibîne",
         "loading": "Tê barkirin...",
@@ -388,6 +387,36 @@
         "name": "Nav",
         "phone": "Telefon",
         "email": "Email",
-        "owner": "Xwediyê Mîlkê"
+        "owner": "Xwediyê Mîlkê",
+        "pageTitle": "Bi Me Re Têkilî Daynin",
+        "pageSubtitle": "Em li vir in ku ji we re bibin alîkar di dîtina mala xewna we de",
+        "contactInfo": "Agahiyên Têkiliyê",
+        "getInTouch": "Têkilî Daynin",
+        "sendMessage": "Peyamek ji me re bişînin",
+        "fullName": "Navê Temam",
+        "fullNamePlaceholder": "Navê xwe yê temam binivîsin",
+        "emailAddress": "Navnîşana Email",
+        "emailPlaceholder": "mînak@email.com",
+        "phoneNumber": "Hejmara Telefonê",
+        "phonePlaceholder": "+1 (555) 123-4567",
+        "subject": "Mijar",
+        "selectSubject": "Mijar hilbijêrin",
+        "message": "Peyam",
+        "messagePlaceholder": "Peyama xwe li vir binivîsin...",
+        "sendButton": "Peyam Bişînin",
+        "sending": "Tê şandin...",
+        "businessHours": "Demên Xebatê",
+        "location": "Cih",
+        "successMessage": "Peyama we bi serkeftî hat şandin! Em ê zû bi we re têkilî daynin.",
+        "subjects": {
+            "general": "Pirseka Giştî",
+            "property": "Pirseka Mîlkê",
+            "rent": "Pirseka Kirêyê",
+            "sale": "Pirseka Firotinê",
+            "support": "Piştgiriya Teknîkî",
+            "other": "Yên Din"
+        },
+        "businessHoursText": "Duşem - În: 9:00 - 18:00\nŞemî: 10:00 - 16:00",
+        "locationText": "Efrîn, Heleb\nSûriye"
     }
 }

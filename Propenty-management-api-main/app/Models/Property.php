@@ -141,45 +141,12 @@ class Property extends Model implements HasMedia
     }
 
     /**
-     * Define media conversions - DISABLED to keep only original images
+     * Define media conversions - DISABLED to avoid read operations on Bunny Storage
      */
     public function registerMediaConversions(?Media $media = null): void
     {
-        // Define all required conversions based on config/images.php
-        $this->addMediaConversion('small')
-            ->width(300)
-            ->height(200)
-            ->quality(75)
-            ->format('webp')
-            ->performOnCollections('images', 'main_image');
-
-        $this->addMediaConversion('thumbnail')
-            ->width(400)
-            ->height(300)
-            ->quality(80)
-            ->format('webp')
-            ->performOnCollections('images', 'main_image');
-
-        $this->addMediaConversion('medium')
-            ->width(800)
-            ->height(533)
-            ->quality(85)
-            ->format('webp')
-            ->performOnCollections('images', 'main_image');
-
-        $this->addMediaConversion('large')
-            ->width(1200)
-            ->height(800)
-            ->quality(88)
-            ->format('webp')
-            ->performOnCollections('images', 'main_image');
-
-        $this->addMediaConversion('full')
-            ->width(1920)
-            ->height(1280)
-            ->quality(92)
-            ->format('webp')
-            ->performOnCollections('images', 'main_image');
+        // Conversions disabled because Bunny Storage adapter doesn't support reading files
+        // This prevents the media library from trying to process images
     }
 
     /**
@@ -372,65 +339,93 @@ class Property extends Model implements HasMedia
     */
 
     /**
-     * Get city name from relationship or direct field.
+     * Get the city name from the related city model
+     * Fixed to prevent infinite recursion
      */
     public function getCityAttribute()
     {
-        // First check if we have a direct value in the city field
-        if (!empty($this->attributes['city'])) {
-            return $this->attributes['city'];
+        // Check if we're already in the middle of accessing this attribute
+        if (isset($this->accessingCity)) {
+            return $this->attributes['city'] ?? null;
         }
         
-        // Fall back to relationship if direct field is empty
-        if ($this->relationLoaded('city') && $this->getRelation('city')) {
-            $city = $this->getRelation('city');
-            return $city->name ?? $city->name_en ?? $city->name_ar;
+        $this->accessingCity = true;
+        
+        try {
+            if ($this->relationLoaded('city') && $this->getRelation('city')) {
+                $result = $this->getRelation('city')->getLocalizedName(request()->get('lang', 'ar'));
+                unset($this->accessingCity);
+                return $result;
+            }
+            
+            // Fallback to database value if relation not loaded
+            $result = $this->attributes['city'] ?? null;
+            unset($this->accessingCity);
+            return $result;
+        } catch (\Exception $e) {
+            unset($this->accessingCity);
+            return $this->attributes['city'] ?? null;
         }
-        if ($this->city_id) {
-            $city = \App\Models\City::find($this->city_id);
-            return $city ? ($city->name ?? $city->name_en ?? $city->name_ar) : null;
-        }
-        return null;
     }
 
     /**
-     * Get state from city relationship or direct field.
+     * Get the state name from the related governorate model
+     * Fixed to prevent infinite recursion
      */
     public function getStateAttribute()
     {
-        // First check if we have a direct value in the state field
-        if (!empty($this->attributes['state'])) {
-            return $this->attributes['state'];
+        // Check if we're already in the middle of accessing this attribute
+        if (isset($this->accessingState)) {
+            return $this->attributes['state'] ?? null;
         }
         
-        // Fall back to relationship if direct field is empty
-        if ($this->relationLoaded('city') && $this->getRelation('city')) {
-            return $this->getRelation('city')->state ?? 'Syria';
+        $this->accessingState = true;
+        
+        try {
+            if ($this->relationLoaded('governorate') && $this->getRelation('governorate')) {
+                $result = $this->getRelation('governorate')->getLocalizedName(request()->get('lang', 'ar'));
+                unset($this->accessingState);
+                return $result;
+            }
+            
+            // Fallback to database value if relation not loaded
+            $result = $this->attributes['state'] ?? null;
+            unset($this->accessingState);
+            return $result;
+        } catch (\Exception $e) {
+            unset($this->accessingState);
+            return $this->attributes['state'] ?? null;
         }
-        if ($this->city_id) {
-            return \App\Models\City::find($this->city_id)?->state ?? 'Syria';
-        }
-        return 'Syria';
     }
 
     /**
-     * Get property type name from relationship or direct field.
+     * Get the property type name from the related property type model
+     * Fixed to prevent infinite recursion
      */
     public function getPropertyTypeAttribute()
     {
-        // First check if we have a direct value in the property_type field
-        if (!empty($this->attributes['property_type'])) {
-            return $this->attributes['property_type'];
+        // Check if we're already in the middle of accessing this attribute
+        if (isset($this->accessingPropertyType)) {
+            return $this->attributes['property_type'] ?? null;
         }
         
-        // Fall back to relationship if direct field is empty
-        if ($this->relationLoaded('propertyType') && $this->getRelation('propertyType')) {
-            return $this->getRelation('propertyType')->name;
+        $this->accessingPropertyType = true;
+        
+        try {
+            if ($this->relationLoaded('propertyType') && $this->getRelation('propertyType')) {
+                $result = $this->getRelation('propertyType')->getLocalizedName(request()->get('lang', 'ar'));
+                unset($this->accessingPropertyType);
+                return $result;
+            }
+            
+            // Fallback to database value if relation not loaded
+            $result = $this->attributes['property_type'] ?? null;
+            unset($this->accessingPropertyType);
+            return $result;
+        } catch (\Exception $e) {
+            unset($this->accessingPropertyType);
+            return $this->attributes['property_type'] ?? null;
         }
-        if ($this->property_type_id) {
-            return \App\Models\PropertyType::find($this->property_type_id)?->name;
-        }
-        return null;
     }
 
     /**

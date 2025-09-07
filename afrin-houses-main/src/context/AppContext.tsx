@@ -373,7 +373,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                (Array.isArray(response.property.images) ? response.property.images : []) || [],
         mainImage: response.property.images?.main || 
                  (Array.isArray(response.property.images) && response.property.images[0]) || 
-                 '/placeholder-property.jpg',
+                 '/images/placeholder-property.svg',
         yearBuilt: response.property.yearBuilt,
         coordinates: {
           lat: response.property.latitude || 0,

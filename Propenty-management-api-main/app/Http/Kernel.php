@@ -67,6 +67,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'validate.image' => \App\Http\Middleware\ValidateImageUpload::class,
+        'secure.image.upload' => \App\Http\Middleware\SecureImageUpload::class,
         'locale' => \App\Http\Middleware\SetLocale::class,
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

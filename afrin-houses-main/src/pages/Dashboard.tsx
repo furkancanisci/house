@@ -146,7 +146,7 @@ const Dashboard: React.FC = () => {
                         <div className="flex flex-col md:flex-row gap-4">
                           <div className="md:w-1/4">
                             <FixedImage
-                              src={property.mainImage || '/placeholder-property.jpg'}
+                              src={property.mainImage || '/images/placeholder-property.svg'}
                               alt={property.title}
                               className="w-full h-32 object-cover rounded-lg shadow-sm border border-gray-200"
                               showLoadingSpinner={true}

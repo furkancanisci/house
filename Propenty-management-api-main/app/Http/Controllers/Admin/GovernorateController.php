@@ -211,4 +211,6 @@ class GovernorateController extends Controller
                                  ->orderBy('name_ar')
                                  ->get();
 
-        return response()->json($governorates)
+        return response()->json($governorates);
+    }
+}

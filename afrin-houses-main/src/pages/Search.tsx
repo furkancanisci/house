@@ -178,7 +178,7 @@ const Search: React.FC = () => {
       },
       mainImage: property.media?.find((m: any) => typeof m === 'object' && m.is_featured)?.url || 
                 (Array.isArray(property.media) && property.media[0]?.url) || 
-                '/placeholder-property.jpg'
+                '/images/placeholder-property.svg'
     };
 
       return extendedProperty;

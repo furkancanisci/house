@@ -13,7 +13,7 @@ const fixImageUrl = (url: string | null | undefined | any, fallbackType?: string
       return '/images/placeholder-property.svg';
     }
     // For production, use production placeholder
-    return `${baseUrl}/placeholder-property.jpg`;
+    return '/images/placeholder-property.svg';
   }
   
   // If URL is already complete and correct, return as-is (MOST IMPORTANT FIX)
