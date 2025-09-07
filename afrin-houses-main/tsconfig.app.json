@@ -34,7 +34,9 @@
     "noImplicitReturns": false,
     "noImplicitThis": false,
     "noPropertyAccessFromIndexSignature": false,
-    "noUncheckedSideEffectImports": false
+    "noUncheckedSideEffectImports": false,
+    /* Testing */
+    "types": ["jest", "node", "@testing-library/jest-dom"]
   },
   "include": [
     "src"

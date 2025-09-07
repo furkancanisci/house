@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useForm, Controller } from 'react-hook-form';
+import { FieldError } from 'react-hook-form';
 import '@testing-library/jest-dom';
 import EnhancedDocumentTypeSelect from '../EnhancedDocumentTypeSelect';
 import { PropertyDocumentType } from '../../services/propertyDocumentTypeService';
@@ -49,7 +50,11 @@ const TestForm: React.FC<{
             onValueChange={field.onChange}
             placeholder="اختر نوع التابو"
             documentTypes={mockDocumentTypes}
-            error={errors.documentTypeId?.message}
+            error={errors.documentTypeId?.message ? 
+              (typeof errors.documentTypeId.message === 'string' 
+                ? errors.documentTypeId.message 
+                : 'خطأ في التحقق') 
+              : undefined}
           />
         )}
       />
@@ -57,7 +62,11 @@ const TestForm: React.FC<{
         Submit
       </button>
       {errors.documentTypeId && (
-        <span data-testid="error-message">{errors.documentTypeId.message}</span>
+        <span data-testid="error-message">
+          {typeof errors.documentTypeId.message === 'string' 
+            ? errors.documentTypeId.message 
+            : 'خطأ في التحقق'}
+        </span>
       )}
     </form>
   );
