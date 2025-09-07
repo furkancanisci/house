@@ -37,6 +37,7 @@ import { getProperty } from '../services/propertyService';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import FixedImage from '../components/FixedImage';
 import PropertyImageGallery from '../components/PropertyImageGallery';
+import { processPropertyImages } from '../lib/imageUtils';
 import FeaturesAndUtilities from '../components/FeaturesAndUtilities';
 import { FeatureService } from '../services/featureService';
 import { UtilityService } from '../services/utilityService';
@@ -198,33 +199,27 @@ const PropertyDetails: React.FC = () => {
             
             return galleryImages.length > 0 ? galleryImages : [];
           })(),
-          images: (() => {
-            // Extract image URLs for the PropertyImageGallery component
-            const imageUrls: string[] = [];
+          // Process images once for both images and mainImage
+          ...(() => {
+            const processedImages = processPropertyImages(propertyData);
             
-            console.log('=== PropertyDetails Image Processing ===');
-            console.log('Raw gallery from API:', propertyData.images?.gallery);
-            console.log('Raw main from API:', propertyData.images?.main);
+            console.log('Raw image data from API:', {
+              images: propertyData.images,
+              mainImage: propertyData.mainImage,
+              media: propertyData.media
+            });
+
+            console.log('Processed image data:', {
+              mainImage: processedImages.mainImage,
+              images: processedImages.images,
+              imageCount: processedImages.images.length
+            });
             
-            // Use the current API format directly without any processing since API returns perfect URLs
-            if (propertyData.images?.gallery && Array.isArray(propertyData.images.gallery)) {
-              console.log('Gallery URLs (using directly from API):', propertyData.images.gallery);
-              imageUrls.push(...propertyData.images.gallery);
-            }
-            
-            // Add main image directly from API
-            if (propertyData.images?.main) {
-              console.log('Main URL (using directly from API):', propertyData.images.main);
-              if (!imageUrls.includes(propertyData.images.main)) {
-                imageUrls.unshift(propertyData.images.main);
-              }
-            }
-            
-            console.log('Final processed image URLs for gallery:', imageUrls);
-            console.log('=== End PropertyDetails Image Processing ===');
-            return imageUrls;
+            return {
+              images: processedImages.images,
+              mainImage: processedImages.mainImage
+            };
           })(),
-          mainImage: propertyData.images?.main || '/placeholder-property.jpg',
           yearBuilt: Number(propertyData.details?.year_built) || new Date().getFullYear(),
           coordinates: {
             lat: Number(propertyData.location.coordinates?.latitude) || 0,
@@ -249,27 +244,24 @@ const PropertyDetails: React.FC = () => {
         };
         
         // Log the transformed property
-        console.group('Transformed Property');
-        console.log('Transformed property:', transformedProperty);
-        console.log('Price after transform:', transformedProperty.price);
-        console.log('Bedrooms after transform:', transformedProperty.bedrooms);
-        console.log('Bathrooms after transform:', transformedProperty.bathrooms);
-        console.log('Square footage after transform:', transformedProperty.squareFootage);
-        console.log('Images array for gallery:', transformedProperty.images);
-        console.log('Media array:', transformedProperty.media);
-        console.log('Main image:', transformedProperty.mainImage);
-        console.log('Document Type ID after transform:', transformedProperty.document_type_id);
-        console.log('Document Type Object after transform:', transformedProperty.documentType);
-        console.log('Raw propertyData.document_type_id:', propertyData.document_type_id);
-        console.log('Raw propertyData.document_type:', propertyData.document_type);
 
         console.groupEnd();
         
         setProperty(transformedProperty);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching property:', err);
-        setError('Failed to load property details');
-        notification.error('Failed to load property details');
+        
+        // Handle specific error types
+        if (err.response?.status === 404) {
+          setError('Property not found. This property may have been removed or the URL is incorrect.');
+          notification.error('Property not found');
+        } else if (err.response?.status >= 500) {
+          setError('Server error. Please try again later.');
+          notification.error('Server error occurred');
+        } else {
+          setError('Failed to load property details. Please check your connection and try again.');
+          notification.error('Failed to load property details');
+        }
       } finally {
         setLoading(false);
       }
@@ -381,7 +373,29 @@ const PropertyDetails: React.FC = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto p-4 text-red-500">{error}</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+            {error.includes('not found') ? 'Property Not Found' : 'Error Loading Property'}
+          </h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => window.history.back()}
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Go to Home
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -568,14 +582,14 @@ const PropertyDetails: React.FC = () => {
             {/* Image Gallery */}
             <Card className="overflow-hidden">
               <div className="relative">
-                {property.images && property.images.length > 0 ? (
+                {property.images && property.images.length > 1 ? (
                   <PropertyImageGallery
                     images={property.images}
                     alt={property.title}
                     className="w-full h-96"
                     propertyId={property.id}
                   />
-                ) : property.mainImage && property.mainImage !== '/placeholder-property.jpg' ? (
+                ) : property.mainImage ? (
                   <div className="relative w-full h-96">
                     <img 
                       src={property.mainImage}
@@ -584,9 +598,6 @@ const PropertyDetails: React.FC = () => {
                       onLoad={() => console.log('Main image loaded:', property.mainImage)}
                       onError={(e) => console.log('Main image failed to load:', property.mainImage, e)}
                     />
-                    <div className="absolute bottom-2 left-2 bg-yellow-500 text-black px-2 py-1 text-xs rounded">
-                      Showing main image (gallery issues)
-                    </div>
                   </div>
                 ) : (
                   <div className="relative w-full h-96 bg-gray-100 flex items-center justify-center">

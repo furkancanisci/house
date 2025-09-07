@@ -22,7 +22,7 @@ class UserResource extends JsonResource
             'full_name' => $this->ensureUtf8($this->full_name),
             'email' => $this->email,
             'phone' => $this->phone,
-            'date_of_birth' => $this->date_of_birth?->format('Y-m-d'),
+            'date_of_birth' => $this->getDateOfBirth(),
             'gender' => $this->gender,
             'bio' => $this->ensureUtf8($this->bio),
             'user_type' => $this->user_type,
@@ -50,6 +50,32 @@ class UserResource extends JsonResource
             'created_at' => $this->getCreatedAt(),
             'updated_at' => $this->getUpdatedAt(),
         ];
+    }
+
+    /**
+     * Get date of birth
+     */
+    private function getDateOfBirth()
+    {
+        if (!$this->date_of_birth) {
+            return null;
+        }
+        
+        // If it's already a Carbon/DateTime object
+        if (is_object($this->date_of_birth) && method_exists($this->date_of_birth, 'format')) {
+            return $this->date_of_birth->format('Y-m-d');
+        }
+        
+        // If it's a string, try to parse it
+        if (is_string($this->date_of_birth)) {
+            try {
+                return Carbon::parse($this->date_of_birth)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return $this->date_of_birth; // Return as-is if parsing fails
+            }
+        }
+        
+        return $this->date_of_birth;
     }
 
     /**

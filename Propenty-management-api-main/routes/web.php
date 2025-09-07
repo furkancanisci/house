@@ -48,10 +48,124 @@ Route::get('/login', function () {
     return redirect()->route('admin.login');
 })->name('login');
 
+// Bunny Storage Connection Test Route
+Route::get('/test-bunny', function () {
+    try {
+        // Load environment variables
+        $storageZone = env('BUNNY_STORAGE_ZONE');
+        $accessKey = env('BUNNY_API_KEY');
+        $pullZone = env('BUNNY_PULL_ZONE');
+        
+        if (!$storageZone || !$accessKey || !$pullZone) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Bunny Storage configuration missing',
+                'missing' => [
+                    'BUNNY_STORAGE_ZONE' => !$storageZone,
+                    'BUNNY_API_KEY' => !$accessKey,
+                    'BUNNY_PULL_ZONE' => !$pullZone
+                ]
+            ], 500);
+        }
+        
+        $baseUrl = "https://storage.bunnycdn.com/{$storageZone}";
+        
+        // Test connectivity
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $baseUrl . '/');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'AccessKey: ' . $accessKey,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($error) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Connection failed',
+                'error' => $error,
+                'config' => [
+                    'storage_zone' => $storageZone,
+                    'pull_zone' => $pullZone,
+                    'base_url' => $baseUrl
+                ]
+            ], 500);
+        }
+        
+        // Test file upload
+        $testContent = 'Bunny test file - ' . now()->toISOString();
+        $fileName = 'test-' . time() . '.txt';
+        $filePath = 'test-uploads/' . $fileName;
+        
+        $uploadCh = curl_init();
+        curl_setopt($uploadCh, CURLOPT_URL, $baseUrl . '/' . $filePath);
+        curl_setopt($uploadCh, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($uploadCh, CURLOPT_HTTPHEADER, [
+            'AccessKey: ' . $accessKey,
+            'Content-Type: text/plain'
+        ]);
+        curl_setopt($uploadCh, CURLOPT_CUSTOMREQUEST, 'PUT');
+        curl_setopt($uploadCh, CURLOPT_POSTFIELDS, $testContent);
+        curl_setopt($uploadCh, CURLOPT_TIMEOUT, 30);
+        curl_setopt($uploadCh, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($uploadCh, CURLOPT_SSL_VERIFYHOST, false);
+        
+        $uploadResponse = curl_exec($uploadCh);
+        $uploadHttpCode = curl_getinfo($uploadCh, CURLINFO_HTTP_CODE);
+        $uploadError = curl_error($uploadCh);
+        curl_close($uploadCh);
+        
+        $cdnUrl = "https://{$pullZone}.b-cdn.net/{$filePath}";
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bunny Storage connection test completed',
+            'results' => [
+                'connectivity' => [
+                    'status' => $httpCode === 200 ? 'success' : 'failed',
+                    'http_code' => $httpCode,
+                    'response' => $httpCode !== 200 ? $response : 'Connected successfully'
+                ],
+                'file_upload' => [
+                    'status' => $uploadHttpCode === 201 ? 'success' : 'failed',
+                    'http_code' => $uploadHttpCode,
+                    'file_path' => $filePath,
+                    'cdn_url' => $cdnUrl,
+                    'error' => $uploadError ?: null
+                ]
+            ],
+            'config' => [
+                'storage_zone' => $storageZone,
+                'pull_zone' => $pullZone,
+                'base_url' => $baseUrl,
+                'access_key_preview' => substr($accessKey, 0, 8) . '...'
+            ],
+            'timestamp' => now()->toISOString()
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Test failed with exception',
+            'error' => $e->getMessage(),
+            'timestamp' => now()->toISOString()
+        ], 500);
+    }
+});
+
 // Redirect to admin panel for authenticated users
 Route::get('/', function () {
     if (auth()->check() && auth()->user()->can('view dashboard')) {
         return redirect()->route('admin.dashboard');
     }
     return view('welcome');
-}); 
+});

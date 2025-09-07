@@ -35,11 +35,11 @@ class PropertyResource extends JsonResource
             'title' => $this->ensureUtf8($this->title),
             'description' => $this->ensureUtf8($this->description),
             'slug' => $this->ensureUtf8($this->slug),
-            'property_type' => $this->ensureUtf8($this->property_type),
+            'property_type' => $this->ensureUtf8($this->getAttributeValue('property_type')),
             'listing_type' => $this->ensureUtf8($this->listing_type),
             
             // Property details - flat structure for frontend compatibility
-            'propertyType' => $this->property_type, // Frontend expects camelCase
+            'propertyType' => $this->getAttributeValue('property_type'), // Frontend expects camelCase
             'listingType' => $this->listing_type, // Frontend expects camelCase
             'bedrooms' => (int) ($this->bedrooms ?? 0),
             'bathrooms' => (float) ($this->bathrooms ?? 0),
@@ -61,8 +61,8 @@ class PropertyResource extends JsonResource
             'address' => $this->buildFullAddress(), // Frontend expects flat address
             'full_address' => $this->buildFullAddress(), // Alternative field name
             'street_address' => $this->ensureUtf8($this->street_address),
-            'city' => $this->ensureUtf8($this->city),
-            'state' => $this->ensureUtf8($this->state),
+            'city' => $this->ensureUtf8($this->getAttributeValue('city')),
+            'state' => $this->ensureUtf8($this->getAttributeValue('state')),
             'postal_code' => $this->postal_code,
             'zip_code' => $this->postal_code, // Frontend expects zip_code
             'country' => $this->ensureUtf8('Syria'), // Hardcoded since country field was removed
@@ -71,8 +71,8 @@ class PropertyResource extends JsonResource
             'longitude' => $this->longitude,
             'location' => [
                 'street_address' => $this->ensureUtf8($this->street_address),
-                'city' => $this->ensureUtf8($this->city),
-                'state' => $this->ensureUtf8($this->state),
+                'city' => $this->ensureUtf8($this->getAttributeValue('city')),
+                'state' => $this->ensureUtf8($this->getAttributeValue('state')),
                 'postal_code' => $this->ensureUtf8($this->postal_code),
                 'country' => $this->ensureUtf8('Syria'), // Hardcoded since country field was removed
                 'full_address' => $this->buildFullAddress(),
@@ -147,7 +147,7 @@ class PropertyResource extends JsonResource
                 }
                 
                 $firstImage = $this->getFirstMedia('images');
-                return $firstImage ? $firstImage->getUrl() : '/placeholder-property.jpg';
+                return $firstImage ? $firstImage->getUrl() : '/images/placeholder-property.svg';
             }),
             
             // Statistics - simplified
@@ -201,8 +201,11 @@ class PropertyResource extends JsonResource
     private function buildFullAddress()
     {
         $address = $this->ensureUtf8($this->street_address);
-        if ($this->city) $address .= ', ' . $this->ensureUtf8($this->city);
-        if ($this->state) $address .= ', ' . $this->ensureUtf8($this->state);
+        $city = $this->getAttributeValue('city');
+        $state = $this->getAttributeValue('state');
+        
+        if ($city) $address .= ', ' . $this->ensureUtf8($city);
+        if ($state) $address .= ', ' . $this->ensureUtf8($state);
         if ($this->postal_code) $address .= ' ' . $this->postal_code;
         $address .= ', Syria'; // Hardcoded since country field was removed
 

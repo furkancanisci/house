@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\UtilityController;
+use App\Http\Controllers\ImageUploadController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -92,7 +93,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/{property}/show', [PropertyController::class, 'show']); // Alternative route for ID
         Route::get('/{property:slug}', [PropertyController::class, 'show']);
         
-        // Write operations - keeping these for future reference but making them public for now
+        // Write operations - require authentication
         Route::post('/', [PropertyController::class, 'store'])->middleware(['auth:sanctum', 'validate.image']);
         Route::put('/{property}', [PropertyController::class, 'update'])->middleware(['auth:sanctum', 'validate.image']);
         Route::delete('/{property}', [PropertyController::class, 'destroy'])->middleware('auth:sanctum');
@@ -182,6 +183,15 @@ Route::prefix('v1')->group(function () {
     Route::prefix('stats')->group(function () {
         Route::get('/overview', [StatsController::class, 'overview']);
         Route::get('/price-ranges', [StatsController::class, 'priceRanges']);
+    });
+
+    // Image Upload Routes - Bunny Storage
+    Route::prefix('images')->middleware(['auth:sanctum', 'secure.image.upload'])->group(function () {
+        Route::post('/upload', [ImageUploadController::class, 'uploadImage']);
+        Route::post('/upload-multiple', [ImageUploadController::class, 'uploadMultipleImages']);
+        Route::post('/upload-base64', [ImageUploadController::class, 'uploadBase64Image']);
+        Route::delete('/delete', [ImageUploadController::class, 'deleteImage']);
+        Route::get('/info', [ImageUploadController::class, 'getImageInfo']);
     });
 });
 

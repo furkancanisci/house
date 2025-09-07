@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Phone, Mail, Clock, Send, User, MessageSquare, AtSign, MapPin, Heart } from 'lucide-react';
+import { Phone, Mail, Clock, Send, User, MessageSquare, AtSign, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ContactForm: React.FC = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -37,81 +39,69 @@ const ContactForm: React.FC = () => {
     });
     
     setIsSubmitting(false);
-    alert('تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.');
+    alert(t('contact.successMessage'));
   };
 
   return (
-    <div className="mt-16 bg-white rounded-xl shadow-md overflow-hidden">
-      <div className="bg-gradient-to-r from-[#067977] to-[#0a9b94] p-8">
-        <h3 className="text-2xl font-bold text-white text-center mb-2">أرسل لنا رسالة</h3>
-        <p className="text-white/90 text-center">نحن هنا للإجابة على جميع استفساراتك</p>
-      </div>
+    <div className="bg-gray-50 rounded-lg p-6">
+      <h3 className="text-2xl font-semibold text-gray-900 mb-6">{t('contact.sendMessage')}</h3>
       
-      <form onSubmit={handleSubmit} className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4 mb-6">
           {/* Name Field */}
-          <div className="relative">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              الاسم الكامل *
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('contact.fullName')} *
             </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#067977] focus:border-transparent transition-all duration-200 hover:border-[#067977]/50"
-                placeholder="أدخل اسمك الكامل"
-              />
-            </div>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#067977] focus:border-[#067977]"
+              placeholder={t('contact.fullNamePlaceholder')}
+            />
           </div>
 
           {/* Email Field */}
-          <div className="relative">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              البريد الإلكتروني *
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('contact.emailAddress')} *
             </label>
-            <div className="relative">
-              <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#067977] focus:border-transparent transition-all duration-200 hover:border-[#067977]/50"
-                placeholder="example@email.com"
-              />
-            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#067977] focus:border-[#067977]"
+              placeholder={t('contact.emailPlaceholder')}
+            />
           </div>
 
           {/* Phone Field */}
-          <div className="relative">
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-              رقم الهاتف
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('contact.phoneNumber')}
             </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#067977] focus:border-transparent transition-all duration-200 hover:border-[#067977]/50"
-                placeholder="+1 (555) 123-4567"
-              />
-            </div>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#067977] focus:border-[#067977]"
+              placeholder={t('contact.phonePlaceholder')}
+            />
           </div>
 
           {/* Subject Field */}
-          <div className="relative">
-            <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-              الموضوع *
+          <div>
+            <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('contact.subject')} *
             </label>
             <select
               id="subject"
@@ -119,153 +109,131 @@ const ContactForm: React.FC = () => {
               value={formData.subject}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#067977] focus:border-transparent transition-all duration-200 hover:border-[#067977]/50 bg-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#067977] focus:border-[#067977] bg-white"
             >
-              <option value="">اختر الموضوع</option>
-              <option value="general">استفسار عام</option>
-              <option value="property">استفسار عن عقار</option>
-              <option value="rent">استفسار عن الإيجار</option>
-              <option value="sale">استفسار عن البيع</option>
-              <option value="support">الدعم الفني</option>
-              <option value="other">أخرى</option>
+              <option value="">{t('contact.selectSubject')}</option>
+              <option value="general">{t('contact.subjects.general')}</option>
+              <option value="property">{t('contact.subjects.property')}</option>
+              <option value="rent">{t('contact.subjects.rent')}</option>
+              <option value="sale">{t('contact.subjects.sale')}</option>
+              <option value="support">{t('contact.subjects.support')}</option>
+              <option value="other">{t('contact.subjects.other')}</option>
             </select>
           </div>
         </div>
 
         {/* Message Field */}
         <div className="mb-6">
-          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-            الرسالة *
+          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('contact.message')} *
           </label>
-          <div className="relative">
-            <MessageSquare className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-            <textarea
-              id="message"
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              required
-              rows={5}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#067977] focus:border-transparent transition-all duration-200 hover:border-[#067977]/50 resize-none"
-              placeholder="اكتب رسالتك هنا..."
-            />
-          </div>
+          <textarea
+            id="message"
+            name="message"
+            value={formData.message}
+            onChange={handleChange}
+            required
+            rows={4}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#067977] focus:border-[#067977] resize-none"
+            placeholder={t('contact.messagePlaceholder')}
+          />
         </div>
 
         {/* Submit Button */}
-        <div className="text-center">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-[#067977] to-[#0a9b94] text-white font-medium rounded-lg hover:from-[#055a5c] hover:to-[#087d76] focus:outline-none focus:ring-2 focus:ring-[#067977] focus:ring-offset-2 transform transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                جاري الإرسال...
-              </>
-            ) : (
-              <>
-                <Send className="h-5 w-5 mr-2" />
-                إرسال الرسالة
-              </>
-            )}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full bg-[#067977] text-white py-2 px-4 rounded-md hover:bg-[#055a5c] focus:outline-none focus:ring-2 focus:ring-[#067977] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              {t('contact.sending')}
+            </>
+          ) : (
+            t('contact.sendButton')
+          )}
+        </button>
       </form>
     </div>
   );
 };
 
 const ContactUs: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-white py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
         {/* Page Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-[#067977] to-[#0a9b94] rounded-full mb-6 shadow-lg">
-            <Heart className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-[#067977] to-[#0a9b94] bg-clip-text text-transparent mb-4">
-            تواصل معنا
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {t('contact.pageTitle')}
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            نحن هنا لمساعدتك في العثور على منزل أحلامك. تواصل مع فريقنا المتخصص للحصول على أفضل الخدمات العقارية
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            {t('contact.pageSubtitle')}
           </p>
         </div>
 
-        {/* Main Content - Side by Side Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
-          {/* Get in Touch Section */}
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300">
-            <div className="bg-gradient-to-r from-[#067977] to-[#0a9b94] p-8">
-              <h2 className="text-3xl font-bold text-white text-center mb-2">تواصل معنا</h2>
-              <p className="text-white/90 text-center text-lg">نحن في انتظار تواصلكم معنا</p>
-            </div>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Contact Information */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">{t('contact.contactInfo')}</h2>
             
-            <div className="p-8 space-y-8">
-              {/* Phone */}
-              <div className="group flex items-start space-x-4 rtl:space-x-reverse p-6 rounded-xl hover:bg-gradient-to-r hover:from-[#067977]/5 hover:to-[#0a9b94]/5 transition-all duration-300 border border-transparent hover:border-[#067977]/20">
-                <div className="flex-shrink-0">
-                  <div className="bg-gradient-to-r from-[#067977] to-[#0a9b94] p-4 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <Phone className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">الهاتف</h3>
-                  <p className="text-lg font-semibold text-[#067977] mb-1">+1 (555) 123-4567</p>
-                  <p className="text-sm text-gray-500">الإثنين - الجمعة، 9 صباحاً - 6 مساءً</p>
+            {/* Phone */}
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              <div className="flex-shrink-0">
+                <div className="bg-[#067977] p-3 rounded-lg">
+                  <Phone className="h-5 w-5 text-white" />
                 </div>
               </div>
+              <div>
+                <h3 className="font-medium text-gray-900">{t('contact.phone')}</h3>
+                <p className="text-[#067977] font-medium">+1 (555) 123-4567</p>
+              </div>
+            </div>
 
-              {/* Email */}
-              <div className="group flex items-start space-x-4 rtl:space-x-reverse p-6 rounded-xl hover:bg-gradient-to-r hover:from-[#067977]/5 hover:to-[#0a9b94]/5 transition-all duration-300 border border-transparent hover:border-[#067977]/20">
-                <div className="flex-shrink-0">
-                  <div className="bg-gradient-to-r from-[#067977] to-[#0a9b94] p-4 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <Mail className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">البريد الإلكتروني</h3>
-                  <p className="text-lg font-semibold text-[#067977] mb-1">info@realestate.com</p>
-                  <p className="text-sm text-gray-500">دعم على مدار الساعة</p>
+            {/* Email */}
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              <div className="flex-shrink-0">
+                <div className="bg-[#067977] p-3 rounded-lg">
+                  <Mail className="h-5 w-5 text-white" />
                 </div>
               </div>
+              <div>
+                <h3 className="font-medium text-gray-900">{t('contact.email')}</h3>
+                <p className="text-[#067977] font-medium">info@realestate.com</p>
+              </div>
+            </div>
 
-              {/* Business Hours */}
-              <div className="group flex items-start space-x-4 rtl:space-x-reverse p-6 rounded-xl hover:bg-gradient-to-r hover:from-[#067977]/5 hover:to-[#0a9b94]/5 transition-all duration-300 border border-transparent hover:border-[#067977]/20">
-                <div className="flex-shrink-0">
-                  <div className="bg-gradient-to-r from-[#067977] to-[#0a9b94] p-4 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <Clock className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">ساعات العمل</h3>
-                  <p className="text-gray-600 text-base leading-relaxed">
-                    الاثنين - الجمعة: 9:00 ص - 6:00 م<br />
-                    السبت: 10:00 ص - 4:00 م
-                  </p>
-                  <p className="text-[#067977] font-bold mt-3 text-base flex items-center">
-                    <Heart className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                    نحن دوماً في خدمتكم
-                  </p>
+            {/* Business Hours */}
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              <div className="flex-shrink-0">
+                <div className="bg-[#067977] p-3 rounded-lg">
+                  <Clock className="h-5 w-5 text-white" />
                 </div>
               </div>
+              <div>
+                <h3 className="font-medium text-gray-900">{t('contact.businessHours')}</h3>
+                <p className="text-gray-600 whitespace-pre-line">
+                  {t('contact.businessHoursText')}
+                </p>
+              </div>
+            </div>
 
-              {/* Location */}
-              <div className="group flex items-start space-x-4 rtl:space-x-reverse p-6 rounded-xl hover:bg-gradient-to-r hover:from-[#067977]/5 hover:to-[#0a9b94]/5 transition-all duration-300 border border-transparent hover:border-[#067977]/20">
-                <div className="flex-shrink-0">
-                  <div className="bg-gradient-to-r from-[#067977] to-[#0a9b94] p-4 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <MapPin className="h-6 w-6 text-white" />
-                  </div>
+            {/* Location */}
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              <div className="flex-shrink-0">
+                <div className="bg-[#067977] p-3 rounded-lg">
+                  <MapPin className="h-5 w-5 text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">الموقع</h3>
-                  <p className="text-gray-600 text-base leading-relaxed">
-                    عفرين، حلب<br />
-                    سوريا
-                  </p>
-                </div>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">{t('contact.location')}</h3>
+                <p className="text-gray-600 whitespace-pre-line">
+                  {t('contact.locationText')}
+                </p>
               </div>
             </div>
           </div>

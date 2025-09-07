@@ -109,23 +109,22 @@ const propertySchema = z.object({
   utilities: z.string().optional(),
   lotSize: z.union([
     z.string()
-      .refine(val => val === '' || /^\d+$/.test(val), {
+      .min(1, 'Lot size is required')
+      .refine(val => /^\d+$/.test(val), {
         message: 'Lot size must be a positive integer'
       })
-      .transform((val) => val === '' ? undefined : parseInt(val, 10))
-      .refine(val => val === undefined || val > 0, {
+      .transform((val) => parseInt(val, 10))
+      .refine(val => val > 0, {
         message: 'Lot size must be greater than 0'
       })
-      .refine(val => val === undefined || val <= 1000000, {
+      .refine(val => val <= 1000000, {
         message: 'Lot size is too large'
-      })
-      .optional(),
+      }),
     z.number()
       .int('Lot size must be an integer')
       .positive('Lot size must be greater than 0')
       .max(1000000, 'Lot size is too large')
-      .optional()
-  ]).optional().default(undefined),
+  ]),
   garage: z.string().optional(),
   heating: z.string().optional(),
   hoaFees: z.string().optional(),
@@ -161,8 +160,15 @@ const AddProperty: React.FC = () => {
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>(() => {
     // Restore image preview URLs from localStorage
     const savedPreviewUrls = localStorage.getItem('addProperty_imagePreviewUrls');
-    return savedPreviewUrls ? JSON.parse(savedPreviewUrls) : [];
+    const urls = savedPreviewUrls ? JSON.parse(savedPreviewUrls) : [];
+    console.log('AddProperty - Initial imagePreviewUrls from localStorage:', urls.length, urls.map(url => url.substring(0, 50) + '...'));
+    return urls;
   });
+
+  // Debug: Log imagePreviewUrls changes
+  useEffect(() => {
+    console.log('AddProperty - imagePreviewUrls state updated:', imagePreviewUrls.length, imagePreviewUrls.map(url => url.substring(0, 50) + '...'));
+  }, [imagePreviewUrls]);
   const [mainImageIndex, setMainImageIndex] = useState<number>(() => {
     // Restore main image index from localStorage
     const savedMainImageIndex = localStorage.getItem('addProperty_mainImageIndex');
@@ -238,6 +244,7 @@ const AddProperty: React.FC = () => {
         price: 0,
         description: '',
         parking: 'none',
+        lotSize: 1000, // Default lot size value since it's now mandatory
         availableDate: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
         contactName: user?.name || '',
         contactEmail: user?.email || '',
@@ -336,6 +343,16 @@ const AddProperty: React.FC = () => {
     fetchFeatures();
     fetchUtilities();
   }, [i18n.language]);
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('AddProperty component state:');
+    console.log('Current step:', currentStep);
+    console.log('Selected images count:', selectedImages.length);
+    console.log('Image preview URLs count:', imagePreviewUrls.length);
+    console.log('Selected images:', selectedImages);
+    console.log('Image preview URLs:', imagePreviewUrls.map(url => url.substring(0, 50) + '...'));
+  }, [currentStep, selectedImages, imagePreviewUrls]);
 
   // State for features and utilities from API
   const [availableFeatures, setAvailableFeatures] = useState<Feature[]>([]);
@@ -491,42 +508,169 @@ const AddProperty: React.FC = () => {
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('=== handleImageUpload CALLED ===');
+    console.log('handleImageUpload - Event object:', event);
+    console.log('handleImageUpload - Event target:', event.target);
+    console.log('handleImageUpload - Event target files:', event.target.files);
+    
     const files = Array.from(event.target.files || []);
+    console.log('handleImageUpload - Files selected:', files.length, files);
+    console.log('handleImageUpload - Current selectedImages:', selectedImages.length);
+    console.log('handleImageUpload - Current imagePreviewUrls:', imagePreviewUrls.length);
+    
+    if (!files || files.length === 0) {
+      console.log('handleImageUpload - No files selected, returning');
+      return;
+    }
+    
+    // Validate file types
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    if (invalidFiles.length > 0) {
+      console.error('handleImageUpload - Invalid file types:', invalidFiles.map(f => f.type));
+      notification.error('Only JPG, PNG, GIF, and WebP images are allowed');
+      return;
+    }
+    
+    // Validate file sizes (max 5MB per file)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    if (oversizedFiles.length > 0) {
+      console.error('handleImageUpload - Oversized files:', oversizedFiles.map(f => f.size));
+      notification.error('Each image must be smaller than 5MB');
+      return;
+    }
+    
     if (files.length + selectedImages.length > 10) {
+      console.log('handleImageUpload - Too many files, limit exceeded');
       notification.error('Maximum 10 images allowed');
       return;
     }
 
+    console.log('handleImageUpload - All validations passed, processing files...');
+    
     const newImages = [...selectedImages, ...files];
     setSelectedImages(newImages);
+    console.log('handleImageUpload - Updated selectedImages:', newImages.length);
 
     // If this is the first image, set it as main image
     if (selectedImages.length === 0 && files.length > 0) {
       setMainImageIndex(0);
+      console.log('handleImageUpload - Set main image index to 0');
     }
 
     // Create preview URLs
-    const newPreviewUrls = [...imagePreviewUrls];
+    console.log('handleImageUpload - Starting to create preview URLs...');
     const promises: Promise<string>[] = [];
     
-    files.forEach((file) => {
-      const promise = new Promise<string>((resolve) => {
+    files.forEach((file, index) => {
+      console.log(`handleImageUpload - Processing file ${index + 1}:`, {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+      });
+      
+      const promise = new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve(e.target?.result as string);
+        
+        reader.onloadstart = () => {
+          console.log(`handleImageUpload - Started reading file ${index + 1}`);
         };
+        
+        reader.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const progress = (e.loaded / e.total) * 100;
+            console.log(`handleImageUpload - File ${index + 1} progress: ${progress.toFixed(2)}%`);
+          }
+        };
+        
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          console.log(`handleImageUpload - File ${index + 1} loaded successfully:`, {
+            urlLength: result?.length,
+            isDataUrl: result?.startsWith('data:'),
+            mimeType: result?.split(';')[0]?.split(':')[1],
+            preview: result?.substring(0, 100) + '...'
+          });
+          
+          if (!result || !result.startsWith('data:')) {
+            console.error(`handleImageUpload - Invalid result for file ${index + 1}:`, result);
+            reject(new Error(`Invalid file result for ${file.name}`));
+            return;
+          }
+          
+          resolve(result);
+        };
+        
+        reader.onerror = (error) => {
+          console.error(`handleImageUpload - Error reading file ${index + 1}:`, {
+            error,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type
+          });
+          reject(new Error(`Failed to read file: ${file.name}`));
+        };
+        
+        reader.onabort = () => {
+          console.error(`handleImageUpload - Reading aborted for file ${index + 1}`);
+          reject(new Error(`Reading aborted for file: ${file.name}`));
+        };
+        
+        console.log(`handleImageUpload - Starting to read file ${index + 1} as data URL`);
         reader.readAsDataURL(file);
       });
+      
       promises.push(promise);
     });
 
+    console.log('handleImageUpload - Waiting for all files to be processed...');
     // Wait for all files to be processed, then update preview URLs
-    Promise.all(promises).then((urls) => {
-      setImagePreviewUrls([...imagePreviewUrls, ...urls]);
-    });
+    Promise.all(promises)
+      .then((urls) => {
+        console.log('handleImageUpload - All files processed successfully:', {
+          urlsCount: urls.length,
+          urlsValid: urls.every(url => url.startsWith('data:')),
+          urlsPreviews: urls.map((url, i) => `${i + 1}: ${url.substring(0, 50)}...`)
+        });
+        
+        setImagePreviewUrls(prev => {
+          const newUrls = [...prev, ...urls];
+          console.log('handleImageUpload - Updating imagePreviewUrls state:', {
+            previousCount: prev.length,
+            newUrlsCount: urls.length,
+            totalCount: newUrls.length,
+            allUrlsValid: newUrls.every(url => url.startsWith('data:')),
+            urlsPreviews: newUrls.map((url, i) => `${i + 1}: ${url.substring(0, 30)}...`)
+          });
+          
+          // Save to localStorage
+          try {
+            localStorage.setItem('addProperty_imagePreviewUrls', JSON.stringify(newUrls));
+            console.log('handleImageUpload - Successfully saved to localStorage');
+          } catch (error) {
+            console.error('handleImageUpload - Error saving to localStorage:', error);
+          }
+          
+          return newUrls;
+        });
+        
+        console.log('handleImageUpload - Image upload completed successfully');
+        notification.success(`Successfully uploaded ${urls.length} image(s)`);
+      })
+      .catch((error) => {
+        console.error('handleImageUpload - Error processing files:', {
+          error,
+          message: error.message,
+          stack: error.stack
+        });
+        notification.error(`Error processing images: ${error.message}`);
+      });
 
     // Clear the input value to allow re-uploading the same file
     event.target.value = '';
+    console.log('handleImageUpload - Input value cleared');
   };
 
   const removeImage = (index: number) => {
@@ -1265,61 +1409,65 @@ const AddProperty: React.FC = () => {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {imagePreviewUrls.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <div 
-                          className={`relative overflow-hidden rounded-xl border-2 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer ${
-                            index === mainImageIndex 
-                              ? 'border-[#067977] ring-2 ring-[#067977]/30 bg-[#067977]/5' 
-                              : 'border-gray-200 hover:border-purple-300'
-                          }`}
-                          onClick={() => selectMainImage(index)}
-                        >
-                          <FixedImage
-                            src={url}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-cover"
-                            showLoadingSpinner={false}
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200"></div>
-                          
-                          {/* Remove button */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeImage(index);
-                            }}
-                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-10"
+                    {imagePreviewUrls.map((url, index) => {
+                      console.log(`Rendering image ${index + 1} with URL:`, url.substring(0, 50) + '...');
+                      console.log(`Image ${index + 1} full URL type:`, typeof url, 'starts with data:', url.startsWith('data:'));
+                      return (
+                        <div key={index} className="relative group">
+                          <div 
+                            className={`relative overflow-hidden rounded-xl border-2 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer ${
+                              index === mainImageIndex 
+                                ? 'border-[#067977] ring-2 ring-[#067977]/30 bg-[#067977]/5' 
+                                : 'border-gray-200 hover:border-purple-300'
+                            }`}
+                            onClick={() => selectMainImage(index)}
                           >
-                            <X className="h-3 w-3" />
-                          </button>
-                          
-                          {/* Main image indicator */}
-                          {index === mainImageIndex && (
-                            <div className="absolute bottom-2 left-2 bg-gradient-to-r from-[#067977] to-[#067977]/90 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg flex items-center gap-1 z-10">
-                              <Star className="h-3 w-3 fill-current" />
-                              <span className="hidden sm:inline">{t('addProperty.imageUpload.mainImage')}</span>
-                              <span className="sm:hidden">رئيسية</span>
-                            </div>
-                          )}
-                          
-                          {/* Image number */}
-                          <div className="absolute top-2 left-2 bg-white/90 text-gray-700 text-xs px-2 py-1 rounded-full font-medium">
-                            {index + 1}
-                          </div>
-                          
-                          {/* Click to select indicator */}
-                          {index !== mainImageIndex && (
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
-                              <div className="bg-white/90 text-gray-700 text-xs px-3 py-1.5 rounded-full font-medium shadow-lg">
-                                انقر لجعلها رئيسية
+                            <FixedImage
+                              src={url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-32 object-cover"
+                              showLoadingSpinner={true}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200"></div>
+                        
+                            {/* Remove button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeImage(index);
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-10"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                        
+                            {/* Main image indicator */}
+                            {index === mainImageIndex && (
+                              <div className="absolute bottom-2 left-2 bg-gradient-to-r from-[#067977] to-[#067977]/90 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg flex items-center gap-1 z-10">
+                                <Star className="h-3 w-3 fill-current" />
+                                <span className="hidden sm:inline">{t('addProperty.imageUpload.mainImage')}</span>
+                                <span className="sm:hidden">رئيسية</span>
                               </div>
+                            )}
+                        
+                            {/* Image number */}
+                            <div className="absolute top-2 left-2 bg-white/90 text-gray-700 text-xs px-2 py-1 rounded-full font-medium">
+                              {index + 1}
                             </div>
-                          )}
+                        
+                            {/* Click to select indicator */}
+                            {index !== mainImageIndex && (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                <div className="bg-white/90 text-gray-700 text-xs px-3 py-1.5 rounded-full font-medium shadow-lg">
+                                  انقر لجعلها رئيسية
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Add more images placeholder */}
                     {selectedImages.length < 10 && (
@@ -1358,13 +1506,43 @@ const AddProperty: React.FC = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="description" className="text-sm">{t('forms.propertyDescription')} *</Label>
-              <Textarea
-                id="description"
-                placeholder={t('forms.propertyDescriptionPlaceholder')}
-                rows={4}
-                className={`text-sm ${errors.description ? 'border-red-500' : ''}`}
-                {...register('description')}
-              />
+              <div className="space-y-2">
+                <Textarea
+                  id="description"
+                  placeholder={t('forms.propertyDescriptionPlaceholder')}
+                  rows={4}
+                  className={`text-sm ${errors.description ? 'border-red-500' : ''}`}
+                  {...register('description')}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const textarea = document.getElementById('description') as HTMLTextAreaElement;
+                      if (textarea) {
+                        const cursorPos = textarea.selectionStart;
+                        const textBefore = textarea.value.substring(0, cursorPos);
+                        const textAfter = textarea.value.substring(cursorPos);
+                        const newValue = textBefore + '\n---\n' + textAfter;
+                        textarea.value = newValue;
+                        textarea.focus();
+                        textarea.setSelectionRange(cursorPos + 5, cursorPos + 5);
+                        // Trigger onChange to update form state
+                        const event = new Event('input', { bubbles: true });
+                        textarea.dispatchEvent(event);
+                      }
+                    }}
+                    className="text-xs h-7"
+                  >
+                    Add Divider
+                  </Button>
+                  <span className="text-xs text-gray-500 flex items-center">
+                    Insert "---" to create visual dividers in your description
+                  </span>
+                </div>
+              </div>
               {errors.description && (
                 <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
               )}

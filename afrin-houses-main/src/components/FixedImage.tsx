@@ -26,7 +26,6 @@ const fixImageUrl = (url: string | undefined | null | any, propertyId?: string |
       url.startsWith('https://') ||
       url.startsWith('data:') ||
       url.startsWith('/images/')) {
-    console.log('FixedImage fixImageUrl - URL already complete:', url);
     return url;
   }
   
@@ -44,7 +43,6 @@ const fixImageUrl = (url: string | undefined | null | any, propertyId?: string |
     return fixedUrl;
   }
   
-  console.log('FixedImage fixImageUrl - Returning unchanged:', url);
   return url;
 };
 

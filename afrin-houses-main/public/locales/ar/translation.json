@@ -13,7 +13,7 @@
     "register": "إنشاء حساب",
     "about": "حول",
     "contact": "تواصل"
-  }
+  },
   "home": {
     "hero": {
       "title": "ابحث عن منزلك المثالي",
@@ -256,7 +256,37 @@
       "name": "الاسم",
       "phone": "الهاتف",
       "email": "البريد الإلكتروني",
-      "owner": "مالك العقار"
+      "owner": "مالك العقار",
+      "pageTitle": "تواصل معنا",
+      "pageSubtitle": "نحن هنا لمساعدتك في العثور على منزل أحلامك",
+      "contactInfo": "معلومات التواصل",
+      "getInTouch": "تواصل معنا",
+      "sendMessage": "أرسل لنا رسالة",
+      "fullName": "الاسم الكامل",
+      "fullNamePlaceholder": "أدخل اسمك الكامل",
+      "emailAddress": "البريد الإلكتروني",
+      "emailPlaceholder": "example@email.com",
+      "phoneNumber": "رقم الهاتف",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "subject": "الموضوع",
+      "selectSubject": "اختر الموضوع",
+      "message": "الرسالة",
+      "messagePlaceholder": "اكتب رسالتك هنا...",
+      "sendButton": "إرسال الرسالة",
+      "sending": "جاري الإرسال...",
+      "businessHours": "ساعات العمل",
+      "location": "الموقع",
+      "successMessage": "تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.",
+      "subjects": {
+        "general": "استفسار عام",
+        "property": "استفسار عن عقار",
+        "rent": "استفسار عن الإيجار",
+        "sale": "استفسار عن البيع",
+        "support": "الدعم الفني",
+        "other": "أخرى"
+      },
+      "businessHoursText": "الاثنين - الجمعة: 9:00 ص - 6:00 م\nالسبت: 10:00 ص - 4:00 م",
+      "locationText": "عفرين، حلب\nسوريا"
     }
   },
   "forms": {
@@ -506,6 +536,7 @@
     "phone": "الهاتف",
     "email": "البريد الإلكتروني",
     "owner": "مالك العقار"
+    
   },
   "common": {
     "understood": "تمام",

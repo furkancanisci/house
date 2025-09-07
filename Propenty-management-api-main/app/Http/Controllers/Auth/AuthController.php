@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -193,17 +194,7 @@ class AuthController extends Controller
 
         try {
             // Manually validate the token without using the guard to prevent recursion
-            $tokenModel = 'Laravel\\Sanctum\\PersonalAccessToken';
-            
-            if (!class_exists($tokenModel)) {
-                \Log::error('Sanctum token model class not found');
-                return response()->json([
-                    'message' => 'Authentication service error',
-                    'user' => null
-                ], 500);
-            }
-            
-            $accessToken = $tokenModel::findToken($token);
+            $accessToken = PersonalAccessToken::findToken($token);
 
             if (!$accessToken) {
                 \Log::warning('Token not found in database', [
