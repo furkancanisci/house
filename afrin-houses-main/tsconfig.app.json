@@ -36,7 +36,7 @@
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedSideEffectImports": false,
     /* Testing */
-    "types": ["jest", "node", "@testing-library/jest-dom"]
+    "types": ["jest", "node", "@testing-library/jest-dom", "vite/client"]
   },
   "include": [
     "src"

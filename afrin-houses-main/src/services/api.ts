@@ -1,6 +1,17 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosInstance } from 'axios';
 import { authService } from './authService';
 
+// Get API base URL from environment variable or use default
+const getApiBaseUrl = (): string => {
+  // For browser environments, we can access process.env
+  if (typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL) {
+    return process.env.VITE_API_BASE_URL;
+  }
+  
+  // Fallback to the production URL as requested
+  return 'https://house-6g6m.onrender.com/api/v1';
+};
+
 // Retry configuration
 interface RetryConfig {
   retries: number;
@@ -24,7 +35,7 @@ const calculateDelay = (attempt: number, baseDelay: number): number => {
 };
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:8000/api/v1',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -145,7 +156,7 @@ api.interceptors.response.use(
 // Function to refresh the access token
 const refreshToken = async (): Promise<string | null> => {
   try {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+    const baseURL = getApiBaseUrl();
     const response = await axios.post(
       `${baseURL}/auth/refresh`,
       {},
