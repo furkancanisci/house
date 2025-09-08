@@ -228,7 +228,7 @@ export const authService: AuthService = {
     try {
       
       // Let's log the full request details
-      const requestUrl = `${process.env?.VITE_API_BASE_URL || 'http://5.180.186.148/api/v1'}/dashboard/profile`;
+      const requestUrl = `${process.env?.VITE_API_BASE_URL || 'http://5.180.186.148:8080/api/v1'}/dashboard/profile`;
       console.log('Full request URL:', requestUrl);
       
       const response = await api.post('/dashboard/profile', userData);

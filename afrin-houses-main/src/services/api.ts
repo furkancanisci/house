@@ -9,7 +9,7 @@ const getApiBaseUrl = (): string => {
   }
   
   // Fallback to the production URL as requested
-  return 'http://5.180.186.148/api/v1';
+  return 'http://5.180.186.148:8080/api/v1';
 };
 
 // Retry configuration

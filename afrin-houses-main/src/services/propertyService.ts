@@ -2,7 +2,7 @@ import api from './api';
 
 // Utility function to fix image URLs with fallback support
 const fixImageUrl = (url: string | null | undefined | any, fallbackType?: string): string => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://5.180.186.148/';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://5.180.186.148:8080/';
   
   console.log('propertyService fixImageUrl - Input:', url, 'BaseUrl:', baseUrl);
   

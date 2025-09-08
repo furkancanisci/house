@@ -103,7 +103,7 @@ export const dashboardService = {
   // Update user profile
   async updateProfile(profileData: UserProfile): Promise<User> {
     try {
-      const response = await api.post('/profile', profileData, { baseURL: (import.meta.env.VITE_API_BASE_URL || 'http://5.180.186.148/api/v1').replace('/v1', '') });
+      const response = await api.post('/profile', profileData, { baseURL: (import.meta.env.VITE_API_BASE_URL || 'http://5.180.186.148:8080/api/v1').replace('/v1', '') });
       return response.data.user;
     } catch (error) {
       console.error('Error updating profile:', error);
