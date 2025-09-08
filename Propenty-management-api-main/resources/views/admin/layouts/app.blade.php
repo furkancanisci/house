@@ -145,107 +145,24 @@
 <!-- AdminLTE App -->
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 
+@if(app()->getLocale() === 'ar')
+<!-- RTL Sidebar Fix for Arabic -->
+<script src="{{ asset('js/rtl-sidebar-fix.js') }}"></script>
+@endif
+
 <script>
     // Set CSRF token for all AJAX requests
     $.ajaxSetup({
         headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
         }
     });
     
     @if(app()->getLocale() === 'ar')
-    // Enhanced RTL layout implementation for Arabic
+    // RTL mode is handled by rtl-sidebar-fix.js
+    // This is just for any additional customization if needed
     $(document).ready(function() {
-        // Force RTL class application
-        $('html').addClass('rtl-layout').attr('dir', 'rtl');
-        $('body').addClass('rtl-body rtl-layout');
-        
-        // Function to apply RTL sidebar positioning
-        function applyRTLSidebar() {
-            $('.main-sidebar').css({
-                'right': '0',
-                'left': 'auto',
-                'position': 'fixed',
-                'z-index': '1038'
-            });
-            
-            // Adjust content wrapper based on sidebar state
-            if ($('body').hasClass('sidebar-collapse')) {
-                $('.content-wrapper').css({
-                    'margin-right': '0',
-                    'margin-left': '0'
-                });
-            } else if ($('body').hasClass('sidebar-mini')) {
-                $('.content-wrapper').css({
-                    'margin-right': '4.6rem',
-                    'margin-left': '0'
-                });
-            } else {
-                $('.content-wrapper').css({
-                    'margin-right': '250px',
-                    'margin-left': '0'
-                });
-            }
-        }
-        
-        // Initial application
-        applyRTLSidebar();
-        
-        // Handle AdminLTE sidebar toggle with enhanced RTL support
-        $(document).off('click', '[data-widget="pushmenu"]');
-        $(document).on('click', '[data-widget="pushmenu"]', function(e) {
-            e.preventDefault();
-            
-            // Let AdminLTE handle the toggle first
-            setTimeout(function() {
-                // Then apply our RTL positioning
-                applyRTLSidebar();
-                
-                // For mobile, handle the overlay
-                if ($(window).width() <= 991) {
-                    if ($('body').hasClass('sidebar-open')) {
-                        $('.main-sidebar').css('transform', 'translateX(0)');
-                    } else {
-                        $('.main-sidebar').css('transform', 'translateX(100%)');
-                    }
-                }
-            }, 50);
-        });
-        
-        // Handle window resize for responsive behavior
-        $(window).on('resize', function() {
-            setTimeout(function() {
-                applyRTLSidebar();
-            }, 100);
-        });
-        
-        // Override AdminLTE layout fixes for RTL
-        if (typeof AdminLTE !== 'undefined') {
-            // Store original layout fix function
-            var originalLayoutFix = AdminLTE.Layout.fixLayoutHeight;
-            
-            // Override with RTL-aware version
-            AdminLTE.Layout.fixLayoutHeight = function(extra) {
-                originalLayoutFix.call(this, extra);
-                applyRTLSidebar();
-            };
-        }
-        
-        // Force RTL on navigation elements
-        $('.nav-sidebar .nav-link').css('text-align', 'right');
-        $('.nav-sidebar .nav-icon').css({
-            'float': 'right',
-            'margin-left': '0.5rem',
-            'margin-right': '0'
-        });
-        
-        // Enhanced mobile handling
-        if ($(window).width() <= 991) {
-            $('.main-sidebar').css({
-                'transform': $('body').hasClass('sidebar-open') ? 'translateX(0)' : 'translateX(100%)',
-                'transition': 'transform 0.3s ease-in-out'
-            });
-        }
+        console.log('Arabic RTL mode activated');
     });
     @endif
 </script>
