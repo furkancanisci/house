@@ -20,9 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://house-6g6m.onrender.com',
-        'https://house-1-3rtj.onrender.com',
-        'https://afrin-houses.vercel.app',
+        'http://5.180.186.148',
         'http://localhost:3000',
         'http://localhost:5173',
         'http://localhost:5174',
@@ -36,10 +34,6 @@ return [
         'http://127.0.0.1:5175',
         'http://127.0.0.1:5176',
         'http://127.0.0.1:5177',
-        // Production frontend URL
-        'https://house-1-3rtj.onrender.com',
-        // Backend URL (for internal requests)
-        'https://house-6g6m.onrender.com',
     ],
 
 

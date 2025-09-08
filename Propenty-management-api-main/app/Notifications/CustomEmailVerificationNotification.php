@@ -68,7 +68,7 @@ class CustomEmailVerificationNotification extends Notification implements Should
      */
     protected function verificationUrl($notifiable): string
     {
-        $baseUrl = config('app.frontend_url', 'https://house-6g6m.onrender.com');
+        $baseUrl = config('app.frontend_url', 'http://5.180.186.148');
         
         // Create encrypted payload with all verification data
         $payload = [

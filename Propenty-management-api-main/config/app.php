@@ -55,11 +55,11 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://house-6g6m.onrender.com'),
+    'url' => env('APP_URL', 'http://5.180.186.148'),
 
     'asset_url' => env('ASSET_URL'),
 
-    'frontend_url' => env('FRONTEND_URL', 'https://house-6g6m.onrender.com'),
+    'frontend_url' => env('FRONTEND_URL', 'http://5.180.186.148'),
 
     /*
     |--------------------------------------------------------------------------
