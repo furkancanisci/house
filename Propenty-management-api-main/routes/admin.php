@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,7 +44,18 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('admin.dashboard.stats');
     Route::get('/dashboard/charts', [DashboardController::class, 'charts'])->name('admin.dashboard.charts');
 
-    // Properties Management
+    // Profile Management
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('admin.profile.index');
+        Route::put('/', [ProfileController::class, 'update'])->name('admin.profile.update');
+        Route::get('/change-password', [ProfileController::class, 'showChangePassword'])->name('admin.profile.change-password');
+        Route::put('/change-password', [ProfileController::class, 'updatePassword'])->name('admin.profile.update-password');
+        Route::get('/settings', [ProfileController::class, 'settings'])->name('admin.profile.settings');
+        Route::put('/settings', [ProfileController::class, 'updateSettings'])->name('admin.profile.update-settings');
+        Route::delete('/account', [ProfileController::class, 'destroy'])->name('admin.profile.destroy');
+    });
+
+     // Properties Management
     Route::resource('properties', PropertyController::class)->names('admin.properties');
     Route::post('properties/bulk-action', [PropertyController::class, 'bulkAction'])->name('admin.properties.bulk');
     Route::post('properties/{property}/approve', [PropertyController::class, 'approve'])->name('admin.properties.approve');
