@@ -26,23 +26,28 @@ const fixImageUrl = (url: string | undefined | null | any, propertyId?: string |
       url.startsWith('https://') ||
       url.startsWith('data:') ||
       url.startsWith('/images/')) {
+    console.log('FixedImage fixImageUrl - URL already complete:', url);
     return url;
   }
   
+  // Get base URL from environment variable
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://5.180.186.148';
+  
   // Handle relative URLs from backend (e.g., /storage/media/...)
   if (url.startsWith('/storage/') || url.startsWith('/media/')) {
-    const fixedUrl = `http://localhost:8000${url}`;
+    const fixedUrl = `${baseUrl}${url}`;
     console.log('FixedImage fixImageUrl - Fixed relative URL:', url, '->', fixedUrl);
     return fixedUrl;
   }
   
   // If it looks like a valid URL path, assume it's from the backend
   if (url.startsWith('/') && !url.startsWith('/images/')) {
-    const fixedUrl = `http://localhost:8000${url}`;
+    const fixedUrl = `${baseUrl}${url}`;
     console.log('FixedImage fixImageUrl - Fixed path URL:', url, '->', fixedUrl);
     return fixedUrl;
   }
   
+  console.log('FixedImage fixImageUrl - Returning unchanged:', url);
   return url;
 };
 

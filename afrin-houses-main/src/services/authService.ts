@@ -226,11 +226,9 @@ export const authService: AuthService = {
   // Update user profile
   async updateUser(userData: Partial<User>): Promise<{ user: User; message: string }> {
     try {
-      console.log('Sending profile update data:', userData);
-      console.log('API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1');
       
       // Let's log the full request details
-      const requestUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1'}/dashboard/profile`;
+      const requestUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://5.180.186.148/api/v1'}/dashboard/profile`;
       console.log('Full request URL:', requestUrl);
       
       const response = await api.post('/dashboard/profile', userData);
