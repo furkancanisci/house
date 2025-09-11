@@ -11,6 +11,77 @@
         "login": "Têketin",
         "register": "Hesab Çêke"
     },
+    "about": {
+        "hero": {
+            "badge": "Hevkarê Te yê Pêbawer di Mîlkê de",
+            "title": "Derbarê Me",
+            "subtitle": "Hevkarê te yê pêbawer di dîtina mala bêkêmasî de. Em kirîyar, firoşkar û kirêgiran bi mîlkên kalîteyê û karûbarê taybetî ve girê didin.",
+            "contactUs": "Bi Me re Têkilî Daynin",
+            "viewProperties": "Mîlkan Bibîne"
+        },
+        "stats": {
+            "title": "Serkeftinên Me",
+            "subtitle": "Hejmar ku ji bo pabendbûna me ya li ser kalîteyê diaxivin",
+            "propertiesListed": "Mîlkên Hatine Lîstkirin",
+            "happyClients": "Xerîdarên Kîfxweş",
+            "successRate": "Rêjeya Serkeftinê",
+            "yearsExperience": "Salên Ezmûnê"
+        },
+        "values": {
+            "title": "Nirxên Me",
+            "subtitle": "Prensîbên ku her tiştê ku em dikin rêber dikin",
+            "trust": {
+                "title": "Pêbawer û Namusî",
+                "description": "Em pêwendiyên domdar ên li ser rastgoyî, zelalbûn û pêbaweriyê ava dikin."
+            },
+            "excellence": {
+                "title": "Kalîte",
+                "description": "Em ji bo her karûbarê ku ji xerîdarên xwe re pêşkêş dikin hewl didin ku bêkêmasî peyda bikin."
+            },
+            "care": {
+                "title": "Lêçûna Xerîdaran",
+                "description": "Razîbûna we pêşîna me ye. Em ji bo her xerîdarî zêdetir hewl didin."
+            },
+            "innovation": {
+                "title": "Nûbûn",
+                "description": "Em teknolojiyê qebûl dikin da ku çareseriyên nûjen ji bo hewcedariyên mîlkê peyda bikin."
+            }
+        },
+        "story": {
+            "badge": "Rêwîtiya Me",
+            "title": "Çîroka Me",
+            "paragraph1": "Di sala 2015-an de hatiye damezrandin, em bi dilsozî û pisporiyê karûbarê civakê dikin. Tîma me ya pisporan a bi ezmûn bazara herêmî fêm dike û ji bo gihîştina armancên we yên mîlkê pabend e.",
+            "paragraph2": "Gelo hûn mala xwe ya yekem dikirin, mîlkekê difiroşin, an jî vebijarkên kirêyê digerin, em karûbarê kesane ya li gorî hewcedariyên we yên taybetî pêşkêş dikin.",
+            "licensed": "Destûrdar û Bîmekirin",
+            "expertise": "Pisporiya Herêmî"
+        },
+        "team": {
+            "title": "Tîma Me Nas Bikin",
+            "subtitle": "Pisporan ên bi ezmûn ku ji bo serkeftina we terkîz in",
+            "ceo": {
+                "name": "Şêrko Hesen",
+                "role": "Serokê Giştî û Damezrîner",
+                "bio": "Bi zêdetirî 15 salan di warê mîlkê de, Şêrko tîma me bi dîtin û pisporiyê rêber dike."
+            },
+            "agent": {
+                "name": "Rojîn Mihemed",
+                "role": "Ajentê Mîlkê yê Bilind",
+                "bio": "Rojîn di mîlkên girantir de pispor e û sedan malbatan alîkarî kir ku malên xewnên xwe bibînin."
+            },
+            "manager": {
+                "name": "Welat Ehmed",
+                "role": "Rêveberê Mîlkan",
+                "bio": "Welat piştrast dike ku hemû mîlkên me li gorî standardên herî bilind ji xerîdarên me re têne parastin."
+            }
+        },
+        "cta": {
+            "title": "Amade ne ku mala xewnên xwe bibînin?",
+            "description": "Tîma me ya ajentên mîlkê yên bi ezmûn li vir in ku di her gavê de alîkariya we bikin.",
+            "contactButton": "Îro Bi Me re Têkilî Daynin",
+            "browseButton": "Mîlkan Bigerin"
+        }
+    },
+
     "location": {
         "state": "Dewat",
         "city": "Bajar",

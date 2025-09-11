@@ -475,6 +475,77 @@
       "content": "If you have any questions about these Terms of Service, please contact us at legal@example.com."
     }
   },
+  "about": {
+    "hero": {
+      "badge": "Your Trusted Real Estate Partner",
+      "title": "About Us",
+      "subtitle": "Your trusted partner in finding the perfect home. We connect buyers, sellers, and renters with quality properties and exceptional service.",
+      "contactUs": "Contact Us",
+      "viewProperties": "View Properties"
+    },
+    "stats": {
+      "title": "Our Achievements",
+      "subtitle": "Numbers that speak for our commitment to excellence",
+      "propertiesListed": "Properties Listed",
+      "happyClients": "Happy Clients",
+      "successRate": "Success Rate",
+      "yearsExperience": "Years Experience"
+    },
+    "values": {
+      "title": "Our Values",
+      "subtitle": "The principles that guide everything we do",
+      "trust": {
+        "title": "Trust & Integrity",
+        "description": "We build lasting relationships based on honesty, transparency, and reliability."
+      },
+      "excellence": {
+        "title": "Excellence",
+        "description": "We strive for perfection in every service we provide to our clients."
+      },
+      "care": {
+        "title": "Client Care",
+        "description": "Your satisfaction is our priority. We go above and beyond for every client."
+      },
+      "innovation": {
+        "title": "Innovation",
+        "description": "We embrace technology to provide modern solutions for real estate needs."
+      }
+    },
+    "story": {
+      "badge": "Our Journey",
+      "title": "Our Story",
+      "paragraph1": "Founded in 2015, we have been serving the community with dedication and expertise. Our team of experienced professionals understands the local market and is committed to helping you achieve your real estate goals.",
+      "paragraph2": "Whether you're buying your first home, selling a property, or looking for rental options, we provide personalized service tailored to your unique needs.",
+      "licensed": "Licensed & Insured",
+      "expertise": "Local Expertise"
+    },
+    "team": {
+      "title": "Meet Our Team",
+      "subtitle": "Experienced professionals dedicated to your success",
+      "ceo": {
+        "name": "John Doe",
+        "role": "CEO & Founder",
+        "bio": "With over 15 years in real estate, John leads our team with vision and expertise."
+      },
+      "agent": {
+        "name": "Jane Smith",
+        "role": "Senior Real Estate Agent",
+        "bio": "Jane specializes in luxury properties and has helped hundreds of families find their dream homes."
+      },
+      "manager": {
+        "name": "Mike Johnson",
+        "role": "Property Manager",
+        "bio": "Mike ensures all our properties are maintained to the highest standards for our clients."
+      }
+    },
+    "cta": {
+      "title": "Ready to find your dream home?",
+      "description": "Our team of experienced real estate agents is here to help you every step of the way.",
+      "contactButton": "Contact Us Today",
+      "browseButton": "Browse Properties"
+    }
+  },
+
   "cookiePolicy": {
     "title": "Cookie Policy",
     "lastUpdated": "Last Updated: August 2023",
