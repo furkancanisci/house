@@ -32,10 +32,13 @@
       "yearsExperience": "Years Experience",
       "totalProperties": "Total Properties",
       "activeSales": "Active Sales",
-      "rentalsAvailable": "Rentals Available"
+      "rentalsAvailable": "Rentals Available",
+      "sectionTitle": "Why Choose Our Platform",
+      "sectionSubtitle": "Trusted by thousands of property seekers and agents across the region"
     },
     "quickSearches": {
-      "title": "Quick Searches",
+      "title": "Popular Searches",
+      "subtitle": "Find your ideal property with these trending searches",
       "downtownApartments": "Downtown Apartments",
       "familyHomes": "Family Homes",
       "luxuryCondos": "Luxury Condos",
@@ -45,6 +48,27 @@
       "modernApartments": "Modern Apartments",
       "villaForRent": "Villa for Rent",
       "affordableHomes": "Affordable Homes"
+    },
+    "sections": {
+      "featured": "Featured Properties",
+      "recommended": "Recommended for You",
+      "trending": "Trending Now",
+      "popularChoices": "Popular Choices",
+      "featuredSubtitle": "Handpicked premium properties that stand out from the rest",
+      "recommendedSubtitle": "Properties matching your preferences and search history",
+      "trendingSubtitle": "Most viewed and inquired properties this week",
+      "popularChoicesSubtitle": "Top-rated properties loved by our community",
+      "rentalProperties": "Rental Properties",
+      "propertiesForSale": "Properties for Sale",
+      "trendingProperties": "Trending Properties",
+      "viewAll": "View All",
+      "loading": "Loading properties...",
+      "error": "Error loading properties",
+      "noProperties": "No properties found",
+      "forRent": "Properties for Rent",
+      "forSale": "Properties for Sale",
+      "loadingMessage": "Loading properties...",
+      "errorMessage": "Error loading properties"
     },
     "featuredProperties": "Featured Properties",
     "viewAll": "View All",
@@ -73,7 +97,30 @@
     "seeMore": "See More",
     "seeLess": "See Less",
     "popularAreas": "Popular Areas",
-    "recentlyViewed": "Recently Viewed Properties"
+    "recentlyViewed": "Recently Viewed Properties",
+    "listings": {
+      "sectionTitle": "Discover Premium Properties",
+      "sectionSubtitle": "Explore our carefully curated selection of exceptional properties, from luxury apartments to family homes",
+      "viewRentals": "View Rentals",
+      "viewSales": "View Sales"
+    },
+    "features": {
+      "sectionTitle": "Why Choose Our Platform",
+      "sectionSubtitle": "Experience the future of real estate with our advanced features designed for modern property seekers",
+      "smartSearch": {
+        "title": "Smart Search",
+        "description": "Advanced AI-powered search that understands your preferences and finds the perfect match"
+      },
+      "mapView": {
+        "title": "Interactive Map",
+        "description": "Explore properties with our interactive map featuring neighborhoods, amenities, and transport links"
+      },
+      "verifiedListings": {
+        "title": "Verified Listings",
+        "description": "All properties are verified by our team to ensure accuracy and authenticity"
+      },
+      "learnMore": "Learn More About Us"
+    }
   },
   "search": {
     "title": "Search Results",
@@ -490,6 +537,7 @@
   },
   "common": {
     "currency": "SYR",
+    "comingSoon": "Coming Soon",
     "loading": "Loading...",
     "backToSearch": "Back to Search",
     "backToHome": "Back to Home",

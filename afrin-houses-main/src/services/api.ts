@@ -8,8 +8,8 @@ const getApiBaseUrl = (): string => {
     return process.env.VITE_API_BASE_URL;
   }
   
-  // Fallback to the production URL as requested
-  return 'http://5.180.186.148:8080/api/v1';
+  // Always use the direct API URL (CORS must be configured on server)
+  return 'https://besttrend-sy.com/api/v1';
 };
 
 // Retry configuration

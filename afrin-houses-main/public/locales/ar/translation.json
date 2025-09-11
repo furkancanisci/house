@@ -32,10 +32,13 @@
       "yearsExperience": "سنوات الخبرة",
       "totalProperties": "إجمالي العقارات",
       "activeSales": "مبيعات نشطة",
-      "rentalsAvailable": "عقارات للإيجار"
+      "rentalsAvailable": "عقارات للإيجار",
+      "sectionTitle": "لماذا تختار منصتنا",
+      "sectionSubtitle": "موثوق من قبل آلاف الباحثين عن العقارات والوكلاء في المنطقة"
     },
     "quickSearches": {
-      "title": "بحث سريع",
+      "title": "البحثات الشائعة",
+      "subtitle": "ابحث عن عقارك المثالي مع هذه البحثات الرائجة",
       "downtownApartments": "شقق وسط المدينة",
       "familyHomes": "منازل عائلية",
       "luxuryCondos": "شقق فاخرة",
@@ -45,6 +48,28 @@
       "modernApartments": "شقق عصرية",
       "villaForRent": "فيلا للإيجار",
       "affordableHomes": "منازل بأسعار معقولة"
+    },
+    "sections": {
+      "featured": "العقارات المميزة",
+      "recommended": "موصى به لك",
+      "trending": "الأكثر رواجاً",
+      "popularChoices": "الاختيارات الشعبية",
+      "featuredSubtitle": "عقارات مميزة مختارة بعناية تتميز عن البقية",
+      "recommendedSubtitle": "عقارات تتناسب مع تفضيلاتك وسجل بحثك",
+      "trendingSubtitle": "العقارات الأكثر مشاهدة واستفساراً هذا الأسبوع",
+      "popularChoicesSubtitle": "العقارات الأعلى تقييماً التي يحبها مجتمعنا",
+      "rentalProperties": "عقارات للإيجار",
+      "propertiesForSale": "عقارات للبيع",
+      "trendingProperties": "العقارات الرائجة",
+      "viewAll": "عرض الكل",
+      "loading": "جاري تحميل العقارات...",
+      "error": "خطأ في تحميل العقارات",
+      "noProperties": "لم يتم العثور على عقارات",
+      "forRent": "عقارات للإيجار",
+      "forSale": "عقارات للبيع",
+      "loadingMessage": "جاري تحميل العقارات...",
+      "errorMessage": "خطأ في تحميل العقارات",
+      "newListings": "عقارات جديدة"
     },
     "featuredProperties": "عقارات مميزة",
     "viewAll": "عرض الكل",
@@ -57,15 +82,6 @@
       "swimmingPool": "مسبح",
       "garageParking": "موقف سيارات مغطى"
     },
-    "sections": {
-      "forRent": "عقارات للإيجار",
-      "forSale": "عقارات للبيع",
-      "trending": "العقارات الرائجة",
-      "recommended": "العقارات الموصى بها",
-      "newListings": "عقارات جديدة",
-      "popularChoices": "الخيارات الشعبية",
-      "featured": "العقارات المميزة"
-    },
     "browseAll": "تصفح جميع العقارات",
     "loading": "جاري التحميل...",
     "errorLoading": "خطأ في تحميل العقارات",
@@ -73,7 +89,30 @@
     "seeMore": "شاهد المزيد",
     "seeLess": "شاهد أقل",
     "popularAreas": "المناطق الشعبية",
-    "recentlyViewed": "عقارات معروضة مؤخراً"
+    "recentlyViewed": "عقارات معروضة مؤخراً",
+    "listings": {
+      "sectionTitle": "اكتشف العقارات المميزة",
+      "sectionSubtitle": "استكشف مجموعتنا المختارة بعناية من العقارات الاستثنائية، من الشقق الفاخرة إلى المنازل العائلية",
+      "viewRentals": "عرض الإيجارات",
+      "viewSales": "عرض المبيعات"
+    },
+    "features": {
+      "sectionTitle": "لماذا تختار منصتنا",
+      "sectionSubtitle": "اختبر مستقبل العقارات مع ميزاتنا المتقدمة المصممة للباحثين العصريين عن العقارات",
+      "smartSearch": {
+        "title": "البحث الذكي",
+        "description": "بحث متقدم مدعوم بالذكاء الاصطناعي يفهم تفضيلاتك ويجد التطابق المثالي"
+      },
+      "mapView": {
+        "title": "خريطة تفاعلية",
+        "description": "استكشف العقارات من خلال خريطتنا التفاعلية التي تعرض الأحياء والمرافق وروابط النقل"
+      },
+      "verifiedListings": {
+        "title": "عقارات موثقة",
+        "description": "جميع العقارات موثقة من قبل فريقنا لضمان الدقة والأصالة"
+      },
+      "learnMore": "تعرف علينا أكثر"
+    }
   },
   "search": {
     "title": "نتائج البحث",
@@ -541,6 +580,7 @@
   "common": {
     "understood": "تمام",
     "currency": "SYR",
+    "comingSoon": "قريباً",
     "loading": "جاري التحميل...",
     "backToSearch": "عودة إلى البحث",
     "backToHome": "العودة إلى الرئيسية",

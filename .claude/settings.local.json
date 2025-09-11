@@ -8,7 +8,9 @@
       "Bash(composer:*)",
       "Bash(php:*)",
       "Bash(where psql)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(node:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
