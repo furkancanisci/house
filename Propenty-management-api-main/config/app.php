@@ -55,11 +55,11 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://5.180.186.148:8080'),
+    'url' => env('APP_URL', 'https://besttrend-sy.com'),
 
     'asset_url' => env('ASSET_URL'),
 
-    'frontend_url' => env('FRONTEND_URL', 'http://5.180.186.148:8080'),
+    'frontend_url' => env('FRONTEND_URL', 'https://besttrend-sy.com'),
 
     /*
     |--------------------------------------------------------------------------
