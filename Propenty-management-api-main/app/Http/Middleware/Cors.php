@@ -18,8 +18,7 @@ class Cors
     public function handle($request, Closure $next)
     {
         $allowedOrigins = [
-            'http://5.180.186.148',
-            'http://5.180.186.148:8080',
+            env('FRONTEND_URL', 'https://besttrend-sy.com'),
             'http://localhost:5173',
             'http://localhost:5174',
             'http://localhost:3000',
