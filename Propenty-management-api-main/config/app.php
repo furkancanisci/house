@@ -55,7 +55,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://besttrend-sy.com'),
+    'url' => env('APP_URL', 'https://api.besttrend-sy.com'),
 
     'asset_url' => env('ASSET_URL'),
 
