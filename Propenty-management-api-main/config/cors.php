@@ -20,16 +20,6 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://5.180.186.148',
-        'http://5.180.186.148:3000',
-        'http://5.180.186.148:5173',
-        'http://5.180.186.148:5174',
-        'http://5.180.186.148:5175',
-        'http://5.180.186.148:5176',
-        'http://5.180.186.148:5177',
-        'http://5.180.186.148:8000',
-        'http://5.180.186.148:8080',
-        'http://5.180.186.148:80',
         'http://localhost:3000',
         'http://localhost:5173',
         'http://localhost:5174',
@@ -46,10 +36,7 @@ return [
     ],
 
 
-    'allowed_origins_patterns' => [
-        '/^http:\/\/5\.180\.186\.148(:\d+)?$/',
-        '/^https:\/\/5\.180\.186\.148(:\d+)?$/',
-    ],
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
