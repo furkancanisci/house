@@ -142,7 +142,7 @@ const ApiTestComponent: React.FC = () => {
       )}
 
       <div className="mt-6 text-sm text-gray-600">
-        <p><strong>API Base URL:</strong> {import.meta.env.VITE_API_BASE_URL || 'https://house-6g6m.onrender.com/api/v1'}</p>
+        <p><strong>API Base URL:</strong> {import.meta.env.VITE_API_BASE_URL || 'https://besttrend-sy.com/api/v1'}</p>
         <p><strong>Note:</strong> Make sure the Laravel API server is running on port 8000</p>
         <p><strong>Start Laravel:</strong> <code>php artisan serve</code></p>
       </div>

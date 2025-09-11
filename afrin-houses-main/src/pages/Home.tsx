@@ -28,6 +28,7 @@ import rightBottomOrnament from '../assets/right_bottom_bb.png';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [rentalProperties, setRentalProperties] = useState<Property[]>([]);
   const [saleProperties, setSaleProperties] = useState<Property[]>([]);
@@ -45,7 +46,6 @@ const Home: React.FC = () => {
     bedrooms: undefined,
     bathrooms: undefined
   });
-  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchPropertiesByCategory = async () => {
@@ -300,9 +300,15 @@ const Home: React.FC = () => {
     }, []);
 
     const rowTitles = [
-      featuredProperties.length > 0 ? t('home.sections.featured') : t('home.sections.recommended'),
-      t('home.sections.trending'), 
-      t('home.sections.popularChoices')
+      featuredProperties.length > 0 ? (t('home.sections.featured') || 'Featured Properties') : (t('home.sections.recommended') || 'Recommended for You'),
+      t('home.sections.trending') || 'Trending Now', 
+      t('home.sections.popularChoices') || 'Popular Choices'
+    ];
+    
+    const rowSubtitles = [
+      featuredProperties.length > 0 ? t('home.sections.featuredSubtitle') : t('home.sections.recommendedSubtitle'),
+      t('home.sections.trendingSubtitle'),
+      t('home.sections.popularChoicesSubtitle')
     ];
     const rowIcons = [HomeIcon, TrendingUp, Award];
     const rowColors = ['text-primary-600', 'text-primary-700', 'text-primary-800'];
@@ -311,16 +317,23 @@ const Home: React.FC = () => {
       <div className="space-y-12">
         {rows.map((rowProperties, rowIndex) => (
           <div key={rowIndex} className="">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center">
-                {React.createElement(rowIcons[rowIndex], { 
-                  className: `h-6 w-6 ${rowColors[rowIndex]} mr-2` 
-                })}
-                <h3 className="text-xl font-semibold text-gray-900">{rowTitles[rowIndex]}</h3>
+            <div className="mb-8">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center">
+                  <div className={`p-2 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 mr-3`}>
+                    {React.createElement(rowIcons[rowIndex], { 
+                      className: `h-6 w-6 ${rowColors[rowIndex]}` 
+                    })}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">{rowTitles[rowIndex]}</h3>
+                    <p className="text-gray-600 text-sm mt-1">{rowSubtitles[rowIndex]}</p>
+                  </div>
+                </div>
+                <Link to="/search" className={`${rowColors[rowIndex]} hover:opacity-80 hover:underline flex items-center text-sm font-medium px-4 py-2 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors`}>
+                  {t('common.viewAll') || 'View All'} <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
               </div>
-              <Link to="/search" className={`${rowColors[rowIndex]} hover:opacity-80 hover:underline flex items-center text-sm`}>
-                {t('common.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
             </div>
             
             <div className="relative group">
@@ -413,10 +426,10 @@ const Home: React.FC = () => {
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="hero-title text-4xl md:text-6xl font-bold mb-6">
             {t('home.hero.title')}
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+          <p className="hero-subtitle text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
             {t('home.hero.subtitle')}
           </p>
           
@@ -432,7 +445,7 @@ const Home: React.FC = () => {
                   onKeyPress={handleKeyPress}
                   className="flex-grow"
                 />
-                <Button onClick={handleSearch} className="ms-2">
+                <Button onClick={handleSearch} className="ms-2 professional-button focus-enhanced">
                   <Search className="h-4 w-4 mr-2" />
                   {t('home.hero.searchButton')}
                 </Button>
@@ -440,7 +453,7 @@ const Home: React.FC = () => {
               <Button 
                 onClick={() => navigate('/search/map')}
                 variant="outline"
-                className="bg-white border-primary-600 text-primary-600 hover:bg-primary-50"
+                className="bg-white border-primary-600 text-primary-600 hover:bg-primary-50 professional-button focus-enhanced"
               >
                 <MapPin className="h-4 w-4 mr-2" />
                 {t('home.hero.searchByMap')}
@@ -453,14 +466,25 @@ const Home: React.FC = () => {
       {/* Map Search View moved to separate page /search/map */}
 
       {/* Stats Section */}
-      <section className="py-12 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="stats-section py-16 bg-gradient-to-br from-primary-50 to-primary-100 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/5 to-primary-800/5"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="section-title text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              {t('home.stats.sectionTitle') || 'Why Choose Our Platform'}
+            </h2>
+            <p className="section-subtitle text-xl text-gray-600 max-w-3xl mx-auto">
+              {t('home.stats.sectionSubtitle') || 'Trusted by thousands of property seekers and agents across the region'}
+            </p>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center p-4 bg-white rounded-lg shadow">
-                <stat.icon className={`h-8 w-8 mx-auto mb-2 ${stat.color}`} />
-                <h3 className="text-2xl font-bold">{stat.number}</h3>
-                <p className="text-gray-600">{stat.label}</p>
+              <div key={index} className="stats-card enhanced-card text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-primary-100">
+                <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <stat.icon className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</h3>
+                <p className="text-gray-600 font-medium">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -468,8 +492,30 @@ const Home: React.FC = () => {
       </section>
 
       {/* Premium Listings */}
-      <section className="py-12">
+      <section className="py-16 bg-gradient-to-b from-white to-primary-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              {t('home.listings.sectionTitle') || 'Discover Premium Properties'}
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+              {t('home.listings.sectionSubtitle') || 'Explore our carefully curated selection of exceptional properties, from luxury apartments to family homes'}
+            </p>
+            <div className="flex justify-center space-x-4 mb-8">
+              <Link 
+                to="/houses-for-rent" 
+                className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                {t('home.listings.viewRentals') || 'View Rentals'}
+              </Link>
+              <Link 
+                to="/houses-for-sale" 
+                className="px-6 py-3 bg-gradient-to-r from-primary-700 to-primary-800 text-white rounded-lg hover:from-primary-800 hover:to-primary-900 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                {t('home.listings.viewSales') || 'View Sales'}
+              </Link>
+            </div>
+          </div>
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -498,11 +544,16 @@ const Home: React.FC = () => {
           )}
 
           {/* Quick Search Tags */}
-          <div className="mt-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              {t('home.quickSearches.title')}
-            </h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-16 bg-gradient-to-r from-primary-600/10 to-primary-800/10 rounded-xl p-8">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                {t('home.quickSearches.title') || 'Popular Searches'}
+              </h3>
+              <p className="text-gray-600">
+                {t('home.quickSearches.subtitle') || 'Find your ideal property with these trending searches'}
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3">
               {quickSearches.map((term, index) => (
                 <button
                   key={index}
@@ -510,12 +561,78 @@ const Home: React.FC = () => {
                     setSearchQuery(term);
                     navigate(`/search?q=${encodeURIComponent(term)}`);
                   }}
-                  className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="px-6 py-3 bg-white border-2 border-primary-200 rounded-full text-sm font-medium hover:bg-primary-50 hover:border-primary-300 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 text-gray-700 hover:text-primary-700"
                 >
                   {term}
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-gradient-to-br from-primary-600 to-primary-800 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black opacity-10"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              {t('home.features.sectionTitle') || 'Why Choose Our Platform'}
+            </h2>
+            <p className="text-xl opacity-90 max-w-3xl mx-auto">
+              {t('home.features.sectionSubtitle') || 'Experience the future of real estate with our advanced features designed for modern property seekers'}
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="relative text-center p-6 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/15 transition-all duration-300">
+              <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-xs font-bold text-white px-3 py-1 rounded-full shadow-lg">
+                {t('common.comingSoon') || 'Coming Soon'}
+              </div>
+              <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
+                <Search className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">
+                {t('home.features.smartSearch.title') || 'Smart Search'}
+              </h3>
+              <p className="opacity-90">
+                {t('home.features.smartSearch.description') || 'Advanced AI-powered search that understands your preferences and finds the perfect match'}
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/15 transition-all duration-300">
+              <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
+                <MapPin className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">
+                {t('home.features.mapView.title') || 'Interactive Map'}
+              </h3>
+              <p className="opacity-90">
+                {t('home.features.mapView.description') || 'Explore properties with our interactive map featuring neighborhoods, amenities, and transport links'}
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/15 transition-all duration-300">
+              <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
+                <Award className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">
+                {t('home.features.verifiedListings.title') || 'Verified Listings'}
+              </h3>
+              <p className="opacity-90">
+                {t('home.features.verifiedListings.description') || 'All properties are verified by our team to ensure accuracy and authenticity'}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link 
+              to="/about" 
+              className="inline-flex items-center px-8 py-4 bg-white text-primary-700 rounded-lg font-semibold hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              {t('home.features.learnMore') || 'Learn More About Us'}
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Link>
           </div>
         </div>
       </section>

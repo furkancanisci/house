@@ -36,22 +36,58 @@
             "yearsExperience": "Salên Ezmûnê",
             "totalProperties": "Tevahiya Mîlkan",
             "activeSales": "Firotinên Çalak",
-            "rentalsAvailable": "Kireyên Amade"
+            "rentalsAvailable": "Kireyên Amade",
+            "sectionTitle": "Çima Platforma Me Hilbijêrî?",
+            "sectionSubtitle": "Ji alîyê hezaran lêgerêrên mîlkê û ajentên di navçeyê de pêbawer"
         },
         "quickSearches": {
-            "title": "Lêgerînên Bilez",
+            "title": "Lêgerînên Popular",
+            "subtitle": "Mîlka xwe ya îdeal bi van lêgerînên populer bibîne",
             "downtownApartments": "Apartmanên Navenda Bajêr",
             "familyHomes": "Malên Malbatê",
             "luxuryCondos": "Kondoên Girantir",
             "petFriendly": "Ji bo Heywanên Malê",
-            "swimmingPool": "Hewz",
-            "garageParking": "Garaj"
+            "swimmingPool": "Hewz"
         },
         "sections": {
+            "featured": "Mîlkên Taybetî",
+            "recommended": "Ji bo Te Pêşniyar",
+            "trending": "Yên Herî Populer",
+            "popularChoices": "Hilbijartinên Populer",
+            "featuredSubtitle": "Mîlkên taybetî yên bi baldarî hatine hilbijartin",
+            "recommendedSubtitle": "Mîlkên li gorî tercîh û dîroka lêgerîna te",
+            "trendingSubtitle": "Mîlkên herî zêde hatine dîtin û pirsîn vê hefteyê",
+            "popularChoicesSubtitle": "Mîlkên herî başhatî nirxandin ku civaka me jê hez dike",
+            "rentalProperties": "Mîlkên bo Kirê",
+            "propertiesForSale": "Mîlkên bo Firotinê",
+            "trendingProperties": "Mîlkên Populer",
+            "viewAll": "Hemûyan Bibîne",
+            "loading": "Mîlk tên barkirin...",
+            "error": "Xelet di barkirina mîlkan de",
+            "noProperties": "Tu mîlk nehat dîtin",
+            "forRent": "Mîlkên bo Kirê",
+            "forSale": "Mîlkên bo Firotinê",
+            "loadingMessage": "Mîlk tên barkirin...",
+            "errorMessage": "Xelet di barkirina mîlkan de"
+        },
+        "sections": {
+            "featured": "Mîlkên Taybetî",
+            "recommended": "Ji bo Te Pêşniyar",
+            "trending": "Yên Herî Populer",
+            "popularChoices": "Hilbijartinên Populer",
+            "featuredSubtitle": "Mîlkên taybetî yên bi baldarî hatine hilbijartin",
+            "recommendedSubtitle": "Mîlkên li gorî tercîh û dîroka lêgerîna te",
+            "trendingSubtitle": "Mîlkên herî zêde hatine dîtin û pirsîn vê hefteyê",
+            "popularChoicesSubtitle": "Mîlkên herî başhatî nirxandin ku civaka me jê hez dike",
+            "rentalProperties": "Mîlkên bo Kirê",
+            "propertiesForSale": "Mîlkên bo Firotinê",
+            "trendingProperties": "Mîlkên Populer",
+            "viewAll": "Hemûyan Bibîne",
+            "loading": "Mîlk tên barkirin...",
+            "error": "Xelet di barkirina mîlkan de",
+            "noProperties": "Tu mîlk nehat dîtin",
             "forRent": "Ji bo Kirê",
             "forSale": "Ji bo Firotinê",
-            "trending": "Mîlkên Popular",
-            "recommended": "Mîlkên Pêşniyarkî",
             "newListings": "Lîstikên Nû",
             "popularChoices": "Hilbijartinên Popular"
         },
@@ -62,7 +98,30 @@
         "seeMore": "Bêtir Bibîne",
         "seeLess": "Kêmtir Bibîne",
         "popularAreas": "Herêmên Popular",
-        "recentlyViewed": "Di Demê de Dîtî"
+        "recentlyViewed": "Di Demê de Dîtî",
+        "listings": {
+            "sectionTitle": "Mîlkên Taybetî Vedîne",
+            "sectionSubtitle": "Koleksîyona me ya bi baldarî hatî hilbijartin a mîlkên taybet vedîne, ji apartmanên giran heya malên malbatê",
+            "viewRentals": "Kireyên Bibîne",
+            "viewSales": "Firotinên Bibîne"
+        },
+        "features": {
+            "sectionTitle": "Çima Platforma Me Hilbijêrî?",
+            "sectionSubtitle": "Pêşerojîya mîlkê bi taybetmendiyên me yên pêşkeftî yên ji bo lêgerêrên mîlkê yên modern vedîne",
+            "smartSearch": {
+                "title": "Lêgerîna Zîrek",
+                "description": "Lêgerîna pêşkeftî ya bi hişmendiya çêkî destekkirî ku tercîhên te fêm dike û hevbeşbûna bêkêmasî dibîne"
+            },
+            "mapView": {
+                "title": "Nexşeya Înteraktîf",
+                "description": "Mîlkan bi nexşeya me ya înteraktîf a ku xanî, kargeh û girêdanên veguhestinê nîşan dide vedîne"
+            },
+            "verifiedListings": {
+                "title": "Lîstekirinên Pejirandî",
+                "description": "Hemû mîlk ji alîyê tîma me ve hatine pejirandin ji bo pêbawerbûn û rastbûnê misoger bikin"
+            },
+            "learnMore": "Der barê Me de Zêdetir Bizane"
+        }
     },
     "search": {
         "title": "Encamên Lêgerînê",
@@ -199,6 +258,7 @@
     },
     "common": {
         "currency": "SYR",
+        "comingSoon": "Nêzîk e",
         "loading": "Tê barkirin...",
         "backToSearch": "Vegere Lêgerînê",
         "backToHome": "Vegere Serrûpelê",

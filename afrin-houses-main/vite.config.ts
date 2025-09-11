@@ -9,5 +9,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Proxy removed - using direct API calls (CORS must be configured on server)
 })
 
