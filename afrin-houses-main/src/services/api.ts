@@ -9,7 +9,7 @@ const getApiBaseUrl = (): string => {
   }
   
   // Always use the direct API URL (CORS must be configured on server)
-  return 'https://besttrend-sy.com/api/v1';
+  return 'https://api.besttrend-sy.com/api/v1';
 };
 
 // Retry configuration

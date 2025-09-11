@@ -31,7 +31,7 @@ const fixImageUrl = (url: string | undefined | null | any, propertyId?: string |
   }
   
   // Get base URL from environment variable
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://besttrend-sy.com';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://api.besttrend-sy.com';
   
   // Handle relative URLs from backend (e.g., /storage/media/...)
   if (url.startsWith('/storage/') || url.startsWith('/media/')) {
