@@ -20,6 +20,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'https://besttrend-sy.com',
+        'https://www.besttrend-sy.com',
         'http://localhost:3000',
         'http://localhost:5173',
         'http://localhost:5174',

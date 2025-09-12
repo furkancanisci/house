@@ -19,6 +19,7 @@ class Cors
     {
         $allowedOrigins = [
             env('FRONTEND_URL', 'https://besttrend-sy.com'),
+            'https://www.besttrend-sy.com',
             'http://localhost:5173',
             'http://localhost:5174',
             'http://localhost:3000',
@@ -31,7 +32,6 @@ class Cors
             'http://127.0.0.1:5175',
             'http://127.0.0.1:5176',
             'http://127.0.0.1:5177',
-            'https://afrin-houses.vercel.app'
         ];
 
         $origin = $request->header('Origin');
