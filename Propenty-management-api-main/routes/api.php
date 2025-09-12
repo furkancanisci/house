@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\PropertyController;
 use App\Http\Controllers\Api\PropertyDocumentTypeController;
 use App\Http\Controllers\Api\SearchController;
@@ -192,6 +193,22 @@ Route::prefix('v1')->group(function () {
         Route::post('/upload-base64', [ImageUploadController::class, 'uploadBase64Image']);
         Route::delete('/delete', [ImageUploadController::class, 'deleteImage']);
         Route::get('/info', [ImageUploadController::class, 'getImageInfo']);
+    });
+
+    // Contact Routes
+    Route::prefix('contact')->group(function () {
+        // Public routes
+        Route::post('/submit', [ContactController::class, 'store']);
+        Route::get('/settings', [ContactController::class, 'getSettings']);
+        
+        // Admin routes for managing contact messages  
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('/messages', [ContactController::class, 'index']);
+            Route::get('/messages/{contactMessage}', [ContactController::class, 'show']);
+            Route::patch('/messages/{contactMessage}/mark-spam', [ContactController::class, 'markAsSpam']);
+            Route::patch('/messages/{contactMessage}/mark-read', [ContactController::class, 'markAsRead']);
+            Route::delete('/messages/{contactMessage}', [ContactController::class, 'destroy']);
+        });
     });
 });
 

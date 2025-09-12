@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\PropertyController;
@@ -113,6 +114,18 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::post('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('admin.leads.status');
     Route::post('leads/{lead}/notes', [LeadController::class, 'addNote'])->name('admin.leads.notes');
     Route::get('leads/export/csv', [LeadController::class, 'exportCsv'])->name('admin.leads.export');
+
+    // Contact Messages
+    Route::prefix('contact')->group(function () {
+        Route::get('/', [ContactMessageController::class, 'index'])->name('admin.contact.index');
+        Route::get('/settings', [ContactMessageController::class, 'settings'])->name('admin.contact.settings');
+        Route::post('/settings', [ContactMessageController::class, 'updateSettings'])->name('admin.contact.settings.update');
+        Route::get('/{contactMessage}', [ContactMessageController::class, 'show'])->name('admin.contact.show');
+        Route::patch('/{contactMessage}/mark-spam', [ContactMessageController::class, 'markAsSpam'])->name('admin.contact.mark-spam');
+        Route::patch('/{contactMessage}/mark-read', [ContactMessageController::class, 'markAsRead'])->name('admin.contact.mark-read');
+        Route::delete('/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('admin.contact.destroy');
+        Route::post('/bulk-action', [ContactMessageController::class, 'bulkAction'])->name('admin.contact.bulk-action');
+    });
 
     // Media Library
     Route::get('media', [MediaController::class, 'index'])->name('admin.media.index');

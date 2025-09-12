@@ -213,4 +213,27 @@ return [
     'new_leads' => 'new lead(s)',
     'pending_properties' => 'pending properties',
     'review' => 'Review',
+    
+    // Contact Messages
+    'contact_messages' => 'Contact Messages',
+    'contact_settings' => 'Contact Settings',
+    'contact_settings_info' => 'Contact Settings Information',
+    'contact_settings_description' => 'These settings control the contact information displayed on your website\'s contact page. Changes will be reflected immediately on the frontend.',
+    'edit_contact_settings' => 'Edit Contact Settings',
+    'save_settings' => 'Save Settings',
+    'back_to_messages' => 'Back to Messages',
+    'required_fields_note' => 'Fields marked with * are required',
+    'contact_preview' => 'Contact Information Preview',
+    'current_contact_info' => 'Current Contact Information',
+    'social_links' => 'Social Media & Additional Links',
+    'no_social_links' => 'No social media links configured yet.',
+    'business_hours' => 'Business Hours',
+    'website' => 'Website',
+    
+    // Contact form
+    'message_sent_success' => 'Thank you! Your message has been sent successfully.',
+    'message_marked_spam' => 'Message marked as spam successfully.',
+    'message_marked_read' => 'Message marked as read successfully.',
+    'message_deleted' => 'Message deleted successfully.',
+    'messages_bulk_action' => 'Messages updated successfully.',
 ];

@@ -171,6 +171,22 @@
                 </li>
                 @endcan
 
+                <!-- Contact Messages -->
+                <li class="nav-item">
+                    <a href="{{ route('admin.contact.index') }}" class="nav-link {{ request()->routeIs('admin.contact*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-envelope"></i>
+                        <p>
+                            {{ __('admin.contact_messages') ?? 'Contact Messages' }}
+                            @php
+                                $unreadCount = \App\Models\ContactMessage::where('is_read', false)->where('is_spam', false)->count();
+                            @endphp
+                            @if($unreadCount > 0)
+                                <span class="badge badge-primary right">{{ $unreadCount }}</span>
+                            @endif
+                        </p>
+                    </a>
+                </li>
+
                 <!-- Media -->
                 @can('view media')
                 <li class="nav-header">{{ strtoupper(__('admin.content_management')) }}</li>

@@ -211,4 +211,27 @@ return [
     'new_leads' => 'عميل محتمل جديد',
     'pending_properties' => 'عقارات في الانتظار',
     'review' => 'مراجعة',
+    
+    // Contact Messages
+    'contact_messages' => 'رسائل الاتصال',
+    'contact_settings' => 'إعدادات الاتصال',
+    'contact_settings_info' => 'معلومات إعدادات الاتصال',
+    'contact_settings_description' => 'هذه الإعدادات تتحكم في معلومات الاتصال المعروضة على صفحة الاتصال في موقعك الإلكتروني. ستنعكس التغييرات فوراً على الواجهة الأمامية.',
+    'edit_contact_settings' => 'تعديل إعدادات الاتصال',
+    'save_settings' => 'حفظ الإعدادات',
+    'back_to_messages' => 'العودة إلى الرسائل',
+    'required_fields_note' => 'الحقول المميزة بـ * مطلوبة',
+    'contact_preview' => 'معاينة معلومات الاتصال',
+    'current_contact_info' => 'معلومات الاتصال الحالية',
+    'social_links' => 'وسائل التواصل الاجتماعي والروابط الإضافية',
+    'no_social_links' => 'لم يتم تكوين روابط وسائل التواصل الاجتماعي بعد.',
+    'business_hours' => 'ساعات العمل',
+    'website' => 'الموقع الإلكتروني',
+    
+    // Contact form
+    'message_sent_success' => 'شكراً لك! تم إرسال رسالتك بنجاح.',
+    'message_marked_spam' => 'تم وضع علامة على الرسالة كرسالة عشوائية بنجاح.',
+    'message_marked_read' => 'تم وضع علامة على الرسالة كمقروءة بنجاح.',
+    'message_deleted' => 'تم حذف الرسالة بنجاح.',
+    'messages_bulk_action' => 'تم تحديث الرسائل بنجاح.',
 ];

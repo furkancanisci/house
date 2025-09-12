@@ -124,25 +124,8 @@
                     <!-- /.col -->
                 </div>
             </form>
-
-            <div class="mt-4">
-                <div class="text-center">
-                    <h6>Demo Accounts</h6>
-                    <div class="row">
-                        <div class="col-12">
-                            <small class="text-muted">
-                                <strong>SuperAdmin:</strong> admin@property.com / Admin@123456<br>
-                                <strong>Admin:</strong> admin2@property.com / Admin@123456<br>
-                                <strong>Moderator:</strong> moderator@property.com / Moderator@123456<br>
-                                <strong>Agent:</strong> agent@property.com / Agent@123456
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="mt-3 text-center">
-                <a href="{{ url('/') }}" class="text-muted">
+                <a href="https://www.besttrend-sy.com" class="text-muted" target="_blank" rel="noopener">
                     <i class="fas fa-arrow-left"></i> Back to Website
                 </a>
             </div>
