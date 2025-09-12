@@ -594,6 +594,7 @@
     "sending": "Sending...",
     "businessHours": "Business Hours",
     "location": "Location",
+    "website": "Website",
     "successMessage": "Your message has been sent successfully! We will contact you soon.",
     "subjects": {
       "general": "General Inquiry",
