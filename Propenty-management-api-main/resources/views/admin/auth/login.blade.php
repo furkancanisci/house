@@ -74,7 +74,7 @@
     <!-- /.login-logo -->
     <div class="card card-outline card-primary">
         <div class="card-header text-center">
-            <a href="{{ url('/admin/login') }}" class="h1"><b>Property</b>Admin</a>
+            <a href="{{ route('admin.login') }}" class="h1"><b>Best Trend</b>Admin</a>
         </div>
         <div class="card-body">
             <p class="login-box-msg">Sign in to start your admin session</p>
@@ -89,7 +89,7 @@
                 </div>
             @endif
 
-            <form action="{{ url('/admin/login') }}" method="post">
+            <form action="{{ route('admin.login.submit') }}" method="post">
                 @csrf
                 <div class="input-group mb-3">
                     <input type="email" name="email" class="form-control" placeholder="Email" 

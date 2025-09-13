@@ -25,5 +25,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Disable Sanctum's auto-migration to prevent conflicts
         \Laravel\Sanctum\Sanctum::ignoreMigrations();
+        
+        // Force HTTPS URLs in production
+        if (config('app.env') === 'production' || request()->isSecure()) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }
