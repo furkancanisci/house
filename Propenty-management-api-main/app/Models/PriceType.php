@@ -27,7 +27,7 @@ class PriceType extends Model
      */
     public function properties()
     {
-        return $this->hasMany(Property::class, 'price_type_id');
+        return $this->hasMany(Property::class, 'price_type', 'key');
     }
 
     /**

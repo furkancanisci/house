@@ -50,6 +50,38 @@ class PriceTypeSeeder extends Seeder
                 'listing_type' => 'both',
                 'is_active' => true,
             ],
+            [
+                'name_ar' => 'شهري',
+                'name_en' => 'Monthly',
+                'name_ku' => 'مانگانە',
+                'key' => 'monthly',
+                'listing_type' => 'rent',
+                'is_active' => true,
+            ],
+            [
+                'name_ar' => 'سنوي',
+                'name_en' => 'Yearly',
+                'name_ku' => 'ساڵانە',
+                'key' => 'yearly',
+                'listing_type' => 'rent',
+                'is_active' => true,
+            ],
+            [
+                'name_ar' => 'السعر الإجمالي',
+                'name_en' => 'Total Price',
+                'name_ku' => 'نرخی گشتی',
+                'key' => 'total',
+                'listing_type' => 'sale',
+                'is_active' => true,
+            ],
+            [
+                'name_ar' => 'سعر ثابت',
+                'name_en' => 'Fixed Price',
+                'name_ku' => 'نرخی جێگیر',
+                'key' => 'fixed',
+                'listing_type' => 'both',
+                'is_active' => true,
+            ],
         ];
         
         foreach ($priceTypes as $priceType) {
