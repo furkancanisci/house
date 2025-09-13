@@ -16,6 +16,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardFooter } from './ui/card';
 import { Badge } from './ui/badge';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import FixedImage from './FixedImage';
 import PropertyImageGallery from './PropertyImageGallery';
 import { processPropertyImages } from '../lib/imageUtils';
@@ -224,7 +225,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                     {formatPrice(property.price, property.listingType)}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
+                    {property.priceType ? (
+                      typeof property.priceType === 'object' ? (
+                        i18n.language === 'ar' ? property.priceType.name_ar :
+                        i18n.language === 'ku' ? property.priceType.name_ku :
+                        property.priceType.name_en
+                      ) : t(`property.priceTypes.${property.priceType}`)
+                    ) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
                   </p>
                 </div>
               </div>

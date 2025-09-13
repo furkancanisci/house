@@ -663,7 +663,13 @@ const PropertyDetails: React.FC = () => {
                       {formatPrice(property.price, property.listingType)}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
+                      {property.priceType ? (
+                        typeof property.priceType === 'object' ? (
+                          i18n.language === 'ar' ? property.priceType.name_ar :
+                          i18n.language === 'ku' ? property.priceType.name_ku :
+                          property.priceType.name_en
+                        ) : t(`property.priceTypes.${property.priceType}`)
+                      ) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
                     </p>
                   </div>
                 </div>
@@ -1019,7 +1025,13 @@ const PropertyDetails: React.FC = () => {
                       {formatPrice(property.price, property.listingType)}
                     </span>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
+                      {property.priceType ? (
+                        typeof property.priceType === 'object' ? (
+                          i18n.language === 'ar' ? property.priceType.name_ar :
+                          i18n.language === 'ku' ? property.priceType.name_ku :
+                          property.priceType.name_en
+                        ) : t(`property.priceTypes.${property.priceType}`)
+                      ) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
                     </p>
                   </div>
                 </div>

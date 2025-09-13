@@ -4,7 +4,14 @@ export interface Property {
   title: string;
   address: string;
   price: number | string;
-  priceType?: 'monthly' | 'yearly' | 'total' | 'fixed' | 'negotiable' | 'finalPrice' | 'folkSaying' | 'lastPrice';
+  priceType?: 'monthly' | 'yearly' | 'total' | 'fixed' | 'negotiable' | 'finalPrice' | 'folkSaying' | 'lastPrice' | {
+    id: number;
+    key: string;
+    name_ar: string;
+    name_en: string;
+    name_ku: string;
+    localized_name: string;
+  };
   listingType: 'rent' | 'sale';
   propertyType: 'apartment' | 'house' | 'condo' | 'townhouse' | 'studio' | 'loft' | 'villa' | 'commercial' | 'land';
   bedrooms: number;
@@ -58,7 +65,14 @@ export interface ExtendedProperty extends Omit<Property, 'property_type' | 'list
   // Original property fields with overrides for consistent naming
   propertyType: string;
   listingType: 'rent' | 'sale';
-  priceType?: 'monthly' | 'yearly' | 'total' | 'fixed' | 'negotiable' | 'finalPrice' | 'folkSaying' | 'lastPrice';
+  priceType?: 'monthly' | 'yearly' | 'total' | 'fixed' | 'negotiable' | 'finalPrice' | 'folkSaying' | 'lastPrice' | {
+    id: number;
+    key: string;
+    name_ar: string;
+    name_en: string;
+    name_ku: string;
+    localized_name: string;
+  };
   squareFootage: number;
   zipCode: string;
   

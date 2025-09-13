@@ -280,7 +280,7 @@ class PropertyController extends Controller
         ]);
 
         // Load relationships
-        $query->with(['documentType', 'features', 'utilities']);
+        $query->with(['documentType', 'features', 'utilities', 'priceType']);
 
         // Paginate the results
         $perPage = $request->input('per_page', 12);

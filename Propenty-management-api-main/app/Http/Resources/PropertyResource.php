@@ -50,6 +50,15 @@ class PropertyResource extends JsonResource
             
             // Pricing - both nested and flat for compatibility
             'price' => $this->price, // Flat price for frontend
+            'priceType' => $this->when($this->relationLoaded('priceType'), function () {
+                return $this->priceType ? [
+                    'key' => $this->priceType->key,
+                    'name_ar' => $this->priceType->name_ar,
+                    'name_en' => $this->priceType->name_en,
+                    'name_ku' => $this->priceType->name_ku,
+                    'localized_name' => $this->priceType->localized_name,
+                ] : null;
+            }),
             'pricing' => [
                 'amount' => $this->price,
                 'formatted' => $this->buildFormattedPrice(),
