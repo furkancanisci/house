@@ -37,6 +37,7 @@ import {
 } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
@@ -79,6 +80,7 @@ const EditProperty: React.FC = () => {
   const { state, updateProperty } = useApp();
   const { user, properties } = state;
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [property, setProperty] = useState<Property | null>(null);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -96,6 +98,7 @@ const EditProperty: React.FC = () => {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<PropertyFormData>({

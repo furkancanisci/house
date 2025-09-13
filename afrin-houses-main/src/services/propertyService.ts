@@ -96,6 +96,7 @@ export interface Property {
 export interface PropertyFilters {
   listingType?: string;
   propertyType?: string;
+  priceType?: string;
   minPrice?: number;
   maxPrice?: number;
   minBeds?: number | string;
