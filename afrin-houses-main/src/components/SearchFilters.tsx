@@ -225,6 +225,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     const resetFilters: SearchFiltersType = {
       listingType: 'all',
       propertyType: '',
+      priceType: undefined,
       location: '',
       state: '',
       city: '',
@@ -355,6 +356,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
         newValues.listingType = value === 'all' ? 'all' : value;
       } else if (key === 'propertyType') {
         newValues.propertyType = (value === 'all' || value === 'all-property-types') ? '' : value;
+      } else if (key === 'priceType') {
+        newValues.priceType = value === 'all' ? undefined : value;
       } else if (key === 'bedrooms' || key === 'bathrooms') {
         if (value === 'any' || value === '') {
           newValues[key] = undefined;
@@ -415,6 +418,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     const defaultFilters: SearchFiltersType = {
       listingType: 'all',
       propertyType: '',
+      priceType: undefined,
       minPrice: undefined,
       maxPrice: undefined,
       bedrooms: undefined,
@@ -551,6 +555,37 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                   {type.label}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Price Type */}
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full"></div>
+            {t('filters.priceType')}
+          </label>
+          <Select
+            value={formValues.priceType || 'all'}
+            onValueChange={(value) => handleFilterChange('priceType', value)}
+          >
+            <SelectTrigger className="bg-gray-50 border-gray-300">
+              <SelectValue placeholder={t('filters.selectPriceType')}>
+                {formValues.priceType && formValues.priceType !== 'all' ? 
+                  t(`property.priceTypes.${formValues.priceType}`) : 
+                  t('property.priceTypes.all')}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('property.priceTypes.all')}</SelectItem>
+              <SelectItem value="negotiable">{t('property.priceTypes.negotiable')}</SelectItem>
+              <SelectItem value="finalPrice">{t('property.priceTypes.finalPrice')}</SelectItem>
+              <SelectItem value="folkSaying">{t('property.priceTypes.folkSaying')}</SelectItem>
+              <SelectItem value="lastPrice">{t('property.priceTypes.lastPrice')}</SelectItem>
+              <SelectItem value="monthly">{t('property.priceTypes.monthly')}</SelectItem>
+              <SelectItem value="yearly">{t('property.priceTypes.yearly')}</SelectItem>
+              <SelectItem value="total">{t('property.priceTypes.total')}</SelectItem>
+              <SelectItem value="fixed">{t('property.priceTypes.fixed')}</SelectItem>
             </SelectContent>
           </Select>
         </div>

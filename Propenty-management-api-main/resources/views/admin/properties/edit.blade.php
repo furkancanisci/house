@@ -56,11 +56,11 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="listing_type">Listing Type <span class="text-danger">*</span></label>
+                                    <label for="listing_type">{{ __('admin.listing_type') }} <span class="text-danger">*</span></label>
                                     <select name="listing_type" id="listing_type" class="form-control @error('listing_type') is-invalid @enderror" required>
-                                        <option value="">Select Type</option>
-                                        <option value="sale" {{ old('listing_type', $property->listing_type) === 'sale' ? 'selected' : '' }}>For Sale</option>
-                                        <option value="rent" {{ old('listing_type', $property->listing_type) === 'rent' ? 'selected' : '' }}>For Rent</option>
+                                        <option value="">{{ __('admin.select_type') }}</option>
+                                        <option value="sale" {{ old('listing_type', $property->listing_type) === 'sale' ? 'selected' : '' }}>{{ __('admin.for_sale') }}</option>
+                                        <option value="rent" {{ old('listing_type', $property->listing_type) === 'rent' ? 'selected' : '' }}>{{ __('admin.for_rent') }}</option>
                                     </select>
                                     @error('listing_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -104,11 +104,26 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="price_type">Price Period (for rent)</label>
-                                    <select name="price_type" id="price_type" class="form-control @error('price_type') is-invalid @enderror">
-                                        <option value="">Select Period</option>
-                                        <option value="monthly" {{ old('price_type', $property->price_type) === 'monthly' ? 'selected' : '' }}>Monthly</option>
-                                        <option value="yearly" {{ old('price_type', $property->price_type) === 'yearly' ? 'selected' : '' }}>Yearly</option>
+                                    <label for="price_type">{{ __('admin.price_type') }} <span class="text-danger">*</span></label>
+                                    <select name="price_type" id="price_type" class="form-control @error('price_type') is-invalid @enderror" required>
+                                        <option value="">{{ __('admin.select_price_type') }}</option>
+                                        @foreach($priceTypes as $priceType)
+                                            @php
+                                                $cssClass = '';
+                                                if (in_array($priceType->key, ['monthly', 'yearly'])) {
+                                                    $cssClass = 'rent-option';
+                                                } elseif (in_array($priceType->key, ['total', 'fixed'])) {
+                                                    $cssClass = 'sale-option';
+                                                } else {
+                                                    $cssClass = 'negotiation-option';
+                                                }
+                                            @endphp
+                                            <option value="{{ $priceType->key }}" 
+                                                class="{{ $cssClass }}" 
+                                                {{ old('price_type', $property->price_type) === $priceType->key ? 'selected' : '' }}>
+                                                {{ $priceType->localized_name }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                     @error('price_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -542,15 +557,33 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Show/hide price type based on listing type
-    $('#listing_type').on('change', function() {
-        if ($(this).val() === 'rent') {
-            $('#price_type').closest('.form-group').show();
+    // Function to update price type options based on listing type
+    function updatePriceTypeOptions() {
+        var listingType = $('#listing_type').val();
+        var priceTypeSelect = $('#price_type');
+        var rentOptions = priceTypeSelect.find('.rent-option');
+        var saleOptions = priceTypeSelect.find('.sale-option');
+        
+        // Always show negotiation options
+        priceTypeSelect.find('.negotiation-option').show();
+        
+        if (listingType === 'rent') {
+            rentOptions.show();
+            saleOptions.hide();
+        } else if (listingType === 'sale') {
+            rentOptions.hide();
+            saleOptions.show();
         } else {
-            $('#price_type').closest('.form-group').hide();
-            $('#price_type').val('');
+            rentOptions.show();
+            saleOptions.show();
         }
-    }).trigger('change');
+    }
+    
+    // Handle listing type change
+    $('#listing_type').on('change', updatePriceTypeOptions);
+    
+    // Initialize on page load
+    updatePriceTypeOptions();
 
     // New image preview
     $('#new_images').on('change', function() {

@@ -97,6 +97,16 @@
                 </li>
                 @endcan
 
+                <!-- Price Types -->
+                @can('view categories')
+                <li class="nav-item">
+                    <a href="{{ route('admin.price-types.index') }}" class="nav-link {{ request()->routeIs('admin.price-types*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-dollar-sign"></i>
+                        <p>{{ __('admin.price_types') }}</p>
+                    </a>
+                </li>
+                @endcan
+
                 <!-- Locations -->
                 @canany(['view cities', 'manage neighborhoods'])
                 <li class="nav-item {{ request()->routeIs('admin.cities*') ? 'menu-open' : '' }}">

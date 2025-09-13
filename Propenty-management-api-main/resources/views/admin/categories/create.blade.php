@@ -29,6 +29,24 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="name_ar">Arabic Name</label>
+                            <input type="text" name="name_ar" id="name_ar" class="form-control @error('name_ar') is-invalid @enderror" 
+                                   value="{{ old('name_ar') }}" placeholder="اسم الفئة بالعربية">
+                            @error('name_ar')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name_ku">Kurdish Kurmanci Name</label>
+                            <input type="text" name="name_ku" id="name_ku" class="form-control @error('name_ku') is-invalid @enderror" 
+                                   value="{{ old('name_ku') }}" placeholder="Navê kategoriyê bi kurdî">
+                            @error('name_ku')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
                             <label for="slug">Slug</label>
                             <input type="text" name="slug" id="slug" class="form-control @error('slug') is-invalid @enderror" 
                                    value="{{ old('slug') }}" placeholder="Auto-generated from name if left empty">
@@ -85,7 +103,10 @@
                                 <option value="">None (Root Category)</option>
                                 @foreach($parentCategories as $parent)
                                     <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>
-                                        {{ $parent->name }}
+                                        {{ $parent->getPreferredName() }}
+                                        @if($parent->getPreferredName() !== $parent->name && $parent->name)
+                                            <small class="text-muted">({{ $parent->name }})</small>
+                                        @endif
                                     </option>
                                 @endforeach
                             </select>

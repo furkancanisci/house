@@ -60,19 +60,21 @@
                                     <td>{{ ucfirst($property->property_type) }}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Listing Type:</strong></td>
+                                    <td><strong>{{ __('admin.listing_type') }}:</strong></td>
                                     <td>
                                         <span class="badge badge-{{ $property->listing_type === 'sale' ? 'info' : 'primary' }}">
-                                            For {{ ucfirst($property->listing_type) }}
+                                            {{ $property->listing_type === 'sale' ? __('admin.for_sale') : __('admin.for_rent') }}
                                         </span>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Price:</strong></td>
+                                    <td><strong>{{ __('admin.price') }}:</strong></td>
                                     <td>
                                         <strong class="text-success">${{ number_format($property->price) }}</strong>
-                                        @if($property->listing_type === 'rent' && $property->price_type)
-                                            <small>/{{ $property->price_type }}</small>
+                                        @if($property->price_type)
+                                            <small class="text-muted">
+                                                ({{ __('admin.' . $property->price_type) }})
+                                            </small>
                                         @endif
                                     </td>
                                 </tr>

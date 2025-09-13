@@ -224,7 +224,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                     {formatPrice(property.price, property.listingType)}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice')}
+                    {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
                   </p>
                 </div>
               </div>
@@ -354,7 +354,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             {formatPrice(property.price, property.listingType)}
           </p>
           <p className="text-xs text-gray-500 mt-0.5">
-            {property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice')}
+            {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
           </p>
         </div>
 

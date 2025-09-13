@@ -320,6 +320,17 @@
       "forRent": "For Rent",
       "forSale": "For Sale"
     },
+    "priceType": "Price Type",
+    "priceTypes": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "total": "Total",
+      "fixed": "Fixed",
+      "negotiable": "Negotiable",
+      "finalPrice": "Final Price",
+      "folkSaying": "Folk Saying",
+      "lastPrice": "Last Price"
+    },
     "details": {
       "bedrooms": "Beds",
       "bathrooms": "Baths",
@@ -703,6 +714,8 @@
     "selectListingType": "Select Listing Type",
     "propertyType": "Property Type",
     "selectPropertyType": "Select Property Type",
+    "priceType": "Price Type",
+    "selectPriceType": "Select Price Type",
     "priceRange": "Price Range",
     "minPrice": "Min Price",
     "maxPrice": "Max Price",

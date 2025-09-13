@@ -48,6 +48,7 @@ const propertySchema = z.object({
   city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
   state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
   price: z.number().min(1, 'Price must be greater than 0'),
+  priceType: z.enum(['monthly', 'yearly', 'total', 'fixed', 'negotiable', 'finalPrice', 'folkSaying', 'lastPrice']),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
   documentTypeId: z.string().optional(),
@@ -218,6 +219,7 @@ const EditProperty: React.FC = () => {
             city: foundProperty.city || '',
             state: foundProperty.state || '',
             price: Number(foundProperty.price) || 0,
+            priceType: foundProperty.priceType || foundProperty.price_type || 'total',
             listingType: foundProperty.listingType || foundProperty.listing_type || 'sale',
             propertyType: foundProperty.propertyType || foundProperty.property_type || 'apartment',
             documentTypeId: foundProperty.document_type_id ? String(foundProperty.document_type_id) : '',
@@ -337,6 +339,7 @@ const EditProperty: React.FC = () => {
         city: selectedCity || data.city,
         state: selectedState || data.state,
         price: data.price,
+        priceType: data.priceType,
         listingType: data.listingType,
         propertyType: data.propertyType,
         documentTypeId: data.documentTypeId ? Number(data.documentTypeId) : undefined,
@@ -519,21 +522,77 @@ const EditProperty: React.FC = () => {
               <CardTitle>Property Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="price">Price *</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="price"
-                    type="number"
-                    placeholder="Monthly rent or sale price"
-                    className={`pl-10 ${errors.price ? 'border-red-500' : ''}`}
-                    {...register('price', { valueAsNumber: true })}
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="price">Price *</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="price"
+                      type="number"
+                      placeholder="Monthly rent or sale price"
+                      className={`pl-10 ${errors.price ? 'border-red-500' : ''}`}
+                      {...register('price', { valueAsNumber: true })}
+                    />
+                  </div>
+                  {errors.price && (
+                    <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
+                  )}
                 </div>
-                {errors.price && (
-                  <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
-                )}
+
+                <div>
+                  <Label htmlFor="priceType">{t('property.priceType')} *</Label>
+                  <Controller
+                    name="priceType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.priceType ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'}`}>
+                          <SelectValue placeholder={t('property.selectPriceType')} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
+                          {watch('listingType') === 'rent' ? (
+                            <>
+                              <SelectItem value="monthly" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
+                                {t('property.priceTypes.monthly')}
+                              </SelectItem>
+                              <SelectItem value="yearly" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
+                                {t('property.priceTypes.yearly')}
+                              </SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="total" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
+                                {t('property.priceTypes.total')}
+                              </SelectItem>
+                              <SelectItem value="fixed" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
+                                {t('property.priceTypes.fixed')}
+                              </SelectItem>
+                              <SelectItem value="negotiable" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
+                                {t('property.priceTypes.negotiable')}
+                              </SelectItem>
+                              <SelectItem value="finalPrice" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
+                                {t('property.priceTypes.finalPrice')}
+                              </SelectItem>
+                              <SelectItem value="folkSaying" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
+                                {t('property.priceTypes.folkSaying')}
+                              </SelectItem>
+                              <SelectItem value="lastPrice" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
+                                {t('property.priceTypes.lastPrice')}
+                              </SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.priceType && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <span className="text-red-500">⚠</span>
+                      {errors.priceType.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">

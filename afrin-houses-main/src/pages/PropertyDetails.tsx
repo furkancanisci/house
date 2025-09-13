@@ -662,6 +662,9 @@ const PropertyDetails: React.FC = () => {
                     <p className="text-3xl font-bold text-[#067977]">
                       {formatPrice(property.price, property.listingType)}
                     </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
+                    </p>
                   </div>
                 </div>
               </CardHeader>
@@ -1011,9 +1014,14 @@ const PropertyDetails: React.FC = () => {
                 <Separator />
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 font-semibold">{t('forms.price')}</span>
-                  <span className="text-xl font-bold text-[#067977]">
-                    {formatPrice(property.price, property.listingType)}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-xl font-bold text-[#067977]">
+                      {formatPrice(property.price, property.listingType)}
+                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

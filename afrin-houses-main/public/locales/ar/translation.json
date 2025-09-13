@@ -189,6 +189,17 @@
       "forRent": "للإيجار",
       "forSale": "للبيع"
     },
+    "priceType": "نوع السعر",
+    "priceTypes": {
+      "monthly": "شهري",
+      "yearly": "سنوي",
+      "total": "إجمالي",
+      "fixed": "ثابت",
+      "negotiable": "قابل للتفاوض",
+      "finalPrice": "سعر نهائي",
+      "folkSaying": "مثل شعبي",
+      "lastPrice": "سعر من الآخر"
+    },
     "details": {
       "bedrooms": "غرف النوم",
       "bathrooms": "الحمامات",
@@ -780,6 +791,8 @@
     "selectListingType": "اختر نوع الإعلان",
     "propertyType": "نوع العقار",
     "selectPropertyType": "اختر نوع العقار",
+    "priceType": "نوع السعر",
+    "selectPriceType": "اختر نوع السعر",
     "priceRange": "نطاق السعر",
     "minPrice": "أقل سعر",
     "maxPrice": "أعلى سعر",

@@ -190,6 +190,14 @@ class Property extends Model implements HasMedia
     }
 
     /**
+     * The price type relationship.
+     */
+    public function priceType()
+    {
+        return $this->belongsTo(\App\Models\PriceType::class, 'price_type', 'key');
+    }
+
+    /**
      * Users who favorited this property.
      */
     public function favoritedByUsers()

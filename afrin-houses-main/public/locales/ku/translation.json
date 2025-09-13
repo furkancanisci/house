@@ -231,6 +231,17 @@
             "villa": "Villa",
             "description": "Danasîn"
         },
+        "priceType": "Celeba Bihayê",
+        "priceTypes": {
+            "monthly": "Mehane",
+            "yearly": "Salane",
+            "total": "Tevahî",
+            "fixed": "Sabît",
+            "negotiable": "Danûstandinî",
+            "finalPrice": "Bihayê Dawî",
+            "folkSaying": "Gotina Gel",
+            "lastPrice": "Bihayê Paşîn"
+        },
         "details": {
             "bedrooms": "Odeyên Nivîn",
             "bathrooms": "Avdestî",

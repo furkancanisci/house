@@ -17,7 +17,7 @@ class CategoryController extends Controller
         $this->authorize('view categories');
 
         $categories = PropertyType::withCount('properties')
-            ->orderBy('name')
+            ->orderByRaw('COALESCE(NULLIF(name_ar, \'\'), name) ASC')
             ->paginate(20);
 
         $stats = [
@@ -36,7 +36,7 @@ class CategoryController extends Controller
         $this->authorize('create categories');
 
         $parentCategories = PropertyType::whereNull('parent_id')
-            ->orderBy('name')
+            ->orderByRaw('COALESCE(NULLIF(name_ar, \'\'), name) ASC')
             ->get();
 
         return view('admin.categories.create', compact('parentCategories'));
@@ -51,6 +51,8 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:property_types,name',
+            'name_ar' => 'nullable|string|max:255',
+            'name_ku' => 'nullable|string|max:255',
             'slug' => 'nullable|string|max:255|unique:property_types,slug',
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
@@ -95,7 +97,7 @@ class CategoryController extends Controller
 
         $parentCategories = PropertyType::whereNull('parent_id')
             ->where('id', '!=', $category->id)
-            ->orderBy('name')
+            ->orderByRaw('COALESCE(NULLIF(name_ar, \'\'), name) ASC')
             ->get();
 
         return view('admin.categories.edit', compact('category', 'parentCategories'));
@@ -110,6 +112,8 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:property_types,name,' . $category->id,
+            'name_ar' => 'nullable|string|max:255',
+            'name_ku' => 'nullable|string|max:255',
             'slug' => 'nullable|string|max:255|unique:property_types,slug,' . $category->id,
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
