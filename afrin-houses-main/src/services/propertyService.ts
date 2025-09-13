@@ -140,6 +140,10 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       params.propertyType = filters.propertyType;
     }
     
+    if (filters.priceType && filters.priceType !== 'all' && filters.priceType !== 'any') {
+      params.priceType = filters.priceType;
+    }
+    
     if (filters.location) {
       params.location = filters.location;
     }

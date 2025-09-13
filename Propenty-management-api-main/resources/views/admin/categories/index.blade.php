@@ -72,7 +72,11 @@
                                         {!! $category->icon_html !!}
                                     </td>
                                     <td>
-                                        <strong>{{ $category->name }}</strong>
+                                        <strong>{{ $category->getPreferredName() }}</strong>
+                                        @if($category->name_ar && $category->name_ar !== $category->name)
+                                            <br>
+                                            <small class="text-muted">English: {{ $category->name }}</small>
+                                        @endif
                                         @if($category->description)
                                             <br>
                                             <small class="text-muted">{{ Str::limit($category->description, 50) }}</small>
@@ -82,7 +86,7 @@
                                     </td>
                                     <td>
                                         @if($category->parent)
-                                            <span class="badge badge-secondary">{{ $category->parent->name }}</span>
+                                            <span class="badge badge-secondary">{{ $category->parent->getPreferredName() }}</span>
                                         @else
                                             <span class="text-muted">Root Category</span>
                                         @endif

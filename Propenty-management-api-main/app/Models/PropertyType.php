@@ -17,6 +17,8 @@ class PropertyType extends Model
      */
     protected $fillable = [
         'name',
+        'name_ar',
+        'name_ku',
         'slug',
         'description',
         'icon',
@@ -121,14 +123,22 @@ class PropertyType extends Model
     }
 
     /**
-     * Get full category path.
+     * Get preferred name (Arabic first, then English fallback).
+     */
+    public function getPreferredName(): string
+    {
+        return $this->name_ar ?: $this->name;
+    }
+
+    /**
+     * Get full category path with preferred names.
      */
     public function getFullPathAttribute(): string
     {
         if ($this->parent) {
-            return $this->parent->name . ' > ' . $this->name;
+            return $this->parent->getPreferredName() . ' > ' . $this->getPreferredName();
         }
 
-        return $this->name;
+        return $this->getPreferredName();
     }
 }

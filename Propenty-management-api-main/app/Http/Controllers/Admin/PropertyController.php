@@ -8,11 +8,16 @@ use App\Models\City;
 use App\Models\Governorate;
 use App\Models\Neighborhood;
 use App\Models\PropertyType;
+use App\Models\PriceType;
 use App\Models\User;
 use App\Models\Amenity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
 
@@ -115,12 +120,16 @@ class PropertyController extends Controller
         
         // Get all neighborhoods (will be filtered by city via AJAX)
         $neighborhoods = collect();
+        
+        // Get price types from database
+        $priceTypes = PriceType::active()->get();
 
         return view('admin.properties.create', compact(
             'cities',
             'states',
             'neighborhoods',
             'propertyTypes',
+            'priceTypes',
             'users'
         ));
     }
@@ -138,7 +147,7 @@ class PropertyController extends Controller
             'property_type' => 'required|string',
             'listing_type' => 'required|in:rent,sale',
             'price' => 'required|numeric|min:0',
-            'price_type' => 'nullable|in:monthly,yearly',
+            'price_type' => 'required|in:monthly,yearly,total,fixed,negotiable,final_price,popular_saying,price_from_last',
             'street_address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
@@ -166,9 +175,19 @@ class PropertyController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
         ]);
 
-        // Handle price_type requirement for rent
-        if ($validated['listing_type'] === 'rent' && empty($validated['price_type'])) {
-            $validated['price_type'] = 'monthly'; // Default to monthly for rent
+        // Set price_type based on listing_type
+        if ($validated['listing_type'] === 'rent') {
+            // For rent listings, allow monthly, yearly, negotiable, final_price, popular_saying, price_from_last
+            $allowedRentTypes = ['monthly', 'yearly', 'negotiable', 'final_price', 'popular_saying', 'price_from_last'];
+            if (empty($validated['price_type']) || !in_array($validated['price_type'], $allowedRentTypes)) {
+                $validated['price_type'] = 'monthly';
+            }
+        } else {
+            // For sale listings, allow total, fixed, negotiable, final_price, popular_saying, price_from_last
+            $allowedSaleTypes = ['total', 'fixed', 'negotiable', 'final_price', 'popular_saying', 'price_from_last'];
+            if (empty($validated['price_type']) || !in_array($validated['price_type'], $allowedSaleTypes)) {
+                $validated['price_type'] = 'total';
+            }
         }
 
         DB::beginTransaction();
@@ -265,6 +284,9 @@ class PropertyController extends Controller
 
         // Load relationships including the new ones
         $property->load(['user', 'media', 'city', 'governorate', 'neighborhood', 'propertyType']);
+        
+        // Get price types from database
+        $priceTypes = PriceType::active()->get();
 
         return view('admin.properties.edit', compact(
             'property',
@@ -273,6 +295,7 @@ class PropertyController extends Controller
             'states',
             'neighborhoods',
             'propertyTypes',
+            'priceTypes',
             'users'
         ));
     }
@@ -290,7 +313,7 @@ class PropertyController extends Controller
             'property_type' => 'required|string',
             'listing_type' => 'required|in:rent,sale',
             'price' => 'required|numeric|min:0',
-            'price_type' => 'nullable|in:monthly,yearly',
+            'price_type' => 'required|in:monthly,yearly,total,fixed,negotiable,final_price,popular_saying,price_from_last',
             'street_address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
@@ -319,6 +342,21 @@ class PropertyController extends Controller
             'remove_images' => 'nullable|array',
             'remove_images.*' => 'integer',
         ]);
+
+        // Set price_type based on listing_type
+        if ($validated['listing_type'] === 'rent') {
+            // For rent listings, allow monthly, yearly, negotiable, final_price, popular_saying, price_from_last
+            $allowedRentTypes = ['monthly', 'yearly', 'negotiable', 'final_price', 'popular_saying', 'price_from_last'];
+            if (!in_array($validated['price_type'], $allowedRentTypes)) {
+                $validated['price_type'] = 'monthly';
+            }
+        } else {
+            // For sale listings, allow total, fixed, negotiable, final_price, popular_saying, price_from_last
+            $allowedSaleTypes = ['total', 'fixed', 'negotiable', 'final_price', 'popular_saying', 'price_from_last'];
+            if (!in_array($validated['price_type'], $allowedSaleTypes)) {
+                $validated['price_type'] = 'total';
+            }
+        }
 
         DB::beginTransaction();
         try {

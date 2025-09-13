@@ -4,6 +4,7 @@ export interface Property {
   title: string;
   address: string;
   price: number | string;
+  priceType?: 'monthly' | 'yearly' | 'total' | 'fixed' | 'negotiable' | 'finalPrice' | 'folkSaying' | 'lastPrice';
   listingType: 'rent' | 'sale';
   propertyType: 'apartment' | 'house' | 'condo' | 'townhouse' | 'studio' | 'loft' | 'villa' | 'commercial' | 'land';
   bedrooms: number;
@@ -57,6 +58,7 @@ export interface ExtendedProperty extends Omit<Property, 'property_type' | 'list
   // Original property fields with overrides for consistent naming
   propertyType: string;
   listingType: 'rent' | 'sale';
+  priceType?: 'monthly' | 'yearly' | 'total' | 'fixed' | 'negotiable' | 'finalPrice' | 'folkSaying' | 'lastPrice';
   squareFootage: number;
   zipCode: string;
   
@@ -139,6 +141,7 @@ export interface User {
 export interface SearchFilters {
   listingType?: 'rent' | 'sale' | 'all';
   propertyType?: string;
+  priceType?: 'monthly' | 'yearly' | 'total' | 'fixed' | 'negotiable' | 'finalPrice' | 'folkSaying' | 'lastPrice' | 'all';
   minPrice?: number;
   maxPrice?: number;
   bedrooms?: number;

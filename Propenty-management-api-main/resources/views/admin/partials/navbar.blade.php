@@ -97,11 +97,11 @@
 
         <!-- Language Switcher -->
         <li class="nav-item dropdown">
-            <a class="nav-link" data-toggle="dropdown" href="#">
+            <a class="nav-link language-switcher-btn" data-toggle="dropdown" href="#" style="background-color: rgba(0,123,255,0.1); border-radius: 5px; padding: 8px 12px;">
                 @if(app()->getLocale() === 'ar')
-                    <i class="fas fa-globe"></i> عربي
+                    <i class="fas fa-globe text-primary"></i> <span class="font-weight-bold">عربي</span>
                 @else
-                    <i class="fas fa-globe"></i> EN
+                    <i class="fas fa-globe text-primary"></i> <span class="font-weight-bold">EN</span>
                 @endif
                 <i class="fas fa-angle-down ml-1"></i>
             </a>

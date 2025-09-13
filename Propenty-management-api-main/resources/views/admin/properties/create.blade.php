@@ -59,11 +59,11 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="listing_type">Listing Type <span class="text-danger">*</span></label>
+                                    <label for="listing_type">{{ __('admin.listing_type') }} <span class="text-danger">*</span></label>
                                     <select name="listing_type" id="listing_type" class="form-control @error('listing_type') is-invalid @enderror" required>
-                                        <option value="">Select Type</option>
-                                        <option value="sale" {{ old('listing_type') === 'sale' ? 'selected' : '' }}>For Sale</option>
-                                        <option value="rent" {{ old('listing_type') === 'rent' ? 'selected' : '' }}>For Rent</option>
+                                        <option value="">{{ __('admin.select_type') }}</option>
+                                        <option value="sale" {{ old('listing_type') === 'sale' ? 'selected' : '' }}>{{ __('admin.for_sale') }}</option>
+                                        <option value="rent" {{ old('listing_type') === 'rent' ? 'selected' : '' }}>{{ __('admin.for_rent') }}</option>
                                     </select>
                                     @error('listing_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -105,11 +105,26 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="price_type">Price Period (for rent)</label>
-                                    <select name="price_type" id="price_type" class="form-control @error('price_type') is-invalid @enderror">
-                                        <option value="">Select Period</option>
-                                        <option value="monthly" {{ old('price_type') === 'monthly' ? 'selected' : '' }}>Monthly</option>
-                                        <option value="yearly" {{ old('price_type') === 'yearly' ? 'selected' : '' }}>Yearly</option>
+                                    <label for="price_type">{{ __('admin.price_type') }} <span class="text-danger">*</span></label>
+                                    <select name="price_type" id="price_type" class="form-control @error('price_type') is-invalid @enderror" required>
+                                        <option value="">{{ __('admin.select_price_type') }}</option>
+                                        @foreach($priceTypes as $priceType)
+                                            @php
+                                                $cssClass = '';
+                                                if (in_array($priceType->key, ['monthly', 'yearly'])) {
+                                                    $cssClass = 'rent-option';
+                                                } elseif (in_array($priceType->key, ['total', 'fixed'])) {
+                                                    $cssClass = 'sale-option';
+                                                } else {
+                                                    $cssClass = 'negotiation-option';
+                                                }
+                                            @endphp
+                                            <option value="{{ $priceType->key }}" 
+                                                {{ old('price_type') === $priceType->key ? 'selected' : '' }} 
+                                                class="{{ $cssClass }}">
+                                                {{ $priceType->localized_name }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                     @error('price_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -555,12 +570,13 @@
         crossorigin=""></script>
 <script>
 $(document).ready(function() {
-    // Show/hide price type based on listing type
+    // Show price type for both rent and sale listings
     $('#listing_type').on('change', function() {
         var listingType = $(this).val();
-        if (listingType === 'rent') {
+        if (listingType === 'rent' || listingType === 'sale') {
             $('#price_type').closest('.form-group').show();
             $('#price_type').prop('required', true);
+            updatePriceTypeOptions();
         } else {
             $('#price_type').closest('.form-group').hide();
             $('#price_type').val('').prop('required', false);
@@ -661,6 +677,40 @@ $(document).ready(function() {
         }
     });
 
+    // Handle price_type options based on listing_type
+    function updatePriceTypeOptions() {
+        var listingType = $('#listing_type').val();
+        var priceTypeSelect = $('#price_type');
+        
+        // Hide all options first
+        priceTypeSelect.find('option').hide();
+        
+        // Always show the default option
+        priceTypeSelect.find('option[value=""]').show();
+        
+        // Always show negotiation options for all listing types
+        priceTypeSelect.find('.negotiation-option').show();
+        
+        if (listingType === 'rent') {
+            // Show rent options
+            priceTypeSelect.find('.rent-option').show();
+            // Set default to monthly if no value selected
+            if (!priceTypeSelect.val()) {
+                priceTypeSelect.val('monthly');
+            }
+        } else if (listingType === 'sale') {
+            // Show sale options
+            priceTypeSelect.find('.sale-option').show();
+            // Set default to total if no value selected
+            if (!priceTypeSelect.val()) {
+                priceTypeSelect.val('total');
+            }
+        }
+    }
+    
+    // Initialize price type options on page load
+    updatePriceTypeOptions();
+
     // Handle form validation for dependent dropdowns
     $('form').on('submit', function(e) {
         var state = $('#state').val();
@@ -683,9 +733,12 @@ $(document).ready(function() {
             return false;
         }
         
-        // Check price type for rent
-        if (listingType === 'rent' && !$('#price_type').val()) {
-            $('#price_type').val('monthly'); // Set default to monthly
+        // Check price type is selected
+        if (!$('#price_type').val()) {
+            e.preventDefault();
+            alert('Please select a price type');
+            $('#price_type').focus();
+            return false;
         }
         
         // Debug log before submission

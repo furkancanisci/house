@@ -197,6 +197,48 @@ return [
     'arabic' => 'Arabic',
     'change_language' => 'Change Language',
     
+    // Price Types
+    'price_type' => 'Price Type',
+    'monthly' => 'Monthly',
+    'yearly' => 'Yearly',
+    'total' => 'Total',
+    'fixed' => 'Fixed',
+    'total_price' => 'Total Price',
+    'fixed_price' => 'Fixed Price',
+    'price_period' => 'Price Period',
+    'price_period_for_rent' => 'Price Period (For Rent)',
+    'select_price_type' => 'Select Price Type',
+    'negotiable' => 'Negotiable',
+    'final_price' => 'Final Price',
+    'popular_saying' => 'Popular Saying (Above Sugar)',
+    'price_from_last' => 'Price From Last',
+    'price_negotiation_type' => 'Price Negotiation Type',
+    'select_negotiation_type' => 'Select Negotiation Type',
+    
+    // Price Types Management
+    'price_types' => 'Price Types',
+    'price_type_management' => 'Price Types Management',
+    'add_price_type' => 'Add Price Type',
+    'edit_price_type' => 'Edit Price Type',
+    'price_type_details' => 'Price Type Details',
+    'price_type_created' => 'Price type created successfully',
+    'price_type_updated' => 'Price type updated successfully',
+    'price_type_deleted' => 'Price type deleted successfully',
+    'price_type_in_use' => 'Cannot delete price type as it is being used by existing properties',
+    'arabic_name' => 'Arabic Name',
+    'english_name' => 'English Name',
+    'kurdish_name' => 'Kurdish Name',
+    'key' => 'Key',
+    'listing_type_both' => 'Sale and Rent',
+    'sale' => 'Sale',
+    'rent' => 'Rent',
+    'both' => 'Both',
+    'is_active' => 'Active',
+    'usage_count' => 'Usage Count',
+    'properties_using_type' => 'Properties using this type',
+    'no_properties_using' => 'No properties using this type',
+    'auto_generate_key' => 'Key will be auto-generated from English name',
+    
     // Additional terms
     'owner' => 'Owner',
     'recent' => 'Recent',
@@ -236,4 +278,6 @@ return [
     'message_marked_read' => 'Message marked as read successfully.',
     'message_deleted' => 'Message deleted successfully.',
     'messages_bulk_action' => 'Messages updated successfully.',
+
+    
 ];

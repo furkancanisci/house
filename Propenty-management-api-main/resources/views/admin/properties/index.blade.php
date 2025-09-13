@@ -249,7 +249,7 @@
                                     <td>
                                         <strong>${{ number_format($property->price) }}</strong>
                                         @if($property->listing_type === 'rent' && $property->price_type)
-                                            <br><small>/{{ $property->price_type }}</small>
+                                            <br><small>/{{ \App\Models\PriceType::getTranslatedPriceType($property->price_type) }}</small>
                                         @endif
                                     </td>
                                     <td>
@@ -342,7 +342,7 @@
                             <label for="csv_file">CSV File</label>
                             <input type="file" name="csv_file" id="csv_file" class="form-control" accept=".csv" required>
                             <small class="form-text text-muted">
-                                Upload a CSV file with property data. Required columns: Title, Type, Listing Type, Price, City, State.
+                                Upload a CSV file with property data. Required columns: Title, Type, {{ __('admin.listing_type') }}, Price, City, State.
                             </small>
                         </div>
                     </div>

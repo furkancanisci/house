@@ -50,13 +50,41 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
+                                <label for="name_ar">Arabic Name</label>
+                                <input type="text" class="form-control @error('name_ar') is-invalid @enderror" 
+                                       id="name_ar" name="name_ar" value="{{ old('name_ar', $category->name_ar) }}" 
+                                       placeholder="اسم الفئة بالعربية">
+                                @error('name_ar')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="name_ku">Kurdish Kurmanci Name</label>
+                                <input type="text" class="form-control @error('name_ku') is-invalid @enderror" 
+                                       id="name_ku" name="name_ku" value="{{ old('name_ku', $category->name_ku) }}" 
+                                       placeholder="Navê kategoriyê bi kurdî">
+                                @error('name_ku')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
                                 <label for="parent_id">Parent Category</label>
                                 <select class="form-control @error('parent_id') is-invalid @enderror" id="parent_id" name="parent_id">
                                     <option value="">-- Root Category --</option>
                                     @foreach($parentCategories as $parent)
                                         <option value="{{ $parent->id }}" 
                                                 {{ old('parent_id', $category->parent_id) == $parent->id ? 'selected' : '' }}>
-                                            {{ $parent->name }}
+                                            {{ $parent->getPreferredName() }}
+                                            @if($parent->getPreferredName() !== $parent->name && $parent->name)
+                                                ({{ $parent->name }})
+                                            @endif
                                         </option>
                                     @endforeach
                                 </select>
@@ -94,13 +122,16 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="is_active">Status</label>
-                                <select class="form-control @error('is_active') is-invalid @enderror" id="is_active" name="is_active">
-                                    <option value="1" {{ old('is_active', $category->is_active) == 1 ? 'selected' : '' }}>Active</option>
-                                    <option value="0" {{ old('is_active', $category->is_active) == 0 ? 'selected' : '' }}>Inactive</option>
-                                </select>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" name="is_active" id="is_active" class="custom-control-input" 
+                                           value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="is_active">Active</label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Only active categories will be available for selection
+                                </small>
                                 @error('is_active')
-                                    <span class="invalid-feedback">{{ $message }}</span>
+                                    <span class="invalid-feedback d-block">{{ $message }}</span>
                                 @enderror
                             </div>
                         </div>
@@ -191,7 +222,10 @@
                 <div class="mt-3">
                     <strong>Parent Category:</strong><br>
                     <a href="{{ route('admin.categories.show', $category->parent) }}" class="badge badge-info">
-                        {{ $category->parent->name }}
+                        {{ $category->parent->getPreferredName() }}
+                        @if($category->parent->getPreferredName() !== $category->parent->name && $category->parent->name)
+                            <small class="text-muted">({{ $category->parent->name }})</small>
+                        @endif
                     </a>
                 </div>
                 @endif
@@ -242,7 +276,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
                         <a href="{{ route('admin.categories.show', $child) }}" class="font-weight-bold">
-                            {{ $child->name }}
+                            {{ $child->getPreferredName() }}
+                            @if($child->getPreferredName() !== $child->name && $child->name)
+                                <small class="text-muted">({{ $child->name }})</small>
+                            @endif
                         </a>
                         <small class="text-muted d-block">{{ $child->properties()->count() }} properties</small>
                     </div>
