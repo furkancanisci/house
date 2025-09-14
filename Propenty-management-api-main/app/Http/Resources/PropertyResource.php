@@ -72,8 +72,6 @@ class PropertyResource extends JsonResource
             'street_address' => $this->ensureUtf8($this->street_address),
             'city' => $this->ensureUtf8($this->getAttributeValue('city')),
             'state' => $this->ensureUtf8($this->getAttributeValue('state')),
-            'postal_code' => $this->postal_code,
-            'zip_code' => $this->postal_code, // Frontend expects zip_code
             'country' => $this->ensureUtf8('Syria'), // Hardcoded since country field was removed
             'neighborhood' => $this->ensureUtf8($this->neighborhood),
             'latitude' => $this->latitude,
@@ -82,7 +80,6 @@ class PropertyResource extends JsonResource
                 'street_address' => $this->ensureUtf8($this->street_address),
                 'city' => $this->ensureUtf8($this->getAttributeValue('city')),
                 'state' => $this->ensureUtf8($this->getAttributeValue('state')),
-                'postal_code' => $this->ensureUtf8($this->postal_code),
                 'country' => $this->ensureUtf8('Syria'), // Hardcoded since country field was removed
                 'full_address' => $this->buildFullAddress(),
                 'neighborhood' => $this->ensureUtf8($this->neighborhood),
@@ -215,7 +212,6 @@ class PropertyResource extends JsonResource
         
         if ($city) $address .= ', ' . $this->ensureUtf8($city);
         if ($state) $address .= ', ' . $this->ensureUtf8($state);
-        if ($this->postal_code) $address .= ' ' . $this->postal_code;
         $address .= ', Syria'; // Hardcoded since country field was removed
 
         return $address;

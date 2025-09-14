@@ -73,7 +73,6 @@ class DocumentedPropertyController extends Controller
      * @bodyParam street_address string required The street address of the property. Example: 123 Main Street, Unit 15A
      * @bodyParam city string required The city where the property is located. Example: New York
      * @bodyParam state string required The state where the property is located. Example: NY
-     * @bodyParam postal_code string required The postal code of the property. Example: 10001
      * @bodyParam latitude number The latitude coordinate of the property. Example: 40.7506
      * @bodyParam longitude number The longitude coordinate of the property. Example: -73.9756
      * @bodyParam neighborhood string The neighborhood where the property is located. Example: Midtown
@@ -111,7 +110,6 @@ class DocumentedPropertyController extends Controller
      *       "street_address": "123 Main Street, Unit 15A",
      *       "city": "New York",
      *       "state": "NY",
-     *       "postal_code": "10001",
      *       "country": "US",
      *       "full_address": "123 Main Street, Unit 15A, New York, NY 10001",
      *       "neighborhood": "Midtown",

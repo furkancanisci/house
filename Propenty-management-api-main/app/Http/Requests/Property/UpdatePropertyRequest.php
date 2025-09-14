@@ -50,7 +50,7 @@ class UpdatePropertyRequest extends FormRequest
             'address' => 'sometimes|required|string|max:255', // Alternative field name
             'city' => 'sometimes|required|string|max:100',
             'state' => 'sometimes|required|string|max:100',
-            'postal_code' => 'sometimes|required|string|max:20',
+            // 'postal_code' => 'sometimes|required|string|max:20', // Removed - column no longer exists
             'country' => 'sometimes|nullable|string|max:100',
             'latitude' => 'sometimes|nullable|numeric|between:-90,90',
             'longitude' => 'sometimes|nullable|numeric|between:-180,180',
@@ -130,7 +130,7 @@ class UpdatePropertyRequest extends FormRequest
             'street_address.required' => 'Street address is required.',
             'city.required' => 'City is required.',
             'state.required' => 'State/Province is required.',
-            'postal_code.required' => 'Postal/ZIP code is required.',
+            // 'postal_code.required' => 'Postal/ZIP code is required.', // Removed - field no longer exists
             'bedrooms.required' => 'Number of bedrooms is required.',
             'bedrooms.integer' => 'Number of bedrooms must be a whole number.',
             'bedrooms.min' => 'Number of bedrooms cannot be negative.',
@@ -184,7 +184,7 @@ class UpdatePropertyRequest extends FormRequest
             'property_type' => 'property type',
             'listing_type' => 'listing type',
             'street_address' => 'street address',
-            'postal_code' => 'postal/ZIP code',
+            // 'postal_code' => 'postal/ZIP code', // Removed - field no longer exists
             'square_feet' => 'square footage',
             'year_built' => 'year built',
             'parking_type' => 'parking type',

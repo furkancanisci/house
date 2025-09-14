@@ -523,9 +523,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('property.listingTypes.all')}</SelectItem>
-                <SelectItem value="rent">{t('property.listingTypes.rent')}</SelectItem>
-                <SelectItem value="sale">{t('property.listingTypes.sale')}</SelectItem>
+                <SelectItem key="all" value="all">{t('property.listingTypes.all')}</SelectItem>
+                <SelectItem key="rent" value="rent">{t('property.listingTypes.rent')}</SelectItem>
+                <SelectItem key="sale" value="sale">{t('property.listingTypes.sale')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -577,15 +577,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t('property.priceTypes.all')}</SelectItem>
-              <SelectItem value="negotiable">{t('property.priceTypes.negotiable')}</SelectItem>
-              <SelectItem value="finalPrice">{t('property.priceTypes.finalPrice')}</SelectItem>
-              <SelectItem value="folkSaying">{t('property.priceTypes.folkSaying')}</SelectItem>
-              <SelectItem value="lastPrice">{t('property.priceTypes.lastPrice')}</SelectItem>
-              <SelectItem value="monthly">{t('property.priceTypes.monthly')}</SelectItem>
-              <SelectItem value="yearly">{t('property.priceTypes.yearly')}</SelectItem>
-              <SelectItem value="total">{t('property.priceTypes.total')}</SelectItem>
-              <SelectItem value="fixed">{t('property.priceTypes.fixed')}</SelectItem>
+              <SelectItem key="all" value="all">{t('property.priceTypes.all')}</SelectItem>
+              <SelectItem key="negotiable" value="negotiable">{t('property.priceTypes.negotiable')}</SelectItem>
+              <SelectItem key="finalPrice" value="finalPrice">{t('property.priceTypes.finalPrice')}</SelectItem>
+              <SelectItem key="folkSaying" value="folkSaying">{t('property.priceTypes.folkSaying')}</SelectItem>
+              <SelectItem key="lastPrice" value="lastPrice">{t('property.priceTypes.lastPrice')}</SelectItem>
+              <SelectItem key="monthly" value="monthly">{t('property.priceTypes.monthly')}</SelectItem>
+              <SelectItem key="yearly" value="yearly">{t('property.priceTypes.yearly')}</SelectItem>
+              <SelectItem key="total" value="total">{t('property.priceTypes.total')}</SelectItem>
+              <SelectItem key="fixed" value="fixed">{t('property.priceTypes.fixed')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -646,7 +646,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                   <SelectValue>{formValues.bedrooms ? `${formValues.bedrooms}+` : t('filters.any')}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="any">{t('filters.any')}</SelectItem>
+                  <SelectItem key="any" value="any">{t('filters.any')}</SelectItem>
                   {bedroomOptions.filter(opt => opt.value !== 'any').map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -668,7 +668,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                   <SelectValue>{formValues.bathrooms ? `${formValues.bathrooms}+` : t('filters.any')}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="any">{t('filters.any')}</SelectItem>
+                  <SelectItem key="any" value="any">{t('filters.any')}</SelectItem>
                   {bathroomOptions.filter(opt => opt.value !== 'any').map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}

@@ -249,7 +249,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
     <div className={cn('space-y-4', className)}>
       <div className="space-y-4">
         {showState && (
-          <div className="space-y-2">
+          <div className="space-y-2" data-field="state">
             <Label htmlFor="state" className="text-sm font-semibold text-gray-700">
               {t('location.state')}
             </Label>
@@ -280,7 +280,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
         )}
 
         {showCity && (
-          <div className="space-y-2">
+          <div className="space-y-2" data-field="city">
             <Label htmlFor="city" className="text-sm font-semibold text-gray-700">
               {t('location.city')}
             </Label>
