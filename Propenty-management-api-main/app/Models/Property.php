@@ -30,7 +30,6 @@ class Property extends Model implements HasMedia
         'street_address',
         'city',
         'state',
-        'postal_code',
         // 'country', // Removed - Syria-only application
         'latitude',
         'longitude',
@@ -248,7 +247,7 @@ class Property extends Model implements HasMedia
         $address = $this->ensureUtf8($this->street_address);
         if ($this->city) $address .= ', ' . $this->ensureUtf8($this->city);
         if ($this->state) $address .= ', ' . $this->ensureUtf8($this->state);
-        if ($this->postal_code) $address .= ' ' . $this->postal_code;
+        // Postal code field removed from database
         // Country field removed - Syria-only application
 
         return $address;

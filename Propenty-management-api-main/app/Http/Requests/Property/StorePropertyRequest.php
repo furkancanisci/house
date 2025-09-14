@@ -32,7 +32,6 @@ class StorePropertyRequest extends FormRequest
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
-            'postalCode' => 'required|string|min:1|max:20',
             'country' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
@@ -110,9 +109,7 @@ class StorePropertyRequest extends FormRequest
         if ($this->has('address') || $this->has('street_address')) {
             $data['address'] = $this->input('address') ?? $this->input('street_address');
         }
-        if ($this->has('postalCode') || $this->has('postal_code')) {
-            $data['postalCode'] = $this->input('postalCode') ?? $this->input('postal_code');
-        }
+        // Postal code field has been removed from the database
         if ($this->has('squareFootage') || $this->has('square_feet')) {
             $data['squareFootage'] = $this->input('squareFootage') ?? $this->input('square_feet');
         }

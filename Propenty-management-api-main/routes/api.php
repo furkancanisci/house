@@ -84,6 +84,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/', [PropertyController::class, 'index']);
         Route::get('/featured', [PropertyController::class, 'featured']);
         Route::get('/amenities', [PropertyController::class, 'amenities']);
+        Route::get('/price-types', [PropertyController::class, 'priceTypes']);
         Route::get('/test', [PropertyController::class, 'test']);
 
         // More specific routes should come first to avoid conflicts

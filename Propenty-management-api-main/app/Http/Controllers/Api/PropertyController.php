@@ -23,7 +23,7 @@ class PropertyController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:sanctum')->except(['index', 'show', 'featured']);
+        $this->middleware('auth:sanctum')->except(['index', 'show', 'featured', 'priceTypes']);
     }
 
     /**
@@ -35,7 +35,6 @@ class PropertyController extends Controller
             'propertyType' => 'property_type',
             'listingType' => 'listing_type',
             'address' => 'street_address',
-            'postalCode' => 'postal_code',
             'squareFootage' => 'square_feet',
             'lotSize' => 'lot_size',
             'yearBuilt' => 'year_built',
@@ -94,7 +93,6 @@ class PropertyController extends Controller
                 'street_address' => '123 Test St',
                 'city' => 'Test City',
                 'state' => 'TS',
-                'postal_code' => '12345',
                 'bedrooms' => 2,
                 'bathrooms' => 1,
                 'contact_name' => 'John Doe',
@@ -273,7 +271,7 @@ class PropertyController extends Controller
         $query->select([
             'id', 'title', 'description', 'slug', 'property_type', 'listing_type',
             'bedrooms', 'bathrooms', 'square_feet', 'year_built', 'price', 'price_type',
-            'street_address', 'city', 'state', 'postal_code', 'neighborhood',
+            'street_address', 'city', 'state', 'neighborhood',
             'latitude', 'longitude', 'nearby_places', 'status', 'is_featured',
             'is_available', 'available_from', 'published_at', 'views_count',
             'user_id', 'document_type_id', 'created_at', 'updated_at'
@@ -961,5 +959,56 @@ class PropertyController extends Controller
     /**
      * Get available amenities for properties.
      */
+    public function amenities(Request $request): JsonResponse
+    {
+        try {
+            $features = \App\Models\Feature::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+            
+            $utilities = \App\Models\Utility::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+            
+            return response()->json([
+                'features' => $features,
+                'utilities' => $utilities
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching amenities',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available price types for properties.
+     */
+    public function priceTypes(Request $request): JsonResponse
+    {
+        try {
+            $listingType = $request->query('listing_type');
+            
+            $query = \App\Models\PriceType::where('is_active', true);
+            
+            if ($listingType && in_array($listingType, ['rent', 'sale'])) {
+                $query->where('listing_type', $listingType);
+            }
+            
+            $priceTypes = $query->orderBy('id')->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $priceTypes
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching price types',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 }

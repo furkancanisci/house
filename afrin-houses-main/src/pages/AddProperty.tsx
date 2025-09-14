@@ -53,6 +53,7 @@ import LocationSelector from '../components/LocationSelector';
 import PropertyLocationMap from '../components/PropertyLocationMap';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
+import { priceTypeService, PriceType } from '../services/priceTypeService';
 import api from '../services/api';
 
 // Types for features and utilities
@@ -88,57 +89,55 @@ interface Utility {
   is_active: boolean;
 }
 
-const propertySchema = z.object({
-  title: z.string().min(1, 'Property title is required').max(255, 'Title cannot exceed 255 characters'),
-  address: z.string().min(1, 'Address is required'),
-  city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
-  state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
-  postalCode: z.string().min(1, 'Postal code is required').max(20, 'Postal code cannot exceed 20 characters'),
-  price: z.number().min(0, 'Price must be 0 or greater').max(99999999.99, 'Price is too high'),
-  priceType: z.enum(['monthly', 'yearly', 'total', 'fixed', 'negotiable', 'finalPrice', 'folkSaying', 'lastPrice']),
+// Create schema factory function to use translation
+const createPropertySchema = (t: any) => z.object({
+  title: z.string().min(1, t('validation.propertyTitleRequired')).max(255, t('validation.titleMaxLength')),
+  address: z.string().min(1, t('validation.addressRequired')).max(500, t('validation.addressMaxLength')),
+  city: z.string().min(1, t('validation.cityRequired')).max(100, t('validation.cityMaxLength')),
+  state: z.string().min(1, t('validation.stateRequired')).max(100, t('validation.stateMaxLength')),
+  price: z.number().min(1, t('validation.priceRequired')).max(99999999.99, t('validation.priceTooHigh')),
+  priceType: z.string().min(1, t('validation.priceTypeRequired')),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
-  documentTypeId: z.string().optional(),
-  bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater').max(20, 'Bedrooms cannot exceed 20'),
-  bathrooms: z.number().min(0, 'Bathrooms must be 0 or greater').max(20, 'Bathrooms cannot exceed 20'),
-  squareFootage: z.number().min(1, 'Square footage must be greater than 0').max(50000, 'Square footage cannot exceed 50,000').optional(),
-  description: z.string().min(10, 'Description must be at least 10 characters').max(5000, 'Description cannot exceed 5000 characters'),
-  yearBuilt: z.number().min(1800, 'Year built must be valid').max(new Date().getFullYear() + 2, 'Year built cannot be in the future').optional(),
+  documentTypeId: z.string().min(1, t('validation.documentTypeRequired')),
+  bedrooms: z.number().min(1, t('validation.bedroomsRequired')).max(20, t('validation.bedroomsMaxLimit')),
+  bathrooms: z.number().min(1, t('validation.bathroomsRequired')).max(20, t('validation.bathroomsMaxLimit')),
+  squareFootage: z.number().min(1, t('validation.squareFootageRequired')).max(50000, t('validation.squareFootageMaxLimit')),
+  description: z.string().min(10, t('validation.descriptionMinLength')).max(5000, t('validation.descriptionMaxLength')),
+  yearBuilt: z.number().min(1800, t('validation.yearBuiltRequired')).max(new Date().getFullYear() + 2, t('validation.yearBuiltFuture')),
   availableDate: z.string().optional(),
   petPolicy: z.string().optional(),
-  parking: z.string().min(1, 'Parking type is required'),
+  parking: z.string().min(1, t('validation.parkingRequired')),
   utilities: z.string().optional(),
   lotSize: z.union([
     z.string()
-      .min(1, 'Lot size is required')
+      .min(1, t('validation.lotSizeRequired'))
       .refine(val => /^\d+$/.test(val), {
-        message: 'Lot size must be a positive integer'
+        message: t('validation.lotSizePositiveInteger')
       })
       .transform((val) => parseInt(val, 10))
       .refine(val => val > 0, {
-        message: 'Lot size must be greater than 0'
+        message: t('validation.lotSizeGreaterThanZero')
       })
       .refine(val => val <= 1000000, {
-        message: 'Lot size is too large'
+        message: t('validation.lotSizeTooLarge')
       }),
     z.number()
-      .int('Lot size must be an integer')
-      .positive('Lot size must be greater than 0')
-      .max(1000000, 'Lot size is too large')
+      .int(t('validation.lotSizeInteger'))
+      .positive(t('validation.lotSizeGreaterThanZero'))
+      .max(1000000, t('validation.lotSizeTooLarge'))
   ]),
   garage: z.string().optional(),
   heating: z.string().optional(),
   hoaFees: z.string().optional(),
   building: z.string().optional(),
   pool: z.string().optional(),
-  contactName: z.string().min(1, 'Contact name is required'),
-  contactPhone: z.string().min(1, 'Contact phone is required'),
-  contactEmail: z.string().email('Valid email is required'),
+  contactName: z.string().min(1, t('validation.contactNameRequired')),
+  contactPhone: z.string().min(1, t('validation.contactPhoneRequired')),
+  contactEmail: z.string().email(t('validation.validEmailRequired')),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
 });
-
-type PropertyFormData = z.infer<typeof propertySchema>;
 
 const AddProperty: React.FC = () => {
   const { state, addProperty } = useApp();
@@ -147,6 +146,10 @@ const AddProperty: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
   const { isAuthenticated, showAuthModal, openAuthModal, closeAuthModal, requireAuth } = useAuthCheck();
+  
+  // Create the schema with translation function
+  const propertySchema = React.useMemo(() => createPropertySchema(t), [t]);
+  type PropertyFormData = z.infer<typeof propertySchema>;
   const [selectedFeatures, setSelectedFeatures] = useState<number[]>(() => {
     // Restore selected features from localStorage
     const savedFeatures = localStorage.getItem('addProperty_selectedFeatures');
@@ -235,14 +238,15 @@ const AddProperty: React.FC = () => {
         address: '',
         city: '',
         state: '',
-        postalCode: '',
         listingType: 'rent',
         propertyType: 'apartment',
+        priceType: undefined, // Use undefined for proper Select component behavior
+        documentTypeId: undefined, // Required field
         bedrooms: 1,
         bathrooms: 1,
         squareFootage: 500,
-        yearBuilt: 2020,
-        price: 0,
+        yearBuilt: new Date().getFullYear(),
+        price: 1, // Changed from 0 to 1 since price must be greater than 0
         description: '',
         parking: 'none',
         lotSize: 1000, // Default lot size value since it's now mandatory
@@ -339,11 +343,21 @@ const AddProperty: React.FC = () => {
     loadDocumentTypes();
   }, [i18n.language]);
 
-  // Load features and utilities when component mounts or language changes
+  // Load features and utilities only when reaching step 2 (Property Details) or language changes
   useEffect(() => {
-    fetchFeatures();
-    fetchUtilities();
-  }, [i18n.language]);
+    if (currentStep >= 2) {
+      fetchFeatures();
+      fetchUtilities();
+    }
+  }, [currentStep, i18n.language]);
+
+  // Load price types only when in step 2 (Property Details) and listing type is selected
+  useEffect(() => {
+    const listingType = watch('listingType');
+    if (currentStep === 2 && listingType) {
+      fetchPriceTypes(listingType);
+    }
+  }, [currentStep, watch('listingType')]);
   
   // Debug logging
   useEffect(() => {
@@ -362,6 +376,11 @@ const AddProperty: React.FC = () => {
   const [loadingUtilities, setLoadingUtilities] = useState(false);
   const [featuresError, setFeaturesError] = useState<string | null>(null);
   const [utilitiesError, setUtilitiesError] = useState<string | null>(null);
+
+  // State for price types from API
+  const [availablePriceTypes, setAvailablePriceTypes] = useState<PriceType[]>([]);
+  const [loadingPriceTypes, setLoadingPriceTypes] = useState(false);
+  const [priceTypesError, setPriceTypesError] = useState<string | null>(null);
 
   // Fetch features from API
   const fetchFeatures = async () => {
@@ -410,6 +429,44 @@ const AddProperty: React.FC = () => {
       notification.error('Failed to load utilities');
     } finally {
       setLoadingUtilities(false);
+    }
+  };
+
+  // Fetch price types from API
+  const fetchPriceTypes = async (listingType?: 'rent' | 'sale') => {
+    setLoadingPriceTypes(true);
+    setPriceTypesError(null);
+    try {
+      const priceTypes = await priceTypeService.getPriceTypes(listingType);
+      setAvailablePriceTypes(priceTypes);
+      
+      // Set default price type based on listing type
+      if (priceTypes.length > 0) {
+        let defaultPriceType = priceTypes[0]; // fallback to first option
+        
+        if (listingType === 'rent') {
+          // For rent, prefer 'monthly' price type
+          const monthlyType = priceTypes.find(pt => pt.key === 'monthly');
+          if (monthlyType) {
+            defaultPriceType = monthlyType;
+          }
+        } else if (listingType === 'sale') {
+          // For sale, prefer 'total' price type
+          const totalType = priceTypes.find(pt => pt.key === 'total');
+          if (totalType) {
+            defaultPriceType = totalType;
+          }
+        }
+        
+        // Set the default value in the form
+        setValue('priceType', defaultPriceType.key);
+      }
+    } catch (error) {
+      console.error('Error fetching price types:', error);
+      setPriceTypesError('Failed to load price types');
+      notification.error('Failed to load price types');
+    } finally {
+      setLoadingPriceTypes(false);
     }
   };
 
@@ -474,7 +531,9 @@ const AddProperty: React.FC = () => {
 
 
   const nextStep = async () => {
+    console.log('=== NEXT STEP DEBUG ===');
     console.log('Next button clicked, current step:', currentStep);
+    console.log('Total steps:', totalSteps);
     
     // Prevent moving beyond the last step
     if (currentStep >= totalSteps) {
@@ -483,25 +542,96 @@ const AddProperty: React.FC = () => {
     }
     
     const fieldsToValidate = getFieldsForStep(currentStep);
-    console.log('Fields to validate:', fieldsToValidate);
+    console.log('Fields to validate for step', currentStep, ':', fieldsToValidate);
+    
+    // Get current form values
+    const currentValues = getValues();
+    console.log('Current form values:', currentValues);
+    
+    // Check each field individually
+    fieldsToValidate.forEach(field => {
+      const value = currentValues[field];
+      const error = errors[field];
+      console.log(`Field ${field}:`, { value, error, isEmpty: !value || value === '' });
+    });
 
     try {
+      console.log('Triggering validation...');
       const isValid = await trigger(fieldsToValidate);
       console.log('Validation result:', isValid);
-      console.log('Current errors:', errors);
+      console.log('Current errors after validation:', errors);
+      
+      // Log specific field errors
+      fieldsToValidate.forEach(field => {
+        if (errors[field]) {
+          console.log(`Error for ${field}:`, errors[field]?.message);
+        }
+      });
 
       if (isValid) {
         console.log('Validation passed, moving to next step');
-        setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+        setCurrentStep(prev => {
+          const newStep = Math.min(prev + 1, totalSteps);
+          console.log('Moving from step', prev, 'to step', newStep);
+          return newStep;
+        });
       } else {
         console.log('Validation failed, staying on current step');
-        // Show validation errors to user
-        notification.error('Please fill in all required fields correctly');
+        const failedFields = fieldsToValidate.filter(field => errors[field]);
+        console.log('Failed fields:', failedFields);
+        
+        // Focus on the first field with an error
+        if (failedFields.length > 0) {
+          const firstErrorField = failedFields[0];
+          console.log('Focusing on first error field:', firstErrorField);
+          
+          // Use setTimeout to ensure the DOM is updated
+          setTimeout(() => {
+            let element: HTMLElement | null = null;
+            
+            // Try different selectors based on field type
+            if (firstErrorField === 'city' || firstErrorField === 'state') {
+              // For Select components in LocationSelector, find the trigger button
+              const selectTrigger = document.querySelector(`[data-field="${firstErrorField}"] button[role="combobox"]`) ||
+                                  document.querySelector(`label[for="${firstErrorField}"] + div button[role="combobox"]`) ||
+                                  document.querySelector(`div:has(label[for="${firstErrorField}"]) button[role="combobox"]`);
+              element = selectTrigger as HTMLElement;
+              console.log(`Found Select trigger for ${firstErrorField}:`, element);
+            } else {
+              // For regular input fields
+              element = document.getElementById(firstErrorField) || 
+                       document.querySelector(`[name="${firstErrorField}"]`) ||
+                       document.querySelector(`input[name="${firstErrorField}"]`) ||
+                       document.querySelector(`select[name="${firstErrorField}"]`) ||
+                       document.querySelector(`textarea[name="${firstErrorField}"]`) as HTMLElement;
+            }
+            
+            if (element) {
+              console.log('Found element to focus:', element);
+              element.focus();
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+              console.log('Could not find element to focus for field:', firstErrorField);
+              // Try a more generic approach - find any focusable element in the section with the error
+              const errorSection = document.querySelector(`[data-field="${firstErrorField}"]`) ||
+                                  document.querySelector(`label[for="${firstErrorField}"]`)?.closest('div');
+              if (errorSection) {
+                const focusableElement = errorSection.querySelector('input, select, textarea, button[role="combobox"]') as HTMLElement;
+                if (focusableElement) {
+                  console.log('Found focusable element in error section:', focusableElement);
+                  focusableElement.focus();
+                  focusableElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }
+            }
+          }, 100);
+        }
       }
     } catch (error) {
       console.error('Error during validation:', error);
-      notification.error('Validation error occurred');
+      // Validation errors are already displayed below each input field with red borders
     }
+    console.log('=== END NEXT STEP DEBUG ===');
   };
 
   const prevStep = () => {
@@ -700,7 +830,7 @@ const AddProperty: React.FC = () => {
   const getFieldsForStep = (step: number) => {
     switch (step) {
       case 1:
-        return ['title', 'address', 'city', 'state', 'postalCode', 'listingType', 'propertyType'] as (keyof PropertyFormData)[];
+        return ['title', 'address', 'city', 'state', 'listingType', 'propertyType', 'documentTypeId'] as (keyof PropertyFormData)[];
       case 2:
         return ['price', 'priceType', 'bedrooms', 'bathrooms', 'squareFootage', 'yearBuilt', 'parking'] as (keyof PropertyFormData)[];
       case 3:
@@ -748,19 +878,20 @@ const AddProperty: React.FC = () => {
       const street = addressParts[0] || '';
       let city = selectedCity || formData.city || addressParts[1] || '';
       let state = selectedState || formData.state || '';
-      let postalCode = formData.postalCode || '';
 
-      console.log('Parsed address:', { street, city, state, postalCode });
+      console.log('Parsed address:', { street, city, state });
 
-      // If city, state, postalCode are not provided, try to parse from address
-      if (!city || !state || !postalCode) {
-        if (addressParts.length >= 3) {
+      // If city, state are not provided, try to parse from address
+      if (!city || !state) {
+        if (addressParts.length >= 2) {
           city = city || addressParts[1];
-          const lastPart = addressParts[addressParts.length - 1];
-          const stateZipMatch = lastPart.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
-          if (stateZipMatch) {
-            state = state || stateZipMatch[1];
-            postalCode = postalCode || stateZipMatch[2];
+          if (addressParts.length >= 3) {
+            const lastPart = addressParts[addressParts.length - 1];
+            // Extract state from the last part (remove any postal code)
+            const stateMatch = lastPart.match(/^(.+?)(?:\s+\d{5}(?:-\d{4})?)?$/);
+            if (stateMatch) {
+              state = state || stateMatch[1];
+            }
           }
         }
       }
@@ -775,7 +906,6 @@ const AddProperty: React.FC = () => {
         address: street,
         city: city,
         state: state,
-        postalCode: postalCode,
         latitude: coordinates?.lat,
         longitude: coordinates?.lng,
         bedrooms: Number(data.bedrooms || 0),
@@ -930,33 +1060,12 @@ const AddProperty: React.FC = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <LocationSelector
-                      onLocationChange={handleLocationChange}
-                      initialCity={selectedCity}
-                      initialState={selectedState}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="postalCode" className="text-sm font-medium text-gray-700 mb-2 block">
-                      {t('forms.postalCode')} <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="postalCode"
-                      placeholder={t('forms.postalCodePlaceholder')}
-                      className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-green-100 hover:border-green-300 ${errors.postalCode ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-green-500'
-                        }`}
-                      {...register('postalCode')}
-                    />
-                    {errors.postalCode && (
-                      <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                        <X className="h-4 w-4" />
-                        {errors.postalCode.message}
-                      </p>
-                    )}
-                  </div>
+                <div>
+                  <LocationSelector
+                    onLocationChange={handleLocationChange}
+                    initialCity={selectedCity}
+                    initialState={selectedState}
+                  />
                 </div>
               </div>
             </div>
@@ -996,7 +1105,7 @@ const AddProperty: React.FC = () => {
                     name="listingType"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200">
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-3 w-3 text-purple-600" />
@@ -1004,13 +1113,13 @@ const AddProperty: React.FC = () => {
                           </div>
                         </SelectTrigger>
                         <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
-                          <SelectItem value="rent" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                          <SelectItem key="rent" value="rent" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <div className="w-1.5 h-1.5 bg-[#067977] rounded-full"></div>
                               {t('property.listingTypes.forRent')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="sale" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                          <SelectItem key="sale" value="sale" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                               {t('property.listingTypes.forSale')}
@@ -1030,7 +1139,7 @@ const AddProperty: React.FC = () => {
                     name="propertyType"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200">
                           <div className="flex items-center gap-1">
                             <Home className="h-3 w-3 text-purple-600" />
@@ -1038,55 +1147,55 @@ const AddProperty: React.FC = () => {
                           </div>
                         </SelectTrigger>
                         <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
-                          <SelectItem value="apartment" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                          <SelectItem key="apartment" value="apartment" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <Building className="h-3 w-3 text-[#067977]" />
                               {t('property.types.apartment')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="house" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                          <SelectItem key="house" value="house" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <Home className="h-3 w-3 text-green-600" />
                               {t('property.types.house')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="villa" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                          <SelectItem key="villa" value="villa" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <Star className="h-3 w-3 text-yellow-600" />
                               {t('property.types.villa')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="condo" className="text-sm py-2">
+                          <SelectItem key="condo" value="condo" className="text-sm py-2">
                             <div className="flex items-center gap-2">
                               <Building className="h-3 w-3 text-purple-600" />
                               {t('property.types.condo')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="townhouse" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                          <SelectItem key="townhouse" value="townhouse" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <Home className="h-3 w-3 text-indigo-600" />
                               {t('property.types.townhouse')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="studio" className="text-sm py-2">
+                          <SelectItem key="studio" value="studio" className="text-sm py-2">
                             <div className="flex items-center gap-2">
                               <Square className="h-3 w-3 text-orange-600" />
                               {t('property.types.studio')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="loft" className="text-sm py-2">
+                          <SelectItem key="loft" value="loft" className="text-sm py-2">
                             <div className="flex items-center gap-2">
                               <Building className="h-3 w-3 text-red-600" />
                               {t('property.types.loft')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="commercial" className="text-sm py-2">
+                          <SelectItem key="commercial" value="commercial" className="text-sm py-2">
                             <div className="flex items-center gap-2">
                               <Building className="h-3 w-3 text-gray-600" />
                               {t('property.types.commercial')}
                             </div>
                           </SelectItem>
-                          <SelectItem value="land" className="text-sm py-2">
+                          <SelectItem key="land" value="land" className="text-sm py-2">
                             <div className="flex items-center gap-2">
                               <Square className="h-3 w-3 text-brown-600" />
                               {t('property.types.land')}
@@ -1163,41 +1272,33 @@ const AddProperty: React.FC = () => {
                     name="priceType"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.priceType ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'}`}>
                           <SelectValue placeholder={t('property.selectPriceType')} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
-                          {watch('listingType') === 'rent' ? (
-                            <>
-                              <SelectItem value="monthly" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.monthly')}
-                              </SelectItem>
-                              <SelectItem value="yearly" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.yearly')}
-                              </SelectItem>
-                            </>
+                          {loadingPriceTypes ? (
+                            <SelectItem key="loading" value="loading" disabled className="text-sm py-3 px-4">
+                              {t('common.loading')}
+                            </SelectItem>
+                          ) : priceTypesError ? (
+                            <SelectItem key="error" value="error" disabled className="text-sm py-3 px-4 text-red-500">
+                              {t('common.error')}
+                            </SelectItem>
                           ) : (
-                            <>
-                              <SelectItem value="total" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.total')}
+                            availablePriceTypes.map((priceType) => (
+                              <SelectItem
+                                key={priceType.id} 
+                                value={priceType.key} 
+                                className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer"
+                              >
+                                <span key={`price-type-${priceType.id}`}>
+                                  {i18n.language === 'ar' ? priceType.name_ar : 
+                                   i18n.language === 'ku' ? priceType.name_ku : 
+                                   priceType.name_en}
+                                </span>
                               </SelectItem>
-                              <SelectItem value="fixed" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.fixed')}
-                              </SelectItem>
-                              <SelectItem value="negotiable" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.negotiable')}
-                              </SelectItem>
-                              <SelectItem value="finalPrice" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.finalPrice')}
-                              </SelectItem>
-                              <SelectItem value="folkSaying" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.folkSaying')}
-                              </SelectItem>
-                              <SelectItem value="lastPrice" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.lastPrice')}
-                              </SelectItem>
-                            </>
+                            ))
                           )}
                         </SelectContent>
                       </Select>
@@ -1374,7 +1475,7 @@ const AddProperty: React.FC = () => {
                   name="parking"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
+                    <Select onValueChange={field.onChange} value={field.value || 'none'}>
                       <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200">
                         <div className="flex items-center gap-1">
                           <Car className="h-3 w-3 text-orange-600" />
@@ -1382,31 +1483,31 @@ const AddProperty: React.FC = () => {
                         </div>
                       </SelectTrigger>
                       <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
-                        <SelectItem value="none" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                        <SelectItem key="none" value="none" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
                             {t('addProperty.parkingTypes.noParking')}
                           </div>
                         </SelectItem>
-                        <SelectItem value="street" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                        <SelectItem key="street" value="street" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
                             {t('addProperty.parkingTypes.streetParking')}
                           </div>
                         </SelectItem>
-                        <SelectItem value="garage" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                        <SelectItem key="garage" value="garage" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                             {t('addProperty.parkingTypes.closedGarage')}
                           </div>
                         </SelectItem>
-                        <SelectItem value="driveway" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                        <SelectItem key="driveway" value="driveway" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-[#067977] rounded-full"></div>
                             {t('addProperty.parkingTypes.privateDriveway')}
                           </div>
                         </SelectItem>
-                        <SelectItem value="carport" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
+                        <SelectItem key="carport" value="carport" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
                             {t('addProperty.parkingTypes.carShelter')}
@@ -1710,6 +1811,11 @@ const AddProperty: React.FC = () => {
                 icon={User}
                 placeholder={t('forms.yourFullName')}
                 className={`text-sm h-9 ${errors.contactName ? 'border-red-500' : ''}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
                 {...register('contactName')}
               />
               {errors.contactName && (
@@ -1724,6 +1830,11 @@ const AddProperty: React.FC = () => {
                 icon={Phone}
                 placeholder={t('forms.phoneNumberPlaceholder')}
                 className={`text-sm h-9 ${errors.contactPhone ? 'border-red-500' : ''}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
                 {...register('contactPhone')}
               />
               {errors.contactPhone && (
@@ -1739,6 +1850,11 @@ const AddProperty: React.FC = () => {
                 icon={Mail}
                 placeholder={t('forms.emailAddressPlaceholder')}
                 className={`text-sm h-9 ${errors.contactEmail ? 'border-red-500' : ''}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
                 {...register('contactEmail')}
               />
               {errors.contactEmail && (
@@ -1957,8 +2073,7 @@ const AddProperty: React.FC = () => {
         message={t('auth.requireAuth.addPropertyMessage')}
         onSuccess={() => {
           closeAuthModal();
-          // After successful login, the form will be automatically submitted
-          // since the user is now authenticated
+          // User is now authenticated and can manually submit the form by clicking the button
         }}
       />
     </div>

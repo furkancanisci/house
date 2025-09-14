@@ -197,6 +197,16 @@ img {
   }
 }
 
+/* Fix for Select component - hide indicator when not selected */
+[data-radix-select-item] [data-radix-select-item-indicator] {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+[data-radix-select-item][data-state="checked"] [data-radix-select-item-indicator] {
+  opacity: 1;
+}
+
 /* RTL Support Enhancements */
 [dir="rtl"] {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

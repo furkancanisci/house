@@ -218,7 +218,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         id="modal-login-email"
                         type="email"
                         placeholder={t('auth.placeholders.enterEmail')}
-                        className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
+                        className={`${i18n.language === 'ar' ? 'pr-10 pl-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                         {...loginForm.register('email')}
                       />
                     </div>
@@ -239,13 +239,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         id="modal-login-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder={t('auth.placeholders.enterPassword')}
-                        className={`${i18n.language === 'ar' ? 'pr-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
+                        className={`${i18n.language === 'ar' ? 'pr-10 pl-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                         {...loginForm.register('password')}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]"
+                        className={`absolute ${i18n.language === 'ar' ? 'left-3' : 'right-3'} top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]`}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -280,7 +280,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                           id="modal-register-first-name"
                           type="text"
                           placeholder={t('auth.placeholders.enterFirstName')}
-                          className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
+                          className={`${i18n.language === 'ar' ? 'pr-10 pl-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                           {...registerForm.register('first_name')}
                         />
                       </div>
@@ -300,7 +300,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                           id="modal-register-last-name"
                           type="text"
                           placeholder={t('auth.placeholders.enterLastName')}
-                          className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
+                          className={`${i18n.language === 'ar' ? 'pr-10 pl-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                           {...registerForm.register('last_name')}
                         />
                       </div>
@@ -322,7 +322,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         id="modal-register-email"
                         type="email"
                         placeholder={t('auth.placeholders.enterEmail')}
-                        className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
+                        className={`${i18n.language === 'ar' ? 'pr-10 pl-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                         {...registerForm.register('email')}
                       />
                     </div>
@@ -343,7 +343,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         id="modal-register-phone"
                         type="tel"
                         placeholder={t('auth.placeholders.enterPhone')}
-                        className={`${i18n.language === 'ar' ? 'pr-10 pl-3' : 'pl-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
+                        className={`${i18n.language === 'ar' ? 'pr-10 pl-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                         {...registerForm.register('phone')}
                       />
                     </div>
@@ -359,13 +359,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         id="modal-register-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder={t('auth.placeholders.createPassword')}
-                        className={`${i18n.language === 'ar' ? 'pr-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
+                        className={`${i18n.language === 'ar' ? 'pr-10 pl-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                         {...registerForm.register('password')}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]"
+                        className={`absolute ${i18n.language === 'ar' ? 'left-3' : 'right-3'} top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]`}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -387,13 +387,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         id="modal-register-confirm-password"
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder={t('auth.placeholders.confirmPassword')}
-                        className={`${i18n.language === 'ar' ? 'pr-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
+                        className={`${i18n.language === 'ar' ? 'pr-10 pl-10' : 'pl-10 pr-10'} border-[#067977]/20 focus:border-[#067977] focus:ring-[#067977]/20`}
                         {...registerForm.register('confirmPassword')}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]"
+                        className={`absolute ${i18n.language === 'ar' ? 'left-3' : 'right-3'} top-1/2 transform -translate-y-1/2 text-[#067977]/60 hover:text-[#067977]`}
                       >
                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>

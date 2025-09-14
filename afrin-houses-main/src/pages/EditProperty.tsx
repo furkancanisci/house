@@ -38,10 +38,12 @@ import {
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
+import { priceTypeService, PriceType } from '../services/priceTypeService';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required'),
@@ -49,7 +51,7 @@ const propertySchema = z.object({
   city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
   state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
   price: z.number().min(1, 'Price must be greater than 0'),
-  priceType: z.enum(['monthly', 'yearly', 'total', 'fixed', 'negotiable', 'finalPrice', 'folkSaying', 'lastPrice']),
+  priceType: z.string().min(1, 'Price type is required'),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
   documentTypeId: z.string().optional(),
@@ -93,6 +95,11 @@ const EditProperty: React.FC = () => {
   // Document types state
   const [documentTypes, setDocumentTypes] = useState<PropertyDocumentType[]>([]);
   const [loadingDocumentTypes, setLoadingDocumentTypes] = useState(false);
+  
+  // Price types state
+  const [priceTypes, setPriceTypes] = useState<PriceType[]>([]);
+  const [priceTypesLoading, setPriceTypesLoading] = useState(false);
+  const [priceTypesError, setPriceTypesError] = useState<string | null>(null);
 
   const {
     register,
@@ -281,6 +288,34 @@ const EditProperty: React.FC = () => {
     loadDocumentTypes();
   }, []);
 
+  // Fetch price types from API
+  const fetchPriceTypes = async (listingType?: 'rent' | 'sale') => {
+    setPriceTypesLoading(true);
+    setPriceTypesError(null);
+    try {
+      const priceTypesData = await priceTypeService.getPriceTypes(listingType);
+      setPriceTypes(priceTypesData);
+    } catch (error) {
+      console.error('Error fetching price types:', error);
+      setPriceTypesError('Failed to load price types');
+      toast.error('Failed to load price types');
+    } finally {
+      setPriceTypesLoading(false);
+    }
+  };
+
+  // Load price types on component mount and when listing type changes
+  useEffect(() => {
+    fetchPriceTypes();
+  }, []);
+
+  useEffect(() => {
+    const listingType = watch('listingType');
+    if (listingType) {
+      fetchPriceTypes(listingType);
+    }
+  }, [watch('listingType')]);
+
   const handleFeatureToggle = (feature: string) => {
     setSelectedFeatures(prev =>
       prev.includes(feature)
@@ -462,8 +497,8 @@ const EditProperty: React.FC = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="rent">For Rent</SelectItem>
-                          <SelectItem value="sale">For Sale</SelectItem>
+                          <SelectItem key="rent" value="rent">For Rent</SelectItem>
+                          <SelectItem key="sale" value="sale">For Sale</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -481,15 +516,15 @@ const EditProperty: React.FC = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="apartment">Apartment</SelectItem>
-                          <SelectItem value="house">House</SelectItem>
-                          <SelectItem value="condo">Condo</SelectItem>
-                          <SelectItem value="townhouse">Townhouse</SelectItem>
-                          <SelectItem value="studio">Studio</SelectItem>
-                          <SelectItem value="loft">Loft</SelectItem>
-                          <SelectItem value="villa">Villa</SelectItem>
-                          <SelectItem value="commercial">Commercial</SelectItem>
-                          <SelectItem value="land">Land</SelectItem>
+                          <SelectItem key="apartment" value="apartment">Apartment</SelectItem>
+                          <SelectItem key="house" value="house">House</SelectItem>
+                          <SelectItem key="condo" value="condo">Condo</SelectItem>
+                          <SelectItem key="townhouse" value="townhouse">Townhouse</SelectItem>
+                          <SelectItem key="studio" value="studio">Studio</SelectItem>
+                          <SelectItem key="loft" value="loft">Loft</SelectItem>
+                          <SelectItem key="villa" value="villa">Villa</SelectItem>
+                          <SelectItem key="commercial" value="commercial">Commercial</SelectItem>
+                          <SelectItem key="land" value="land">Land</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -554,36 +589,26 @@ const EditProperty: React.FC = () => {
                           <SelectValue placeholder={t('property.selectPriceType')} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
-                          {watch('listingType') === 'rent' ? (
-                            <>
-                              <SelectItem value="monthly" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.monthly')}
-                              </SelectItem>
-                              <SelectItem value="yearly" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.yearly')}
-                              </SelectItem>
-                            </>
+                          {priceTypesLoading ? (
+                            <SelectItem value="loading" disabled className="text-sm py-3 px-4">
+                              {t('common.loading')}
+                            </SelectItem>
+                          ) : priceTypesError ? (
+                            <SelectItem value="error" disabled className="text-sm py-3 px-4 text-red-500">
+                              {t('common.error')}
+                            </SelectItem>
                           ) : (
-                            <>
-                              <SelectItem value="total" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.total')}
+                            priceTypes.map((priceType) => (
+                              <SelectItem 
+                                key={priceType.id} 
+                                value={priceType.slug} 
+                                className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer"
+                              >
+                                {i18n.language === 'ar' ? priceType.name_ar : 
+                                 i18n.language === 'ku' ? priceType.name_ku : 
+                                 priceType.name_en}
                               </SelectItem>
-                              <SelectItem value="fixed" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.fixed')}
-                              </SelectItem>
-                              <SelectItem value="negotiable" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.negotiable')}
-                              </SelectItem>
-                              <SelectItem value="finalPrice" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.finalPrice')}
-                              </SelectItem>
-                              <SelectItem value="folkSaying" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.folkSaying')}
-                              </SelectItem>
-                              <SelectItem value="lastPrice" className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer">
-                                {t('property.priceTypes.lastPrice')}
-                              </SelectItem>
-                            </>
+                            ))
                           )}
                         </SelectContent>
                       </Select>
@@ -688,16 +713,16 @@ const EditProperty: React.FC = () => {
                     name="parking"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
+                      <Select onValueChange={field.onChange} value={field.value || 'none'}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select parking type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">No Parking</SelectItem>
-                          <SelectItem value="street">Street Parking</SelectItem>
-                          <SelectItem value="garage">Garage</SelectItem>
-                          <SelectItem value="driveway">Driveway</SelectItem>
-                          <SelectItem value="carport">Carport</SelectItem>
+                          <SelectItem key="none" value="none">No Parking</SelectItem>
+                          <SelectItem key="street" value="street">Street Parking</SelectItem>
+                          <SelectItem key="garage" value="garage">Garage</SelectItem>
+                          <SelectItem key="driveway" value="driveway">Driveway</SelectItem>
+                          <SelectItem key="carport" value="carport">Carport</SelectItem>
                         </SelectContent>
                       </Select>
                     )}

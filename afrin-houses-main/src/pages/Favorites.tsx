@@ -220,9 +220,9 @@ const Favorites: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="rent">For Rent</SelectItem>
-                    <SelectItem value="sale">For Sale</SelectItem>
+                    <SelectItem key="all" value="all">All Types</SelectItem>
+                    <SelectItem key="rent" value="rent">For Rent</SelectItem>
+                    <SelectItem key="sale" value="sale">For Sale</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -233,10 +233,10 @@ const Favorites: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="date-added">Recently Added</SelectItem>
-                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                    <SelectItem value="title-asc">Title: A to Z</SelectItem>
+                    <SelectItem key="date-added" value="date-added">Recently Added</SelectItem>
+                    <SelectItem key="price-asc" value="price-asc">Price: Low to High</SelectItem>
+                    <SelectItem key="price-desc" value="price-desc">Price: High to Low</SelectItem>
+                    <SelectItem key="title-asc" value="title-asc">Title: A to Z</SelectItem>
                   </SelectContent>
                 </Select>
 
