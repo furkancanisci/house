@@ -212,69 +212,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="latitude">Latitude</label>
-                                    <div class="input-group">
-                                        <input type="number" name="latitude" id="latitude" class="form-control @error('latitude') is-invalid @enderror" 
-                                               value="{{ old('latitude') }}" step="0.0000001" min="-90" max="90" readonly>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-secondary" id="clearLatLng" title="Clear coordinates">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    @error('latitude')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="longitude">Longitude</label>
-                                    <div class="input-group">
-                                        <input type="number" name="longitude" id="longitude" class="form-control @error('longitude') is-invalid @enderror" 
-                                               value="{{ old('longitude') }}" step="0.0000001" min="-180" max="180" readonly>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-primary" id="getCurrentLocation" title="Get current location">
-                                                <i class="fas fa-crosshairs"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    @error('longitude')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Interactive Map for Location Selection -->
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label>Select Location on Map</label>
-                                    <div class="card">
-                                        <div class="card-body p-0">
-                                            <div class="map-container">
-                                                <div id="propertyMap"></div>
-                                                <div class="map-overlay">
-                                                    <div class="btn-group-vertical">
-                                                        <button type="button" class="btn btn-sm btn-primary" id="searchOnMap" title="Search address on map">
-                                                            <i class="fas fa-search"></i>
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-info" id="centerMap" title="Center map on marker">
-                                                            <i class="fas fa-crosshairs"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <small class="form-text text-muted">
-                                        Click on the map to set the property location. The latitude and longitude will be automatically filled.
-                                    </small>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -498,76 +436,22 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""/>
 <style>
-    .leaflet-popup-content {
-        margin: 8px 12px;
-        line-height: 1.4;
-    }
-    .map-container {
-        margin-bottom: 1rem;
-        position: relative;
-        width: 100%;
-        max-width: 100%;
-        overflow: hidden;
-        box-sizing: border-box;
-    }
-    #propertyMap {
-        height: 400px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        position: relative;
-        z-index: 1;
-        box-sizing: border-box;
-        display: block;
-    }
-    .leaflet-container {
-        width: 100% !important;
-        height: 400px !important;
-        max-width: 100% !important;
-        position: relative !important;
-        box-sizing: border-box !important;
-        background: #f0f0f0;
-    }
-    .leaflet-map-pane {
-        width: 100% !important;
-        height: 100% !important;
-    }
-    .leaflet-tile-container {
-        width: 100% !important;
-        height: 100% !important;
-    }
-    .leaflet-tile {
-        width: 256px !important;
-        height: 256px !important;
-        max-width: none !important;
-        max-height: none !important;
-    }
-    .leaflet-control-attribution {
-        font-size: 10px;
-    }
-    .map-overlay {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 1000;
-    }
-    /* Force container constraints */
-    .card .card-body .map-container {
-        max-width: 100% !important;
+    /* Card container constraints */
+    .card {
         overflow: hidden !important;
+        position: relative;
     }
-    .card .card-body .map-container #propertyMap {
-        max-width: 100% !important;
-        width: 100% !important;
+    
+    .card-body {
+        overflow: hidden !important;
+        position: relative;
+        contain: layout style paint;
     }
+
 </style>
 @endpush
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""></script>
 <script>
 $(document).ready(function() {
     // Show price type for both rent and sale listings
@@ -750,227 +634,7 @@ $(document).ready(function() {
         });
     });
 
-    // Map functionality
-    let propertyMap;
-    let mapMarker;
-    let defaultLat = 35.2131; // Damascus, Syria
-    let defaultLng = 36.7011;
-    
-    // Initialize map
-    function initializeMap() {
-        // Ensure container exists and has proper dimensions
-        const mapContainer = document.getElementById('propertyMap');
-        if (!mapContainer) return;
-        
-        // Force container dimensions
-        mapContainer.style.width = '100%';
-        mapContainer.style.height = '400px';
-        mapContainer.style.maxWidth = '100%';
-        mapContainer.style.position = 'relative';
-        
-        // Create map centered on Syria (Damascus)
-        propertyMap = L.map('propertyMap', {
-            preferCanvas: false,
-            zoomControl: true,
-            attributionControl: true,
-            fadeAnimation: true,
-            zoomAnimation: true,
-            markerZoomAnimation: true
-        }).setView([defaultLat, defaultLng], 8);
-        
-        // Add OpenStreetMap tiles with proper configuration
-        const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19,
-            minZoom: 3,
-            tileSize: 256,
-            zoomOffset: 0,
-            crossOrigin: true
-        });
-        
-        tileLayer.addTo(propertyMap);
-        
-        // Force map to refresh after tile layer is added
-        setTimeout(function() {
-            propertyMap.invalidateSize(true);
-        }, 100);
-        
-        // Add click event to set marker
-        propertyMap.on('click', function(e) {
-            setMapMarker(e.latlng.lat, e.latlng.lng);
-        });
-        
-        // Set initial marker if coordinates exist
-        let currentLat = $('#latitude').val();
-        let currentLng = $('#longitude').val();
-        if (currentLat && currentLng) {
-            setMapMarker(parseFloat(currentLat), parseFloat(currentLng));
-            propertyMap.setView([currentLat, currentLng], 15);
-        }
-    }
-    
-    // Set marker on map and update coordinates
-    function setMapMarker(lat, lng) {
-        if (mapMarker) {
-            propertyMap.removeLayer(mapMarker);
-        }
-        
-        mapMarker = L.marker([lat, lng], {
-            draggable: true
-        }).addTo(propertyMap);
-        
-        mapMarker.bindPopup(`<b>Property Location</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`);
-        
-        // Update input fields
-        $('#latitude').val(lat.toFixed(6));
-        $('#longitude').val(lng.toFixed(6));
-        
-        // Make marker draggable
-        mapMarker.on('dragend', function(e) {
-            let position = e.target.getLatLng();
-            $('#latitude').val(position.lat.toFixed(6));
-            $('#longitude').val(position.lng.toFixed(6));
-            mapMarker.setPopupContent(`<b>Property Location</b><br>Lat: ${position.lat.toFixed(6)}<br>Lng: ${position.lng.toFixed(6)}`);
-        });
-    }
-    
-    // Clear coordinates and marker
-    $('#clearLatLng').on('click', function() {
-        $('#latitude').val('');
-        $('#longitude').val('');
-        if (mapMarker) {
-            propertyMap.removeLayer(mapMarker);
-            mapMarker = null;
-        }
-    });
-    
-    // Get current location
-    $('#getCurrentLocation').on('click', function() {
-        if (navigator.geolocation) {
-            $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-            
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    let lat = position.coords.latitude;
-                    let lng = position.coords.longitude;
-                    setMapMarker(lat, lng);
-                    propertyMap.setView([lat, lng], 15);
-                    
-                    $('#getCurrentLocation').html('<i class="fas fa-crosshairs"></i>').prop('disabled', false);
-                },
-                function(error) {
-                    alert('Error getting location: ' + error.message);
-                    $('#getCurrentLocation').html('<i class="fas fa-crosshairs"></i>').prop('disabled', false);
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 300000
-                }
-            );
-        } else {
-            alert('Geolocation is not supported by this browser.');
-        }
-    });
-    
-    // Search address on map
-    $('#searchOnMap').on('click', function() {
-        let address = $('#street_address').val();
-        let city = $('#city').val();
-        let state = $('#state').val();
-        
-        if (!address && !city) {
-            alert('Please enter a street address or select a city first.');
-            return;
-        }
-        
-        let searchQuery = [address, city, state, 'Syria'].filter(Boolean).join(', ');
-        
-        $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-        
-        // Use OpenStreetMap Nominatim for geocoding with Syria bounds
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=3&countrycodes=sy&bounded=1&viewbox=35.7,32.3,42.4,37.3`)
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.length > 0) {
-                    let lat = parseFloat(data[0].lat);
-                    let lng = parseFloat(data[0].lon);
-                    setMapMarker(lat, lng);
-                    propertyMap.setView([lat, lng], 15);
-                } else {
-                    alert('Address not found. Please try a different address or click on the map.');
-                }
-                $('#searchOnMap').html('<i class="fas fa-search"></i>').prop('disabled', false);
-            })
-            .catch(error => {
-                console.error('Geocoding error:', error);
-                alert('Error searching for address. Please try again.');
-                $('#searchOnMap').html('<i class="fas fa-search"></i>').prop('disabled', false);
-            });
-    });
-    
-    // Center map on marker
-    $('#centerMap').on('click', function() {
-        if (mapMarker) {
-            propertyMap.setView(mapMarker.getLatLng(), 15);
-        } else {
-            propertyMap.setView([defaultLat, defaultLng], 8);
-        }
-    });
-    
-    // Update map when city changes
-    $('#city').on('change', function() {
-        let city = $(this).val();
-        if (city && !$('#latitude').val()) {
-            // Auto-search for city location if no coordinates set
-            setTimeout(function() {
-                $('#searchOnMap').click();
-            }, 500);
-        }
-    });
-    
-    // Initialize map when document is ready
-    setTimeout(function() {
-        initializeMap();
-        // Force map to resize properly
-        setTimeout(function() {
-            if (propertyMap) {
-                propertyMap.invalidateSize();
-                // Force container constraints
-                enforceMapConstraints();
-            }
-        }, 250);
-    }, 100);
-    
-    // Function to enforce map container constraints
-    function enforceMapConstraints() {
-        const mapContainer = document.getElementById('propertyMap');
-        const leafletContainer = mapContainer?.querySelector('.leaflet-container');
-        
-        if (mapContainer) {
-            mapContainer.style.width = '100%';
-            mapContainer.style.maxWidth = '100%';
-            mapContainer.style.height = '400px';
-            mapContainer.style.position = 'relative';
-        }
-        
-        if (leafletContainer) {
-            leafletContainer.style.width = '100%';
-            leafletContainer.style.maxWidth = '100%';
-            leafletContainer.style.height = '400px';
-            leafletContainer.style.position = 'relative';
-        }
-        
-        // Force map to recalculate its size
-        if (propertyMap) {
-            propertyMap.invalidateSize(true);
-        }
-    }
-    
-    // Monitor for any size changes (less frequent to avoid interference)
-    setTimeout(function() {
-        setInterval(enforceMapConstraints, 5000);
-    }, 2000);
+
 });
 </script>
 @endpush

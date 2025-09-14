@@ -17,11 +17,11 @@ class UserSeeder extends Seeder
     {
         // Create Super Admin user first (if roles exist)
         $superAdmin = User::firstOrCreate(
-            ['email' => 'superadmin@property.com'],
+            ['email' => 'kado@kado.com'],
             [
                 'first_name' => 'Super',
                 'last_name' => 'Admin',
-                'password' => Hash::make('SuperAdmin@123456'),
+                'password' => Hash::make('123123123'),
                 'phone' => '+1-555-0000',
                 'user_type' => 'admin',
                 'is_verified' => true,
