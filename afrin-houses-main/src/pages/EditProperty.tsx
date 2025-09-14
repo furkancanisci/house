@@ -601,7 +601,7 @@ const EditProperty: React.FC = () => {
                             priceTypes.map((priceType) => (
                               <SelectItem 
                                 key={priceType.id} 
-                                value={priceType.slug} 
+                                value={priceType.key} 
                                 className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer"
                               >
                                 {i18n.language === 'ar' ? priceType.name_ar : 
