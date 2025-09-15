@@ -121,15 +121,15 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::get('leads/export/csv', [LeadController::class, 'exportCsv'])->name('admin.leads.export');
 
     // Contact Messages
-    Route::prefix('contact')->group(function () {
+    Route::prefix('contact')->middleware('can:view contact messages')->group(function () {
         Route::get('/', [ContactMessageController::class, 'index'])->name('admin.contact.index');
-        Route::get('/settings', [ContactMessageController::class, 'settings'])->name('admin.contact.settings');
-        Route::post('/settings', [ContactMessageController::class, 'updateSettings'])->name('admin.contact.settings.update');
+        Route::get('/settings', [ContactMessageController::class, 'settings'])->middleware('can:manage contact messages')->name('admin.contact.settings');
+        Route::post('/settings', [ContactMessageController::class, 'updateSettings'])->middleware('can:manage contact messages')->name('admin.contact.settings.update');
         Route::get('/{contactMessage}', [ContactMessageController::class, 'show'])->name('admin.contact.show');
-        Route::patch('/{contactMessage}/mark-spam', [ContactMessageController::class, 'markAsSpam'])->name('admin.contact.mark-spam');
-        Route::patch('/{contactMessage}/mark-read', [ContactMessageController::class, 'markAsRead'])->name('admin.contact.mark-read');
-        Route::delete('/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('admin.contact.destroy');
-        Route::post('/bulk-action', [ContactMessageController::class, 'bulkAction'])->name('admin.contact.bulk-action');
+        Route::patch('/{contactMessage}/mark-spam', [ContactMessageController::class, 'markAsSpam'])->middleware('can:manage contact messages')->name('admin.contact.mark-spam');
+        Route::patch('/{contactMessage}/mark-read', [ContactMessageController::class, 'markAsRead'])->middleware('can:manage contact messages')->name('admin.contact.mark-read');
+        Route::delete('/{contactMessage}', [ContactMessageController::class, 'destroy'])->middleware('can:delete contact messages')->name('admin.contact.destroy');
+        Route::post('/bulk-action', [ContactMessageController::class, 'bulkAction'])->middleware('can:manage contact messages')->name('admin.contact.bulk-action');
     });
 
     // Media Library
