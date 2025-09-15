@@ -57,7 +57,9 @@ class ModerationController extends Controller
                                ->pluck('property_type')
                                ->sort();
 
-        return view('admin.moderation.index', compact('properties', 'propertyTypes'));
+        // Redirect to properties admin page with pending filter
+        return redirect()->route('admin.properties.index', ['filter[status]' => 'pending'])
+                        ->with('info', 'Property moderation is now handled in the Properties section. Showing pending properties for approval.');
     }
 
     /**
@@ -69,7 +71,9 @@ class ModerationController extends Controller
 
         $property->load(['user', 'media']);
 
-        return view('admin.moderation.show', compact('property'));
+        // Redirect to properties admin page to view the property
+        return redirect()->route('admin.properties.show', $property)
+                        ->with('info', 'Property moderation is now handled in the Properties section.');
     }
 
     /**
@@ -77,14 +81,8 @@ class ModerationController extends Controller
      */
     public function approve(Request $request, Property $property)
     {
-        Gate::authorize('moderate properties');
-
-        $property->update([
-            'status' => 'active',
-            'published_at' => now(),
-            'moderated_by' => Auth::id(),
-            'moderated_at' => now(),
-        ]);
+        // Redirect to PropertyController approve method which includes email notifications
+        return app(\App\Http\Controllers\Admin\PropertyController::class)->approve($property);
 
         // Log the moderation action (requires Spatie Activity Log package)
         // Activity::create([
@@ -111,38 +109,8 @@ class ModerationController extends Controller
      */
     public function reject(Request $request, Property $property)
     {
-        Gate::authorize('moderate properties');
-
-        $request->validate([
-            'reason' => 'required|string|max:1000'
-        ]);
-
-        $property->update([
-            'status' => 'rejected',
-            'rejection_reason' => $request->reason,
-            'moderated_by' => Auth::id(),
-            'moderated_at' => now(),
-        ]);
-
-        // Log the moderation action (requires Spatie Activity Log package)
-        // Activity::create([
-        //     'subject_type' => get_class($property),
-        //     'subject_id' => $property->id,
-        //     'causer_type' => get_class(Auth::user()),
-        //     'causer_id' => Auth::id(),
-        //     'description' => 'Property rejected during moderation',
-        //     'properties' => [
-        //         'action' => 'rejected',
-        //         'reason' => $request->reason,
-        //         'notes' => $request->notes,
-        //         'previous_status' => 'pending'
-        //     ]
-        // ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Property rejected successfully.'
-        ]);
+        // Redirect to PropertyController reject method
+        return app(\App\Http\Controllers\Admin\PropertyController::class)->reject($request, $property);
     }
 
     /**
@@ -150,48 +118,7 @@ class ModerationController extends Controller
      */
     public function bulkAction(Request $request)
     {
-        Gate::authorize('moderate properties');
-
-        $request->validate([
-            'action' => 'required|in:approve,reject,delete',
-            'property_ids' => 'required|array',
-            'property_ids.*' => 'exists:properties,id',
-            'reason' => 'required_if:action,reject|string|max:1000'
-        ]);
-
-        $properties = Property::whereIn('id', $request->property_ids);
-        $count = $properties->count();
-
-        switch ($request->action) {
-            case 'approve':
-                $properties->update([
-                    'status' => 'active',
-                    'published_at' => now(),
-                    'moderated_by' => Auth::id(),
-                    'moderated_at' => now(),
-                ]);
-                $message = "Successfully approved {$count} properties.";
-                break;
-
-            case 'reject':
-                $properties->update([
-                    'status' => 'rejected',
-                    'rejection_reason' => $request->reason,
-                    'moderated_by' => Auth::id(),
-                    'moderated_at' => now(),
-                ]);
-                $message = "Successfully rejected {$count} properties.";
-                break;
-
-            case 'delete':
-                $properties->delete();
-                $message = "Successfully deleted {$count} properties.";
-                break;
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => $message
-        ]);
+        // Redirect to PropertyController bulk action method
+        return app(\App\Http\Controllers\Admin\PropertyController::class)->bulkAction($request);
     }
 }

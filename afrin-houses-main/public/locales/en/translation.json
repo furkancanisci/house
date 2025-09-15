@@ -704,7 +704,8 @@
     "failedToUpdateProperty": "Failed to update property",
     "propertyNotFound": "Property not found",
     "canOnlyEditOwnProperties": "You can only edit your own properties",
-    "propertyListedSuccess": "Property listed successfully!"
+    "propertyListedSuccess": "Property listed successfully!",
+    "propertyPendingApproval": "Your property listing has been submitted successfully! 🎉 Your listing is currently under review by our administration team and will be visible to users once approved. You'll receive an email notification when your property is published."
   },
   "filters": {
     "title": "Filters",

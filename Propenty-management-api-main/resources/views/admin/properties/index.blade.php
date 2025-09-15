@@ -291,7 +291,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="{{ can('bulk manage properties') ? '9' : '8' }}" class="text-center">
+                                    <td colspan="{{ auth()->user()->can('bulk manage properties') ? '9' : '8' }}" class="text-center">
                                         <div class="py-4">
                                             <i class="fas fa-home fa-3x text-muted mb-3"></i>
                                             <h5 class="text-muted">No properties found</h5>

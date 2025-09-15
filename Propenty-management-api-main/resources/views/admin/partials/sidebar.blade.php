@@ -98,7 +98,7 @@
                 @endcan
 
                 <!-- Price Types -->
-                @can('view categories')
+                @can('view price types')
                 <li class="nav-item">
                     <a href="{{ route('admin.price-types.index') }}" class="nav-link {{ request()->routeIs('admin.price-types*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-dollar-sign"></i>

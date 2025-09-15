@@ -3,12 +3,14 @@ import { authService } from './authService';
 
 // Get API base URL from environment variable or use default
 const getApiBaseUrl = (): string => {
-  // For browser environments, we can access process.env
-  if (typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL) {
-    return process.env.VITE_API_BASE_URL;
+  // In Vite, environment variables are accessed through import.meta.env
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
+  if (apiUrl) {
+    return apiUrl;
   }
-  
-  // Always use the direct API URL (CORS must be configured on server)
+
+  // Fallback to production API URL if no environment variable is set
   return 'https://api.besttrend-sy.com/api/v1';
 };
 

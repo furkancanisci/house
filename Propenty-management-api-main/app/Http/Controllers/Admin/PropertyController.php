@@ -16,7 +16,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use App\Mail\PropertyApprovedMail;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -429,7 +431,22 @@ class PropertyController extends Controller
         try {
             switch ($request->action) {
                 case 'approve':
+                    $propertiesToApprove = $properties->get();
                     $properties->update(['status' => 'active']);
+
+                    // Send approval emails for bulk approval
+                    foreach ($propertiesToApprove as $property) {
+                        try {
+                            if ($property->user && $property->user->email) {
+                                Mail::to($property->user->email)->send(new PropertyApprovedMail($property));
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send bulk approval email', [
+                                'property_id' => $property->id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
                     break;
                 case 'reject':
                     $properties->update([
@@ -474,7 +491,23 @@ class PropertyController extends Controller
 
         $property->update(['status' => 'active']);
 
-        return back()->with('success', 'Property approved successfully.');
+        // Send approval email notification
+        try {
+            if ($property->user && $property->user->email) {
+                Mail::to($property->user->email)->send(new PropertyApprovedMail($property));
+                Log::info('Property approval email sent', [
+                    'property_id' => $property->id,
+                    'user_email' => $property->user->email
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send property approval email', [
+                'property_id' => $property->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return back()->with('success', 'Property approved successfully and notification sent to owner.');
     }
 
     /**

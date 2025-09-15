@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\PropertyController;
+use App\Http\Controllers\Admin\PropertyTypeController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\GovernorateController;
@@ -74,11 +75,21 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
 
     // Categories / Property Types
     Route::resource('categories', CategoryController::class)->names('admin.categories');
+    Route::resource('property-types', PropertyTypeController::class)->names('admin.property-types');
     Route::post('categories/{category}/restore', [CategoryController::class, 'restore'])->name('admin.categories.restore');
 
     // Price Types Management
-    Route::resource('price-types', PriceTypeController::class)->names('admin.price-types');
-    Route::post('price-types/{priceType}/toggle-status', [PriceTypeController::class, 'toggleStatus'])->name('admin.price-types.toggle-status');
+    Route::prefix('price-types')->middleware('can:view price types')->group(function () {
+        Route::get('/', [PriceTypeController::class, 'index'])->name('admin.price-types.index');
+        Route::get('/create', [PriceTypeController::class, 'create'])->name('admin.price-types.create')->middleware('can:create price types');
+        Route::post('/', [PriceTypeController::class, 'store'])->name('admin.price-types.store')->middleware('can:create price types');
+        Route::get('/{priceType}', [PriceTypeController::class, 'show'])->name('admin.price-types.show');
+        Route::get('/{priceType}/edit', [PriceTypeController::class, 'edit'])->name('admin.price-types.edit')->middleware('can:edit price types');
+        Route::put('/{priceType}', [PriceTypeController::class, 'update'])->name('admin.price-types.update')->middleware('can:edit price types');
+        Route::patch('/{priceType}', [PriceTypeController::class, 'update'])->middleware('can:edit price types');
+        Route::delete('/{priceType}', [PriceTypeController::class, 'destroy'])->name('admin.price-types.destroy')->middleware('can:delete price types');
+        Route::post('/{priceType}/toggle-status', [PriceTypeController::class, 'toggleStatus'])->name('admin.price-types.toggle-status')->middleware('can:edit price types');
+    });
 
     // Locations Management
     // Governorates
