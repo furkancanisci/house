@@ -182,6 +182,7 @@
                 @endcan
 
                 <!-- Contact Messages -->
+                @can('view contact messages')
                 <li class="nav-item">
                     <a href="{{ route('admin.contact.index') }}" class="nav-link {{ request()->routeIs('admin.contact*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-envelope"></i>
@@ -196,6 +197,7 @@
                         </p>
                     </a>
                 </li>
+                @endcan
 
                 <!-- Media -->
                 @can('view media')

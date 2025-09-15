@@ -1,17 +1,14 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosInstance } from 'axios';
 import { authService } from './authService';
+import { config, validateEnvironmentVariables } from '../utils/config';
 
-// Get API base URL from environment variable or use default
+// Validate environment variables on import
+validateEnvironmentVariables();
+
+// Get API base URL from environment variable
 const getApiBaseUrl = (): string => {
-  // In Vite, environment variables are accessed through import.meta.env
-  const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
-  if (apiUrl) {
-    return apiUrl;
-  }
-
-  // Fallback to production API URL if no environment variable is set
-  return 'https://api.besttrend-sy.com/api/v1';
+  return config.apiBaseUrl;
 };
 
 // Retry configuration
