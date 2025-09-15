@@ -1,15 +1,13 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosInstance } from 'axios';
 import { authService } from './authService';
+import { config, validateEnvironmentVariables } from '../utils/config';
 
-// Get API base URL from environment variable or use default
+// Validate environment variables on import
+validateEnvironmentVariables();
+
+// Get API base URL from environment variable
 const getApiBaseUrl = (): string => {
-  // For browser environments, we can access process.env
-  if (typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL) {
-    return process.env.VITE_API_BASE_URL;
-  }
-  
-  // Always use the direct API URL (CORS must be configured on server)
-  return 'https://api.besttrend-sy.com/api/v1';
+  return config.apiBaseUrl;
 };
 
 // Retry configuration
