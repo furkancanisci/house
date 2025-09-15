@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\PropertyController;
 use App\Http\Controllers\Api\PropertyDocumentTypeController;
+use App\Http\Controllers\Api\PropertyTypeController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Auth\AuthController;
@@ -145,6 +146,15 @@ Route::prefix('v1')->group(function () {
         Route::get('/', [PropertyDocumentTypeController::class, 'index']);
         Route::get('/all-languages', [PropertyDocumentTypeController::class, 'getAllLanguages']);
         Route::get('/{propertyDocumentType}', [PropertyDocumentTypeController::class, 'show']);
+    });
+
+    // Property Types Routes
+    Route::prefix('property-types')->group(function () {
+        Route::get('/', [PropertyTypeController::class, 'index']);
+        Route::get('/parents', [PropertyTypeController::class, 'parents']);
+        Route::get('/children/{parentId?}', [PropertyTypeController::class, 'children']);
+        Route::get('/options', [PropertyTypeController::class, 'options']);
+        Route::get('/{propertyType}', [PropertyTypeController::class, 'show']);
     });
 
     // Features Routes

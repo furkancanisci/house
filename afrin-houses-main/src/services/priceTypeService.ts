@@ -1,12 +1,10 @@
-// Get API base URL from environment variable or use default
+// Get API base URL from environment variable
 const getApiBaseUrl = (): string => {
-  // For browser environments, we can access process.env
-  if (typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL) {
-    return process.env.VITE_API_BASE_URL;
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!apiUrl) {
+    throw new Error('VITE_API_BASE_URL is not defined in environment variables.');
   }
-  
-  // Always use the local development API URL
-  return 'http://localhost:8000/api/v1';
+  return apiUrl;
 };
 
 const API_BASE_URL = getApiBaseUrl();

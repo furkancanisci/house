@@ -319,8 +319,8 @@ class PropertyController extends Controller
             // Add user_id to the data
             $mappedData['user_id'] = $user->id;
             
-            // Set default status if not provided
-            $mappedData['status'] = $mappedData['status'] ?? 'active';
+            // Set default status to pending for admin approval
+            $mappedData['status'] = $mappedData['status'] ?? 'pending';
             
             // Ensure required fields have proper defaults and validation
             $mappedData['published_at'] = $mappedData['published_at'] ?? now();
@@ -993,7 +993,10 @@ class PropertyController extends Controller
             $query = \App\Models\PriceType::where('is_active', true);
             
             if ($listingType && in_array($listingType, ['rent', 'sale'])) {
-                $query->where('listing_type', $listingType);
+                $query->where(function($q) use ($listingType) {
+                    $q->where('listing_type', $listingType)
+                      ->orWhere('listing_type', 'both');
+                });
             }
             
             $priceTypes = $query->orderBy('id')->get();

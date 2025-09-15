@@ -24,6 +24,7 @@ class Property extends Model implements HasMedia
         'title',
         'description',
         'property_type',
+        'property_type_id',
         'listing_type',
         'price',
         'price_type',
@@ -53,7 +54,7 @@ class Property extends Model implements HasMedia
         'contact_email',
         'published_at',
         'document_type_id',
-        
+
         // Foreign key fields
         'governorate_id',
         'city_id',

@@ -54,6 +54,7 @@ import PropertyLocationMap from '../components/PropertyLocationMap';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import { priceTypeService, PriceType } from '../services/priceTypeService';
+import { propertyTypeService, PropertyType } from '../services/propertyTypeService';
 import api from '../services/api';
 
 // Types for features and utilities
@@ -98,7 +99,7 @@ const createPropertySchema = (t: any) => z.object({
   price: z.number().min(1, t('validation.priceRequired')).max(99999999.99, t('validation.priceTooHigh')),
   priceType: z.string().min(1, t('validation.priceTypeRequired')),
   listingType: z.enum(['rent', 'sale']),
-  propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
+  propertyType: z.string().min(1, t('validation.propertyTypeRequired')),
   documentTypeId: z.string().min(1, t('validation.documentTypeRequired')),
   bedrooms: z.number().min(1, t('validation.bedroomsRequired')).max(20, t('validation.bedroomsMaxLimit')),
   bathrooms: z.number().min(1, t('validation.bathroomsRequired')).max(20, t('validation.bathroomsMaxLimit')),
@@ -125,8 +126,9 @@ const createPropertySchema = (t: any) => z.object({
     z.number()
       .int(t('validation.lotSizeInteger'))
       .positive(t('validation.lotSizeGreaterThanZero'))
-      .max(1000000, t('validation.lotSizeTooLarge'))
-  ]),
+      .max(1000000, t('validation.lotSizeTooLarge')),
+    z.literal('').transform(() => undefined)
+  ]).optional(),
   garage: z.string().optional(),
   heating: z.string().optional(),
   hoaFees: z.string().optional(),
@@ -189,6 +191,10 @@ const AddProperty: React.FC = () => {
   const [documentTypes, setDocumentTypes] = useState<PropertyDocumentType[]>([]);
   const [loadingDocumentTypes, setLoadingDocumentTypes] = useState(false);
 
+  // Property types state
+  const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
+  const [loadingPropertyTypes, setLoadingPropertyTypes] = useState(false);
+
   // Location state
   const [selectedCity, setSelectedCity] = useState<string>(() => {
     // Restore selected city from localStorage
@@ -239,9 +245,9 @@ const AddProperty: React.FC = () => {
         city: '',
         state: '',
         listingType: 'rent',
-        propertyType: 'apartment',
+        propertyType: '',
         priceType: undefined, // Use undefined for proper Select component behavior
-        documentTypeId: undefined, // Required field
+        documentTypeId: '', // Required field
         bedrooms: 1,
         bathrooms: 1,
         squareFootage: 500,
@@ -341,6 +347,25 @@ const AddProperty: React.FC = () => {
     };
 
     loadDocumentTypes();
+  }, [i18n.language]);
+
+  // Load property types
+  React.useEffect(() => {
+    const loadPropertyTypes = async () => {
+      setLoadingPropertyTypes(true);
+      try {
+        const types = await propertyTypeService.getPropertyTypeOptions(true, true);
+        setPropertyTypes(types);
+      } catch (error) {
+        console.error('Failed to load property types:', error);
+        // Use fallback empty array if API fails
+        setPropertyTypes([]);
+      } finally {
+        setLoadingPropertyTypes(false);
+      }
+    };
+
+    loadPropertyTypes();
   }, [i18n.language]);
 
   // Load features and utilities only when reaching step 2 (Property Details) or language changes
@@ -897,10 +922,14 @@ const AddProperty: React.FC = () => {
       }
 
       // Create the property data object
+      // Find the selected property type to get its ID
+      const selectedPropertyType = propertyTypes.find(type => type.slug === data.propertyType);
+
       const propertyData: any = {
         title: data.title,
         description: data.description || '',
-        propertyType: data.propertyType,
+        propertyType: data.propertyType, // Keep for backward compatibility
+        property_type_id: selectedPropertyType?.id, // New foreign key relationship
         listingType: data.listingType,
         price: parseFloat(data.price.toString()),
         address: street,
@@ -914,7 +943,6 @@ const AddProperty: React.FC = () => {
         lotSize: Number(data.lotSize || 0),
         yearBuilt: Number(data.yearBuilt || new Date().getFullYear()),
         parking: data.parking || 'none',
-        status: 'active',
         is_featured: false,
         is_available: true,
         availableDate: data.availableDate || new Date().toISOString(),
@@ -970,7 +998,7 @@ const AddProperty: React.FC = () => {
         // Clear localStorage after successful submission
         clearFormDataFromStorage();
         
-        notification.success('تمت إضافة العقار بنجاح!');
+        notification.success(t('messages.propertyPendingApproval'));
         console.log('Navigating to dashboard...');
         navigate('/dashboard');
       } catch (apiError) {
@@ -1147,60 +1175,44 @@ const AddProperty: React.FC = () => {
                           </div>
                         </SelectTrigger>
                         <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
-                          <SelectItem key="apartment" value="apartment" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
-                            <div className="flex items-center gap-2">
-                              <Building className="h-3 w-3 text-[#067977]" />
-                              {t('property.types.apartment')}
-                            </div>
-                          </SelectItem>
-                          <SelectItem key="house" value="house" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
-                            <div className="flex items-center gap-2">
-                              <Home className="h-3 w-3 text-green-600" />
-                              {t('property.types.house')}
-                            </div>
-                          </SelectItem>
-                          <SelectItem key="villa" value="villa" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
-                            <div className="flex items-center gap-2">
-                              <Star className="h-3 w-3 text-yellow-600" />
-                              {t('property.types.villa')}
-                            </div>
-                          </SelectItem>
-                          <SelectItem key="condo" value="condo" className="text-sm py-2">
-                            <div className="flex items-center gap-2">
-                              <Building className="h-3 w-3 text-purple-600" />
-                              {t('property.types.condo')}
-                            </div>
-                          </SelectItem>
-                          <SelectItem key="townhouse" value="townhouse" className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer">
-                            <div className="flex items-center gap-2">
-                              <Home className="h-3 w-3 text-indigo-600" />
-                              {t('property.types.townhouse')}
-                            </div>
-                          </SelectItem>
-                          <SelectItem key="studio" value="studio" className="text-sm py-2">
-                            <div className="flex items-center gap-2">
-                              <Square className="h-3 w-3 text-orange-600" />
-                              {t('property.types.studio')}
-                            </div>
-                          </SelectItem>
-                          <SelectItem key="loft" value="loft" className="text-sm py-2">
-                            <div className="flex items-center gap-2">
-                              <Building className="h-3 w-3 text-red-600" />
-                              {t('property.types.loft')}
-                            </div>
-                          </SelectItem>
-                          <SelectItem key="commercial" value="commercial" className="text-sm py-2">
-                            <div className="flex items-center gap-2">
-                              <Building className="h-3 w-3 text-gray-600" />
-                              {t('property.types.commercial')}
-                            </div>
-                          </SelectItem>
-                          <SelectItem key="land" value="land" className="text-sm py-2">
-                            <div className="flex items-center gap-2">
-                              <Square className="h-3 w-3 text-brown-600" />
-                              {t('property.types.land')}
-                            </div>
-                          </SelectItem>
+                          {loadingPropertyTypes ? (
+                            <SelectItem value="loading" disabled className="text-sm py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <div className="animate-spin h-3 w-3 border border-gray-300 border-t-[#067977] rounded-full"></div>
+                                {t('addProperty.loading.propertyTypes')}
+                              </div>
+                            </SelectItem>
+                          ) : propertyTypes.length > 0 ? (
+                            propertyTypes.map((type) => {
+                              const displayName = propertyTypeService.getDisplayName(type, i18n.language);
+                              const iconClass = propertyTypeService.getIconClass(type);
+
+                              return (
+                                <SelectItem
+                                  key={type.slug}
+                                  value={type.slug}
+                                  className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <i className={`${iconClass} h-3 w-3 text-[#067977]`}></i>
+                                    {displayName}
+                                    {type.parent && (
+                                      <span className="text-xs text-gray-500 ml-1">
+                                        ({propertyTypeService.getDisplayName(type.parent, i18n.language)})
+                                      </span>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              );
+                            })
+                          ) : (
+                            <SelectItem value="no-types" disabled className="text-sm py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <Home className="h-3 w-3 text-gray-400" />
+                                {t('addProperty.noPropertyTypes')}
+                              </div>
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     )}
@@ -1218,8 +1230,11 @@ const AddProperty: React.FC = () => {
                   control={control}
                   render={({ field }) => (
                     <EnhancedDocumentTypeSelect
-                      value={field.value}
-                      onValueChange={field.onChange}
+                      value={field.value || undefined}
+                      onValueChange={(value) => {
+                        console.log('Document type selected:', value);
+                        field.onChange(value);
+                      }}
                       placeholder="اختر نوع الطابو"
                       loading={loadingDocumentTypes}
                       documentTypes={documentTypes}
@@ -1228,6 +1243,12 @@ const AddProperty: React.FC = () => {
                     />
                   )}
                 />
+                {errors.documentTypeId && (
+                  <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                    <X className="h-4 w-4" />
+                    {errors.documentTypeId.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>

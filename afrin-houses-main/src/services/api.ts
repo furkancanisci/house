@@ -7,6 +7,7 @@ validateEnvironmentVariables();
 
 // Get API base URL from environment variable
 const getApiBaseUrl = (): string => {
+
   return config.apiBaseUrl;
 };
 
