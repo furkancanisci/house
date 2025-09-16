@@ -232,3 +232,100 @@ export const getRandomPropertyImage = (propertyId?: string | number): string => 
   // Fallback to first image instead of random
   return PROPERTY_IMAGES[0];
 };
+
+/**
+ * Compress an image file to reduce its size
+ */
+export const compressImage = (
+  file: File,
+  maxWidth: number = 1920,
+  maxHeight: number = 1080,
+  quality: number = 0.8
+): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      // Calculate new dimensions while maintaining aspect ratio
+      let { width, height } = img;
+      
+      if (width > maxWidth || height > maxHeight) {
+        const aspectRatio = width / height;
+        
+        if (width > height) {
+          width = maxWidth;
+          height = width / aspectRatio;
+        } else {
+          height = maxHeight;
+          width = height * aspectRatio;
+        }
+      }
+
+      // Set canvas dimensions
+      canvas.width = width;
+      canvas.height = height;
+
+      // Draw and compress the image
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          } else {
+            reject(new Error('Failed to compress image'));
+          }
+        },
+        file.type,
+        quality
+      );
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+};
+
+/**
+ * Compress multiple images
+ */
+export const compressImages = async (
+  files: File[],
+  maxWidth: number = 1920,
+  maxHeight: number = 1080,
+  quality: number = 0.8
+): Promise<File[]> => {
+  const compressedFiles: File[] = [];
+  
+  for (const file of files) {
+    try {
+      const compressedFile = await compressImage(file, maxWidth, maxHeight, quality);
+      compressedFiles.push(compressedFile);
+    } catch (error) {
+      console.error('Failed to compress image:', file.name, error);
+      // If compression fails, use original file
+      compressedFiles.push(file);
+    }
+  }
+  
+  return compressedFiles;
+};
+
+/**
+ * Format file size for display
+ */
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};

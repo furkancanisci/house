@@ -55,6 +55,7 @@ import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import { priceTypeService, PriceType } from '../services/priceTypeService';
 import { propertyTypeService, PropertyType } from '../services/propertyTypeService';
+import { compressImages, formatFileSize } from '../lib/imageUtils';
 import api from '../services/api';
 
 // Types for features and utilities
@@ -663,7 +664,7 @@ const AddProperty: React.FC = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log('=== handleImageUpload CALLED ===');
     console.log('handleImageUpload - Event object:', event);
     console.log('handleImageUpload - Event target:', event.target);
@@ -688,38 +689,56 @@ const AddProperty: React.FC = () => {
       return;
     }
     
-    // Validate file sizes (max 5MB per file)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const oversizedFiles = files.filter(file => file.size > maxSize);
-    if (oversizedFiles.length > 0) {
-      console.error('handleImageUpload - Oversized files:', oversizedFiles.map(f => f.size));
-      notification.error('Each image must be smaller than 5MB');
-      return;
-    }
-    
+    // Check total file count limit
     if (files.length + selectedImages.length > 10) {
       console.log('handleImageUpload - Too many files, limit exceeded');
       notification.error('Maximum 10 images allowed');
       return;
     }
 
-    console.log('handleImageUpload - All validations passed, processing files...');
-    
-    const newImages = [...selectedImages, ...files];
-    setSelectedImages(newImages);
-    console.log('handleImageUpload - Updated selectedImages:', newImages.length);
+    // Show initial file sizes for comparison
+    const totalOriginalSize = files.reduce((sum, file) => sum + file.size, 0);
+    console.log('handleImageUpload - Original total size:', formatFileSize(totalOriginalSize));
+    notification.info(`Processing ${files.length} image(s)... Original size: ${formatFileSize(totalOriginalSize)}`);
 
-    // If this is the first image, set it as main image
-    if (selectedImages.length === 0 && files.length > 0) {
-      setMainImageIndex(0);
-      console.log('handleImageUpload - Set main image index to 0');
-    }
+    try {
+      // Compress images before processing
+      console.log('handleImageUpload - Starting image compression...');
+      const compressedFiles = await compressImages(files, 1920, 1080, 0.8);
+      
+      // Show compression results
+      const totalCompressedSize = compressedFiles.reduce((sum, file) => sum + file.size, 0);
+      const compressionRatio = ((totalOriginalSize - totalCompressedSize) / totalOriginalSize * 100).toFixed(1);
+      console.log('handleImageUpload - Compressed total size:', formatFileSize(totalCompressedSize));
+      console.log('handleImageUpload - Compression ratio:', compressionRatio + '%');
+      
+      // Validate compressed file sizes (max 2MB per file after compression)
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      const oversizedFiles = compressedFiles.filter(file => file.size > maxSize);
+      if (oversizedFiles.length > 0) {
+        console.error('handleImageUpload - Files still too large after compression:', oversizedFiles.map(f => ({ name: f.name, size: formatFileSize(f.size) })));
+        notification.error(`Some images are still too large after compression. Please use smaller images or reduce quality.`);
+        return;
+      }
 
-    // Create preview URLs
-    console.log('handleImageUpload - Starting to create preview URLs...');
-    const promises: Promise<string>[] = [];
-    
-    files.forEach((file, index) => {
+      console.log('handleImageUpload - All validations passed, processing compressed files...');
+      notification.success(`Images compressed successfully! Reduced size by ${compressionRatio}%`);
+      
+      const newImages = [...selectedImages, ...compressedFiles];
+      setSelectedImages(newImages);
+      console.log('handleImageUpload - Updated selectedImages:', newImages.length);
+
+      // If this is the first image, set it as main image
+      if (selectedImages.length === 0 && compressedFiles.length > 0) {
+        setMainImageIndex(0);
+        console.log('handleImageUpload - Set main image index to 0');
+      }
+
+      // Create preview URLs
+      console.log('handleImageUpload - Starting to create preview URLs...');
+      const promises: Promise<string>[] = [];
+      
+      compressedFiles.forEach((file, index) => {
       console.log(`handleImageUpload - Processing file ${index + 1}:`, {
         name: file.name,
         type: file.type,
@@ -823,6 +842,10 @@ const AddProperty: React.FC = () => {
         });
         notification.error(`Error processing images: ${error.message}`);
       });
+    } catch (compressionError) {
+      console.error('handleImageUpload - Error during image compression:', compressionError);
+      notification.error(`Failed to compress images: ${compressionError instanceof Error ? compressionError.message : 'Unknown error'}`);
+    }
 
     // Clear the input value to allow re-uploading the same file
     event.target.value = '';
