@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\Admin\BuildingTypeController;
+use App\Http\Controllers\Admin\WindowTypeController;
+use App\Http\Controllers\Admin\FloorTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -160,6 +163,24 @@ Route::get('/test-bunny', function () {
             'timestamp' => now()->toISOString()
         ], 500);
     }
+});
+
+// Admin routes for property detail types management
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+    // Building Types Management
+    Route::resource('building-types', BuildingTypeController::class);
+    Route::patch('building-types/{buildingType}/toggle-status', [BuildingTypeController::class, 'toggleStatus'])
+        ->name('building-types.toggle-status');
+    
+    // Window Types Management
+    Route::resource('window-types', WindowTypeController::class);
+    Route::patch('window-types/{windowType}/toggle-status', [WindowTypeController::class, 'toggleStatus'])
+        ->name('window-types.toggle-status');
+    
+    // Floor Types Management
+    Route::resource('floor-types', FloorTypeController::class);
+    Route::patch('floor-types/{floorType}/toggle-status', [FloorTypeController::class, 'toggleStatus'])
+        ->name('floor-types.toggle-status');
 });
 
 // Redirect to admin panel for authenticated users

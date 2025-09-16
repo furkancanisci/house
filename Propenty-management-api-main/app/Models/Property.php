@@ -15,6 +15,68 @@ class Property extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
 
     /**
+     * Property orientation constants
+     */
+    public const ORIENTATIONS = [
+        'north' => 'North',
+        'south' => 'South',
+        'east' => 'East',
+        'west' => 'West',
+        'northeast' => 'Northeast',
+        'northwest' => 'Northwest',
+        'southeast' => 'Southeast',
+        'southwest' => 'Southwest',
+    ];
+
+    /**
+     * Property view type constants
+     */
+    public const VIEW_TYPES = [
+        'sea' => 'Sea View',
+        'city' => 'City View',
+        'mountain' => 'Mountain View',
+        'garden' => 'Garden View',
+        'street' => 'Street View',
+        'courtyard' => 'Courtyard View',
+        'forest' => 'Forest View',
+        'lake' => 'Lake View',
+    ];
+
+    /**
+     * Building type constants
+     */
+    public const BUILDING_TYPES = [
+        'new' => 'New Construction',
+        'resale' => 'Resale',
+        'under_construction' => 'Under Construction',
+        'project' => 'Project',
+    ];
+
+    /**
+     * Floor type constants
+     */
+    public const FLOOR_TYPES = [
+        'laminate' => 'Laminate',
+        'hardwood' => 'Hardwood',
+        'tile' => 'Tile',
+        'marble' => 'Marble',
+        'carpet' => 'Carpet',
+        'vinyl' => 'Vinyl',
+        'concrete' => 'Concrete',
+        'parquet' => 'Parquet',
+    ];
+
+    /**
+     * Window type constants
+     */
+    public const WINDOW_TYPES = [
+        'aluminum' => 'Aluminum',
+        'pvc' => 'PVC',
+        'wood' => 'Wood',
+        'steel' => 'Steel',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -59,6 +121,28 @@ class Property extends Model implements HasMedia
         'governorate_id',
         'city_id',
         'neighborhood_id',
+
+        // Basic property fields - Phase 1
+        'floor_number',
+        'total_floors',
+        'balcony_count',
+        'orientation',
+        'view_type',
+
+        // Advanced property fields - Phase 2
+        'building_age',
+        'building_type',
+        'floor_type',
+        'window_type',
+        'maintenance_fee',
+        'deposit_amount',
+        'annual_tax',
+        'notes',
+        
+        // Advanced property detail foreign keys
+        'building_type_id',
+        'window_type_id',
+        'floor_type_id',
     ];
 
     /**
@@ -76,6 +160,9 @@ class Property extends Model implements HasMedia
         'is_available' => 'boolean',
         'available_from' => 'date',
         'published_at' => 'datetime',
+        'maintenance_fee' => 'decimal:2',
+        'deposit_amount' => 'decimal:2',
+        'annual_tax' => 'decimal:2',
     ];
 
     /**
@@ -238,6 +325,38 @@ class Property extends Model implements HasMedia
     public function documentType()
     {
         return $this->belongsTo(PropertyDocumentType::class, 'document_type_id');
+    }
+
+    /**
+     * Property statistics relationship.
+     */
+    public function statistics()
+    {
+        return $this->hasOne(PropertyStatistic::class);
+    }
+
+    /**
+     * Building type relationship.
+     */
+    public function buildingType()
+    {
+        return $this->belongsTo(BuildingType::class);
+    }
+
+    /**
+     * Window type relationship.
+     */
+    public function windowType()
+    {
+        return $this->belongsTo(WindowType::class);
+    }
+
+    /**
+     * Floor type relationship.
+     */
+    public function floorType()
+    {
+        return $this->belongsTo(FloorType::class);
     }
 
     /**
@@ -574,6 +693,94 @@ class Property extends Model implements HasMedia
               ->orWhere('state', 'like', "%{$search}%")
               ->orWhere('neighborhood', 'like', "%{$search}%");
         });
+    }
+
+    /**
+     * Scope for filtering by building age range.
+     */
+    public function scopeWithBuildingAge(Builder $query, $minAge = null, $maxAge = null): Builder
+    {
+        if ($minAge !== null) {
+            $query->where('building_age', '>=', $minAge);
+        }
+
+        if ($maxAge !== null) {
+            $query->where('building_age', '<=', $maxAge);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope for filtering by building type.
+     */
+    public function scopeWithBuildingType(Builder $query, $buildingType): Builder
+    {
+        return $query->where('building_type', $buildingType);
+    }
+
+    /**
+     * Scope for filtering by floor type.
+     */
+    public function scopeWithFloorType(Builder $query, $floorType): Builder
+    {
+        return $query->where('floor_type', $floorType);
+    }
+
+    /**
+     * Scope for filtering by window type.
+     */
+    public function scopeWithWindowType(Builder $query, $windowType): Builder
+    {
+        return $query->where('window_type', $windowType);
+    }
+
+    /**
+     * Scope for filtering by maintenance fee range.
+     */
+    public function scopeWithMaintenanceFee(Builder $query, $minFee = null, $maxFee = null): Builder
+    {
+        if ($minFee !== null) {
+            $query->where('maintenance_fee', '>=', $minFee);
+        }
+
+        if ($maxFee !== null) {
+            $query->where('maintenance_fee', '<=', $maxFee);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope for filtering by deposit amount range.
+     */
+    public function scopeWithDepositAmount(Builder $query, $minDeposit = null, $maxDeposit = null): Builder
+    {
+        if ($minDeposit !== null) {
+            $query->where('deposit_amount', '>=', $minDeposit);
+        }
+
+        if ($maxDeposit !== null) {
+            $query->where('deposit_amount', '<=', $maxDeposit);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope for filtering by annual tax range.
+     */
+    public function scopeWithAnnualTax(Builder $query, $minTax = null, $maxTax = null): Builder
+    {
+        if ($minTax !== null) {
+            $query->where('annual_tax', '>=', $minTax);
+        }
+
+        if ($maxTax !== null) {
+            $query->where('annual_tax', '<=', $maxTax);
+        }
+
+        return $query;
     }
 
     /**

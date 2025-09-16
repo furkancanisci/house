@@ -1,0 +1,691 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\phpunit.xml" tests="49" assertions="36" errors="31" failures="0" skipped="0" time="17.733706">
+    <testsuite name="Unit" tests="49" assertions="36" errors="31" failures="0" skipped="0" time="17.733706">
+      <testsuite name="Tests\Unit\ExampleTest" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\ExampleTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.011145">
+        <testcase name="test_that_true_is_true" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\ExampleTest.php" line="12" class="Tests\Unit\ExampleTest" classname="Tests.Unit.ExampleTest" assertions="1" time="0.011145"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\PropertyModelTest" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" tests="15" assertions="5" errors="13" failures="0" skipped="0" time="6.713105">
+        <testcase name="test_property_slug_is_generated_automatically" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="59" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="1.497598">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_slug_is_generated_automatically&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (1, Beautiful Apartment in Damascus, Quia perferendis id necessitatibus labore non. Ipsum eligendi quia voluptatem earum dolor odio. Neque impedit optio dolores sapiente sit velit qui. Repellat sit incidunt voluptatem doloribus enim neque ut.
+
+Doloribus voluptatem expedita aliquam atque modi ea. Aut qui ex qui voluptatem aperiam aut vitae.
+
+Modi cum libero aliquid cupiditate sint ad tempore vitae. Quia rerum aperiam nulla explicabo vel dignissimos cupiditate. Eveniet voluptatem vitae excepturi sit quam minima totam veniam. Reprehenderit reiciendis numquam expedita dolorem repellat eveniet deserunt. Praesentium ea totam quo quidem., apartment, rent, 3122, yearly, 643 Howe Plain Suite 854, Abigalestad, GA, 59547, 42.86862, -84.426766, vel District, 3, 3, 1214, ?, 1958, carport, 0, active, 0, 1, 2025-10-06 20:45:51, beautiful-apartment-in-damascus, ?, [{"name":"Whole Foods","type":"grocery","distance":2},{"name":"Gym","type":"fitness","distance":0.9}], 401, 2025-09-02 17:11:19, 2025-05-17 02:46:32, 2025-09-08 04:54:05) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:61</error>
+        </testcase>
+        <testcase name="test_property_belongs_to_user" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="17" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.264741">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_belongs_to_user&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (2, Quis temporibus deleniti doloremque., Quia ut labore quod neque commodi atque itaque placeat. Qui illum corrupti id cumque nostrum et provident.
+
+Consectetur nihil quaerat error. Sit sed dolores ex ullam similique unde saepe harum. Vero doloremque exercitationem sint et et consectetur.
+
+Qui tempore tenetur ea repellendus est. Odit maxime veritatis et culpa eos. Quasi consequatur saepe saepe., studio, rent, 2689, monthly, 19726 Gerlach Meadows Apt. 692, East Lenora, WA, 75556-1978, 33.014383, -118.456949, distinctio District, 3, 1, 2089, ?, 1962, garage, 0, active, 0, 1, 2025-09-24 09:19:13, quis-temporibus-deleniti-doloremque, ?, [{"name":"City Park","type":"park","distance":1.7},{"name":"Hospital","type":"healthcare","distance":2.4},{"name":"Public Library","type":"education","distance":0.6}], 55, 2025-07-19 19:50:55, 2025-08-20 20:30:35, 2025-08-21 23:10:12) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:20</error>
+        </testcase>
+        <testcase name="test_property_belongs_to_many_features" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="37" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.259195">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_belongs_to_many_features&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (3, Ut sed nulla., Voluptatem necessitatibus dolores amet quia ipsam officia. Eveniet in rerum odio eius non quos sit. Ut magni veritatis sunt esse. Ipsam est dolorum et laboriosam assumenda eligendi.
+
+Commodi quos voluptatum eum quaerat. Esse labore enim ut nam id eveniet. Tempore a quasi ratione porro. Reprehenderit corporis architecto sunt impedit.
+
+Ab earum deleniti nihil accusamus earum doloremque qui reprehenderit. Autem assumenda animi laboriosam porro minus. Deleniti quae dicta maxime id. Aut illum magnam voluptatem ipsam porro qui ut., apartment, sale, 941938, total, 58707 Kunde Wall, Lake Aglae, AZ, 61722-0643, 27.103933, -70.484208, sunt District, 1, 4, 716, ?, 1959, garage, 2, active, 0, 1, 2025-10-10 03:15:55, ut-sed-nulla, ?, [{"name":"Hospital","type":"healthcare","distance":0.7},{"name":"Restaurant Row","type":"dining","distance":1.9},{"name":"Public Library","type":"education","distance":1.5}], 165, 2025-08-16 21:53:11, 2025-09-04 20:14:24, 2025-09-13 09:28:09) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:39</error>
+        </testcase>
+        <testcase name="test_property_casts" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="194" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.264584">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_casts&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (4, Sit minus sit in praesentium., Asperiores similique incidunt excepturi odit qui illum. Quis aut est neque voluptas hic dolor. Assumenda quis nemo voluptatem quam voluptatem dolorem. Rerum omnis nulla optio voluptatem.
+
+Tenetur dicta ut occaecati eum. Quos aut aut corrupti quam sit facere. Numquam rem similique voluptas voluptas commodi doloremque et ut.
+
+Aperiam dolorem est explicabo et aut. Est fuga voluptas fugit odio eaque perferendis. Eos alias fugit explicabo at voluptatem nobis eaque. Impedit id necessitatibus distinctio eum., land, rent, 1500.50, monthly, 6467 Ullrich Ports, Williehaven, MS, 61394, 42.756364, -88.354456, exercitationem District, 0, 0, ?, 3013, 1987, driveway, 0, active, 1, 0, 2025-10-02 04:47:30, sit-minus-sit-in-praesentium, ?, [{"name":"City Park","type":"park","distance":1},{"name":"Gym","type":"fitness","distance":1.7},{"name":"Shopping Mall","type":"shopping","distance":4.1},{"name":"Restaurant Row","type":"dining","distance":0.6}], 101, 2025-07-19 20:00:10, 2025-03-21 06:55:26, 2025-09-12 20:52:51) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:196</error>
+        </testcase>
+        <testcase name="test_property_fillable_attributes" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="170" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="4" time="0.411290"/>
+        <testcase name="test_property_has_many_media" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="26" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.278013">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_has_many_media&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (6, Odio natus natus., Non ducimus veritatis aut aperiam tenetur id et repellat. Aperiam dolor culpa ducimus unde. Et velit sunt fuga aut omnis illum. Enim quod aliquid aperiam quaerat.
+
+Consequuntur eos tenetur temporibus nam aperiam maxime voluptatem. Sed voluptatem voluptas repellat quia. Facere earum perspiciatis distinctio earum autem.
+
+Eum blanditiis ipsam placeat quis dolorem. Labore iure et eligendi aut et rerum excepturi. Quo odit quaerat numquam numquam molestias voluptas similique. Et maxime tenetur ut., villa, rent, 4768, yearly, 9772 Harber Keys, Koeppshire, GA, 96863-7589, 41.664521, -117.02839, sit District, 1, 3, 3439, ?, 1955, street, 3, pending, 0, 1, 2025-11-14 09:29:39, odio-natus-natus, ?, [{"name":"Starbucks","type":"cafe","distance":0.4},{"name":"Whole Foods","type":"grocery","distance":2.2},{"name":"City Park","type":"park","distance":1},{"name":"Restaurant Row","type":"dining","distance":0.4}], 346, 2025-09-16 16:07:59, 2025-08-10 09:35:00, 2025-09-09 07:55:26) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:28</error>
+        </testcase>
+        <testcase name="test_property_required_fields" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="162" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="1" time="0.082733"/>
+        <testcase name="test_property_increment_views" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="140" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.258570">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_increment_views&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (7, Et cum aut repudiandae., Eos adipisci minima magni officiis atque. Et iusto voluptatem nihil et. Quod porro aliquam nostrum nam vel excepturi mollitia.
+
+Id nam facilis est repellendus molestias fugiat. Aliquam incidunt laudantium fugiat officiis molestias. Dignissimos consequatur aut illum culpa. Officia molestiae et nam sit. Qui doloremque nostrum eius.
+
+Dolorem hic id velit ea accusantium maiores vel. Ex repellat consequuntur non consequatur hic. Commodi eius hic quia aut rerum. Id odit qui repudiandae sed corporis magni consequatur., land, rent, 757, yearly, 95364 Legros Union Suite 444, Stephonfurt, SD, 81989, 48.08209, -112.197359, dolores District, 0, 0, ?, 11771, 1952, garage, 1, draft, 0, 0, 2025-11-08 14:35:47, et-cum-aut-repudiandae, ?, [{"name":"Metro Station","type":"transportation","distance":1.3},{"name":"Gym","type":"fitness","distance":1.2},{"name":"Shopping Mall","type":"shopping","distance":1.9}], 5, ?, 2025-09-01 11:16:03, 2025-08-18 22:18:14) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:142</error>
+        </testcase>
+        <testcase name="test_property_for_listing_scope" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="85" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.475212">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_for_listing_scope&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (8, Minima harum praesentium., Autem voluptate molestiae quis dolores est. Ad corrupti voluptas facilis ut dolores mollitia sunt. Veniam repudiandae sit doloribus optio.
+
+Quibusdam similique sunt quo minima. Quis maiores atque sed ut et nulla soluta. Repellat ut id veritatis sit sapiente cum.
+
+Repudiandae occaecati rem omnis nisi quia magnam. Sint laborum dolorum quia sit dolorem distinctio voluptas eos. Quam in quod est. Qui nihil voluptas eaque qui., apartment, rent, 1141, monthly, 22890 Winnifred Valley, Wilfredbury, WY, 40307, 37.898114, -66.328864, adipisci District, 1, 4, 2249, ?, 1976, driveway, 0, rented, 0, 0, 2025-11-27 14:59:52, minima-harum-praesentium, ?, [{"name":"Elementary School","type":"school","distance":1},{"name":"Public Library","type":"education","distance":0.9}], 218, 2025-08-01 14:24:03, 2025-05-22 10:29:44, 2025-08-22 01:34:48) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:88</error>
+        </testcase>
+        <testcase name="test_property_price_formatting" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="150" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.261645">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_price_formatting&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (10, Sunt placeat fugit aut distinctio., Sit assumenda ea error ducimus. Hic quo voluptatem aut nesciunt dolor pariatur. Est in culpa possimus voluptatibus. Reprehenderit et accusantium quo aliquam.
+
+Tempore tempora porro in pariatur eveniet rerum. Eum qui possimus quia est eos. Eius tempore repellendus omnis delectus. Dolorem aut enim aut omnis.
+
+Nam et et est odio eligendi ratione et. Magni dicta nam quia earum distinctio., condo, sale, 150000, total, 211 Deckow Ridges Apt. 082, New Friedamouth, WY, 23881, 33.935912, -108.625323, doloremque District, 3, 2, 2110, ?, 2013, garage, 0, draft, 0, 0, 2025-09-18 20:09:55, sunt-placeat-fugit-aut-distinctio, ?, [{"name":"Whole Foods","type":"grocery","distance":1},{"name":"Elementary School","type":"school","distance":0.7}], 21, ?, 2025-05-27 19:58:35, 2025-08-24 07:34:25) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:152</error>
+        </testcase>
+        <testcase name="test_property_active_scope" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="69" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.771486">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_active_scope&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (11, Ducimus libero quia., Tenetur aut deleniti eaque accusamus a enim soluta. Deleniti quia illo laboriosam deleniti in voluptatem placeat harum. Omnis adipisci omnis ut eum perspiciatis et.
+
+Consequatur et tempore sunt quos sequi sit. Voluptatem cupiditate itaque commodi qui perspiciatis maxime. Dolorem amet aperiam odit eveniet sapiente deserunt excepturi. Deserunt soluta tenetur aliquid deserunt error ut.
+
+Ad voluptatibus magni natus rerum sit. Quae consequatur quis voluptatem deserunt expedita., villa, rent, 3949, monthly, 93152 Blanche Key, Ovamouth, NY, 91094-1873, 47.914945, -66.536167, eum District, 0, 1, 3932, ?, 1988, none, 0, active, 1, 1, 2025-10-04 00:07:36, ducimus-libero-quia, ?, [{"name":"Starbucks","type":"cafe","distance":1.7},{"name":"Hospital","type":"healthcare","distance":2.9}], 388, 2025-07-06 20:45:17, 2025-04-24 14:01:03, 2025-09-14 23:33:19) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:72</error>
+        </testcase>
+        <testcase name="test_property_available_scope" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="124" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.780627">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_available_scope&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (14, Nihil consequatur vel officiis facilis., Praesentium accusamus dignissimos similique. Hic placeat officiis ut. Esse voluptatem aperiam dolorem eligendi ea.
+
+In sed voluptatem omnis tempora facere commodi provident amet. Placeat delectus voluptatibus voluptates reiciendis culpa nemo. Velit earum corporis in qui.
+
+Voluptas maxime natus hic repudiandae perspiciatis vel. Quibusdam eaque et sit non nam consequatur. Harum ea eos molestias enim dignissimos labore expedita. Blanditiis ipsum sapiente sapiente dicta consequatur optio dolor. Corporis eos qui aut est fugit aut., loft, sale, 420888, total, 175 Beer Villages Apt. 221, North Marcelle, OR, 72453-7698, 46.721585, -112.049374, reiciendis District, 5, 4, 3944, ?, 1961, carport, 0, inactive, 0, 1, 2025-10-29 10:28:10, nihil-consequatur-vel-officiis-facilis, ?, [{"name":"Metro Station","type":"transportation","distance":0.3},{"name":"Hospital","type":"healthcare","distance":2.1},{"name":"Shopping Mall","type":"shopping","distance":4.8},{"name":"Restaurant Row","type":"dining","distance":0.7},{"name":"Public Library","type":"education","distance":2}], 205, 2025-07-28 03:46:06, 2025-08-30 22:41:23, 2025-09-14 17:44:54) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:127</error>
+        </testcase>
+        <testcase name="test_property_featured_scope" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="108" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.459682">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_featured_scope&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (17, Dicta molestias illum minus neque est., Aut debitis quis omnis possimus est recusandae. Voluptatem aperiam accusantium illum enim sunt voluptate corporis voluptate.
+
+Quis aut dignissimos voluptatem ut nihil libero. Minima culpa repudiandae laudantium sapiente rerum. Est est et illo illum aliquam explicabo. Magni eum ea dolores enim dolores consequatur est.
+
+Repudiandae perferendis cupiditate quis impedit quia. Alias porro sed iure quas voluptatem sit maiores ipsam. Quisquam et maiores corporis temporibus cum dolores id. Fugiat quia minima corrupti saepe dignissimos., land, sale, 883782, total, 93574 Hermina Cliff, Lenniestad, ID, 54011-5430, 39.014243, -92.552523, unde District, 0, 0, ?, 16628, 1951, none, 3, active, 1, 1, 2025-09-20 08:21:50, dicta-molestias-illum-minus-neque-est, ?, [{"name":"Starbucks","type":"cafe","distance":0.8},{"name":"Metro Station","type":"transportation","distance":0.4},{"name":"Hospital","type":"healthcare","distance":1},{"name":"Shopping Mall","type":"shopping","distance":5}], 321, 2025-09-07 21:09:25, 2025-08-20 09:37:06, 2025-08-22 01:54:53) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:111</error>
+        </testcase>
+        <testcase name="test_property_belongs_to_many_utilities" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="48" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.378577">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_belongs_to_many_utilities&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (19, Qui dolores necessitatibus velit soluta., Beatae ut ea velit ut. Veritatis non assumenda qui hic deserunt voluptatibus. Consequuntur molestiae excepturi facere sit expedita voluptas a.
+
+Animi architecto sit velit dolore est officia maiores ut. Numquam accusantium repellendus et omnis rerum ut.
+
+Tempora non ad illo quia ut ut voluptas rerum. Aut voluptatibus doloremque consequatur error non omnis. Aut rem omnis quod velit. Est assumenda ut quo recusandae saepe sit magni quod., loft, rent, 1206, monthly, 660 Klocko Drives Suite 119, Roxanemouth, MA, 45874, 38.7319, -77.647393, enim District, 4, 2, 2637, ?, 1998, driveway, 3, rented, 0, 0, 2025-11-11 05:27:27, qui-dolores-necessitatibus-velit-soluta, ?, [{"name":"Whole Foods","type":"grocery","distance":1.7},{"name":"Elementary School","type":"school","distance":1},{"name":"Shopping Mall","type":"shopping","distance":4.1},{"name":"Public Library","type":"education","distance":2.8}], 219, 2025-08-20 11:26:05, 2025-04-20 21:10:53, 2025-08-23 12:18:40) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:50</error>
+        </testcase>
+        <testcase name="test_property_search_functionality" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php" line="208" class="Tests\Unit\PropertyModelTest" classname="Tests.Unit.PropertyModelTest" assertions="0" time="0.269151">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyModelTest::test_property_search_functionality&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (20, Beautiful Apartment, Impedit laboriosam architecto quo voluptas nesciunt cupiditate eum qui. Et harum nihil magnam eveniet fugiat. Unde eos vitae officia itaque. Amet modi non dolorum. Quisquam qui in ut dolorum suscipit placeat ut.
+
+Consequuntur et vel aut ad aut illo voluptatem. Aut perferendis explicabo dicta rerum. Inventore aut harum labore tempora.
+
+Ut labore autem enim aut voluptates. Id perferendis qui et vero. Rem commodi sint dolores nihil. Eveniet libero consectetur sapiente qui., house, sale, 491061, total, 2331 Laisha Forges Suite 475, Damascus, CO, 14441-0300, 30.676186, -80.444924, temporibus District, 3, 1, 650, ?, 1978, garage, 3, active, 0, 0, 2025-10-26 14:28:50, beautiful-apartment, ?, [{"name":"Starbucks","type":"cafe","distance":1.4},{"name":"Whole Foods","type":"grocery","distance":0.5},{"name":"Hospital","type":"healthcare","distance":3.5},{"name":"Shopping Mall","type":"shopping","distance":2.8},{"name":"Restaurant Row","type":"dining","distance":0.5}], 173, 2025-08-25 06:36:16, 2025-07-05 09:50:52, 2025-09-11 08:09:59) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyModelTest.php:210</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="Tests\Unit\PropertyCacheServiceTest" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php" tests="7" assertions="0" errors="7" failures="0" skipped="0" time="3.061362">
+        <testcase name="test_search_results_respect_filters" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php" line="128" class="Tests\Unit\PropertyCacheServiceTest" classname="Tests.Unit.PropertyCacheServiceTest" assertions="0" time="0.411646">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyCacheServiceTest::test_search_results_respect_filters&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (21, Non ut illo deserunt repellat sapiente., Quasi a voluptate enim esse id ut modi. Et id qui et qui. Reiciendis voluptatibus ab pariatur iusto quis autem. Doloremque voluptas eaque ut.
+
+Minima doloremque ad aut quas eum vel eum. Quibusdam et incidunt commodi aliquam. Voluptas beatae ut voluptatibus animi molestiae earum dolores. Consequuntur iusto ut est ut. Porro corrupti non sit occaecati corrupti illo.
+
+Voluptate facilis ullam dolorum officiis aut. In et minus aliquam voluptas sequi et placeat. Fugiat magni ut facilis ducimus illo reiciendis., apartment, rent, 1000, yearly, 45538 Etha Spring Suite 058, Damascus, NJ, 05638-7513, 37.927935, -121.717455, magni District, 5, 4, 3589, ?, 2022, garage, 2, active, 1, 0, 2025-12-01 23:20:26, non-ut-illo-deserunt-repellat-sapiente, ?, [{"name":"Whole Foods","type":"grocery","distance":1.9},{"name":"Metro Station","type":"transportation","distance":1.4},{"name":"Restaurant Row","type":"dining","distance":1.1},{"name":"Public Library","type":"education","distance":2}], 180, 2025-08-21 14:38:43, 2025-05-05 18:50:32, 2025-09-04 05:04:09) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php:131</error>
+        </testcase>
+        <testcase name="test_can_get_featured_properties" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php" line="69" class="Tests\Unit\PropertyCacheServiceTest" classname="Tests.Unit.PropertyCacheServiceTest" assertions="0" time="0.476289">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyCacheServiceTest::test_can_get_featured_properties&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (22, Commodi adipisci sit quia., Quidem quaerat amet assumenda voluptas mollitia quam. Quia quis aut qui illum beatae illo. Eum et commodi assumenda sit qui omnis fugit. Velit architecto quos dolore odio hic necessitatibus deleniti. Et et aut a sit occaecati.
+
+Omnis dolor sint aut dolorum aut dignissimos qui laborum. Consectetur expedita dicta reiciendis nostrum vel. In praesentium omnis impedit dignissimos quaerat voluptas.
+
+Inventore et impedit voluptas dolore. Deleniti libero non explicabo. Aut quisquam vel facilis et fugiat repellat., commercial, sale, 211184, total, 766 Miller Gardens Apt. 513, Grantmouth, NV, 61471-3289, 30.301357, -110.511472, et District, 1, 2, 3290, ?, 2012, street, 3, active, 1, 0, 2025-12-13 10:57:32, commodi-adipisci-sit-quia, ?, [{"name":"Metro Station","type":"transportation","distance":0.7},{"name":"City Park","type":"park","distance":0.5},{"name":"Elementary School","type":"school","distance":1.2},{"name":"Hospital","type":"healthcare","distance":3.6},{"name":"Restaurant Row","type":"dining","distance":0.9}], 252, ?, 2025-09-06 18:31:07, 2025-08-29 10:16:07) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php:72</error>
+        </testcase>
+        <testcase name="test_can_cache_search_results" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php" line="44" class="Tests\Unit\PropertyCacheServiceTest" classname="Tests.Unit.PropertyCacheServiceTest" assertions="0" time="0.775277">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyCacheServiceTest::test_can_cache_search_results&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (24, Neque commodi dolores nihil dolorum., Aut officia quasi corrupti sed. Et aliquam ad itaque voluptas nulla eum molestias. Impedit aut eaque commodi magni tempora assumenda. Voluptates voluptas distinctio est dolorem corrupti omnis nam. Pariatur culpa sint odit iusto.
+
+Ea eos quod et ut est sint corrupti repellat. Minus ut quia cumque esse cum reprehenderit. Eum et est aperiam eos natus. Repellendus laudantium fugiat accusantium dignissimos aut cupiditate quidem.
+
+Nulla autem praesentium officiis libero temporibus. Ipsam qui sit aut est aliquid iusto. Qui a veniam reiciendis velit quae. Eum sit id eos omnis sit ea. Est iure eius corrupti dolore dolorem quos ullam., apartment, sale, 779818, total, 529 Carmen Junctions, Damascus, MN, 37131, 35.807395, -101.079522, cupiditate District, 4, 3, 2056, ?, 1968, carport, 1, active, 0, 0, 2025-10-13 20:35:19, neque-commodi-dolores-nihil-dolorum, ?, [{"name":"Whole Foods","type":"grocery","distance":0.3},{"name":"Metro Station","type":"transportation","distance":1.4},{"name":"Restaurant Row","type":"dining","distance":1.3}], 67, 2025-09-06 12:58:02, 2025-09-15 02:31:58, 2025-08-18 07:49:00) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php:47</error>
+        </testcase>
+        <testcase name="test_warm_up_cache_populates_common_data" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php" line="164" class="Tests\Unit\PropertyCacheServiceTest" classname="Tests.Unit.PropertyCacheServiceTest" assertions="0" time="0.482076">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyCacheServiceTest::test_warm_up_cache_populates_common_data&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (27, Quam magni perspiciatis aut accusamus labore., Quia mollitia qui unde molestiae et. Id sunt repudiandae magni animi tempora. Eos illo dolorem enim aspernatur facere repudiandae. Cumque dolores sapiente quam accusamus autem quia architecto.
+
+Nemo voluptas quasi eius quia. Culpa est dolorum error et molestiae aut vitae. Eum sed asperiores et ut commodi quidem consequatur. Nostrum voluptas nemo aut ipsam quae blanditiis beatae.
+
+Et totam optio exercitationem. Suscipit atque consequatur numquam consequuntur id molestiae error explicabo., loft, sale, 432081, total, 8850 Webster Mission, Dariusfurt, ID, 22078, 28.489688, -86.114641, rerum District, 5, 2, 1622, ?, 2003, garage, 0, active, 1, 1, 2025-11-16 03:33:19, quam-magni-perspiciatis-aut-accusamus-labore, ?, [{"name":"Metro Station","type":"transportation","distance":1},{"name":"City Park","type":"park","distance":0.9}], 487, 2025-07-27 11:40:46, 2025-04-01 19:36:17, 2025-08-18 12:46:01) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php:167</error>
+        </testcase>
+        <testcase name="test_can_get_recent_properties" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php" line="93" class="Tests\Unit\PropertyCacheServiceTest" classname="Tests.Unit.PropertyCacheServiceTest" assertions="0" time="0.266615">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyCacheServiceTest::test_can_get_recent_properties&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (29, Ipsum aut ut nulla., Dicta animi et ea veritatis nam. Rem voluptatibus inventore animi sed voluptatibus architecto. Quisquam omnis ut rerum et et sint sunt doloribus. Quia exercitationem sed incidunt vero non voluptas nemo.
+
+Voluptatem labore dolores tempora velit. Ullam excepturi eos enim ut voluptas sed aperiam. Adipisci error deserunt autem fugit rerum perspiciatis pariatur. Natus aut debitis qui sit in veniam nemo.
+
+Eligendi iste provident libero quibusdam quas. Ad vel nobis aspernatur est. Quo accusantium blanditiis soluta voluptatem error., villa, sale, 943097, total, 666 Brianne Rapids Apt. 153, Stoneton, DC, 65355-9232, 47.188899, -102.371225, dignissimos District, 5, 3, 2686, ?, 2018, driveway, 0, active, 0, 0, 2025-11-10 15:46:23, ipsum-aut-ut-nulla, ?, [{"name":"Whole Foods","type":"grocery","distance":0.5},{"name":"Gym","type":"fitness","distance":0.4},{"name":"Shopping Mall","type":"shopping","distance":1.3},{"name":"Restaurant Row","type":"dining","distance":1.7},{"name":"Public Library","type":"education","distance":2.5}], 69, 2025-08-22 17:02:01, 2025-09-11 18:31:51, 2025-09-09 02:49:00) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php:96</error>
+        </testcase>
+        <testcase name="test_can_clear_property_cache" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php" line="115" class="Tests\Unit\PropertyCacheServiceTest" classname="Tests.Unit.PropertyCacheServiceTest" assertions="0" time="0.267817">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyCacheServiceTest::test_can_clear_property_cache&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (30, Officiis eos corporis., Est sequi quo debitis harum. Consectetur inventore accusamus praesentium dicta esse labore. Ut eos esse eos iusto quo. Consequatur libero non omnis dolorem labore eum nisi.
+
+Voluptas est ea explicabo reprehenderit aut dolores. Quos deserunt qui qui incidunt aut nostrum.
+
+Expedita aliquam enim quos. Perspiciatis libero autem ipsum ea rerum. Occaecati ipsum dolorum est nostrum., townhouse, rent, 1432, yearly, 7660 Darien Courts, West Ola, UT, 52883-7249, 36.365556, -122.732865, ab District, 0, 2, 1037, ?, 2003, street, 3, active, 1, 0, 2025-11-12 07:09:03, officiis-eos-corporis, ?, [{"name":"Whole Foods","type":"grocery","distance":2.5},{"name":"Metro Station","type":"transportation","distance":0.9},{"name":"Elementary School","type":"school","distance":1.5},{"name":"Public Library","type":"education","distance":2.5}], 441, 2025-07-25 10:07:02, 2025-06-30 10:54:34, 2025-09-12 16:38:11) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php:117</error>
+        </testcase>
+        <testcase name="test_can_cache_and_retrieve_property" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php" line="24" class="Tests\Unit\PropertyCacheServiceTest" classname="Tests.Unit.PropertyCacheServiceTest" assertions="0" time="0.381641">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\PropertyCacheServiceTest::test_can_cache_and_retrieve_property&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (31, Test Property, Facere facere sint eligendi ut. Error voluptate assumenda rerum aperiam velit. Quo saepe assumenda non. Voluptate ipsa aut occaecati sunt. Et et ex quam sed quia.
+
+Aut maxime quia dicta tempora sed sit ex. Quaerat molestias dolores et consequatur facilis sed a. Nemo fuga officiis beatae et atque quia vero.
+
+Id qui autem ut qui rerum officiis ea. Consequuntur deleniti quo doloribus est odio voluptate optio. Voluptates quod at doloremque. Quod eum quis aut ut nisi omnis., land, rent, 4591, yearly, 369 Danyka Road, East Alvah, TX, 84762-1233, 29.913061, -109.764972, quasi District, 0, 0, ?, 42765, 1980, carport, 3, active, 0, 1, 2025-11-22 21:13:55, test-property, ?, [{"name":"Starbucks","type":"cafe","distance":0.2},{"name":"City Park","type":"park","distance":1.1},{"name":"Shopping Mall","type":"shopping","distance":0.8}], 94, 2025-06-24 20:05:02, 2025-07-11 06:11:11, 2025-08-23 15:21:22) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\PropertyCacheServiceTest.php:27</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="Tests\Unit\UserModelTest" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" tests="17" assertions="29" errors="3" failures="0" skipped="0" time="6.853019">
+        <testcase name="test_user_email_uniqueness" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="110" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="1" time="0.478758"/>
+        <testcase name="test_user_avatar_handling" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="218" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="1" time="0.306797"/>
+        <testcase name="test_user_timestamps" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="144" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="4" time="0.483613"/>
+        <testcase name="test_user_email_validation_format" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="126" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="1" time="0.258218"/>
+        <testcase name="test_user_hidden_attributes" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="53" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="2" time="0.282751"/>
+        <testcase name="test_user_can_create_property" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="182" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="3" time="0.340865"/>
+        <testcase name="test_user_active_properties_relationship" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="84" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="0" time="0.306859">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\UserModelTest::test_user_active_properties_relationship&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (39, Eius eos omnis., Dolorum tempore suscipit aperiam enim fugit rem omnis. Quos voluptatum eligendi omnis. Voluptas veritatis soluta inventore accusantium quibusdam. Excepturi inventore eos itaque sit placeat asperiores.
+
+Et qui qui veniam quae. Nihil placeat neque quas voluptatum. Velit architecto fuga tempore impedit. Excepturi laudantium illo rerum rerum officia vitae.
+
+Quaerat placeat deleniti distinctio quas enim asperiores ut laborum. Neque soluta deleniti recusandae corrupti alias dignissimos rerum. Optio non similique ut soluta. Mollitia natus aperiam aut sed possimus velit., loft, rent, 3164, monthly, 67879 Alycia Turnpike Apt. 194, Connerfurt, ND, 35809-4218, 31.995396, -70.93658, quibusdam District, 1, 4, 3783, ?, 1995, carport, 2, active, 0, 1, 2025-10-14 21:32:57, eius-eos-omnis, ?, [{"name":"Starbucks","type":"cafe","distance":0.9},{"name":"Metro Station","type":"transportation","distance":1.5}], 289, 2025-08-16 19:23:41, 2025-05-10 19:42:35, 2025-09-07 08:13:59) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php:89</error>
+        </testcase>
+        <testcase name="test_user_fillable_attributes" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="34" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="5" time="0.565390"/>
+        <testcase name="test_user_soft_deletes" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="154" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="1" time="0.450045"/>
+        <testcase name="test_user_required_fields" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="118" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="1" time="0.055681"/>
+        <testcase name="test_user_phone_format" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="204" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="4" time="0.958271"/>
+        <testcase name="test_user_password_is_hashed" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="24" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="2" time="0.686702"/>
+        <testcase name="test_user_password_mutator" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="134" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="2" time="0.470253"/>
+        <testcase name="test_user_full_name_accessor" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="71" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="1" time="0.262626"/>
+        <testcase name="test_user_has_many_properties" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="15" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="0" time="0.389882">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\UserModelTest::test_user_has_many_properties&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (49, Autem et odit veritatis quo., Exercitationem aspernatur illum dicta rem. Velit aperiam ipsam et quis. Consequuntur nihil velit recusandae at.
+
+Quaerat quasi quis in ut placeat suscipit quae inventore. Veritatis rerum ipsa consectetur ipsa et. Possimus rerum vel quo eligendi voluptas. Aut inventore ipsam id ut.
+
+Eum veritatis velit dolorem alias doloremque consequuntur. Earum dolore nemo libero sunt quo alias. Facilis quia voluptatum consectetur perferendis nam vel nisi., commercial, rent, 1991, monthly, 40484 Veum Estate, North Laron, ID, 18048-7764, 41.83108, -99.28658, porro District, 4, 3, 711, ?, 1952, none, 1, inactive, 0, 0, 2025-10-18 06:51:33, autem-et-odit-veritatis-quo, ?, [{"name":"Whole Foods","type":"grocery","distance":2.8},{"name":"Shopping Mall","type":"shopping","distance":3.2},{"name":"Public Library","type":"education","distance":0.5}], 431, 2025-07-06 09:11:44, 2025-07-28 08:36:35, 2025-09-04 23:41:41) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php:18</error>
+        </testcase>
+        <testcase name="test_user_properties_count" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="173" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="0" time="0.284602">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\UserModelTest::test_user_properties_count&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (50, Voluptatibus cum repellendus repudiandae., Ullam maxime et aut neque. Magnam et totam facere voluptatem sit tenetur et doloremque. Tempore et eveniet in molestias deserunt. Itaque natus debitis non nam necessitatibus qui.
+
+Ut accusantium voluptatem est nam. Beatae tempore dolorem aut. Corporis quod sed et nihil.
+
+Non qui iure accusantium ullam pariatur error. Tenetur nesciunt qui qui aut sunt et aut., land, rent, 2407, yearly, 225 Kuvalis Square Suite 771, Lake Rustyville, IA, 83406, 30.214725, -93.231469, ut District, 0, 0, ?, 27975, 1975, carport, 1, active, 0, 1, 2025-09-26 11:05:02, voluptatibus-cum-repellendus-repudiandae, ?, [{"name":"Whole Foods","type":"grocery","distance":1.5},{"name":"Metro Station","type":"transportation","distance":0.5},{"name":"City Park","type":"park","distance":0.3},{"name":"Shopping Mall","type":"shopping","distance":4.8},{"name":"Public Library","type":"education","distance":1}], 53, 2025-07-12 13:50:42, 2025-04-21 01:09:48, 2025-09-04 06:56:02) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:291
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:281
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php:176</error>
+        </testcase>
+        <testcase name="test_user_email_verification_timestamp_cast" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\UserModelTest.php" line="62" class="Tests\Unit\UserModelTest" classname="Tests.Unit.UserModelTest" assertions="1" time="0.271706"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\Services\PropertyCacheServiceTest" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" tests="9" assertions="1" errors="8" failures="0" skipped="0" time="1.095075">
+        <testcase name="test_can_get_cached_property" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="45" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="0" time="0.291983">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\Services\PropertyCacheServiceTest::test_can_get_cached_property&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (52, Nobis sit sunt., Distinctio et adipisci iure placeat consequatur ad non. Sed officiis quae quibusdam possimus porro et autem. Molestias laboriosam quia totam quo iste. Ab molestias ea aliquam cumque repudiandae quisquam.
+
+Illo fugit accusantium non quos et. Cupiditate dignissimos est voluptatem autem et ut. Impedit illo quos possimus rerum dolores.
+
+Totam illo quia esse cum provident dicta at. Asperiores illo voluptate et sed et. Est perferendis rem quia., villa, sale, 328187, total, 148 Kovacek Ramp, Towneview, WV, 25323, 37.912304, -86.353389, veniam District, 2, 4, 1929, ?, 1955, none, 2, rented, 0, 0, 2025-12-10 05:09:43, nobis-sit-sunt, ?, [{"name":"City Park","type":"park","distance":1.6},{"name":"Hospital","type":"healthcare","distance":3.9},{"name":"Shopping Mall","type":"shopping","distance":1.2},{"name":"Restaurant Row","type":"dining","distance":0.8}], 121, 2025-09-05 18:16:10, 2025-07-16 02:06:11, 2025-09-04 07:48:28) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php:48</error>
+        </testcase>
+        <testcase name="test_can_cache_property" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="25" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="0" time="0.266840">
+          <error type="Illuminate\Database\QueryException">Tests\Unit\Services\PropertyCacheServiceTest::test_can_cache_property&#13;
+Illuminate\Database\QueryException: Array to string conversion (Connection: pgsql, SQL: insert into "properties" ("user_id", "title", "description", "property_type", "listing_type", "price", "price_type", "street_address", "city", "state", "postal_code", "latitude", "longitude", "neighborhood", "bedrooms", "bathrooms", "square_feet", "lot_size", "year_built", "parking_type", "parking_spaces", "status", "is_featured", "is_available", "available_from", "slug", "amenities", "nearby_places", "views_count", "published_at", "created_at", "updated_at") values (53, Corrupti quos fugit ullam architecto., Qui et consequatur minima amet. Sint dolorum temporibus facilis quas consequatur facere occaecati. Sit at et sed a facere id.
+
+Facere ipsum id et voluptas repellat mollitia voluptatem. Rerum ad et magni voluptatum distinctio sed sed blanditiis. Ratione beatae atque non assumenda. Necessitatibus quas aut odit sed voluptatibus.
+
+Non aut in ut omnis. Incidunt omnis libero ut ut odit tenetur. Distinctio architecto distinctio maiores quae nulla debitis., house, rent, 1177, yearly, 734 Strosin Pike, Lake Bethelfurt, CO, 90306-9942, 24.10922, -113.467661, accusamus District, 2, 2, 3078, ?, 2007, carport, 1, pending, 0, 1, 2025-10-25 02:46:50, corrupti-quos-fugit-ullam-architecto, ?, [{"name":"Whole Foods","type":"grocery","distance":1.7},{"name":"Metro Station","type":"transportation","distance":0.1},{"name":"Hospital","type":"healthcare","distance":2.1},{"name":"Shopping Mall","type":"shopping","distance":3.6}], 357, 2025-08-23 17:51:30, 2025-08-27 08:59:21, 2025-09-06 13:00:51) returning "id")
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:783
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:414
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Connection.php:401
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\PostgresProcessor.php:24
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3549
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1982
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1334
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1299
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:338
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:240
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:333
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:287
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php:28</error>
+        </testcase>
+        <testcase name="test_generates_correct_search_key" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="170" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="0" time="0.056861">
+          <error type="Error">Tests\Unit\Services\PropertyCacheServiceTest::test_generates_correct_search_key&#13;
+Error: Call to undefined method App\Services\PropertyCacheService::generateSearchKey()
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php:181</error>
+        </testcase>
+        <testcase name="test_can_invalidate_property_cache" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="76" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="0" time="0.075123">
+          <error type="Error">Tests\Unit\Services\PropertyCacheServiceTest::test_can_invalidate_property_cache&#13;
+Error: Call to undefined method App\Services\PropertyCacheService::invalidateProperty()
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php:95</error>
+        </testcase>
+        <testcase name="test_can_cache_search_results" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="101" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="0" time="0.060517">
+          <error type="Error">Tests\Unit\Services\PropertyCacheServiceTest::test_can_cache_search_results&#13;
+Error: Call to undefined method App\Services\PropertyCacheService::cacheSearchResults()
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php:117</error>
+        </testcase>
+        <testcase name="test_can_invalidate_search_cache" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="141" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="0" time="0.066633">
+          <error type="Error">Tests\Unit\Services\PropertyCacheServiceTest::test_can_invalidate_search_cache&#13;
+Error: Call to undefined method App\Services\PropertyCacheService::invalidateSearchCache()
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php:167</error>
+        </testcase>
+        <testcase name="test_can_get_cached_search_results" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="123" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="0" time="0.065728">
+          <error type="Error">Tests\Unit\Services\PropertyCacheServiceTest::test_can_get_cached_search_results&#13;
+Error: Call to undefined method App\Services\PropertyCacheService::getCachedSearchResults()
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php:135</error>
+        </testcase>
+        <testcase name="test_returns_null_when_property_not_cached" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="61" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="1" time="0.053728"/>
+        <testcase name="test_generates_consistent_search_key_for_same_filters" file="C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php" line="187" class="Tests\Unit\Services\PropertyCacheServiceTest" classname="Tests.Unit.Services.PropertyCacheServiceTest" assertions="0" time="0.157662">
+          <error type="Error">Tests\Unit\Services\PropertyCacheServiceTest::test_generates_consistent_search_key_for_same_filters&#13;
+Error: Call to undefined method App\Services\PropertyCacheService::generateSearchKey()
+&#13;
+C:\Users\mehme\OneDrive\Desktop\house\Propenty-management-api-main\tests\Unit\Services\PropertyCacheServiceTest.php:194</error>
+        </testcase>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

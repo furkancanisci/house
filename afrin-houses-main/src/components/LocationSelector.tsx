@@ -91,23 +91,23 @@ const LocationSelector: FC<LocationSelectorProps> = ({
       return;
     }
     // Verify the city exists in our options (check both display name and original name)
-    const cityExists = cities.some(city => {
+    const cityExists = cities && cities.length > 0 ? cities.some(city => {
       const cityDisplayName = locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name);
       const match = city.name === value || cityDisplayName === value;
       console.log(`LocationSelector: Checking city '${city.name}' (display: '${cityDisplayName}') against '${value}': ${match}`);
       return match;
-    });
+    }) : false;
     console.log('LocationSelector: Does selected city exist in options?', cityExists);
     
     // If city doesn't exist in options, log warning but still proceed
-    if (!cityExists && cities.length > 0) {
+    if (!cityExists && cities && cities.length > 0) {
       console.warn('LocationSelector: Selected city not found in available cities:', {
         selectedCity: value,
-        availableCities: cities.map(c => {
+        availableCities: cities ? cities.map(c => {
           const displayName = locale === 'ar' && c.name_ar ? c.name_ar : (c.name_en || c.name);
           return { original: c.name, display: displayName };
-        }),
-        citiesCount: cities.length
+        }) : [],
+        citiesCount: cities ? cities.length : 0
       });
     }
     
@@ -182,7 +182,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
         
         // Only clear the city if we're confident it's a new state selection
         // (not just a re-render with the same state)
-        const shouldClearCity = selectedCity && cities.length === 0; // Only clear if no cities are loaded yet
+        const shouldClearCity = selectedCity && (!cities || cities.length === 0); // Only clear if no cities are loaded yet
         
         if (shouldClearCity) {
           if (propOnCityChange) {
@@ -212,7 +212,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
 
   // Verify selected city exists when cities are loaded
   useEffect(() => {
-    if (cities.length > 0 && selectedCity) {
+    if (cities && cities.length > 0 && selectedCity) {
       // Check if selectedCity exists in either name format
       const cityExists = cities.some(city => {
         const cityDisplayName = locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name);
@@ -221,10 +221,10 @@ const LocationSelector: FC<LocationSelectorProps> = ({
       
       console.log('LocationSelector: Verifying selected city after cities loaded:');
       console.log('LocationSelector: Selected city:', selectedCity);
-      console.log('LocationSelector: Available cities:', cities.map(c => {
+      console.log('LocationSelector: Available cities:', cities ? cities.map(c => {
         const displayName = locale === 'ar' && c.name_ar ? c.name_ar : (c.name_en || c.name);
         return { original: c.name, display: displayName };
-      }));
+      }) : []);
       console.log('LocationSelector: City exists in list:', cityExists);
       
       if (!cityExists) {
@@ -319,10 +319,10 @@ const LocationSelector: FC<LocationSelectorProps> = ({
               </SelectTrigger>
               <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
                 {(() => {
-                  console.log('LocationSelector: Rendering SelectContent with cities:', cities.length);
-                  console.log('LocationSelector: Cities data:', cities.map(c => ({ id: c.id, name: c.name, state: c.state })));
+                  console.log('LocationSelector: Rendering SelectContent with cities:', cities ? cities.length : 0);
+                  console.log('LocationSelector: Cities data:', cities ? cities.map(c => ({ id: c.id, name: c.name, state: c.state })) : []);
                   
-                  return cities.map((city) => {
+                  return cities && cities.length > 0 ? cities.map((city) => {
                     console.log('LocationSelector: Rendering city option:', {
                       id: city.id,
                       name: city.name,
@@ -348,7 +348,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
                         </span>
                       </SelectItem>
                     );
-                  });
+                  }) : [];
                 })()} 
               </SelectContent>
             </Select>

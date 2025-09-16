@@ -8,7 +8,10 @@ import {
   DollarSign,
   Bed,
   Bath,
-  Square
+  Square,
+  Building,
+  Eye,
+  Compass
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -368,6 +371,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       } else if (key === 'minSquareFootage' || key === 'maxSquareFootage') {
         const numValue = Number(value);
         newValues[key] = !isNaN(numValue) && numValue > 0 ? numValue : undefined;
+      } else if (key === 'minFloorNumber' || key === 'maxFloorNumber' || key === 'minTotalFloors' || key === 'maxTotalFloors' || key === 'minBalconyCount' || key === 'maxBalconyCount') {
+        const numValue = Number(value);
+        newValues[key] = !isNaN(numValue) && numValue >= 0 ? numValue : undefined;
+      } else if (key === 'orientation' || key === 'viewType') {
+        newValues[key] = value === 'any' ? undefined : value;
       } else if (key === 'location') {
         newValues.location = typeof value === 'string' ? value : '';
       } else if (key === 'state') {
@@ -429,6 +437,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       location: '',
       state: '',
       city: '',
+      minFloorNumber: undefined,
+      maxFloorNumber: undefined,
+      minTotalFloors: undefined,
+      maxTotalFloors: undefined,
+      minBalconyCount: undefined,
+      maxBalconyCount: undefined,
+      orientation: undefined,
+      viewType: undefined,
     };
     
     // Reset all state in a single batch
@@ -715,6 +731,154 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                       className="pl-10"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Floor Details */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-gray-500" />
+                  {t('filters.floorDetails')}
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={t('filters.minFloor')}
+                      value={formValues.minFloorNumber || ''}
+                      onChange={(e) => handleFilterChange('minFloorNumber', e.target.value ? Number(e.target.value) : undefined)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={t('filters.maxFloor')}
+                      value={formValues.maxFloorNumber || ''}
+                      onChange={(e) => handleFilterChange('maxFloorNumber', e.target.value ? Number(e.target.value) : undefined)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Floors */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-gray-500" />
+                  {t('filters.totalFloors')}
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder={t('filters.minTotalFloors')}
+                      value={formValues.minTotalFloors || ''}
+                      onChange={(e) => handleFilterChange('minTotalFloors', e.target.value ? Number(e.target.value) : undefined)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder={t('filters.maxTotalFloors')}
+                      value={formValues.maxTotalFloors || ''}
+                      onChange={(e) => handleFilterChange('maxTotalFloors', e.target.value ? Number(e.target.value) : undefined)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Balcony Count */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Square className="h-4 w-4 text-gray-500" />
+                  {t('filters.balconyCount')}
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={t('filters.minBalconies')}
+                      value={formValues.minBalconyCount || ''}
+                      onChange={(e) => handleFilterChange('minBalconyCount', e.target.value ? Number(e.target.value) : undefined)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={t('filters.maxBalconies')}
+                      value={formValues.maxBalconyCount || ''}
+                      onChange={(e) => handleFilterChange('maxBalconyCount', e.target.value ? Number(e.target.value) : undefined)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Orientation & View Type */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Compass className="h-4 w-4 text-gray-500" />
+                    {t('filters.orientation')}
+                  </Label>
+                  <Select
+                    value={formValues.orientation || 'any'}
+                    onValueChange={(value) => handleFilterChange('orientation', value === 'any' ? undefined : value)}
+                  >
+                    <SelectTrigger className="bg-gray-50 border-gray-300">
+                      <SelectValue placeholder={t('filters.selectOrientation')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">{t('filters.any')}</SelectItem>
+                      <SelectItem value="north">{t('property.orientation.north')}</SelectItem>
+                      <SelectItem value="south">{t('property.orientation.south')}</SelectItem>
+                      <SelectItem value="east">{t('property.orientation.east')}</SelectItem>
+                      <SelectItem value="west">{t('property.orientation.west')}</SelectItem>
+                      <SelectItem value="northeast">{t('property.orientation.northeast')}</SelectItem>
+                      <SelectItem value="northwest">{t('property.orientation.northwest')}</SelectItem>
+                      <SelectItem value="southeast">{t('property.orientation.southeast')}</SelectItem>
+                      <SelectItem value="southwest">{t('property.orientation.southwest')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-gray-500" />
+                    {t('filters.viewType')}
+                  </Label>
+                  <Select
+                    value={formValues.viewType || 'any'}
+                    onValueChange={(value) => handleFilterChange('viewType', value === 'any' ? undefined : value)}
+                  >
+                    <SelectTrigger className="bg-gray-50 border-gray-300">
+                      <SelectValue placeholder={t('filters.selectViewType')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">{t('filters.any')}</SelectItem>
+                      <SelectItem value="city">{t('property.viewType.city')}</SelectItem>
+                      <SelectItem value="sea">{t('property.viewType.sea')}</SelectItem>
+                      <SelectItem value="mountain">{t('property.viewType.mountain')}</SelectItem>
+                      <SelectItem value="garden">{t('property.viewType.garden')}</SelectItem>
+                      <SelectItem value="street">{t('property.viewType.street')}</SelectItem>
+                      <SelectItem value="courtyard">{t('property.viewType.courtyard')}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

@@ -80,6 +80,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'remember_token',
         'email_verified_at',
         'preferred_language',
+        'user_type',
     ];
 
     /**

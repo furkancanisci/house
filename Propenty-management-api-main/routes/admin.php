@@ -21,6 +21,9 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\PriceTypeController;
+use App\Http\Controllers\Admin\BuildingTypeController;
+use App\Http\Controllers\Admin\WindowTypeController;
+use App\Http\Controllers\Admin\FloorTypeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -113,6 +116,21 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     // Utilities
     Route::resource('utilities', UtilityController::class)->names('admin.utilities');
     Route::post('utilities/bulk-action', [UtilityController::class, 'bulkAction'])->name('admin.utilities.bulk');
+
+    // Advanced Property Details
+    Route::prefix('advanced-details')->middleware('can:view advanced details')->group(function () {
+        // Building Types
+        Route::resource('building-types', BuildingTypeController::class)->names('admin.building-types');
+        Route::post('building-types/{buildingType}/toggle-status', [BuildingTypeController::class, 'toggleStatus'])->name('admin.building-types.toggle-status');
+        
+        // Window Types
+        Route::resource('window-types', WindowTypeController::class)->names('admin.window-types');
+        Route::post('window-types/{windowType}/toggle-status', [WindowTypeController::class, 'toggleStatus'])->name('admin.window-types.toggle-status');
+        
+        // Floor Types
+        Route::resource('floor-types', FloorTypeController::class)->names('admin.floor-types');
+        Route::post('floor-types/{floorType}/toggle-status', [FloorTypeController::class, 'toggleStatus'])->name('admin.floor-types.toggle-status');
+    });
 
     // Users & Agents Management
     Route::resource('users', UserController::class)->names('admin.users');

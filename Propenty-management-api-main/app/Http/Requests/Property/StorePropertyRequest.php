@@ -68,6 +68,34 @@ class StorePropertyRequest extends FormRequest
             'features.*' => 'integer|exists:features,id',
             'utilities' => 'nullable|array',
             'utilities.*' => 'integer|exists:utilities,id',
+            
+            // Phase 1 property fields
+            'floorNumber' => 'nullable|integer|min:0|max:200',
+            'floor_number' => 'nullable|integer|min:0|max:200',
+            'totalFloors' => 'nullable|integer|min:1|max:200',
+            'total_floors' => 'nullable|integer|min:1|max:200',
+            'balconyCount' => 'nullable|integer|min:0|max:20',
+            'balcony_count' => 'nullable|integer|min:0|max:20',
+            'orientation' => 'nullable|string|in:north,south,east,west,northeast,northwest,southeast,southwest',
+            'viewType' => 'nullable|string|in:city,sea,mountain,garden,street,courtyard',
+            'view_type' => 'nullable|string|in:city,sea,mountain,garden,street,courtyard',
+            
+            // Phase 2 advanced property fields
+            'buildingAge' => 'nullable|integer|min:0|max:200',
+            'building_age' => 'nullable|integer|min:0|max:200',
+            'buildingType' => 'nullable|string|in:concrete,brick,wood,steel,mixed',
+            'building_type' => 'nullable|string|in:concrete,brick,wood,steel,mixed',
+            'floorType' => 'nullable|string|in:tile,hardwood,carpet,laminate,marble,concrete',
+            'floor_type' => 'nullable|string|in:tile,hardwood,carpet,laminate,marble,concrete',
+            'windowType' => 'nullable|string|in:single,double,triple,aluminum,pvc,wood',
+            'window_type' => 'nullable|string|in:single,double,triple,aluminum,pvc,wood',
+            'maintenanceFee' => 'nullable|numeric|min:0|max:999999.99',
+            'maintenance_fee' => 'nullable|numeric|min:0|max:999999.99',
+            'depositAmount' => 'nullable|numeric|min:0|max:999999.99',
+            'deposit_amount' => 'nullable|numeric|min:0|max:999999.99',
+            'annualTax' => 'nullable|numeric|min:0|max:999999.99',
+            'annual_tax' => 'nullable|numeric|min:0|max:999999.99',
+            'notes' => 'nullable|string|max:1000',
         ];
     }
     
@@ -207,6 +235,60 @@ class StorePropertyRequest extends FormRequest
         // Handle nearby places
         if ($this->has('nearby_places') || $this->has('nearbyPlaces')) {
             $data['nearby_places'] = $this->input('nearby_places') ?? $this->input('nearbyPlaces');
+        }
+        
+        // Handle Phase 1 property fields
+        if ($this->has('floorNumber') || $this->has('floor_number')) {
+            $data['floorNumber'] = $this->input('floorNumber') ?? $this->input('floor_number');
+            $data['floor_number'] = $data['floorNumber'];
+        }
+        if ($this->has('totalFloors') || $this->has('total_floors')) {
+            $data['totalFloors'] = $this->input('totalFloors') ?? $this->input('total_floors');
+            $data['total_floors'] = $data['totalFloors'];
+        }
+        if ($this->has('balconyCount') || $this->has('balcony_count')) {
+            $data['balconyCount'] = $this->input('balconyCount') ?? $this->input('balcony_count');
+            $data['balcony_count'] = $data['balconyCount'];
+        }
+        if ($this->has('orientation')) {
+            $data['orientation'] = $this->input('orientation');
+        }
+        if ($this->has('viewType') || $this->has('view_type')) {
+            $data['viewType'] = $this->input('viewType') ?? $this->input('view_type');
+            $data['view_type'] = $data['viewType'];
+        }
+        
+        // Handle Phase 2 advanced property fields
+        if ($this->has('buildingAge') || $this->has('building_age')) {
+            $data['buildingAge'] = $this->input('buildingAge') ?? $this->input('building_age');
+            $data['building_age'] = $data['buildingAge'];
+        }
+        if ($this->has('buildingType') || $this->has('building_type')) {
+            $data['buildingType'] = $this->input('buildingType') ?? $this->input('building_type');
+            $data['building_type'] = $data['buildingType'];
+        }
+        if ($this->has('floorType') || $this->has('floor_type')) {
+            $data['floorType'] = $this->input('floorType') ?? $this->input('floor_type');
+            $data['floor_type'] = $data['floorType'];
+        }
+        if ($this->has('windowType') || $this->has('window_type')) {
+            $data['windowType'] = $this->input('windowType') ?? $this->input('window_type');
+            $data['window_type'] = $data['windowType'];
+        }
+        if ($this->has('maintenanceFee') || $this->has('maintenance_fee')) {
+            $data['maintenanceFee'] = $this->input('maintenanceFee') ?? $this->input('maintenance_fee');
+            $data['maintenance_fee'] = $data['maintenanceFee'];
+        }
+        if ($this->has('depositAmount') || $this->has('deposit_amount')) {
+            $data['depositAmount'] = $this->input('depositAmount') ?? $this->input('deposit_amount');
+            $data['deposit_amount'] = $data['depositAmount'];
+        }
+        if ($this->has('annualTax') || $this->has('annual_tax')) {
+            $data['annualTax'] = $this->input('annualTax') ?? $this->input('annual_tax');
+            $data['annual_tax'] = $data['annualTax'];
+        }
+        if ($this->has('notes')) {
+            $data['notes'] = $this->input('notes');
         }
         
         // Handle fields that don't need mapping - just pass them through

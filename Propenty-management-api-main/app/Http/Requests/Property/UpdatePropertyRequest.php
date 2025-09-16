@@ -78,6 +78,33 @@ class UpdatePropertyRequest extends FormRequest
             'features.*' => 'integer|exists:features,id',
             'utilities' => 'sometimes|nullable|array',
             'utilities.*' => 'integer|exists:utilities,id',
+            
+            // Phase 1 property fields
+            'floorNumber' => 'sometimes|nullable|integer|min:0|max:200',
+            'floor_number' => 'sometimes|nullable|integer|min:0|max:200',
+            'totalFloors' => 'sometimes|nullable|integer|min:1|max:200',
+            'total_floors' => 'sometimes|nullable|integer|min:1|max:200',
+            'balconyCount' => 'sometimes|nullable|integer|min:0|max:20',
+            'balcony_count' => 'sometimes|nullable|integer|min:0|max:20',
+            'orientation' => 'sometimes|nullable|string|in:north,south,east,west,northeast,northwest,southeast,southwest',
+            'viewType' => 'sometimes|nullable|string|in:city,sea,mountain,garden,street,courtyard',
+            'view_type' => 'sometimes|nullable|string|in:city,sea,mountain,garden,street,courtyard',
+            
+            // Phase 2 advanced property fields
+            'buildingAge' => 'sometimes|nullable|integer|min:0|max:200',
+            'building_age' => 'sometimes|nullable|integer|min:0|max:200',
+            'buildingType' => 'sometimes|nullable|string|in:concrete,brick,wood,steel,mixed',
+            'building_type' => 'sometimes|nullable|string|in:concrete,brick,wood,steel,mixed',
+            'floorType' => 'sometimes|nullable|string|in:tile,hardwood,carpet,laminate,marble,concrete',
+            'floor_type' => 'sometimes|nullable|string|in:tile,hardwood,carpet,laminate,marble,concrete',
+            'windowType' => 'sometimes|nullable|string|in:single,double,triple,aluminum,pvc,wood',
+            'window_type' => 'sometimes|nullable|string|in:single,double,triple,aluminum,pvc,wood',
+            'maintenanceFee' => 'sometimes|nullable|numeric|min:0|max:999999.99',
+            'maintenance_fee' => 'sometimes|nullable|numeric|min:0|max:999999.99',
+            'depositAmount' => 'sometimes|nullable|numeric|min:0|max:999999.99',
+            'deposit_amount' => 'sometimes|nullable|numeric|min:0|max:999999.99',
+            'annualTax' => 'sometimes|nullable|numeric|min:0|max:999999.99',
+            'annual_tax' => 'sometimes|nullable|numeric|min:0|max:999999.99',
             'nearby_places' => 'sometimes|nullable|array',
             'nearby_places.*.name' => 'required_with:nearby_places|string|max:100',
             'nearby_places.*.type' => 'required_with:nearby_places|string|max:50',
@@ -237,6 +264,57 @@ class UpdatePropertyRequest extends FormRequest
             $this->merge([
                 'price_type' => $this->listing_type === 'rent' ? 'monthly' : 'total'
             ]);
+        }
+        
+        // Handle Phase 1 property fields
+        if ($this->has('floorNumber') || $this->has('floor_number')) {
+            $floorNumber = $this->input('floorNumber') ?? $this->input('floor_number');
+            $this->merge(['floorNumber' => $floorNumber, 'floor_number' => $floorNumber]);
+        }
+        if ($this->has('totalFloors') || $this->has('total_floors')) {
+            $totalFloors = $this->input('totalFloors') ?? $this->input('total_floors');
+            $this->merge(['totalFloors' => $totalFloors, 'total_floors' => $totalFloors]);
+        }
+        if ($this->has('balconyCount') || $this->has('balcony_count')) {
+            $balconyCount = $this->input('balconyCount') ?? $this->input('balcony_count');
+            $this->merge(['balconyCount' => $balconyCount, 'balcony_count' => $balconyCount]);
+        }
+        if ($this->has('orientation')) {
+            $this->merge(['orientation' => $this->input('orientation')]);
+        }
+        if ($this->has('viewType') || $this->has('view_type')) {
+            $viewType = $this->input('viewType') ?? $this->input('view_type');
+            $this->merge(['viewType' => $viewType, 'view_type' => $viewType]);
+        }
+        
+        // Handle Phase 2 advanced property fields
+        if ($this->has('buildingAge') || $this->has('building_age')) {
+            $buildingAge = $this->input('buildingAge') ?? $this->input('building_age');
+            $this->merge(['buildingAge' => $buildingAge, 'building_age' => $buildingAge]);
+        }
+        if ($this->has('buildingType') || $this->has('building_type')) {
+            $buildingType = $this->input('buildingType') ?? $this->input('building_type');
+            $this->merge(['buildingType' => $buildingType, 'building_type' => $buildingType]);
+        }
+        if ($this->has('floorType') || $this->has('floor_type')) {
+            $floorType = $this->input('floorType') ?? $this->input('floor_type');
+            $this->merge(['floorType' => $floorType, 'floor_type' => $floorType]);
+        }
+        if ($this->has('windowType') || $this->has('window_type')) {
+            $windowType = $this->input('windowType') ?? $this->input('window_type');
+            $this->merge(['windowType' => $windowType, 'window_type' => $windowType]);
+        }
+        if ($this->has('maintenanceFee') || $this->has('maintenance_fee')) {
+            $maintenanceFee = $this->input('maintenanceFee') ?? $this->input('maintenance_fee');
+            $this->merge(['maintenanceFee' => $maintenanceFee, 'maintenance_fee' => $maintenanceFee]);
+        }
+        if ($this->has('depositAmount') || $this->has('deposit_amount')) {
+            $depositAmount = $this->input('depositAmount') ?? $this->input('deposit_amount');
+            $this->merge(['depositAmount' => $depositAmount, 'deposit_amount' => $depositAmount]);
+        }
+        if ($this->has('annualTax') || $this->has('annual_tax')) {
+            $annualTax = $this->input('annualTax') ?? $this->input('annual_tax');
+            $this->merge(['annualTax' => $annualTax, 'annual_tax' => $annualTax]);
         }
     }
 }

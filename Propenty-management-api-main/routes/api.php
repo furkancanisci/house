@@ -7,10 +7,17 @@ use App\Http\Controllers\Api\PropertyDocumentTypeController;
 use App\Http\Controllers\Api\PropertyTypeController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\StatsController;
-use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BuildingTypeController;
+use App\Http\Controllers\Api\WindowTypeController;
+use App\Http\Controllers\Api\FloorTypeController;
+use App\Http\Controllers\Api\PropertyDetailController;
+use App\Http\Controllers\Api\AdvancedDetailsController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\ImageUploadController;
+use App\Http\Controllers\PropertyStatisticsController;
+use App\Http\Controllers\SavedSearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,11 +62,11 @@ Route::prefix('v1')->group(function () {
     
     // Authentication Routes
     Route::prefix('auth')->group(function () {
-        // Public authentication routes
-        Route::post('/register', [AuthController::class, 'register']);
-        Route::post('/login', [AuthController::class, 'login']);
-        Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink']);
-        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+        // Public authentication routes with stricter rate limiting
+        Route::post('/register', [AuthController::class, 'register'])->middleware('rate.limit:5:15'); // 5 attempts per 15 minutes
+        Route::post('/login', [AuthController::class, 'login'])->middleware('rate.limit:10:15'); // 10 attempts per 15 minutes
+        Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])->middleware('rate.limit:3:60'); // 3 attempts per hour
+        Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('rate.limit:5:60'); // 5 attempts per hour
         
         // Email verification routes
         Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
@@ -67,17 +74,19 @@ Route::prefix('v1')->group(function () {
         Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
         Route::post('/email/resend-verification', [AuthController::class, 'resendVerificationEmail']);
         
-        // User info route - made public for now
-        Route::get('/me', [AuthController::class, 'me']);
-        
-        // Protected authentication routes (only logout operations)
+        // Protected authentication routes
         Route::middleware('auth:sanctum')->group(function () {
+            Route::get('/me', [AuthController::class, 'me']);
             Route::post('/logout', [AuthController::class, 'logout']);
-            Route::post('/logout-all', [AuthController::class, 'logoutAll']);
-            Route::post('/refresh', [AuthController::class, 'refresh']);
-            Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail']);
-            Route::get('/email/verification-status', [AuthController::class, 'getVerificationStatus']);
         });
+        
+        // Additional protected routes (if needed)
+        // Route::middleware('auth:sanctum')->group(function () {
+        //     Route::post('/logout-all', [AuthController::class, 'logoutAll']);
+        //     Route::post('/refresh', [AuthController::class, 'refresh']);
+        //     Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail']);
+        //     Route::get('/email/verification-status', [AuthController::class, 'getVerificationStatus']);
+        // });
     });
 
     // Property Routes - All made public for now
@@ -96,10 +105,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/{property}/show', [PropertyController::class, 'show']); // Alternative route for ID
         Route::get('/{property:slug}', [PropertyController::class, 'show']);
         
-        // Write operations - require authentication
-        Route::post('/', [PropertyController::class, 'store'])->middleware(['auth:sanctum', 'validate.image']);
-        Route::put('/{property}', [PropertyController::class, 'update'])->middleware(['auth:sanctum', 'validate.image']);
-        Route::delete('/{property}', [PropertyController::class, 'destroy'])->middleware('auth:sanctum');
+        // Write operations - require authentication with rate limiting
+        Route::post('/', [PropertyController::class, 'store'])->middleware(['auth:sanctum', 'validate.image', 'rate.limit:10:60']); // 10 properties per hour
+        Route::put('/{property}', [PropertyController::class, 'update'])->middleware(['auth:sanctum', 'validate.image', 'rate.limit:30:60']); // 30 updates per hour
+        Route::delete('/{property}', [PropertyController::class, 'destroy'])->middleware(['auth:sanctum', 'rate.limit:5:60']); // 5 deletions per hour
 
     });
 
@@ -157,6 +166,47 @@ Route::prefix('v1')->group(function () {
         Route::get('/{propertyType}', [PropertyTypeController::class, 'show']);
     });
 
+    // Building Types Routes
+    Route::prefix('building-types')->group(function () {
+        Route::get('/', [BuildingTypeController::class, 'index']);
+        Route::get('/options', [BuildingTypeController::class, 'options']);
+        Route::get('/with-counts', [BuildingTypeController::class, 'withCounts']);
+        Route::get('/{buildingType}', [BuildingTypeController::class, 'show']);
+    });
+
+    // Window Types Routes
+    Route::prefix('window-types')->group(function () {
+        Route::get('/', [WindowTypeController::class, 'index']);
+        Route::get('/options', [WindowTypeController::class, 'options']);
+        Route::get('/with-counts', [WindowTypeController::class, 'withCounts']);
+        Route::get('/{windowType}', [WindowTypeController::class, 'show']);
+    });
+
+    // Floor Types Routes
+    Route::prefix('floor-types')->group(function () {
+        Route::get('/', [FloorTypeController::class, 'index']);
+        Route::get('/options', [FloorTypeController::class, 'options']);
+        Route::get('/with-counts', [FloorTypeController::class, 'withCounts']);
+        Route::get('/{floorType}', [FloorTypeController::class, 'show']);
+    });
+
+    // Property Details Routes - Combined endpoint for all types
+    Route::prefix('property-details')->group(function () {
+        Route::get('/building-types', [PropertyDetailController::class, 'getBuildingTypes']);
+        Route::get('/window-types', [PropertyDetailController::class, 'getWindowTypes']);
+        Route::get('/floor-types', [PropertyDetailController::class, 'getFloorTypes']);
+        Route::get('/all-types', [PropertyDetailController::class, 'getAllTypes']);
+    });
+
+    // Advanced Details Routes - For property forms
+    Route::prefix('advanced-details')->group(function () {
+        Route::get('/building-types', [AdvancedDetailsController::class, 'getBuildingTypes']);
+        Route::get('/window-types', [AdvancedDetailsController::class, 'getWindowTypes']);
+        Route::get('/floor-types', [AdvancedDetailsController::class, 'getFloorTypes']);
+        Route::get('/all', [AdvancedDetailsController::class, 'getAllAdvancedDetails']);
+        Route::get('/statistics', [AdvancedDetailsController::class, 'getStatistics']);
+    });
+
     // Features Routes
     Route::prefix('features')->group(function () {
         Route::get('/', [FeatureController::class, 'index']);
@@ -195,6 +245,34 @@ Route::prefix('v1')->group(function () {
     Route::prefix('stats')->group(function () {
         Route::get('/overview', [StatsController::class, 'overview']);
         Route::get('/price-ranges', [StatsController::class, 'priceRanges']);
+    });
+
+    // Property Statistics Routes
+    Route::prefix('property-statistics')->group(function () {
+        // Public routes for tracking views
+        Route::post('/{property}/track-view', [PropertyStatisticsController::class, 'trackView']);
+        Route::get('/{property}/statistics', [PropertyStatisticsController::class, 'getPropertyStatistics']);
+        Route::get('/popular', [PropertyStatisticsController::class, 'getPopularProperties']);
+        
+        // Protected routes for tracking inquiries and favorites
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/{property}/track-inquiry', [PropertyStatisticsController::class, 'trackInquiry']);
+            Route::post('/{property}/track-favorite-add', [PropertyStatisticsController::class, 'trackFavoriteAdd']);
+            Route::post('/{property}/track-favorite-remove', [PropertyStatisticsController::class, 'trackFavoriteRemove']);
+            Route::get('/dashboard', [PropertyStatisticsController::class, 'getDashboardStatistics']);
+        });
+    });
+
+    // Saved Searches Routes - All require authentication
+    Route::prefix('saved-searches')->middleware('auth:sanctum')->group(function () {
+        Route::get('/', [SavedSearchController::class, 'index']);
+        Route::post('/', [SavedSearchController::class, 'store']);
+        Route::get('/{savedSearch}', [SavedSearchController::class, 'show']);
+        Route::put('/{savedSearch}', [SavedSearchController::class, 'update']);
+        Route::delete('/{savedSearch}', [SavedSearchController::class, 'destroy']);
+        Route::post('/{savedSearch}/execute', [SavedSearchController::class, 'execute']);
+        Route::get('/{savedSearch}/matching-count', [SavedSearchController::class, 'getMatchingCount']);
+        Route::patch('/{savedSearch}/toggle-notification', [SavedSearchController::class, 'toggleNotification']);
     });
 
     // Image Upload Routes - Bunny Storage

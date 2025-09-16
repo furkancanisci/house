@@ -150,6 +150,45 @@
                 </li>
                 @endcan
 
+                <!-- Advanced Property Details -->
+                @canany(['view building types', 'view window types', 'view floor types'])
+                <li class="nav-item {{ request()->routeIs('admin.building-types*') || request()->routeIs('admin.window-types*') || request()->routeIs('admin.floor-types*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.building-types*') || request()->routeIs('admin.window-types*') || request()->routeIs('admin.floor-types*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-building"></i>
+                        <p>
+                            {{ __('admin.advanced_details') }}
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        @can('view building types')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.building-types.index') }}" class="nav-link {{ request()->routeIs('admin.building-types*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('admin.building_types') }}</p>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('view window types')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.window-types.index') }}" class="nav-link {{ request()->routeIs('admin.window-types*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('admin.window_types') }}</p>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('view floor types')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.floor-types.index') }}" class="nav-link {{ request()->routeIs('admin.floor-types*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('admin.floor_types') }}</p>
+                            </a>
+                        </li>
+                        @endcan
+                    </ul>
+                </li>
+                @endcanany
+
                 <!-- User Management -->
                 @canany(['view users', 'view leads'])
                 <li class="nav-header">{{ strtoupper(__('admin.user_management')) }}</li>

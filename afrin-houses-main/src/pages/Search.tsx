@@ -282,6 +282,45 @@ const Search: React.FC = () => {
     if (params.location) {
         filters.location = params.location;
     }
+
+    // Handle Phase 1 fields
+    if (params.minFloorNumber) {
+        const minFloor = Number(params.minFloorNumber);
+        if (!isNaN(minFloor)) filters.minFloorNumber = minFloor;
+    }
+
+    if (params.maxFloorNumber) {
+        const maxFloor = Number(params.maxFloorNumber);
+        if (!isNaN(maxFloor)) filters.maxFloorNumber = maxFloor;
+    }
+
+    if (params.minTotalFloors) {
+        const minTotal = Number(params.minTotalFloors);
+        if (!isNaN(minTotal)) filters.minTotalFloors = minTotal;
+    }
+
+    if (params.maxTotalFloors) {
+        const maxTotal = Number(params.maxTotalFloors);
+        if (!isNaN(maxTotal)) filters.maxTotalFloors = maxTotal;
+    }
+
+    if (params.minBalconyCount) {
+        const minBalcony = Number(params.minBalconyCount);
+        if (!isNaN(minBalcony)) filters.minBalconyCount = minBalcony;
+    }
+
+    if (params.maxBalconyCount) {
+        const maxBalcony = Number(params.maxBalconyCount);
+        if (!isNaN(maxBalcony)) filters.maxBalconyCount = maxBalcony;
+    }
+
+    if (params.orientation) {
+        filters.orientation = params.orientation;
+    }
+
+    if (params.viewType) {
+        filters.viewType = params.viewType;
+    }
     
     return filters;
   };
@@ -374,6 +413,40 @@ const Search: React.FC = () => {
         return false;
       }
       if (filters.maxSquareFootage !== undefined && property.squareFootage > filters.maxSquareFootage) {
+        return false;
+      }
+
+      // Floor number filter
+      if (filters.minFloorNumber !== undefined && property.floorNumber !== undefined && property.floorNumber < filters.minFloorNumber) {
+        return false;
+      }
+      if (filters.maxFloorNumber !== undefined && property.floorNumber !== undefined && property.floorNumber > filters.maxFloorNumber) {
+        return false;
+      }
+
+      // Total floors filter
+      if (filters.minTotalFloors !== undefined && property.totalFloors !== undefined && property.totalFloors < filters.minTotalFloors) {
+        return false;
+      }
+      if (filters.maxTotalFloors !== undefined && property.totalFloors !== undefined && property.totalFloors > filters.maxTotalFloors) {
+        return false;
+      }
+
+      // Balcony count filter
+      if (filters.minBalconyCount !== undefined && property.balconyCount !== undefined && property.balconyCount < filters.minBalconyCount) {
+        return false;
+      }
+      if (filters.maxBalconyCount !== undefined && property.balconyCount !== undefined && property.balconyCount > filters.maxBalconyCount) {
+        return false;
+      }
+
+      // Orientation filter
+      if (filters.orientation && property.orientation && property.orientation !== filters.orientation) {
+        return false;
+      }
+
+      // View type filter
+      if (filters.viewType && property.viewType && property.viewType !== filters.viewType) {
         return false;
       }
 

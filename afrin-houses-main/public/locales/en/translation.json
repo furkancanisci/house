@@ -346,8 +346,13 @@
       "garage": "Garage",
       "heating": "Heating",
       "building": "Building",
-      "pool": "Pool"
-    },
+      "pool": "Pool",
+      "totalFloors": "Total Floors",
+      "floorNumber": "Floor Number",
+      "orientation": "Orientation",
+      "balconyCount": "Balcony Count",
+      "viewType": "View Type"
+    }
     "features": {
       "airconditioning": "Air Conditioning",
       "heating": "Heating",
@@ -1003,6 +1008,7 @@
       "propertyTypeAd": "Property and Listing Type",
       "priceAndCost": "Price and Cost",
       "propertySpecs": "Property Specifications",
+      "buildingDetails": "Building Details",
       "additionalDetails": "Additional Details",
       "propertyImages": "Property Images"
     },
@@ -1013,7 +1019,12 @@
       "bathroomCount": "Number of bathrooms",
       "areaSquareMeters": "Area (m²)",
       "yearBuilt": "Year built",
-      "selectParkingType": "Select parking type"
+      "selectParkingType": "Select parking type",
+      "totalFloors": "Total floors in building",
+      "floorNumber": "Floor number",
+      "selectOrientation": "Select orientation",
+      "balconyCount": "Number of balconies",
+      "selectViewType": "Select view type"
     },
     "parkingTypes": {
       "noParking": "No parking",
