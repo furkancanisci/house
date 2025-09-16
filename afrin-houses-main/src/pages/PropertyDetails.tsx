@@ -987,35 +987,7 @@ const PropertyDetails: React.FC = () => {
                   <span className="text-gray-600">{t('property.details.squareFootage')}</span>
                   <span>{(property.squareFootage || 0).toLocaleString()}</span>
                 </div>
-                
-                {/* Owner Information Section */}
-                {user && property.contact && (
-                  <div className="pt-3 border-t border-gray-200">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">{t('property.contact.owner')}</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm">
-                        <User className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
-                        <span className="truncate">{property.contact.name}</span>
-                      </div>
-                      {property.contact.phone && (
-                        <div className="flex items-center text-sm">
-                          <Phone className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
-                          <a href={`tel:${property.contact.phone}`} className="text-blue-600 hover:underline truncate">
-                            {property.contact.phone}
-                          </a>
-                        </div>
-                      )}
-                      {property.contact.email && (
-                        <div className="flex items-start text-sm">
-                          <Mail className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0 mt-0.5" />
-                          <a href={`mailto:${property.contact.email}`} className="text-blue-600 hover:underline break-words">
-                            {property.contact.email}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+
                 
                 <Separator />
                 <div className="flex justify-between items-center">
