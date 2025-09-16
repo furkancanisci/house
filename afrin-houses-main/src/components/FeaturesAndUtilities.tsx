@@ -351,7 +351,7 @@ const FeaturesAndUtilities: React.FC<FeaturesAndUtilitiesProps> = ({
                 <Star className="h-3.5 w-3.5 text-blue-600" />
               </div>
               <h3 className="text-sm font-semibold text-gray-800">
-                {t('property.features', 'Property Features')}
+                {t('property.featuresTitle', 'Property Features')}
               </h3>
               <div className="flex-1 h-px bg-gradient-to-r from-blue-200 to-transparent"></div>
             </div>

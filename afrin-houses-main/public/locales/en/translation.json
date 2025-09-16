@@ -397,6 +397,7 @@
       "desertLandscaping": "Desert Landscaping",
       "tileFloors": "Tile Floors"
     },
+    "featuresTitle": "Property Features",
     "actions": {
       "viewDetails": "View Details",
       "addToFavorites": "Add to Favorites",

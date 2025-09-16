@@ -173,7 +173,7 @@ const PropertyFeatures: React.FC<PropertyFeaturesProps> = ({
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>{t('property.features', 'Features & Amenities')}</CardTitle>
+          <CardTitle>{t('property.featuresTitle', 'Features & Amenities')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-4">
@@ -192,7 +192,7 @@ const PropertyFeatures: React.FC<PropertyFeaturesProps> = ({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>{t('property.features', 'Features & Amenities')}</CardTitle>
+        <CardTitle>{t('property.featuresTitle', 'Features & Amenities')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className={`flex flex-wrap gap-2 ${
