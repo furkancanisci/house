@@ -10,6 +10,7 @@ use App\Http\Resources\PropertyCollection;
 use App\Models\Property;
 use App\Models\PropertyView;
 use App\Services\LocationService;
+use App\Services\PropertyCacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,11 +19,14 @@ use Spatie\QueryBuilder\AllowedFilter;
 
 class PropertyController extends Controller
 {
+    protected $cacheService;
+
     /**
      * Create a new controller instance.
      */
-    public function __construct()
+    public function __construct(PropertyCacheService $cacheService)
     {
+        $this->cacheService = $cacheService;
         $this->middleware('auth:sanctum')->except(['index', 'show', 'featured', 'priceTypes']);
     }
 
@@ -50,6 +54,18 @@ class PropertyController extends Controller
             'imagesToRemove' => 'remove_images',
             'mainImage' => 'main_image',
             'main_image' => 'main_image', // Also accept snake_case
+            // New property fields
+            'floorNumber' => 'floor_number',
+            'totalFloors' => 'total_floors',
+            'balconyCount' => 'balcony_count',
+            'viewType' => 'view_type',
+            // Advanced property details
+            'buildingTypeId' => 'building_type_id',
+            'windowTypeId' => 'window_type_id',
+            'floorTypeId' => 'floor_type_id',
+            'building_type_id' => 'building_type_id', // Also accept snake_case
+            'window_type_id' => 'window_type_id', // Also accept snake_case
+            'floor_type_id' => 'floor_type_id', // Also accept snake_case
         ];
 
         $mappedData = [];
@@ -136,6 +152,14 @@ class PropertyController extends Controller
             }
         });
         
+        // Try to get cached search results first - TEMPORARILY DISABLED FOR DEBUGGING
+        // $cachedResults = $this->cacheService->getSearchResults($filters);
+        // if ($cachedResults) {
+        //     \Illuminate\Support\Facades\Log::info('Returning cached search results');
+        //     return new PropertyCollection($cachedResults);
+        // }
+        \Illuminate\Support\Facades\Log::info('Cache disabled for debugging - executing fresh query');
+        
         // Log the received filters for debugging
         \Illuminate\Support\Facades\Log::info('Received request with filters:', [
             'url' => $request->fullUrl(),
@@ -210,6 +234,65 @@ class PropertyController extends Controller
                 $q->whereIn('utilities.id', $utilities)->where('utilities.is_active', true);
             });
         }
+        
+        // Apply Phase 1 property field filters
+        if ($request->has('floor_number') && $request->input('floor_number') !== null) {
+            $query->where('floor_number', $request->input('floor_number'));
+        }
+        if ($request->has('total_floors') && $request->input('total_floors') !== null) {
+            $query->where('total_floors', $request->input('total_floors'));
+        }
+        if ($request->has('balcony_count') && $request->input('balcony_count') !== null) {
+            $query->where('balcony_count', $request->input('balcony_count'));
+        }
+        if ($request->has('orientation') && !empty($request->input('orientation'))) {
+            $query->where('orientation', $request->input('orientation'));
+        }
+        if ($request->has('view_type') && !empty($request->input('view_type'))) {
+            $query->where('view_type', $request->input('view_type'));
+        }
+        
+        // Apply Phase 2 advanced property field filters
+        if ($request->has('building_age') && $request->input('building_age') !== null) {
+            $query->where('building_age', $request->input('building_age'));
+        }
+        if ($request->has('building_type') && !empty($request->input('building_type'))) {
+            $query->where('building_type', $request->input('building_type'));
+        }
+        if ($request->has('floor_type') && !empty($request->input('floor_type'))) {
+            $query->where('floor_type', $request->input('floor_type'));
+        }
+        if ($request->has('window_type') && !empty($request->input('window_type'))) {
+            $query->where('window_type', $request->input('window_type'));
+        }
+        
+        // Apply advanced fee filters with range support
+        $minMaintenanceFee = $request->input('min_maintenance_fee');
+        $maxMaintenanceFee = $request->input('max_maintenance_fee');
+        if ($minMaintenanceFee !== null && is_numeric($minMaintenanceFee)) {
+            $query->where('maintenance_fee', '>=', (float)$minMaintenanceFee);
+        }
+        if ($maxMaintenanceFee !== null && is_numeric($maxMaintenanceFee)) {
+            $query->where('maintenance_fee', '<=', (float)$maxMaintenanceFee);
+        }
+        
+        $minDepositAmount = $request->input('min_deposit_amount');
+        $maxDepositAmount = $request->input('max_deposit_amount');
+        if ($minDepositAmount !== null && is_numeric($minDepositAmount)) {
+            $query->where('deposit_amount', '>=', (float)$minDepositAmount);
+        }
+        if ($maxDepositAmount !== null && is_numeric($maxDepositAmount)) {
+            $query->where('deposit_amount', '<=', (float)$maxDepositAmount);
+        }
+        
+        $minAnnualTax = $request->input('min_annual_tax');
+        $maxAnnualTax = $request->input('max_annual_tax');
+        if ($minAnnualTax !== null && is_numeric($minAnnualTax)) {
+            $query->where('annual_tax', '>=', (float)$minAnnualTax);
+        }
+        if ($maxAnnualTax !== null && is_numeric($maxAnnualTax)) {
+            $query->where('annual_tax', '<=', (float)$maxAnnualTax);
+        }
 
         // Apply search query - check both 'search', 'q', and 'searchQuery' parameters
         $searchTerm = $request->input('search', $request->input('q', $request->input('searchQuery')));
@@ -274,16 +357,40 @@ class PropertyController extends Controller
             'street_address', 'city', 'state', 'neighborhood',
             'latitude', 'longitude', 'nearby_places', 'status', 'is_featured',
             'is_available', 'available_from', 'published_at', 'views_count',
-            'user_id', 'document_type_id', 'created_at', 'updated_at'
+            'user_id', 'document_type_id', 'created_at', 'updated_at',
+            // Phase 1 fields
+            'floor_number', 'total_floors', 'balcony_count', 'orientation', 'view_type',
+            // Phase 2 advanced fields
+            'building_age', 'building_type', 'floor_type', 'window_type',
+            'maintenance_fee', 'deposit_amount', 'annual_tax'
         ]);
 
         // Load relationships
         $query->with(['documentType', 'features', 'utilities', 'priceType']);
 
+        // Add debug logging before pagination
+        \Illuminate\Support\Facades\Log::info('Query before pagination:', [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings(),
+            'count_query' => $query->count()
+        ]);
+        
         // Paginate the results
         $perPage = $request->input('per_page', 12);
         $properties = $query->paginate($perPage);
-        return new PropertyCollection($properties);
+        
+
+        
+        // Create the collection
+        $collection = new PropertyCollection($properties);
+        
+        // Generate cache key for caching
+        $searchKey = md5(serialize($filters));
+        
+        // Cache the search results - method not implemented in PropertyCacheService
+        // $this->cacheService->cacheSearchResults($searchKey, $collection);
+        
+        return $collection;
     }
 
     /**
@@ -366,6 +473,17 @@ class PropertyController extends Controller
             $features = $mappedData['features'] ?? [];
             $utilities = $mappedData['utilities'] ?? [];
             unset($mappedData['features'], $mappedData['utilities']);
+            
+            // Handle advanced property details
+            if (isset($mappedData['building_type_id']) && empty($mappedData['building_type_id'])) {
+                $mappedData['building_type_id'] = null;
+            }
+            if (isset($mappedData['window_type_id']) && empty($mappedData['window_type_id'])) {
+                $mappedData['window_type_id'] = null;
+            }
+            if (isset($mappedData['floor_type_id']) && empty($mappedData['floor_type_id'])) {
+                $mappedData['floor_type_id'] = null;
+            }
             
             // Log the data being inserted for debugging
             \Illuminate\Support\Facades\Log::info('Creating property with data', [
@@ -555,6 +673,9 @@ class PropertyController extends Controller
                 $property->utilities()->sync($utilities);
             }
             
+            // Invalidate search results cache since we added a new property
+            $this->cacheService->invalidateSearchResults();
+            
             // Return the response
             return response()->json([
                 'message' => 'Property created successfully',
@@ -580,6 +701,30 @@ class PropertyController extends Controller
             return response()->json([
                 'message' => 'Property not found or not available.',
             ], 404);
+        }
+
+        // Try to get cached property first
+        $cachedProperty = $this->cacheService->getProperty($property->id);
+        if ($cachedProperty) {
+            \Illuminate\Support\Facades\Log::info('Returning cached property', ['property_id' => $property->id]);
+            
+            // Still record the view for analytics
+            try {
+                PropertyView::recordView($property, $request);
+                $property->incrementViews();
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to record property view', [
+                    'property_id' => $property->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
+            // Cache the property after loading relationships
+            $this->cacheService->cacheProperty($cachedProperty);
+            
+            return response()->json([
+                'property' => new PropertyResource($cachedProperty),
+            ]);
         }
 
         try {
@@ -649,6 +794,17 @@ class PropertyController extends Controller
             $features = $mappedData['features'] ?? null;
             $utilities = $mappedData['utilities'] ?? null;
             unset($mappedData['features'], $mappedData['utilities']);
+            
+            // Handle advanced property details
+            if (isset($mappedData['building_type_id']) && empty($mappedData['building_type_id'])) {
+                $mappedData['building_type_id'] = null;
+            }
+            if (isset($mappedData['window_type_id']) && empty($mappedData['window_type_id'])) {
+                $mappedData['window_type_id'] = null;
+            }
+            if (isset($mappedData['floor_type_id']) && empty($mappedData['floor_type_id'])) {
+                $mappedData['floor_type_id'] = null;
+            }
             
             $property->update($mappedData);
             
@@ -726,6 +882,9 @@ class PropertyController extends Controller
             // Load relationships for the updated property
             $property->load(['user', 'media', 'favoritedByUsers', 'documentType', 'features', 'utilities']);
 
+            // Clear cache for this property and related caches
+            $this->cacheService->clearPropertyCache($property->id);
+
             return response()->json([
                 'message' => 'Property updated successfully.',
                 'property' => new PropertyResource($property),
@@ -757,6 +916,10 @@ class PropertyController extends Controller
             // Delete all media associated with the property
             $property->clearMediaCollection('images');
             $property->clearMediaCollection('main_image');
+
+            // Invalidate cache before deletion
+            $this->cacheService->invalidateProperty($property->id);
+            $this->cacheService->invalidateSearchResults();
 
             // Delete the property
             $property->delete();

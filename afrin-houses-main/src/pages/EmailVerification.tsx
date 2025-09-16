@@ -48,8 +48,15 @@ const EmailVerification: React.FC = () => {
   useEffect(() => {
     console.log('EmailVerification component loaded with params:', {
       id, hash, token, data: data ? 'present' : 'missing', 
-      signature: signature ? 'present' : 'missing'
+      signature: signature ? 'present' : 'missing',
+      userVerified: state.user?.is_verified
     });
+    
+    // If user is already verified, don't attempt verification
+    if (state.user?.is_verified) {
+      console.log('User is already verified, skipping verification process');
+      return;
+    }
     
     if ((id && hash && token) || (data && signature)) {
       verifyEmail();
@@ -58,7 +65,7 @@ const EmailVerification: React.FC = () => {
       setMessage(t('emailVerification.invalidLink'));
       toast.error(t('emailVerification.invalidLink'));
     }
-  }, [id, hash, token, data, signature]);
+  }, [id, hash, token, data, signature, state.user?.is_verified]);
 
   useEffect(() => {
     if (state.user && !state.user.is_verified) {
@@ -68,6 +75,12 @@ const EmailVerification: React.FC = () => {
 
   const verifyEmail = async () => {
     try {
+      // Double check if user is already verified before making API call
+      if (state.user?.is_verified) {
+        console.log('User is already verified, aborting verification process');
+        return;
+      }
+      
       setVerificationStatus('loading');
       
       let response;
@@ -122,7 +135,15 @@ const EmailVerification: React.FC = () => {
       
       let errorMessage = t('emailVerification.verificationFailedMessage');
       
-      if (error.response?.status === 500) {
+      // Handle specific error cases
+      if (error.response?.status === 422 && error.response?.data?.message?.includes('already verified')) {
+        // User is already verified - this should not happen with our new logic, but just in case
+        console.log('API returned already verified status');
+        if (state.user) {
+          dispatch({ type: 'SET_USER', payload: { ...state.user, is_verified: true } });
+        }
+        return;
+      } else if (error.response?.status === 500) {
         errorMessage = t('emailVerification.serverError');
       } else if (error.response?.status === 400) {
         errorMessage = error.response?.data?.message || t('emailVerification.invalidLink');

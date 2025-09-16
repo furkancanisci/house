@@ -22,6 +22,22 @@ export interface Property {
   state: string;
   zip_code: string;
   
+  // Phase 1 Enhancement Fields
+  floor_number?: number;
+  total_floors?: number;
+  balcony_count?: number;
+  orientation?: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
+  view_type?: 'city' | 'sea' | 'mountain' | 'garden' | 'street' | 'courtyard' | 'pool' | 'park';
+  
+  // Phase 2 Advanced Enhancement Fields
+  building_age?: number;
+  building_type?: 'new_construction' | 'resale' | 'under_construction' | 'renovated' | 'historic';
+  floor_type?: 'marble' | 'ceramic' | 'hardwood' | 'laminate' | 'carpet' | 'tile' | 'concrete' | 'vinyl';
+  window_type?: 'single_pane' | 'double_pane' | 'triple_pane' | 'energy_efficient' | 'soundproof';
+  maintenance_fee?: number;
+  deposit_amount?: number;
+  annual_tax?: number;
+  
   // Optional fields
   square_feet?: number;
   year_built?: number;
@@ -166,6 +182,30 @@ export interface SearchFilters {
   location?: string;
   state?: string; // Added for location filtering
   city?: string; // Added for location filtering
+  
+  // Phase 1 Enhancement Filters
+  minFloorNumber?: number;
+  maxFloorNumber?: number;
+  minTotalFloors?: number;
+  maxTotalFloors?: number;
+  minBalconyCount?: number;
+  maxBalconyCount?: number;
+  orientation?: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
+  viewType?: 'city' | 'sea' | 'mountain' | 'garden' | 'street' | 'courtyard' | 'pool' | 'park';
+  
+  // Phase 2 Advanced Enhancement Filters
+  minBuildingAge?: number;
+  maxBuildingAge?: number;
+  buildingType?: 'new_construction' | 'resale' | 'under_construction' | 'renovated' | 'historic';
+  floorType?: 'marble' | 'ceramic' | 'hardwood' | 'laminate' | 'carpet' | 'tile' | 'concrete' | 'vinyl';
+  windowType?: 'single_pane' | 'double_pane' | 'triple_pane' | 'energy_efficient' | 'soundproof';
+  minMaintenanceFee?: number;
+  maxMaintenanceFee?: number;
+  minDepositAmount?: number;
+  maxDepositAmount?: number;
+  minAnnualTax?: number;
+  maxAnnualTax?: number;
+  
   sortBy?: 'price' | 'date' | 'created_at' | 'squareFootage';
   sortOrder?: 'asc' | 'desc';
   searchQuery?: string; // Added to support search functionality
@@ -241,6 +281,14 @@ export interface PropertyFormData {
   hoaFees?: string;
   building?: string;
   pool?: string;
+  
+  // Phase 1 Enhancement Fields
+  floorNumber?: number;
+  totalFloors?: number;
+  balconyCount?: number;
+  orientation?: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
+  viewType?: 'city' | 'sea' | 'mountain' | 'garden' | 'street' | 'courtyard' | 'pool' | 'park';
+  
   contact: {
     name: string;
     phone: string;

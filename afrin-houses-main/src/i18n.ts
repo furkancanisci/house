@@ -21,6 +21,11 @@ i18n
     defaultNS: 'translation',
     supportedLngs: ['en', 'ar', 'ku'],
     
+    // Backend options
+    backend: {
+      loadPath: '/locales/{{lng}}/{{ns}}.json',
+    },
+    
     // Language detection options
     detection: {
       // Order of language detection - prioritize localStorage

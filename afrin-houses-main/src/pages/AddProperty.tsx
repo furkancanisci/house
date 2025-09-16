@@ -31,7 +31,9 @@ import {
   Star,
   CheckCircle,
   Car,
-  File
+  File,
+  Eye,
+  Settings
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -55,6 +57,9 @@ import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import { priceTypeService, PriceType } from '../services/priceTypeService';
 import { propertyTypeService, PropertyType } from '../services/propertyTypeService';
+import { buildingTypeService, BuildingType } from '../services/buildingTypeService';
+import { windowTypeService, WindowType } from '../services/windowTypeService';
+import { floorTypeService, FloorType } from '../services/floorTypeService';
 import { compressImages, formatFileSize } from '../lib/imageUtils';
 import api from '../services/api';
 
@@ -135,8 +140,28 @@ const createPropertySchema = (t: any) => z.object({
   hoaFees: z.string().optional(),
   building: z.string().optional(),
   pool: z.string().optional(),
+  
+  // Phase 1 Enhancement Fields
+  floorNumber: z.number().min(0, t('validation.floorNumberMin')).max(200, t('validation.floorNumberMax')).optional(),
+  totalFloors: z.number().min(1, t('validation.totalFloorsMin')).max(200, t('validation.totalFloorsMax')).optional(),
+  balconyCount: z.number().min(0, t('validation.balconyCountMin')).max(20, t('validation.balconyCountMax')).optional(),
+  orientation: z.enum(['north', 'south', 'east', 'west', 'northeast', 'northwest', 'southeast', 'southwest']).optional(),
+  viewType: z.enum(['city', 'sea', 'mountain', 'garden', 'street', 'courtyard', 'pool', 'park']).optional(),
+  
+  // Phase 2 Advanced Enhancement Fields
+  buildingAge: z.number().min(0, t('validation.buildingAgeMin')).max(200, t('validation.buildingAgeMax')).optional(),
+  buildingType: z.enum(['new_construction', 'resale', 'under_construction', 'renovated', 'historic']).optional(),
+  buildingTypeId: z.number().optional(),
+  floorType: z.enum(['marble', 'ceramic', 'hardwood', 'laminate', 'carpet', 'tile', 'concrete', 'vinyl']).optional(),
+  floorTypeId: z.number().optional(),
+  windowType: z.enum(['single_pane', 'double_pane', 'triple_pane', 'energy_efficient', 'soundproof']).optional(),
+  windowTypeId: z.number().optional(),
+  maintenanceFee: z.number().min(0, t('validation.maintenanceFeeMin')).max(99999, t('validation.maintenanceFeeMax')).optional(),
+  depositAmount: z.number().min(0, t('validation.depositAmountMin')).max(9999999, t('validation.depositAmountMax')).optional(),
+  annualTax: z.number().min(0, t('validation.annualTaxMin')).max(999999, t('validation.annualTaxMax')).optional(),
+  
   contactName: z.string().min(1, t('validation.contactNameRequired')),
-  contactPhone: z.string().min(1, t('validation.contactPhoneRequired')),
+  contactPhone: z.string().optional().or(z.literal('')),
   contactEmail: z.string().email(t('validation.validEmailRequired')),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
@@ -186,7 +211,7 @@ const AddProperty: React.FC = () => {
     const savedStep = localStorage.getItem('addProperty_currentStep');
     return savedStep ? parseInt(savedStep, 10) : 1;
   });
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   // Document types state
   const [documentTypes, setDocumentTypes] = useState<PropertyDocumentType[]>([]);
@@ -195,6 +220,18 @@ const AddProperty: React.FC = () => {
   // Property types state
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
   const [loadingPropertyTypes, setLoadingPropertyTypes] = useState(false);
+
+  // Building types state
+  const [buildingTypes, setBuildingTypes] = useState<BuildingType[]>([]);
+  const [loadingBuildingTypes, setLoadingBuildingTypes] = useState(false);
+
+  // Window types state
+  const [windowTypes, setWindowTypes] = useState<WindowType[]>([]);
+  const [loadingWindowTypes, setLoadingWindowTypes] = useState(false);
+
+  // Floor types state
+  const [floorTypes, setFloorTypes] = useState<FloorType[]>([]);
+  const [loadingFloorTypes, setLoadingFloorTypes] = useState(false);
 
   // Location state
   const [selectedCity, setSelectedCity] = useState<string>(() => {
@@ -232,7 +269,7 @@ const AddProperty: React.FC = () => {
             ...parsedData,
             contactName: parsedData.contactName || user?.name || '',
             contactEmail: parsedData.contactEmail || user?.email || '',
-            contactPhone: parsedData.contactPhone || user?.phone || '',
+            contactPhone: (parsedData.contactPhone && parsedData.contactPhone.trim() !== '') ? parsedData.contactPhone : (user?.phone || ''),
           };
         } catch (error) {
           console.error('Error parsing saved form data:', error);
@@ -263,6 +300,23 @@ const AddProperty: React.FC = () => {
         contactPhone: user?.phone || '',
         latitude: undefined,
         longitude: undefined,
+        // Phase 1 new fields
+        floorNumber: undefined,
+        totalFloors: undefined,
+        balconyCount: undefined,
+        orientation: undefined,
+        viewType: undefined,
+        // Phase 2 advanced fields
+        buildingAge: undefined,
+        buildingType: undefined,
+        buildingTypeId: undefined,
+        floorType: undefined,
+        floorTypeId: undefined,
+        windowType: undefined,
+        windowTypeId: undefined,
+        maintenanceFee: undefined,
+        depositAmount: undefined,
+        annualTax: undefined,
       };
     })(),
   });
@@ -273,6 +327,23 @@ const AddProperty: React.FC = () => {
       navigate('/auth');
     }
   }, [user, navigate, loading]);
+
+  // Initialize contact fields when user data is available
+  React.useEffect(() => {
+    if (user && !loading) {
+      const currentValues = getValues();
+      // Only set values if they are currently empty
+      if (!currentValues.contactName) {
+        setValue('contactName', user.name || '');
+      }
+      if (!currentValues.contactEmail) {
+        setValue('contactEmail', user.email || '');
+      }
+      if (!currentValues.contactPhone) {
+        setValue('contactPhone', user.phone || '');
+      }
+    }
+  }, [user, loading, setValue, getValues]);
 
   // Save form data to localStorage whenever form values change
   React.useEffect(() => {
@@ -367,6 +438,60 @@ const AddProperty: React.FC = () => {
     };
 
     loadPropertyTypes();
+  }, [i18n.language]);
+
+  // Load building types
+  React.useEffect(() => {
+    const loadBuildingTypes = async () => {
+      setLoadingBuildingTypes(true);
+      try {
+        const types = await buildingTypeService.getBuildingTypeOptions();
+        setBuildingTypes(types);
+      } catch (error) {
+        console.error('Failed to load building types:', error);
+        setBuildingTypes([]);
+      } finally {
+        setLoadingBuildingTypes(false);
+      }
+    };
+
+    loadBuildingTypes();
+  }, [i18n.language]);
+
+  // Load window types
+  React.useEffect(() => {
+    const loadWindowTypes = async () => {
+      setLoadingWindowTypes(true);
+      try {
+        const types = await windowTypeService.getWindowTypeOptions();
+        setWindowTypes(types);
+      } catch (error) {
+        console.error('Failed to load window types:', error);
+        setWindowTypes([]);
+      } finally {
+        setLoadingWindowTypes(false);
+      }
+    };
+
+    loadWindowTypes();
+  }, [i18n.language]);
+
+  // Load floor types
+  React.useEffect(() => {
+    const loadFloorTypes = async () => {
+      setLoadingFloorTypes(true);
+      try {
+        const types = await floorTypeService.getFloorTypeOptions();
+        setFloorTypes(types);
+      } catch (error) {
+        console.error('Failed to load floor types:', error);
+        setFloorTypes([]);
+      } finally {
+        setLoadingFloorTypes(false);
+      }
+    };
+
+    loadFloorTypes();
   }, [i18n.language]);
 
   // Load features and utilities only when reaching step 2 (Property Details) or language changes
@@ -573,6 +698,18 @@ const AddProperty: React.FC = () => {
     // Get current form values
     const currentValues = getValues();
     console.log('Current form values:', currentValues);
+    
+    // Special debugging for step 5 contactPhone issue
+    if (currentStep === 5) {
+      console.log('=== STEP 5 CONTACT PHONE DEBUG ===');
+      console.log('contactPhone value:', currentValues.contactPhone);
+      console.log('contactPhone type:', typeof currentValues.contactPhone);
+      console.log('contactPhone length:', currentValues.contactPhone?.length);
+      console.log('contactPhone trimmed length:', currentValues.contactPhone?.trim()?.length);
+      console.log('User phone from context:', user?.phone);
+      console.log('User object:', user);
+      console.log('=== END STEP 5 DEBUG ===');
+    }
     
     // Check each field individually
     fieldsToValidate.forEach(field => {
@@ -886,6 +1023,8 @@ const AddProperty: React.FC = () => {
       case 4:
         return ['description'] as (keyof PropertyFormData)[];
       case 5:
+        return [] as (keyof PropertyFormData)[]; // Advanced details step - all fields are optional
+      case 6:
         return ['contactName', 'contactPhone', 'contactEmail'] as (keyof PropertyFormData)[];
       default:
         return [];
@@ -975,6 +1114,15 @@ const AddProperty: React.FC = () => {
         contactPhone: data.contactPhone || '',
         contactEmail: data.contactEmail || '',
         document_type_id: data.documentTypeId ? Number(data.documentTypeId) : undefined,
+        // Advanced details
+        buildingAge: data.buildingAge ? Number(data.buildingAge) : undefined,
+        buildingType: data.buildingType || undefined,
+        floorType: data.floorType || undefined,
+        windowType: data.windowType || undefined,
+        maintenanceFee: data.maintenanceFee ? Number(data.maintenanceFee) : undefined,
+        depositAmount: data.depositAmount ? Number(data.depositAmount) : undefined,
+        annualTax: data.annualTax ? Number(data.annualTax) : undefined,
+        notes: data.notes || undefined,
       };
 
       // Create FormData for file uploads
@@ -1563,6 +1711,185 @@ const AddProperty: React.FC = () => {
                 />
               </div>
             </div>
+
+            {/* Phase 1 Enhancement Fields */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+              <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <Building className="h-4 w-4 text-blue-600" />
+                {t('addProperty.sectionTitles.buildingDetails')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="floorNumber" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.floorNumber')}
+                  </Label>
+                  <InputWithIcon
+                    id="floorNumber"
+                    type="number"
+                    min="0"
+                    max="200"
+                    icon={Building}
+                    placeholder={t('addProperty.placeholders.floorNumber')}
+                    className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-100 hover:border-blue-300 ${
+                      errors.floorNumber ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
+                    }`}
+                    {...register('floorNumber', { valueAsNumber: true })}
+                  />
+                  {errors.floorNumber && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.floorNumber.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="totalFloors" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.totalFloors')}
+                  </Label>
+                  <InputWithIcon
+                    id="totalFloors"
+                    type="number"
+                    min="1"
+                    max="200"
+                    icon={Building}
+                    placeholder={t('addProperty.placeholders.totalFloors')}
+                    className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-100 hover:border-blue-300 ${
+                      errors.totalFloors ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
+                    }`}
+                    {...register('totalFloors', { valueAsNumber: true })}
+                  />
+                  {errors.totalFloors && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.totalFloors.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="balconyCount" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.balconyCount')}
+                  </Label>
+                  <InputWithIcon
+                    id="balconyCount"
+                    type="number"
+                    min="0"
+                    max="20"
+                    icon={Home}
+                    placeholder={t('addProperty.placeholders.balconyCount')}
+                    className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-100 hover:border-blue-300 ${
+                      errors.balconyCount ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
+                    }`}
+                    {...register('balconyCount', { valueAsNumber: true })}
+                  />
+                  {errors.balconyCount && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.balconyCount.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.orientation')}
+                  </Label>
+                  <Controller
+                    name="orientation"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <SelectTrigger className="h-10 text-sm border-2 rounded-lg bg-white border-gray-200 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-blue-600" />
+                            <SelectValue placeholder={t('addProperty.placeholders.selectOrientation')} />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-lg shadow-lg">
+                          <SelectItem value="north" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.orientation.north')}
+                          </SelectItem>
+                          <SelectItem value="south" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.orientation.south')}
+                          </SelectItem>
+                          <SelectItem value="east" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.orientation.east')}
+                          </SelectItem>
+                          <SelectItem value="west" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.orientation.west')}
+                          </SelectItem>
+                          <SelectItem value="northeast" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.orientation.northeast')}
+                          </SelectItem>
+                          <SelectItem value="northwest" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.orientation.northwest')}
+                          </SelectItem>
+                          <SelectItem value="southeast" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.orientation.southeast')}
+                          </SelectItem>
+                          <SelectItem value="southwest" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.orientation.southwest')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.orientation && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.orientation.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.details.viewType')}
+                  </Label>
+                  <Controller
+                    name="viewType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <SelectTrigger className="h-10 text-sm border-2 rounded-lg bg-white border-gray-200 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200">
+                          <div className="flex items-center gap-2">
+                            <Eye className="h-4 w-4 text-blue-600" />
+                            <SelectValue placeholder={t('addProperty.placeholders.selectViewType')} />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-lg shadow-lg">
+                          <SelectItem value="city" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.viewType.city')}
+                          </SelectItem>
+                          <SelectItem value="sea" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.viewType.sea')}
+                          </SelectItem>
+                          <SelectItem value="mountain" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.viewType.mountain')}
+                          </SelectItem>
+                          <SelectItem value="garden" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.viewType.garden')}
+                          </SelectItem>
+                          <SelectItem value="street" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.viewType.street')}
+                          </SelectItem>
+                          <SelectItem value="courtyard" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
+                            {t('property.viewType.courtyard')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.viewType && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.viewType.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         );
 
@@ -1842,6 +2169,161 @@ const AddProperty: React.FC = () => {
         return (
           <div className="space-y-4">
             <div>
+              <h3 className="text-base font-semibold mb-3">{t('steps.advancedDetails')}</h3>
+              <p className="text-gray-600 mb-4 text-sm">
+                {t('forms.advancedDetailsDescription')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="buildingAge" className="text-sm">{t('property.details.buildingAge')}</Label>
+                <Input
+                  id="buildingAge"
+                  type="number"
+                  placeholder={t('forms.buildingAgePlaceholder')}
+                  className={`text-sm h-9 ${errors.buildingAge ? 'border-red-500' : ''}`}
+                  {...register('buildingAge', { valueAsNumber: true })}
+                />
+                {errors.buildingAge && (
+                  <p className="text-sm text-red-600 mt-1">{errors.buildingAge.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="buildingType" className="text-sm">{t('property.details.buildingType')}</Label>
+                {loadingBuildingTypes ? (
+                  <div className="flex items-center justify-center p-2 border rounded-lg">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#067977]"></div>
+                    <span className="ml-2 text-xs text-gray-600">{t('common.loading')}...</span>
+                  </div>
+                ) : (
+                  <Select onValueChange={(value) => setValue('buildingTypeId', parseInt(value))}>
+                    <SelectTrigger className={`text-sm h-9 ${errors.buildingType ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder={t('forms.selectBuildingType')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {buildingTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {buildingTypeService.getDisplayName(type, i18n.language)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {errors.buildingType && (
+                  <p className="text-sm text-red-600 mt-1">{errors.buildingType.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="floorType" className="text-sm">{t('property.details.floorType')}</Label>
+                {loadingFloorTypes ? (
+                  <div className="flex items-center justify-center p-2 border rounded-lg">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#067977]"></div>
+                    <span className="ml-2 text-xs text-gray-600">{t('common.loading')}...</span>
+                  </div>
+                ) : (
+                  <Select onValueChange={(value) => setValue('floorTypeId', parseInt(value))}>
+                    <SelectTrigger className={`text-sm h-9 ${errors.floorType ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder={t('forms.selectFloorType')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {floorTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {floorTypeService.getDisplayName(type, i18n.language)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {errors.floorType && (
+                  <p className="text-sm text-red-600 mt-1">{errors.floorType.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="windowType" className="text-sm">{t('property.details.windowType')}</Label>
+                {loadingWindowTypes ? (
+                  <div className="flex items-center justify-center p-2 border rounded-lg">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#067977]"></div>
+                    <span className="ml-2 text-xs text-gray-600">{t('common.loading')}...</span>
+                  </div>
+                ) : (
+                  <Select onValueChange={(value) => setValue('windowTypeId', parseInt(value))}>
+                    <SelectTrigger className={`text-sm h-9 ${errors.windowType ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder={t('forms.selectWindowType')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {windowTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {windowTypeService.getDisplayName(type, i18n.language)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {errors.windowType && (
+                  <p className="text-sm text-red-600 mt-1">{errors.windowType.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="maintenanceFee" className="text-sm">{t('property.details.maintenanceFee')}</Label>
+                <Input
+                  id="maintenanceFee"
+                  type="number"
+                  placeholder={t('forms.maintenanceFeePlaceholder')}
+                  className={`text-sm h-9 ${errors.maintenanceFee ? 'border-red-500' : ''}`}
+                  {...register('maintenanceFee', { valueAsNumber: true })}
+                />
+                {errors.maintenanceFee && (
+                  <p className="text-sm text-red-600 mt-1">{errors.maintenanceFee.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="depositAmount" className="text-sm">{t('property.details.depositAmount')}</Label>
+                <Input
+                  id="depositAmount"
+                  type="number"
+                  placeholder={t('forms.depositAmountPlaceholder')}
+                  className={`text-sm h-9 ${errors.depositAmount ? 'border-red-500' : ''}`}
+                  {...register('depositAmount', { valueAsNumber: true })}
+                />
+                {errors.depositAmount && (
+                  <p className="text-sm text-red-600 mt-1">{errors.depositAmount.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="annualTax" className="text-sm">{t('property.details.annualTax')}</Label>
+                <Input
+                  id="annualTax"
+                  type="number"
+                  placeholder={t('forms.annualTaxPlaceholder')}
+                  className={`text-sm h-9 ${errors.annualTax ? 'border-red-500' : ''}`}
+                  {...register('annualTax', { valueAsNumber: true })}
+                />
+                {errors.annualTax && (
+                  <p className="text-sm text-red-600 mt-1">{errors.annualTax.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <h4 className="font-semibold text-blue-700 mb-2 text-sm">{t('forms.note')}</h4>
+              <p className="text-blue-600 text-xs">
+                {t('forms.advancedDetailsNote')}
+              </p>
+            </div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-4">
+            <div>
               <h3 className="text-base font-semibold mb-3">{t('steps.contactInformation')}</h3>
               <p className="text-gray-600 mb-4 text-sm">
                 {t('forms.contactInfoDescription')}
@@ -1868,9 +2350,10 @@ const AddProperty: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="contactPhone" className="text-sm">{t('forms.phoneNumber')} *</Label>
+              <Label htmlFor="contactPhone" className="text-sm">{t('forms.phoneNumber')}</Label>
               <InputWithIcon
                 id="contactPhone"
+                name="contactPhone"
                 icon={Phone}
                 placeholder={t('forms.phoneNumberPlaceholder')}
                 className={`text-sm h-9 ${errors.contactPhone ? 'border-red-500' : ''}`}
@@ -1970,7 +2453,7 @@ const AddProperty: React.FC = () => {
 
           {/* Step Indicators */}
           <div className="flex items-center justify-between mb-3">
-            {[1, 2, 3, 4, 5].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <div key={step} className="flex flex-col items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                   step <= currentStep
@@ -1988,7 +2471,8 @@ const AddProperty: React.FC = () => {
                   {step === 2 && t('addProperty.progress.details')}
                   {step === 3 && t('addProperty.progress.images')}
                   {step === 4 && t('addProperty.progress.features')}
-                  {step === 5 && t('addProperty.progress.contact')}
+                  {step === 5 && t('addProperty.progress.advanced')}
+                  {step === 6 && t('addProperty.progress.contact')}
                 </span>
               </div>
             ))}
@@ -2015,7 +2499,8 @@ const AddProperty: React.FC = () => {
                   {currentStep === 2 && <Building className="h-4 w-4 text-white" />}
                   {currentStep === 3 && <Camera className="h-4 w-4 text-white" />}
                   {currentStep === 4 && <Star className="h-4 w-4 text-white" />}
-                  {currentStep === 5 && <User className="h-4 w-4 text-white" />}
+                  {currentStep === 5 && <Settings className="h-4 w-4 text-white" />}
+                  {currentStep === 6 && <User className="h-4 w-4 text-white" />}
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-gray-900 font-['Cairo',_'Tajawal',_sans-serif]">
@@ -2044,6 +2529,12 @@ const AddProperty: React.FC = () => {
                       </>
                     )}
                     {currentStep === 5 && (
+                      <>
+                        <span className="text-[#067977]">{t('addProperty.stepTitles.advanced')}</span>
+                        <p className="text-xs font-normal text-gray-600 mt-1">{t('addProperty.stepDescriptions.advanced')}</p>
+                      </>
+                    )}
+                    {currentStep === 6 && (
                       <>
                         <span className="text-[#067977]">{t('addProperty.stepTitles.contact')}</span>
                         <p className="text-xs font-normal text-gray-600 mt-1">{t('addProperty.stepDescriptions.contact')}</p>

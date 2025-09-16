@@ -16,11 +16,19 @@ class PropertyCollection extends ResourceCollection
     {
         // Check if this is a paginated result
         if ($this->resource instanceof \Illuminate\Pagination\LengthAwarePaginator) {
-            // This is a paginated result
+            // This is a paginated result - use items() to get the actual models
+            $items = $this->resource->items();
+            
             return [
-                'data' => $this->collection->map(function ($property) {
+                'data' => collect($items)->map(function ($property) {
+                    // If this is already a PropertyResource, just return it
+                    if ($property instanceof PropertyResource) {
+                        return $property;
+                    }
+                    
+                    // Create PropertyResource from Property model
                     return new PropertyResource($property);
-                })->values()->toArray(),
+                })->toArray(),
                 'meta' => [
                     'total' => $this->resource->total(),
                     'count' => $this->resource->count(),
@@ -41,9 +49,9 @@ class PropertyCollection extends ResourceCollection
         
         // For simple collections, return a simpler structure
         return [
-            'data' => $this->collection->map(function ($property) {
+            'data' => $this->resource->map(function ($property) {
                 return new PropertyResource($property);
-            })->values()->toArray(),
+            })->toArray(),
         ];
     }
 

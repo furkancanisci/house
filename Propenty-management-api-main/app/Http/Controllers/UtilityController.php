@@ -14,9 +14,11 @@ class UtilityController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $language = $request->get('lang', 'ar');
+        // Support both 'lang' and 'language' parameters for compatibility
+        $language = $request->get('language', $request->get('lang', 'ar'));
         $category = $request->get('category');
-        $active = $request->get('active', true);
+        // Support both 'active' and 'status' parameters for compatibility
+        $active = $request->get('status') === 'active' ? true : $request->get('active', true);
         $grouped = $request->get('grouped', false);
 
         $query = Utility::query();
