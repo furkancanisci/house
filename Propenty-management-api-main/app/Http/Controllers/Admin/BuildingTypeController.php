@@ -123,4 +123,52 @@ class BuildingTypeController extends Controller
         return redirect()->route('admin.building-types.index')
             ->with('success', "Building type {$status} successfully.");
     }
+
+    /**
+     * Handle bulk actions on building types.
+     */
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $this->authorize('edit building types');
+
+        $request->validate([
+            'action' => 'required|in:activate,deactivate,delete',
+            'building_types' => 'required|array',
+            'building_types.*' => 'exists:building_types,id'
+        ]);
+
+        $buildingTypes = $request->building_types;
+        $action = $request->action;
+
+        switch ($action) {
+            case 'activate':
+                BuildingType::whereIn('id', $buildingTypes)->update(['is_active' => true]);
+                $message = 'Selected building types activated successfully.';
+                break;
+
+            case 'deactivate':
+                BuildingType::whereIn('id', $buildingTypes)->update(['is_active' => false]);
+                $message = 'Selected building types deactivated successfully.';
+                break;
+
+            case 'delete':
+                $canDelete = BuildingType::whereIn('id', $buildingTypes)->doesntHave('properties')->pluck('id');
+                if ($canDelete->count() > 0) {
+                    BuildingType::whereIn('id', $canDelete)->delete();
+                    $message = $canDelete->count() . ' building types deleted successfully.';
+
+                    // Check if some couldn't be deleted
+                    $couldntDelete = count($buildingTypes) - $canDelete->count();
+                    if ($couldntDelete > 0) {
+                        $message .= " ({$couldntDelete} building types couldn't be deleted because they are associated with properties.)";
+                    }
+                } else {
+                    return redirect()->route('admin.building-types.index')
+                        ->with('error', 'Cannot delete building types that are associated with properties.');
+                }
+                break;
+        }
+
+        return redirect()->route('admin.building-types.index')->with('success', $message);
+    }
 }

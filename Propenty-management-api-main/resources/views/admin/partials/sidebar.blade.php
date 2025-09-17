@@ -151,9 +151,9 @@
                 @endcan
 
                 <!-- Advanced Property Details -->
-                @canany(['view building types', 'view window types', 'view floor types'])
-                <li class="nav-item {{ request()->routeIs('admin.building-types*') || request()->routeIs('admin.window-types*') || request()->routeIs('admin.floor-types*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->routeIs('admin.building-types*') || request()->routeIs('admin.window-types*') || request()->routeIs('admin.floor-types*') ? 'active' : '' }}">
+                @canany(['view building types', 'view window types', 'view floor types', 'view view types', 'view directions'])
+                <li class="nav-item {{ request()->routeIs('admin.building-types*') || request()->routeIs('admin.window-types*') || request()->routeIs('admin.floor-types*') || request()->routeIs('admin.view-types*') || request()->routeIs('admin.directions*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.building-types*') || request()->routeIs('admin.window-types*') || request()->routeIs('admin.floor-types*') || request()->routeIs('admin.view-types*') || request()->routeIs('admin.directions*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-building"></i>
                         <p>
                             {{ __('admin.advanced_details') }}
@@ -182,6 +182,22 @@
                             <a href="{{ route('admin.floor-types.index') }}" class="nav-link {{ request()->routeIs('admin.floor-types*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('admin.floor_types') }}</p>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('view view types')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.view-types.index') }}" class="nav-link {{ request()->routeIs('admin.view-types*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('View Types') }}</p>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('view directions')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.directions.index') }}" class="nav-link {{ request()->routeIs('admin.directions*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('Directions') }}</p>
                             </a>
                         </li>
                         @endcan

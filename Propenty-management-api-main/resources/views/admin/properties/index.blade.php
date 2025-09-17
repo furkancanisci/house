@@ -8,43 +8,79 @@
     <li class="breadcrumb-item active">Properties</li>
 @endsection
 
+@push('styles')
+<style>
+    /* New property highlighting */
+    .table-success {
+        background-color: #d4edda !important;
+        border-color: #c3e6cb !important;
+    }
+
+    .table-success td {
+        border-top-color: #c3e6cb !important;
+    }
+
+    .badge-success.new-property {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        animation: pulse-new 2s infinite;
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.4);
+    }
+
+    @keyframes pulse-new {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Tooltip styling */
+    .tooltip-inner {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .tooltip.show {
+        opacity: 1;
+    }
+</style>
+@endpush
+
 @section('content')
     <!-- Stats Cards -->
     <div class="row">
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-2 col-md-3 col-6">
             <div class="small-box bg-info">
                 <div class="inner">
                     <h3>{{ $stats['total'] }}</h3>
-                    <p>Total Properties</p>
+                    <p>Total</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-home"></i>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-2 col-md-3 col-6">
             <div class="small-box bg-success">
                 <div class="inner">
                     <h3>{{ $stats['active'] }}</h3>
-                    <p>Active Properties</p>
+                    <p>Active</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-2 col-md-3 col-6">
             <div class="small-box bg-warning">
                 <div class="inner">
                     <h3>{{ $stats['pending'] }}</h3>
-                    <p>Pending Approval</p>
+                    <p>Pending</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-clock"></i>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-2 col-md-3 col-6">
             <div class="small-box bg-primary">
                 <div class="inner">
                     <h3>{{ $stats['featured'] }}</h3>
@@ -52,6 +88,17 @@
                 </div>
                 <div class="icon">
                     <i class="fas fa-star"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-3 col-6">
+            <div class="small-box" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                <div class="inner">
+                    <h3 style="color: white;">{{ $stats['new'] }}</h3>
+                    <p style="color: white;"><i class="fas fa-sparkles"></i> New (2h)</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-plus-circle" style="color: rgba(255,255,255,0.8);"></i>
                 </div>
             </div>
         </div>
@@ -189,13 +236,17 @@
                                     <th width="120">Type</th>
                                     <th width="120">Price</th>
                                     <th width="150">Owner</th>
-                                    <th width="120">Created</th>
+                                    <th width="80">ID</th>
                                     <th width="120">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($properties as $property)
-                                <tr>
+                                @php
+                                    // Check if property was created within the last 2 hours
+                                    $isNew = $property->created_at->diffInHours(now()) <= 2;
+                                @endphp
+                                <tr class="{{ $isNew ? 'table-success' : '' }}" style="{{ $isNew ? 'background-color: #d4edda !important;' : '' }}">
                                     @can('bulk manage properties')
                                     <td>
                                         <input type="checkbox" name="property_ids[]" value="{{ $property->id }}" class="property-checkbox">
@@ -214,6 +265,13 @@
                                     </td>
                                     <td>
                                         <strong>{{ Str::limit($property->title, 40) }}</strong>
+                                        @if($isNew)
+                                            <span class="badge badge-success badge-sm ml-1 new-property"
+                                                  title="Created {{ $property->created_at->format('M j, Y \a\t H:i:s') }} ({{ $property->created_at->diffForHumans() }})"
+                                                  data-toggle="tooltip">
+                                                <i class="fas fa-sparkles"></i> NEW
+                                            </span>
+                                        @endif
                                         <br>
                                         <small class="text-muted">
                                             <i class="fas fa-map-marker-alt"></i> {{ $property->city }}, {{ $property->state }}
@@ -257,10 +315,12 @@
                                         <br>
                                         <small class="text-muted">{{ $property->user->email ?? '' }}</small>
                                     </td>
-                                    <td>
-                                        {{ $property->created_at->format('M j, Y') }}
-                                        <br>
-                                        <small class="text-muted">{{ $property->created_at->diffForHumans() }}</small>
+                                    <td class="text-center">
+                                        <strong class="text-primary">#{{ $property->id }}</strong>
+                                        @if($isNew)
+                                            <br>
+                                            <small class="badge badge-success badge-xs">NEW</small>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="btn-group-vertical btn-group-sm">
@@ -446,6 +506,13 @@ $(document).ready(function() {
         }
 
         $('#bulkActionForm').submit();
+    });
+
+    // Initialize tooltips for NEW badges
+    $('[data-toggle="tooltip"]').tooltip({
+        placement: 'top',
+        trigger: 'hover',
+        delay: { "show": 500, "hide": 100 }
     });
 });
 </script>

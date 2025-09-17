@@ -51,6 +51,7 @@
                                         <option value="townhouse" {{ old('property_type') === 'townhouse' ? 'selected' : '' }}>Townhouse</option>
                                         <option value="land" {{ old('property_type') === 'land' ? 'selected' : '' }}>Land</option>
                                         <option value="commercial" {{ old('property_type') === 'commercial' ? 'selected' : '' }}>Commercial</option>
+                                        <option value="retail" {{ old('property_type') === 'retail' ? 'selected' : '' }}>Retail</option>
                                     </select>
                                     @error('property_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -81,6 +82,39 @@
                                         @endcan
                                     </select>
                                     @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="document_type_id">Document Type <span class="text-danger">*</span></label>
+                                    <select name="document_type_id" id="document_type_id" class="form-control @error('document_type_id') is-invalid @enderror" required>
+                                        <option value="">Select Document Type</option>
+                                        @if(isset($documentTypes) && $documentTypes->count() > 0)
+                                            @foreach($documentTypes as $documentType)
+                                                <option value="{{ $documentType->id }}" {{ old('document_type_id') == $documentType->id ? 'selected' : '' }}>
+                                                    {{ $documentType->name_ar }} - {{ $documentType->name_en }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No document types available</option>
+                                        @endif
+                                    </select>
+                                    @error('document_type_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pet_policy">Pet Policy</label>
+                                    <input type="text" name="pet_policy" id="pet_policy" class="form-control @error('pet_policy') is-invalid @enderror"
+                                           value="{{ old('pet_policy') }}" placeholder="e.g., Cats and small dogs allowed">
+                                    @error('pet_policy')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -201,19 +235,6 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="postal_code">{{ __('admin.postal_code') ?? 'Postal Code' }}</label>
-                                    <input type="text" name="postal_code" id="postal_code" class="form-control @error('postal_code') is-invalid @enderror" 
-                                           value="{{ old('postal_code') }}">
-                                    @error('postal_code')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                        </div>
                     </div>
                 </div>
 
@@ -304,6 +325,218 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Advanced Property Details -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="floor_number">Floor Number</label>
+                                    <input type="number" name="floor_number" id="floor_number" class="form-control @error('floor_number') is-invalid @enderror"
+                                           value="{{ old('floor_number') }}" min="0" max="200">
+                                    @error('floor_number')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="total_floors">Total Floors</label>
+                                    <input type="number" name="total_floors" id="total_floors" class="form-control @error('total_floors') is-invalid @enderror"
+                                           value="{{ old('total_floors') }}" min="1" max="200">
+                                    @error('total_floors')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="balcony_count">Balcony Count</label>
+                                    <input type="number" name="balcony_count" id="balcony_count" class="form-control @error('balcony_count') is-invalid @enderror"
+                                           value="{{ old('balcony_count', 0) }}" min="0" max="20">
+                                    @error('balcony_count')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="orientation">{{ __('Property Orientation') }}</label>
+                                    <select name="orientation" id="orientation" class="form-control @error('orientation') is-invalid @enderror">
+                                        <option value="">{{ __('Select Orientation') }}</option>
+                                        @if(isset($directions) && $directions->count() > 0)
+                                            @foreach($directions as $direction)
+                                                <option value="{{ $direction->value }}" {{ old('orientation') === $direction->value ? 'selected' : '' }}>
+                                                    {{ $direction->name }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No directions available</option>
+                                        @endif
+                                    </select>
+                                    @error('orientation')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="view_type">{{ __('View Type') }}</label>
+                                    <select name="view_type" id="view_type" class="form-control @error('view_type') is-invalid @enderror">
+                                        <option value="">{{ __('Select View Type') }}</option>
+                                        @if(isset($viewTypes) && $viewTypes->count() > 0)
+                                            @foreach($viewTypes as $viewType)
+                                                <option value="{{ $viewType->value }}" {{ old('view_type') === $viewType->value ? 'selected' : '' }}>
+                                                    {{ $viewType->name }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No view types available</option>
+                                        @endif
+                                    </select>
+                                    @error('view_type')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Building Details -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="building_age">Building Age (Years)</label>
+                                    <input type="number" name="building_age" id="building_age" class="form-control @error('building_age') is-invalid @enderror"
+                                           value="{{ old('building_age') }}" min="0" max="200">
+                                    @error('building_age')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="building_type_id">Building Type</label>
+                                    <select name="building_type_id" id="building_type_id" class="form-control @error('building_type_id') is-invalid @enderror">
+                                        <option value="">Select Building Type</option>
+                                        @if(isset($buildingTypes) && $buildingTypes->count() > 0)
+                                            @foreach($buildingTypes as $buildingType)
+                                                <option value="{{ $buildingType->id }}" {{ old('building_type_id') == $buildingType->id ? 'selected' : '' }}>
+                                                    {{ $buildingType->name_ar }} - {{ $buildingType->name_en }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No building types available</option>
+                                        @endif
+                                    </select>
+                                    @error('building_type_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="floor_type_id">Floor Type</label>
+                                    <select name="floor_type_id" id="floor_type_id" class="form-control @error('floor_type_id') is-invalid @enderror">
+                                        <option value="">Select Floor Type</option>
+                                        @if(isset($floorTypes) && $floorTypes->count() > 0)
+                                            @foreach($floorTypes as $floorType)
+                                                <option value="{{ $floorType->id }}" {{ old('floor_type_id') == $floorType->id ? 'selected' : '' }}>
+                                                    {{ $floorType->name_ar }} - {{ $floorType->name_en }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No floor types available</option>
+                                        @endif
+                                    </select>
+                                    @error('floor_type_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="window_type_id">Window Type</label>
+                                    <select name="window_type_id" id="window_type_id" class="form-control @error('window_type_id') is-invalid @enderror">
+                                        <option value="">Select Window Type</option>
+                                        @if(isset($windowTypes) && $windowTypes->count() > 0)
+                                            @foreach($windowTypes as $windowType)
+                                                <option value="{{ $windowType->id }}" {{ old('window_type_id') == $windowType->id ? 'selected' : '' }}>
+                                                    {{ $windowType->name_ar }} - {{ $windowType->name_en }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No window types available</option>
+                                        @endif
+                                    </select>
+                                    @error('window_type_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="maintenance_fee">Maintenance Fee</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="number" name="maintenance_fee" id="maintenance_fee" class="form-control @error('maintenance_fee') is-invalid @enderror"
+                                               value="{{ old('maintenance_fee') }}" min="0" step="0.01">
+                                    </div>
+                                    @error('maintenance_fee')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="hoa_fees">HOA Fees</label>
+                                    <input type="text" name="hoa_fees" id="hoa_fees" class="form-control @error('hoa_fees') is-invalid @enderror"
+                                           value="{{ old('hoa_fees') }}" placeholder="e.g., $200/month">
+                                    @error('hoa_fees')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="deposit_amount">Deposit Amount</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="number" name="deposit_amount" id="deposit_amount" class="form-control @error('deposit_amount') is-invalid @enderror"
+                                               value="{{ old('deposit_amount') }}" min="0" step="0.01">
+                                    </div>
+                                    @error('deposit_amount')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="annual_tax">Annual Tax</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="number" name="annual_tax" id="annual_tax" class="form-control @error('annual_tax') is-invalid @enderror"
+                                               value="{{ old('annual_tax') }}" min="0" step="0.01">
+                                    </div>
+                                    @error('annual_tax')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -325,6 +558,63 @@
                             @enderror
                         </div>
                         <div id="imagePreview" class="row mt-3"></div>
+                    </div>
+                </div>
+
+                <!-- Features & Utilities -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Features & Utilities</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Property Features</h5>
+                                <div class="row">
+                                    @if(isset($features) && $features->count() > 0)
+                                        @foreach($features as $feature)
+                                            <div class="col-md-6 mb-2">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" name="features[]" value="{{ $feature->id }}"
+                                                           id="feature_{{ $feature->id }}" class="custom-control-input"
+                                                           {{ in_array($feature->id, old('features', [])) ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="feature_{{ $feature->id }}">
+                                                        {{ $feature->name_ar }} - {{ $feature->name_en }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="col-12">
+                                            <p class="text-muted">No features available</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Property Utilities</h5>
+                                <div class="row">
+                                    @if(isset($utilities) && $utilities->count() > 0)
+                                        @foreach($utilities as $utility)
+                                            <div class="col-md-6 mb-2">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" name="utilities[]" value="{{ $utility->id }}"
+                                                           id="utility_{{ $utility->id }}" class="custom-control-input"
+                                                           {{ in_array($utility->id, old('utilities', [])) ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="utility_{{ $utility->id }}">
+                                                        {{ $utility->name_ar }} - {{ $utility->name_en }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="col-12">
+                                            <p class="text-muted">No utilities available</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -479,7 +769,14 @@ $(document).ready(function() {
                 if (file.type.startsWith('image/')) {
                     var reader = new FileReader();
                     reader.onload = function(e) {
-                        var img = $('<div class="col-md-4 mb-3"><img src="' + e.target.result + '" class="img-thumbnail" style="height: 150px; object-fit: cover;"></div>');
+                        var img = $('<div class="col-md-4 mb-3">' +
+                                   '<div class="position-relative image-preview">' +
+                                   '<img src="' + e.target.result + '" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">' +
+                                   '<div class="position-absolute" style="top: 5px; left: 5px; background: rgba(40, 167, 69, 0.9); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">' +
+                                   '<i class="fas fa-image"></i> Preview' +
+                                   '</div>' +
+                                   '</div>' +
+                                   '</div>');
                         preview.append(img);
                     };
                     reader.readAsDataURL(file);
@@ -637,4 +934,28 @@ $(document).ready(function() {
 
 });
 </script>
+
+<style>
+.image-preview {
+    transition: all 0.3s ease;
+}
+
+.image-preview:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.image-preview img {
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+#imagePreview .col-md-4 {
+    transition: all 0.3s ease;
+}
+
+#imagePreview .col-md-4:hover {
+    transform: scale(1.02);
+}
+</style>
 @endpush

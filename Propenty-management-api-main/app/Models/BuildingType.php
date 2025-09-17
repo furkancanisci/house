@@ -74,4 +74,36 @@ class BuildingType extends Model
     {
         return $this->hasMany(Property::class, 'building_type', 'value');
     }
+
+    /**
+     * Get building types as options for dropdowns
+     */
+    public static function getOptions()
+    {
+        return static::active()->ordered()->get()->map(function ($type) {
+            return [
+                'id' => $type->id,
+                'value' => $type->value,
+                'label' => $type->getDisplayName(app()->getLocale()),
+                'name_en' => $type->name_en,
+                'name_ar' => $type->name_ar,
+            ];
+        });
+    }
+
+    /**
+     * Get localized name attribute
+     */
+    public function getLocalizedNameAttribute()
+    {
+        return $this->getDisplayName(app()->getLocale());
+    }
+
+    /**
+     * Get localized description attribute
+     */
+    public function getLocalizedDescriptionAttribute()
+    {
+        return $this->getDescription(app()->getLocale());
+    }
 }

@@ -168,10 +168,6 @@
                                     <td>{{ $property->state }}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Postal Code:</strong></td>
-                                    <td>{{ $property->postal_code ?? 'Not specified' }}</td>
-                                </tr>
-                                <tr>
                                     <td><strong>Neighborhood:</strong></td>
                                     <td>{{ $property->neighborhood ?? 'Not specified' }}</td>
                                 </tr>

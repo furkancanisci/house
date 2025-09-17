@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BuildingTypeController;
 use App\Http\Controllers\Api\WindowTypeController;
 use App\Http\Controllers\Api\FloorTypeController;
+use App\Http\Controllers\Api\ViewTypeController;
+use App\Http\Controllers\Api\DirectionController;
 use App\Http\Controllers\Api\PropertyDetailController;
 use App\Http\Controllers\Api\AdvancedDetailsController;
 use App\Http\Controllers\FeatureController;
@@ -188,6 +190,22 @@ Route::prefix('v1')->group(function () {
         Route::get('/options', [FloorTypeController::class, 'options']);
         Route::get('/with-counts', [FloorTypeController::class, 'withCounts']);
         Route::get('/{floorType}', [FloorTypeController::class, 'show']);
+    });
+
+    // View Types Routes
+    Route::prefix('view-types')->group(function () {
+        Route::get('/', [ViewTypeController::class, 'index']);
+        Route::get('/options', [ViewTypeController::class, 'options']);
+        Route::get('/with-counts', [ViewTypeController::class, 'withCounts']);
+        Route::get('/{viewType}', [ViewTypeController::class, 'show']);
+    });
+
+    // Directions Routes
+    Route::prefix('directions')->group(function () {
+        Route::get('/', [DirectionController::class, 'index']);
+        Route::get('/options', [DirectionController::class, 'options']);
+        Route::get('/with-counts', [DirectionController::class, 'withCounts']);
+        Route::get('/{direction}', [DirectionController::class, 'show']);
     });
 
     // Property Details Routes - Combined endpoint for all types

@@ -67,8 +67,7 @@ class LocationService
             
             // Also search in other fields with original term
             $q->orWhere('neighborhood', 'ILIKE', "%{$location}%")
-              ->orWhere('street_address', 'ILIKE', "%{$location}%")
-              ->orWhere('postal_code', 'ILIKE', "%{$location}%");
+              ->orWhere('street_address', 'ILIKE', "%{$location}%");
         });
 
         return $query;

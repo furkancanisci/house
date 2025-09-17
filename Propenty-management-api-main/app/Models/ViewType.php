@@ -4,17 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class FloorType extends Model
+class ViewType extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name_en',
         'name_ar',
@@ -22,61 +17,58 @@ class FloorType extends Model
         'description_en',
         'description_ar',
         'is_active',
-        'sort_order',
+        'sort_order'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'is_active' => 'boolean',
-        'sort_order' => 'integer',
+        'sort_order' => 'integer'
     ];
 
     /**
-     * Scope a query to only include active floor types.
+     * Scope for active view types
      */
-    public function scopeActive(Builder $query): void
+    public function scopeActive($query)
     {
-        $query->where('is_active', true);
+        return $query->where('is_active', true);
     }
 
     /**
-     * Scope a query to order by sort order.
+     * Scope for ordered view types
      */
-    public function scopeOrdered(Builder $query): void
+    public function scopeOrdered($query)
     {
-        $query->orderBy('sort_order')->orderBy('name_en');
+        return $query->orderBy('sort_order')->orderBy('name_en');
     }
 
     /**
-     * Get the display name based on locale.
+     * Get the name attribute based on current locale
      */
-    public function getDisplayName(string $locale = 'en'): string
+    public function getNameAttribute()
     {
+        $locale = app()->getLocale();
         return $locale === 'ar' ? $this->name_ar : $this->name_en;
     }
 
     /**
-     * Get the description based on locale.
+     * Get the description attribute based on current locale
      */
-    public function getDescription(string $locale = 'en'): ?string
+    public function getDescriptionAttribute()
     {
+        $locale = app()->getLocale();
         return $locale === 'ar' ? $this->description_ar : $this->description_en;
     }
 
     /**
-     * Get properties that use this floor type.
+     * Properties that use this view type
      */
-    public function properties()
+    public function properties(): HasMany
     {
-        return $this->hasMany(Property::class, 'floor_type', 'value');
+        return $this->hasMany(Property::class, 'view_type', 'value');
     }
 
     /**
-     * Get floor types as options for dropdowns
+     * Get view types as options for dropdowns
      */
     public static function getOptions()
     {
@@ -84,7 +76,7 @@ class FloorType extends Model
             return [
                 'id' => $type->id,
                 'value' => $type->value,
-                'label' => $type->getDisplayName(app()->getLocale()),
+                'label' => $type->name,
                 'name_en' => $type->name_en,
                 'name_ar' => $type->name_ar,
             ];
@@ -96,7 +88,7 @@ class FloorType extends Model
      */
     public function getLocalizedNameAttribute()
     {
-        return $this->getDisplayName(app()->getLocale());
+        return $this->name;
     }
 
     /**
@@ -104,6 +96,6 @@ class FloorType extends Model
      */
     public function getLocalizedDescriptionAttribute()
     {
-        return $this->getDescription(app()->getLocale());
+        return $this->description;
     }
 }

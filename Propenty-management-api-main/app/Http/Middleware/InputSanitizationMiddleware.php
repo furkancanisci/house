@@ -18,9 +18,9 @@ class InputSanitizationMiddleware
     {
         // Skip sanitization for authentication and property endpoints to allow proper validation
         $skipPaths = [
-            'api/v1/auth/login', 
-            'api/v1/auth/register', 
-            'api/v1/auth/me', 
+            'api/v1/auth/login',
+            'api/v1/auth/register',
+            'api/v1/auth/me',
             'api/v1/auth/logout',
             'api/v1/properties',
             'api/v1/properties/featured',
@@ -28,17 +28,52 @@ class InputSanitizationMiddleware
             'api/v1/utilities',
             'api/v1/cities/states',
             'api/v1/property-document-types',
-            'api/v1/property-types/options'
+            'api/v1/property-types/options',
+            'api/v1/building-types/options',
+            'api/v1/window-types/options',
+            'api/v1/floor-types/options',
+            'api/v1/view-types/options',
+            'api/v1/directions/options'
         ];
         $currentPath = trim($request->path(), '/');
         
         // Also skip if path starts with api/v1/properties/ (for specific property endpoints)
         $isPropertyEndpoint = str_starts_with($currentPath, 'api/v1/properties/');
-        
+
         // Also skip if path starts with api/v1/cities/state/ (for state-specific city endpoints)
         $isCityStateEndpoint = str_starts_with($currentPath, 'api/v1/cities/state/');
-        
-        if (!in_array($currentPath, $skipPaths) && !$isPropertyEndpoint && !$isCityStateEndpoint) {
+
+        // Also skip if path starts with api/v1/property-document-types/ (for specific document type endpoints)
+        $isDocumentTypeEndpoint = str_starts_with($currentPath, 'api/v1/property-document-types/');
+
+        // Also skip if path starts with api/v1/property-types/ (for specific property type endpoints)
+        $isPropertyTypeEndpoint = str_starts_with($currentPath, 'api/v1/property-types/');
+
+        // Also skip if path starts with api/v1/building-types/ (for specific building type endpoints)
+        $isBuildingTypeEndpoint = str_starts_with($currentPath, 'api/v1/building-types/');
+
+        // Also skip if path starts with api/v1/window-types/ (for specific window type endpoints)
+        $isWindowTypeEndpoint = str_starts_with($currentPath, 'api/v1/window-types/');
+
+        // Also skip if path starts with api/v1/floor-types/ (for specific floor type endpoints)
+        $isFloorTypeEndpoint = str_starts_with($currentPath, 'api/v1/floor-types/');
+
+        // Also skip if path starts with api/v1/view-types/ (for specific view type endpoints)
+        $isViewTypeEndpoint = str_starts_with($currentPath, 'api/v1/view-types/');
+
+        // Also skip if path starts with api/v1/directions/ (for specific direction endpoints)
+        $isDirectionEndpoint = str_starts_with($currentPath, 'api/v1/directions/');
+
+        if (!in_array($currentPath, $skipPaths) &&
+            !$isPropertyEndpoint &&
+            !$isCityStateEndpoint &&
+            !$isDocumentTypeEndpoint &&
+            !$isPropertyTypeEndpoint &&
+            !$isBuildingTypeEndpoint &&
+            !$isWindowTypeEndpoint &&
+            !$isFloorTypeEndpoint &&
+            !$isViewTypeEndpoint &&
+            !$isDirectionEndpoint) {
             // Sanitize input data
             $this->sanitizeInput($request);
             

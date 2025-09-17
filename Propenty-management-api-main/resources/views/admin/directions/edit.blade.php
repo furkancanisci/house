@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', __('Edit Floor Type'))
+@section('title', __('Edit Direction'))
 
 @section('content')
 <div class="container-fluid">
@@ -8,18 +8,18 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">{{ __('Edit Floor Type') }}: {{ $floorType->name }}</h3>
+                    <h3 class="card-title">{{ __('Edit Direction') }}: {{ $direction->name }}</h3>
                     <div class="card-tools">
-                        <a href="{{ route('admin.floor-types.show', $floorType) }}" class="btn btn-info btn-sm">
+                        <a href="{{ route('admin.directions.show', $direction) }}" class="btn btn-info btn-sm">
                             <i class="fas fa-eye"></i> {{ __('View Details') }}
                         </a>
-                        <a href="{{ route('admin.floor-types.index') }}" class="btn btn-secondary btn-sm">
+                        <a href="{{ route('admin.directions.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> {{ __('Back to List') }}
                         </a>
                     </div>
                 </div>
-                
-                <form action="{{ route('admin.floor-types.update', $floorType) }}" method="POST" id="floor-type-form">
+
+                <form action="{{ route('admin.directions.update', $direction) }}" method="POST" id="direction-form">
                     @csrf
                     @method('PUT')
                     <div class="card-body">
@@ -32,7 +32,7 @@
                                 </button>
                             </div>
                         @endif
-                        
+
                         @if($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <i class="fas fa-exclamation-circle"></i> {{ __('Please correct the following errors:') }}
@@ -46,7 +46,7 @@
                                 </button>
                             </div>
                         @endif
-                        
+
                         <!-- Statistics Row -->
                         <div class="row mb-4">
                             <div class="col-12">
@@ -68,7 +68,7 @@
                                                     <span class="info-box-icon"><i class="fas fa-home"></i></span>
                                                     <div class="info-box-content">
                                                         <span class="info-box-text">{{ __('Properties') }}</span>
-                                                        <span class="info-box-number">{{ $floorType->properties_count ?? 0 }}</span>
+                                                        <span class="info-box-number">{{ $direction->properties_count ?? 0 }}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -77,7 +77,7 @@
                                                     <span class="info-box-icon"><i class="fas fa-calendar-alt"></i></span>
                                                     <div class="info-box-content">
                                                         <span class="info-box-text">{{ __('Created') }}</span>
-                                                        <span class="info-box-number">{{ $floorType->created_at->format('M d, Y') }}</span>
+                                                        <span class="info-box-number">{{ $direction->created_at->format('M d, Y') }}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -86,18 +86,18 @@
                                                     <span class="info-box-icon"><i class="fas fa-edit"></i></span>
                                                     <div class="info-box-content">
                                                         <span class="info-box-text">{{ __('Last Updated') }}</span>
-                                                        <span class="info-box-number">{{ $floorType->updated_at->format('M d, Y') }}</span>
+                                                        <span class="info-box-number">{{ $direction->updated_at->format('M d, Y') }}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
-                                                <div class="info-box {{ $floorType->is_active ? 'bg-success' : 'bg-danger' }}">
+                                                <div class="info-box {{ $direction->is_active ? 'bg-success' : 'bg-danger' }}">
                                                     <span class="info-box-icon">
-                                                        <i class="fas {{ $floorType->is_active ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+                                                        <i class="fas {{ $direction->is_active ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
                                                     </span>
                                                     <div class="info-box-content">
                                                         <span class="info-box-text">{{ __('Status') }}</span>
-                                                        <span class="info-box-number">{{ $floorType->is_active ? __('Active') : __('Inactive') }}</span>
+                                                        <span class="info-box-number">{{ $direction->is_active ? __('Active') : __('Inactive') }}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -106,7 +106,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <!-- English Fields -->
                             <div class="col-md-6">
@@ -119,9 +119,9 @@
                                     <div class="card-body">
                                         <div class="form-group">
                                             <label for="name_en" class="required">{{ __('Name (English)') }}</label>
-                                            <input type="text" class="form-control @error('name_en') is-invalid @enderror" 
-                                                   id="name_en" name="name_en" value="{{ old('name_en', $floorType->name_en) }}" 
-                                                   placeholder="{{ __('Enter floor type name in English') }}" required>
+                                            <input type="text" class="form-control @error('name_en') is-invalid @enderror"
+                                                   id="name_en" name="name_en" value="{{ old('name_en', $direction->name_en) }}"
+                                                   placeholder="{{ __('Enter direction name in English') }}" required>
                                             @error('name_en')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -129,12 +129,12 @@
                                                 {{ __('This will be displayed to English-speaking users') }}
                                             </small>
                                         </div>
-                                        
+
                                         <div class="form-group">
                                             <label for="description_en">{{ __('Description (English)') }}</label>
-                                            <textarea class="form-control @error('description_en') is-invalid @enderror" 
-                                                      id="description_en" name="description_en" rows="4" 
-                                                      placeholder="{{ __('Enter detailed description in English') }}">{{ old('description_en', $floorType->description_en) }}</textarea>
+                                            <textarea class="form-control @error('description_en') is-invalid @enderror"
+                                                      id="description_en" name="description_en" rows="4"
+                                                      placeholder="{{ __('Enter detailed description in English') }}">{{ old('description_en', $direction->description_en) }}</textarea>
                                             @error('description_en')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -145,7 +145,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Arabic Fields -->
                             <div class="col-md-6">
                                 <div class="card card-outline card-success">
@@ -157,9 +157,9 @@
                                     <div class="card-body" dir="rtl">
                                         <div class="form-group">
                                             <label for="name_ar" class="required">{{ __('Name (Arabic)') }}</label>
-                                            <input type="text" class="form-control @error('name_ar') is-invalid @enderror" 
-                                                   id="name_ar" name="name_ar" value="{{ old('name_ar', $floorType->name_ar) }}" 
-                                                   placeholder="{{ __('أدخل اسم نوع الأرضية بالعربية') }}" required dir="rtl">
+                                            <input type="text" class="form-control @error('name_ar') is-invalid @enderror"
+                                                   id="name_ar" name="name_ar" value="{{ old('name_ar', $direction->name_ar) }}"
+                                                   placeholder="{{ __('أدخل اسم الاتجاه بالعربية') }}" required dir="rtl">
                                             @error('name_ar')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -167,12 +167,12 @@
                                                 {{ __('سيتم عرض هذا للمستخدمين الناطقين بالعربية') }}
                                             </small>
                                         </div>
-                                        
+
                                         <div class="form-group">
                                             <label for="description_ar">{{ __('Description (Arabic)') }}</label>
-                                            <textarea class="form-control @error('description_ar') is-invalid @enderror" 
-                                                      id="description_ar" name="description_ar" rows="4" 
-                                                      placeholder="{{ __('أدخل وصف مفصل بالعربية') }}" dir="rtl">{{ old('description_ar', $floorType->description_ar) }}</textarea>
+                                            <textarea class="form-control @error('description_ar') is-invalid @enderror"
+                                                      id="description_ar" name="description_ar" rows="4"
+                                                      placeholder="{{ __('أدخل وصف مفصل بالعربية') }}" dir="rtl">{{ old('description_ar', $direction->description_ar) }}</textarea>
                                             @error('description_ar')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -201,13 +201,13 @@
                                                    class="form-control @error('value') is-invalid @enderror"
                                                    id="value"
                                                    name="value"
-                                                   value="{{ old('value', $floorType->value) }}"
-                                                   placeholder="{{ __('Enter unique value/code (e.g., marble, tile, hardwood)') }}"
+                                                   value="{{ old('value', $direction->value) }}"
+                                                   placeholder="{{ __('Enter unique value/code (e.g., north, south, east, west)') }}"
                                                    required>
                                             @error('value')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <small class="form-text text-muted">{{ __('Unique identifier for this floor type (used internally, no spaces or special characters)') }}</small>
+                                            <small class="form-text text-muted">{{ __('Unique identifier for this direction (used internally, no spaces or special characters)') }}</small>
                                         </div>
                                     </div>
                                 </div>
@@ -228,8 +228,8 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="sort_order">{{ __('Sort Order') }}</label>
-                                                    <input type="number" class="form-control @error('sort_order') is-invalid @enderror" 
-                                                           id="sort_order" name="sort_order" value="{{ old('sort_order', $floorType->sort_order) }}" 
+                                                    <input type="number" class="form-control @error('sort_order') is-invalid @enderror"
+                                                           id="sort_order" name="sort_order" value="{{ old('sort_order', $direction->sort_order) }}"
                                                            min="0" max="999" step="1">
                                                     @error('sort_order')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -239,20 +239,20 @@
                                                     </small>
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="is_active">{{ __('Status') }}</label>
                                                     <div class="custom-control custom-switch">
-                                                        <input type="checkbox" class="custom-control-input" 
-                                                               id="is_active" name="is_active" value="1" 
-                                                               {{ old('is_active', $floorType->is_active) ? 'checked' : '' }}>
+                                                        <input type="checkbox" class="custom-control-input"
+                                                               id="is_active" name="is_active" value="1"
+                                                               {{ old('is_active', $direction->is_active) ? 'checked' : '' }}>
                                                         <label class="custom-control-label" for="is_active">
                                                             <span class="switch-text">{{ __('Active') }}</span>
                                                         </label>
                                                     </div>
                                                     <small class="form-text text-muted">
-                                                        {{ __('Only active floor types will be available for selection') }}
+                                                        {{ __('Only active directions will be available for selection') }}
                                                     </small>
                                                 </div>
                                             </div>
@@ -261,7 +261,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Preview Section -->
                         <div class="row mt-3">
                             <div class="col-12">
@@ -281,22 +281,22 @@
                                             <div class="col-md-6">
                                                 <h5>{{ __('English Preview') }}</h5>
                                                 <div class="preview-card">
-                                                    <h6 id="preview_name_en" class="text-primary">{{ $floorType->name_en }}</h6>
-                                                    <p id="preview_description_en" class="text-muted">{{ $floorType->description_en ?: __('No description provided') }}</p>
+                                                    <h6 id="preview_name_en" class="text-primary">{{ $direction->name_en }}</h6>
+                                                    <p id="preview_description_en" class="text-muted">{{ $direction->description_en ?: __('No description provided') }}</p>
                                                     <small class="text-info">
-                                                        <i class="fas fa-sort-numeric-up"></i> 
-                                                        {{ __('Order') }}: <span id="preview_sort_order">{{ $floorType->sort_order }}</span>
+                                                        <i class="fas fa-sort-numeric-up"></i>
+                                                        {{ __('Order') }}: <span id="preview_sort_order">{{ $direction->sort_order }}</span>
                                                     </small>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <h5>{{ __('Arabic Preview') }}</h5>
                                                 <div class="preview-card" dir="rtl">
-                                                    <h6 id="preview_name_ar" class="text-success">{{ $floorType->name_ar }}</h6>
-                                                    <p id="preview_description_ar" class="text-muted">{{ $floorType->description_ar ?: __('لا يوجد وصف') }}</p>
+                                                    <h6 id="preview_name_ar" class="text-success">{{ $direction->name_ar }}</h6>
+                                                    <p id="preview_description_ar" class="text-muted">{{ $direction->description_ar ?: __('لا يوجد وصف') }}</p>
                                                     <small class="text-info">
-                                                        <i class="fas fa-sort-numeric-up"></i> 
-                                                        {{ __('الترتيب') }}: <span id="preview_sort_order_ar">{{ $floorType->sort_order }}</span>
+                                                        <i class="fas fa-sort-numeric-up"></i>
+                                                        {{ __('الترتيب') }}: <span id="preview_sort_order_ar">{{ $direction->sort_order }}</span>
                                                     </small>
                                                 </div>
                                             </div>
@@ -306,12 +306,12 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="card-footer">
                         <div class="row">
                             <div class="col-md-6">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-save"></i> {{ __('Update Floor Type') }}
+                                    <i class="fas fa-save"></i> {{ __('Update Direction') }}
                                 </button>
                                 <button type="button" class="btn btn-success btn-lg ml-2" onclick="saveAndContinue()">
                                     <i class="fas fa-check"></i> {{ __('Save & Continue Editing') }}
@@ -334,13 +334,13 @@
 </div>
 
 <!-- Delete Form -->
-<form id="delete-form" action="{{ route('admin.floor-types.destroy', $floorType) }}" method="POST" style="display: none;">
+<form id="delete-form" action="{{ route('admin.directions.destroy', $direction) }}" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
 </form>
 
 <!-- Save and Continue Form -->
-<form id="save-continue-form" action="{{ route('admin.floor-types.update', $floorType) }}" method="POST" style="display: none;">
+<form id="save-continue-form" action="{{ route('admin.directions.update', $direction) }}" method="POST" style="display: none;">
     @csrf
     @method('PUT')
     <input type="hidden" name="continue_editing" value="1">
@@ -412,17 +412,17 @@
     .card-footer .row {
         flex-direction: column;
     }
-    
+
     .card-footer .text-right {
         text-align: left !important;
         margin-top: 1rem;
     }
-    
+
     .btn-lg {
         width: 100%;
         margin-bottom: 0.5rem;
     }
-    
+
     .info-box {
         margin-bottom: 1rem;
     }
@@ -434,63 +434,64 @@
 <script>
 // Store original values for reset functionality
 const originalValues = {
-    name_en: '{{ $floorType->name_en }}',
-    name_ar: '{{ $floorType->name_ar }}',
-    description_en: '{{ $floorType->description_en }}',
-    description_ar: '{{ $floorType->description_ar }}',
-    sort_order: '{{ $floorType->sort_order }}',
-    is_active: {{ $floorType->is_active ? 'true' : 'false' }}
+    name_en: '{{ $direction->name_en }}',
+    name_ar: '{{ $direction->name_ar }}',
+    value: '{{ $direction->value }}',
+    description_en: '{{ $direction->description_en }}',
+    description_ar: '{{ $direction->description_ar }}',
+    sort_order: '{{ $direction->sort_order }}',
+    is_active: {{ $direction->is_active ? 'true' : 'false' }}
 };
 
 // Form validation and preview updates
 $(document).ready(function() {
     // Update preview on input change
     $('#name_en').on('input', function() {
-        const value = $(this).val() || '{{ __('Floor Type Name') }}';
+        const value = $(this).val() || '{{ __('Direction Name') }}';
         $('#preview_name_en').text(value);
     });
-    
+
     $('#name_ar').on('input', function() {
-        const value = $(this).val() || '{{ __('اسم نوع الأرضية') }}';
+        const value = $(this).val() || '{{ __('اسم الاتجاه') }}';
         $('#preview_name_ar').text(value);
     });
-    
+
     $('#description_en').on('input', function() {
         const value = $(this).val() || '{{ __('No description provided') }}';
         $('#preview_description_en').text(value);
         updateCharacterCount('description_en');
     });
-    
+
     $('#description_ar').on('input', function() {
         const value = $(this).val() || '{{ __('لا يوجد وصف') }}';
         $('#preview_description_ar').text(value);
         updateCharacterCount('description_ar');
     });
-    
+
     $('#sort_order').on('input', function() {
         const value = $(this).val() || '0';
         $('#preview_sort_order').text(value);
         $('#preview_sort_order_ar').text(value);
     });
-    
+
     // Initialize character counts
     updateCharacterCount('description_en');
     updateCharacterCount('description_ar');
-    
+
     // Form validation
-    $('#floor-type-form').on('submit', function(e) {
+    $('#direction-form').on('submit', function(e) {
         if (!validateForm()) {
             e.preventDefault();
             return false;
         }
     });
-    
+
     // Track form changes
     let hasChanges = false;
     $('input, textarea, select').on('input change', function() {
         hasChanges = true;
     });
-    
+
     // Warn before leaving if there are unsaved changes
     window.addEventListener('beforeunload', function(e) {
         if (hasChanges) {
@@ -498,9 +499,9 @@ $(document).ready(function() {
             e.returnValue = '{{ __('You have unsaved changes. Are you sure you want to leave?') }}';
         }
     });
-    
+
     // Reset hasChanges flag on successful form submission
-    $('#floor-type-form').on('submit', function() {
+    $('#direction-form').on('submit', function() {
         hasChanges = false;
     });
 });
@@ -511,9 +512,9 @@ function updateCharacterCount(fieldId) {
     const countElement = document.getElementById(fieldId + '_count');
     const count = field.value.length;
     const maxLength = 500;
-    
+
     countElement.textContent = count;
-    
+
     // Update styling based on character count
     countElement.className = 'character-count';
     if (count > maxLength * 0.8) {
@@ -529,53 +530,64 @@ function updateCharacterCount(fieldId) {
 function validateForm() {
     let isValid = true;
     const errors = [];
-    
+
     // Required fields validation
     const nameEn = document.getElementById('name_en').value.trim();
     const nameAr = document.getElementById('name_ar').value.trim();
-    
+    const value = document.getElementById('value').value.trim();
+
     if (!nameEn) {
         errors.push('{{ __('English name is required') }}');
         isValid = false;
     }
-    
+
     if (!nameAr) {
         errors.push('{{ __('Arabic name is required') }}');
         isValid = false;
     }
-    
+
+    if (!value) {
+        errors.push('{{ __('Value/Code is required') }}');
+        isValid = false;
+    }
+
     // Length validation
     if (nameEn.length > 100) {
         errors.push('{{ __('English name must not exceed 100 characters') }}');
         isValid = false;
     }
-    
+
     if (nameAr.length > 100) {
         errors.push('{{ __('Arabic name must not exceed 100 characters') }}');
         isValid = false;
     }
-    
+
+    if (value.length > 50) {
+        errors.push('{{ __('Value/Code must not exceed 50 characters') }}');
+        isValid = false;
+    }
+
     // Description length validation
     const descEn = document.getElementById('description_en').value;
     const descAr = document.getElementById('description_ar').value;
-    
+
     if (descEn.length > 500) {
         errors.push('{{ __('English description must not exceed 500 characters') }}');
         isValid = false;
     }
-    
+
     if (descAr.length > 500) {
         errors.push('{{ __('Arabic description must not exceed 500 characters') }}');
         isValid = false;
     }
-    
+
     // Sort order validation
     const sortOrder = parseInt(document.getElementById('sort_order').value);
     if (isNaN(sortOrder) || sortOrder < 0 || sortOrder > 999) {
         errors.push('{{ __('Sort order must be between 0 and 999') }}');
         isValid = false;
     }
-    
+
     if (!isValid) {
         Swal.fire({
             title: '{{ __('Validation Error') }}',
@@ -584,7 +596,7 @@ function validateForm() {
             confirmButtonText: '{{ __('OK') }}'
         });
     }
-    
+
     return isValid;
 }
 
@@ -604,11 +616,12 @@ function resetForm() {
             // Reset to original values
             document.getElementById('name_en').value = originalValues.name_en;
             document.getElementById('name_ar').value = originalValues.name_ar;
+            document.getElementById('value').value = originalValues.value;
             document.getElementById('description_en').value = originalValues.description_en;
             document.getElementById('description_ar').value = originalValues.description_ar;
             document.getElementById('sort_order').value = originalValues.sort_order;
             document.getElementById('is_active').checked = originalValues.is_active;
-            
+
             // Reset previews
             $('#preview_name_en').text(originalValues.name_en);
             $('#preview_name_ar').text(originalValues.name_ar);
@@ -616,14 +629,14 @@ function resetForm() {
             $('#preview_description_ar').text(originalValues.description_ar || '{{ __('لا يوجد وصف') }}');
             $('#preview_sort_order').text(originalValues.sort_order);
             $('#preview_sort_order_ar').text(originalValues.sort_order);
-            
+
             // Reset character counts
             updateCharacterCount('description_en');
             updateCharacterCount('description_ar');
-            
+
             // Reset change tracking
             hasChanges = false;
-            
+
             toastr.success('{{ __('Changes have been reset to original values') }}');
         }
     });
@@ -634,11 +647,11 @@ function saveAndContinue() {
     if (!validateForm()) {
         return false;
     }
-    
+
     // Copy form data to hidden form
-    const mainForm = document.getElementById('floor-type-form');
+    const mainForm = document.getElementById('direction-form');
     const hiddenForm = document.getElementById('save-continue-form');
-    
+
     // Copy all form fields
     const formData = new FormData(mainForm);
     for (let [key, value] of formData.entries()) {
@@ -650,21 +663,21 @@ function saveAndContinue() {
             hiddenForm.appendChild(input);
         }
     }
-    
+
     hiddenForm.submit();
 }
 
 // Confirm delete
 function confirmDelete() {
-    const propertiesCount = {{ $floorType->properties_count ?? 0 }};
-    
+    const propertiesCount = {{ $direction->properties_count ?? 0 }};
+
     let warningText = '{{ __('This action cannot be undone!') }}';
     if (propertiesCount > 0) {
-        warningText = '{{ __('This floor type is used by') }} ' + propertiesCount + ' {{ __('properties. Deleting it may affect those properties. This action cannot be undone!') }}';
+        warningText = '{{ __('This direction is used by') }} ' + propertiesCount + ' {{ __('properties. Deleting it may affect those properties. This action cannot be undone!') }}';
     }
-    
+
     Swal.fire({
-        title: '{{ __('Delete Floor Type') }}',
+        title: '{{ __('Delete Direction') }}',
         text: warningText,
         icon: 'warning',
         showCancelButton: true,
@@ -689,21 +702,21 @@ $(document).on('keydown', function(e) {
     // Ctrl+S to save
     if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
-        $('#floor-type-form').submit();
+        $('#direction-form').submit();
     }
-    
+
     // Ctrl+R to reset
     if (e.ctrlKey && e.key === 'r') {
         e.preventDefault();
         resetForm();
     }
-    
+
     // Ctrl+D to delete
     if (e.ctrlKey && e.key === 'd') {
         e.preventDefault();
         confirmDelete();
     }
-    
+
     // Escape to cancel
     if (e.key === 'Escape') {
         if (hasChanges) {
@@ -718,13 +731,13 @@ $(document).on('keydown', function(e) {
                 cancelButtonText: '{{ __('Stay') }}'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $('#floor-type-form').submit();
+                    $('#direction-form').submit();
                 } else if (result.isDenied) {
-                    window.location.href = '{{ route('admin.floor-types.index') }}';
+                    window.location.href = '{{ route('admin.directions.index') }}';
                 }
             });
         } else {
-            window.location.href = '{{ route('admin.floor-types.index') }}';
+            window.location.href = '{{ route('admin.directions.index') }}';
         }
     }
 });

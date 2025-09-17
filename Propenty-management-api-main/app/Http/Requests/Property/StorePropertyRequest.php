@@ -25,7 +25,8 @@ class StorePropertyRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'propertyType' => 'required|string|in:apartment,house,condo,townhouse,studio,loft,villa,commercial,land',
+            'propertyType' => 'required|string|max:255', // Accept any property type slug from frontend
+            'property_type_id' => 'nullable|integer|exists:property_types,id', // Foreign key validation
             'listingType' => 'required|string|in:rent,sale',
             'price' => 'required|numeric|min:0',
             'price_type' => 'nullable|string|in:monthly,yearly,total',
@@ -168,6 +169,12 @@ class StorePropertyRequest extends FormRequest
             $data['contactEmail'] = $this->input('contactEmail') ?? $this->input('contact_email');
         }
         
+        // Handle property type ID (support both formats)
+        if ($this->has('propertyTypeId') || $this->has('property_type_id')) {
+            $data['propertyTypeId'] = $this->input('propertyTypeId') ?? $this->input('property_type_id');
+            $data['property_type_id'] = $data['propertyTypeId'];
+        }
+
         // Handle document type ID (support both formats)
         if ($this->has('documentTypeId') || $this->has('document_type_id')) {
             $data['documentTypeId'] = $this->input('documentTypeId') ?? $this->input('document_type_id');
@@ -314,9 +321,9 @@ class StorePropertyRequest extends FormRequest
             $data['is_available'] = true; // Default value
         }
         
-        // Set default status if not provided
+        // Set default status if not provided - all new properties require admin approval
         if (!isset($data['status'])) {
-            $data['status'] = 'active';
+            $data['status'] = 'pending';
         }
         
         // Log the prepared data

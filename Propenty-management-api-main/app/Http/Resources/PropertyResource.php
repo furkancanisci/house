@@ -151,11 +151,27 @@ class PropertyResource extends JsonResource
                 if ($mainImage) {
                     return $mainImage->getUrl();
                 }
-                
+
                 $firstImage = $this->getFirstMedia('images');
                 return $firstImage ? $firstImage->getUrl() : '/images/placeholder-property.svg';
             }),
-            
+
+            // Phase 1 Enhancement Fields
+            'floor_number' => $this->floor_number,
+            'total_floors' => $this->total_floors,
+            'balcony_count' => $this->balcony_count,
+            'orientation' => $this->orientation,
+            'view_type' => $this->view_type,
+
+            // Phase 2 Advanced Enhancement Fields
+            'building_age' => $this->building_age,
+            'building_type' => $this->building_type,
+            'floor_type' => $this->floor_type,
+            'window_type' => $this->window_type,
+            'maintenance_fee' => $this->maintenance_fee,
+            'deposit_amount' => $this->deposit_amount,
+            'annual_tax' => $this->annual_tax,
+
             // Statistics - simplified
             'stats' => [
                 'views_count' => $this->views_count ?? 0,

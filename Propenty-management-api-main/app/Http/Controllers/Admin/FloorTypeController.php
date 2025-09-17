@@ -123,4 +123,52 @@ class FloorTypeController extends Controller
         return redirect()->route('admin.floor-types.index')
             ->with('success', "Floor type {$status} successfully.");
     }
+
+    /**
+     * Handle bulk actions on floor types.
+     */
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $this->authorize('edit floor types');
+
+        $request->validate([
+            'action' => 'required|in:activate,deactivate,delete',
+            'floor_types' => 'required|array',
+            'floor_types.*' => 'exists:floor_types,id'
+        ]);
+
+        $floorTypes = $request->floor_types;
+        $action = $request->action;
+
+        switch ($action) {
+            case 'activate':
+                FloorType::whereIn('id', $floorTypes)->update(['is_active' => true]);
+                $message = 'Selected floor types activated successfully.';
+                break;
+
+            case 'deactivate':
+                FloorType::whereIn('id', $floorTypes)->update(['is_active' => false]);
+                $message = 'Selected floor types deactivated successfully.';
+                break;
+
+            case 'delete':
+                $canDelete = FloorType::whereIn('id', $floorTypes)->doesntHave('properties')->pluck('id');
+                if ($canDelete->count() > 0) {
+                    FloorType::whereIn('id', $canDelete)->delete();
+                    $message = $canDelete->count() . ' floor types deleted successfully.';
+
+                    // Check if some couldn't be deleted
+                    $couldntDelete = count($floorTypes) - $canDelete->count();
+                    if ($couldntDelete > 0) {
+                        $message .= " ({$couldntDelete} floor types couldn't be deleted because they are associated with properties.)";
+                    }
+                } else {
+                    return redirect()->route('admin.floor-types.index')
+                        ->with('error', 'Cannot delete floor types that are associated with properties.');
+                }
+                break;
+        }
+
+        return redirect()->route('admin.floor-types.index')->with('success', $message);
+    }
 }

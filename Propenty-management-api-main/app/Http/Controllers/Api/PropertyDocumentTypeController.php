@@ -47,9 +47,37 @@ class PropertyDocumentTypeController extends Controller
     /**
      * Display the specified property document type.
      */
-    public function show(Request $request, PropertyDocumentType $propertyDocumentType): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
         try {
+            // Log the incoming request for debugging
+            \Log::info('PropertyDocumentType show method called', [
+                'id' => $id,
+                'lang' => $request->get('lang'),
+                'all_params' => $request->all()
+            ]);
+
+            // Validate the ID parameter
+            if (!is_numeric($id) || $id <= 0) {
+                \Log::warning('Invalid ID provided to PropertyDocumentType show', ['id' => $id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid property document type ID provided',
+                    'error' => 'ID must be a positive integer'
+                ], 400);
+            }
+
+            // Find the property document type
+            $propertyDocumentType = PropertyDocumentType::find($id);
+
+            if (!$propertyDocumentType) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Property document type not found',
+                    'error' => 'No property document type found with the provided ID'
+                ], 404);
+            }
+
             $language = $request->get('lang', 'ar');
 
             $data = [

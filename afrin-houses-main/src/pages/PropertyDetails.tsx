@@ -140,6 +140,20 @@ const PropertyDetails: React.FC = () => {
           bathrooms: propertyData.bathrooms ? parseFloat(propertyData.bathrooms) : 0,
           squareFootage: propertyData.square_feet || propertyData.squareFootage || Number(propertyData.details?.square_feet) || 0,
           year_built: propertyData.year_built || propertyData.yearBuilt,
+          // Phase 1 Enhancement Fields
+          floor_number: propertyData.floor_number,
+          total_floors: propertyData.total_floors,
+          balcony_count: propertyData.balcony_count,
+          orientation: propertyData.orientation,
+          view_type: propertyData.view_type,
+          // Phase 2 Advanced Enhancement Fields
+          building_age: propertyData.building_age,
+          building_type: propertyData.building_type,
+          floor_type: propertyData.floor_type,
+          window_type: propertyData.window_type,
+          maintenance_fee: propertyData.maintenance_fee,
+          deposit_amount: propertyData.deposit_amount,
+          annual_tax: propertyData.annual_tax,
           features: (() => {
             // Handle features that come as objects with id, name_ar, name_en, etc.
             if (Array.isArray(propertyData.features)) {
@@ -734,6 +748,36 @@ const PropertyDetails: React.FC = () => {
                       <span className="text-gray-600">{t('property.details.yearBuilt')}</span>
                       <span>{property.yearBuilt}</span>
                     </div>
+                    {property.floor_number && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.floorNumber')}</span>
+                        <span>{property.floor_number}</span>
+                      </div>
+                    )}
+                    {property.total_floors && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.totalFloors')}</span>
+                        <span>{property.total_floors}</span>
+                      </div>
+                    )}
+                    {property.balcony_count && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.balconyCount')}</span>
+                        <span>{property.balcony_count}</span>
+                      </div>
+                    )}
+                    {property.orientation && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.orientation')}</span>
+                        <span className="capitalize">{property.orientation}</span>
+                      </div>
+                    )}
+                    {property.view_type && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.viewType')}</span>
+                        <span className="capitalize">{property.view_type}</span>
+                      </div>
+                    )}
                     {property.lotSize && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.lotSize')}</span>
@@ -748,6 +792,48 @@ const PropertyDetails: React.FC = () => {
                     )}
                   </div>
                   <div className="space-y-3">
+                    {property.building_age && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.buildingAge')}</span>
+                        <span>{property.building_age} {t('property.details.years')}</span>
+                      </div>
+                    )}
+                    {property.building_type && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.buildingType')}</span>
+                        <span className="capitalize">{property.building_type}</span>
+                      </div>
+                    )}
+                    {property.floor_type && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.floorType')}</span>
+                        <span className="capitalize">{property.floor_type}</span>
+                      </div>
+                    )}
+                    {property.window_type && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.windowType')}</span>
+                        <span className="capitalize">{property.window_type}</span>
+                      </div>
+                    )}
+                    {property.maintenance_fee && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.maintenanceFee')}</span>
+                        <span>${property.maintenance_fee.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {property.deposit_amount && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.depositAmount')}</span>
+                        <span>${property.deposit_amount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {property.annual_tax && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{t('property.details.annualTax')}</span>
+                        <span>${property.annual_tax.toLocaleString()}</span>
+                      </div>
+                    )}
                     {property.availableDate && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.availableDate')}</span>
