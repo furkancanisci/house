@@ -37,6 +37,7 @@ class PropertyController extends Controller
     {
         $fieldMapping = [
             'propertyType' => 'property_type',
+            'propertyTypeId' => 'property_type_id',
             'listingType' => 'listing_type',
             'address' => 'street_address',
             'squareFootage' => 'square_feet',
@@ -60,6 +61,13 @@ class PropertyController extends Controller
             'balconyCount' => 'balcony_count',
             'viewType' => 'view_type',
             // Advanced property details
+            'buildingAge' => 'building_age',
+            'buildingType' => 'building_type',
+            'floorType' => 'floor_type',
+            'windowType' => 'window_type',
+            'maintenanceFee' => 'maintenance_fee',
+            'depositAmount' => 'deposit_amount',
+            'annualTax' => 'annual_tax',
             'buildingTypeId' => 'building_type_id',
             'windowTypeId' => 'window_type_id',
             'floorTypeId' => 'floor_type_id',
@@ -428,6 +436,15 @@ class PropertyController extends Controller
             
             // Set default status to pending for admin approval
             $mappedData['status'] = $mappedData['status'] ?? 'pending';
+
+            // Force status to pending for all new properties - admin approval required
+            $mappedData['status'] = 'pending';
+
+            \Illuminate\Support\Facades\Log::info('Property status set to pending for approval', [
+                'user_id' => $user->id,
+                'property_title' => $mappedData['title'] ?? 'Unknown',
+                'status' => $mappedData['status']
+            ]);
             
             // Ensure required fields have proper defaults and validation
             $mappedData['published_at'] = $mappedData['published_at'] ?? now();
@@ -678,8 +695,10 @@ class PropertyController extends Controller
             
             // Return the response
             return response()->json([
-                'message' => 'Property created successfully',
-                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'documentType', 'features', 'utilities']))
+                'message' => 'Property created successfully and is pending admin approval',
+                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'documentType', 'features', 'utilities'])),
+                'status' => 'pending',
+                'note' => 'Your property has been submitted for review and will be published after admin approval.'
             ], 201);
             
         } catch (\Exception $e) {

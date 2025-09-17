@@ -72,7 +72,27 @@
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <div class="row">
+                            <!-- Value Field -->
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="value" class="required">{{ __('Value/Code') }}</label>
+                                    <input type="text"
+                                           class="form-control @error('value') is-invalid @enderror"
+                                           id="value"
+                                           name="value"
+                                           value="{{ old('value') }}"
+                                           placeholder="{{ __('Enter unique value/code (e.g., sliding, double_hung, casement)') }}"
+                                           required>
+                                    @error('value')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <small class="form-text text-muted">{{ __('Unique identifier for this window type (used internally, no spaces or special characters)') }}</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <!-- English Description -->
                             <div class="col-md-6">
@@ -260,19 +280,27 @@ $(document).ready(function() {
         // Check required fields
         const nameEn = $('#name_en').val().trim();
         const nameAr = $('#name_ar').val().trim();
-        
+        const value = $('#value').val().trim();
+
         if (!nameEn) {
             $('#name_en').addClass('is-invalid');
             isValid = false;
         } else {
             $('#name_en').removeClass('is-invalid');
         }
-        
+
         if (!nameAr) {
             $('#name_ar').addClass('is-invalid');
             isValid = false;
         } else {
             $('#name_ar').removeClass('is-invalid');
+        }
+
+        if (!value) {
+            $('#value').addClass('is-invalid');
+            isValid = false;
+        } else {
+            $('#value').removeClass('is-invalid');
         }
         
         if (!isValid) {
@@ -331,6 +359,7 @@ function autoSaveDraft() {
         const formData = {
             name_en: $('#name_en').val(),
             name_ar: $('#name_ar').val(),
+            value: $('#value').val(),
             description_en: $('#description_en').val(),
             description_ar: $('#description_ar').val(),
             sort_order: $('#sort_order').val(),
@@ -362,6 +391,7 @@ $(document).ready(function() {
             if (result.isConfirmed) {
                 $('#name_en').val(data.name_en).trigger('input');
                 $('#name_ar').val(data.name_ar).trigger('input');
+                $('#value').val(data.value);
                 $('#description_en').val(data.description_en).trigger('input');
                 $('#description_ar').val(data.description_ar).trigger('input');
                 $('#sort_order').val(data.sort_order);

@@ -11,6 +11,14 @@ use App\Models\PropertyType;
 use App\Models\PriceType;
 use App\Models\User;
 use App\Models\Amenity;
+use App\Models\ViewType;
+use App\Models\Direction;
+use App\Models\PropertyDocumentType;
+use App\Models\BuildingType;
+use App\Models\FloorType;
+use App\Models\WindowType;
+use App\Models\Feature;
+use App\Models\Utility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -47,8 +55,8 @@ class PropertyController extends Controller
                 AllowedFilter::scope('bedrooms'),
                 AllowedFilter::scope('created_between', 'dateRange'),
             ])
-            ->allowedSorts(['title', 'price', 'created_at', 'updated_at', 'status'])
-            ->defaultSort('-created_at')
+            ->allowedSorts(['title', 'price', 'id', 'status'])
+            ->defaultSort('-id') // Sort by ID descending (newest first)
             ->paginate(20)
             ->appends($request->query());
 
@@ -63,6 +71,7 @@ class PropertyController extends Controller
             'active' => Property::where('status', 'active')->count(),
             'pending' => Property::where('status', 'pending')->count(),
             'featured' => Property::where('is_featured', true)->count(),
+            'new' => Property::where('created_at', '>=', now()->subHours(2))->count(),
         ];
 
         return view('admin.properties.index', compact(
@@ -81,44 +90,13 @@ class PropertyController extends Controller
     {
         $this->authorize('create properties');
 
+        $governorates = Governorate::orderBy('name_ar')->get();
         $cities = City::active()->orderBy('name_en')->get();
         $propertyTypes = PropertyType::orderBy('name')->get();
         $users = User::select('id', 'first_name', 'last_name', 'email')->get()
             ->mapWithKeys(fn($user) => [$user->id => $user->full_name . ' (' . $user->email . ')']);
-        
-        // Get unique states from cities
-        $states = City::active()
-            ->select('state_en', 'state_ar')
-            ->whereNotNull('state_en')
-            ->where('state_en', '!=', '')
-            ->distinct()
-            ->orderBy('state_en')
-            ->get()
-            ->mapWithKeys(function($city) {
-                return [$city->state_en => [
-                    'en' => $city->state_en,
-                    'ar' => $city->state_ar ?: $city->state_en
-                ]];
-            });
-        
-        // If no states found in database, provide Syria's states as fallback
-        if ($states->isEmpty()) {
-            $states = collect([
-                'Damascus' => ['en' => 'Damascus', 'ar' => 'دمشق'],
-                'Aleppo' => ['en' => 'Aleppo', 'ar' => 'حلب'],
-                'Homs' => ['en' => 'Homs', 'ar' => 'حمص'],
-                'Hama' => ['en' => 'Hama', 'ar' => 'حماة'],
-                'Latakia' => ['en' => 'Latakia', 'ar' => 'اللاذقية'],
-                'Tartus' => ['en' => 'Tartus', 'ar' => 'طرطوس'],
-                'Daraa' => ['en' => 'Daraa', 'ar' => 'درعا'],
-                'Deir ez-Zor' => ['en' => 'Deir ez-Zor', 'ar' => 'دير الزور'],
-                'Al-Hasakah' => ['en' => 'Al-Hasakah', 'ar' => 'الحسكة'],
-                'Ar-Raqqah' => ['en' => 'Ar-Raqqah', 'ar' => 'الرقة'],
-                'As-Suwayda' => ['en' => 'As-Suwayda', 'ar' => 'السويداء'],
-                'Quneitra' => ['en' => 'Quneitra', 'ar' => 'القنيطرة'],
-                'Idlib' => ['en' => 'Idlib', 'ar' => 'إدلب']
-            ]);
-        }
+
+        // States data removed - using governorates relationship instead
         
         // Get all neighborhoods (will be filtered by city via AJAX)
         $neighborhoods = collect();
@@ -126,13 +104,33 @@ class PropertyController extends Controller
         // Get price types from database
         $priceTypes = PriceType::active()->get();
 
+        // Get view types and directions
+        $viewTypes = ViewType::active()->ordered()->get();
+        $directions = Direction::active()->ordered()->get();
+
+        // Get additional required data
+        $documentTypes = PropertyDocumentType::active()->ordered()->get();
+        $buildingTypes = BuildingType::active()->ordered()->get();
+        $floorTypes = FloorType::active()->ordered()->get();
+        $windowTypes = WindowType::active()->ordered()->get();
+        $features = Feature::active()->orderBy('sort_order')->orderBy('name_ar')->get();
+        $utilities = Utility::active()->orderBy('sort_order')->orderBy('name_ar')->get();
+
         return view('admin.properties.create', compact(
+            'governorates',
             'cities',
-            'states',
             'neighborhoods',
             'propertyTypes',
             'priceTypes',
-            'users'
+            'users',
+            'viewTypes',
+            'directions',
+            'documentTypes',
+            'buildingTypes',
+            'floorTypes',
+            'windowTypes',
+            'features',
+            'utilities'
         ));
     }
 
@@ -149,10 +147,12 @@ class PropertyController extends Controller
             'property_type' => 'required|string',
             'listing_type' => 'required|in:rent,sale',
             'price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:monthly,yearly,total,fixed,negotiable,final_price,popular_saying,price_from_last',
+            'price_type' => 'required|in:negotiable,final_price,popular_saying,price_from_last,monthly,yearly,total,fixed',
             'street_address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
+            'governorate_id' => 'required|integer|exists:governorates,id',
+            'city_id' => 'required|integer|exists:cities,id',
+            'neighborhood_id' => 'nullable|integer|exists:neighborhoods,id',
             'neighborhood' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
@@ -174,6 +174,43 @@ class PropertyController extends Controller
             'user_id' => 'required|exists:users,id',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
+
+            // Advanced fields with camelCase from frontend
+            'floorNumber' => 'nullable|integer|min:0|max:200',
+            'totalFloors' => 'nullable|integer|min:1|max:200',
+            'balconyCount' => 'nullable|integer|min:0|max:20',
+            'orientation' => 'nullable|string|max:50',
+            'viewType' => 'nullable|string|max:50',
+            'buildingAge' => 'nullable|integer|min:0|max:200',
+            'buildingType' => 'nullable|string|max:50',
+            'floorType' => 'nullable|string|max:50',
+            'windowType' => 'nullable|string|max:50',
+            'maintenanceFee' => 'nullable|numeric|min:0|max:99999',
+            'depositAmount' => 'nullable|numeric|min:0|max:9999999',
+            'annualTax' => 'nullable|numeric|min:0|max:999999',
+            'buildingTypeId' => 'nullable|integer|exists:building_types,id',
+            'windowTypeId' => 'nullable|integer|exists:window_types,id',
+            'floorTypeId' => 'nullable|integer|exists:floor_types,id',
+
+            // Admin form fields (snake_case)
+            'document_type_id' => 'required|integer|exists:property_document_types,id',
+            'pet_policy' => 'nullable|string|max:255',
+            'building_age' => 'nullable|integer|min:0|max:200',
+            'building_type_id' => 'nullable|integer|exists:building_types,id',
+            'floor_type_id' => 'nullable|integer|exists:floor_types,id',
+            'window_type_id' => 'nullable|integer|exists:window_types,id',
+            'maintenance_fee' => 'nullable|numeric|min:0|max:99999',
+            'hoa_fees' => 'nullable|string|max:100',
+            'deposit_amount' => 'nullable|numeric|min:0|max:9999999',
+            'annual_tax' => 'nullable|numeric|min:0|max:999999',
+            'floor_number' => 'nullable|integer|min:0|max:200',
+            'total_floors' => 'nullable|integer|min:1|max:200',
+            'balcony_count' => 'nullable|integer|min:0|max:20',
+            'view_type' => 'nullable|string|max:50',
+            'features' => 'nullable|array',
+            'features.*' => 'integer|exists:features,id',
+            'utilities' => 'nullable|array',
+            'utilities.*' => 'integer|exists:utilities,id'
         ]);
 
         // Set price_type based on listing_type
@@ -191,9 +228,66 @@ class PropertyController extends Controller
             }
         }
 
+        // Convert camelCase field names to snake_case for database
+        $fieldMappings = [
+            'floorNumber' => 'floor_number',
+            'totalFloors' => 'total_floors',
+            'balconyCount' => 'balcony_count',
+            'viewType' => 'view_type',
+            'buildingAge' => 'building_age',
+            'buildingType' => 'building_type',
+            'floorType' => 'floor_type',
+            'windowType' => 'window_type',
+            'maintenanceFee' => 'maintenance_fee',
+            'depositAmount' => 'deposit_amount',
+            'annualTax' => 'annual_tax',
+            'buildingTypeId' => 'building_type_id',
+            'windowTypeId' => 'window_type_id',
+            'floorTypeId' => 'floor_type_id'
+        ];
+
+        // Transform camelCase to snake_case
+        foreach ($fieldMappings as $camelCase => $snakeCase) {
+            if (isset($validated[$camelCase])) {
+                $validated[$snakeCase] = $validated[$camelCase];
+                unset($validated[$camelCase]);
+            }
+        }
+
+        // Set types to null if they don't match constraints (to avoid constraint violations)
+        // The real values should come from the type IDs
+        if (isset($validated['building_type'])) {
+            $allowedBuildingTypes = ['new', 'resale', 'under_construction', 'project'];
+            if (!in_array($validated['building_type'], $allowedBuildingTypes)) {
+                $validated['building_type'] = null;
+            }
+        }
+
+        if (isset($validated['floor_type'])) {
+            $allowedFloorTypes = ['laminate', 'hardwood', 'tile', 'marble', 'carpet', 'vinyl', 'concrete', 'parquet'];
+            if (!in_array($validated['floor_type'], $allowedFloorTypes)) {
+                $validated['floor_type'] = null;
+            }
+        }
+
+        if (isset($validated['window_type'])) {
+            $allowedWindowTypes = ['aluminum', 'pvc', 'wood', 'steel'];
+            if (!in_array($validated['window_type'], $allowedWindowTypes)) {
+                $validated['window_type'] = null;
+            }
+        }
+
         DB::beginTransaction();
         try {
             $property = Property::create($validated);
+
+            // Sync features and utilities
+            if ($request->has('features')) {
+                $property->features()->sync($request->features);
+            }
+            if ($request->has('utilities')) {
+                $property->utilities()->sync($request->utilities);
+            }
 
             // Handle image uploads
             if ($request->hasFile('images')) {
@@ -244,33 +338,18 @@ class PropertyController extends Controller
         $this->authorize('edit properties');
 
         // Load governorates, cities, and property types
-        $governorates = \App\Models\Governorate::orderBy('name_ar')->get();
+        $governorates = Governorate::orderBy('name_ar')->get();
         $cities = City::orderBy('name_en')->get();
         $propertyTypes = PropertyType::orderBy('name')->get();
         $users = User::select('id', 'first_name', 'last_name', 'email')->get()
             ->mapWithKeys(fn($user) => [$user->id => $user->full_name . ' (' . $user->email . ')']);
 
-        // Add states data for dropdowns (same as in create method)
-        $states = collect([
-            'Damascus' => ['en' => 'Damascus', 'ar' => 'دمشق'],
-            'Aleppo' => ['en' => 'Aleppo', 'ar' => 'حلب'],
-            'Homs' => ['en' => 'Homs', 'ar' => 'حمص'],
-            'Hama' => ['en' => 'Hama', 'ar' => 'حماة'],
-            'Latakia' => ['en' => 'Latakia', 'ar' => 'اللاذقية'],
-            'Tartus' => ['en' => 'Tartus', 'ar' => 'طرطوس'],
-            'Daraa' => ['en' => 'Daraa', 'ar' => 'درعا'],
-            'Deir ez-Zor' => ['en' => 'Deir ez-Zor', 'ar' => 'دير الزور'],
-            'Al-Hasakah' => ['en' => 'Al-Hasakah', 'ar' => 'الحسكة'],
-            'Ar-Raqqah' => ['en' => 'Ar-Raqqah', 'ar' => 'الرقة'],
-            'As-Suwayda' => ['en' => 'As-Suwayda', 'ar' => 'السويداء'],
-            'Quneitra' => ['en' => 'Quneitra', 'ar' => 'القنيطرة'],
-            'Idlib' => ['en' => 'Idlib', 'ar' => 'إدلب']
-        ]);
+        // States data removed - using governorates relationship instead
         
         // Get neighborhoods for the current city
         $neighborhoods = collect();
         if ($property->city_id) {
-            $neighborhoods = \App\Models\Neighborhood::where('city_id', $property->city_id)
+            $neighborhoods = Neighborhood::where('city_id', $property->city_id)
                                                     ->orderBy('name_ar')
                                                     ->get();
         } elseif ($property->city) {
@@ -284,20 +363,39 @@ class PropertyController extends Controller
         }
 
         // Load relationships including the new ones
-        $property->load(['user', 'media', 'city', 'governorate', 'neighborhood', 'propertyType']);
+        $property->load(['user', 'media', 'city', 'governorate', 'neighborhood', 'propertyType', 'features', 'utilities']);
         
         // Get price types from database
         $priceTypes = PriceType::active()->get();
+
+        // Get view types and directions
+        $viewTypes = ViewType::active()->ordered()->get();
+        $directions = Direction::active()->ordered()->get();
+
+        // Get additional required data
+        $documentTypes = PropertyDocumentType::active()->ordered()->get();
+        $buildingTypes = BuildingType::active()->ordered()->get();
+        $floorTypes = FloorType::active()->ordered()->get();
+        $windowTypes = WindowType::active()->ordered()->get();
+        $features = Feature::active()->orderBy('sort_order')->orderBy('name_ar')->get();
+        $utilities = Utility::active()->orderBy('sort_order')->orderBy('name_ar')->get();
 
         return view('admin.properties.edit', compact(
             'property',
             'governorates',
             'cities',
-            'states',
             'neighborhoods',
             'propertyTypes',
             'priceTypes',
-            'users'
+            'users',
+            'viewTypes',
+            'directions',
+            'documentTypes',
+            'buildingTypes',
+            'floorTypes',
+            'windowTypes',
+            'features',
+            'utilities'
         ));
     }
 
@@ -317,7 +415,9 @@ class PropertyController extends Controller
             'price_type' => 'required|in:monthly,yearly,total,fixed,negotiable,final_price,popular_saying,price_from_last',
             'street_address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
+            'governorate_id' => 'required|integer|exists:governorates,id',
+            'city_id' => 'required|integer|exists:cities,id',
+            'neighborhood_id' => 'nullable|integer|exists:neighborhoods,id',
             'neighborhood' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
@@ -341,6 +441,43 @@ class PropertyController extends Controller
             'new_images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'remove_images' => 'nullable|array',
             'remove_images.*' => 'integer',
+
+            // Advanced fields with camelCase from frontend
+            'floorNumber' => 'nullable|integer|min:0|max:200',
+            'totalFloors' => 'nullable|integer|min:1|max:200',
+            'balconyCount' => 'nullable|integer|min:0|max:20',
+            'orientation' => 'nullable|string|max:50',
+            'viewType' => 'nullable|string|max:50',
+            'buildingAge' => 'nullable|integer|min:0|max:200',
+            'buildingType' => 'nullable|string|max:50',
+            'floorType' => 'nullable|string|max:50',
+            'windowType' => 'nullable|string|max:50',
+            'maintenanceFee' => 'nullable|numeric|min:0|max:99999',
+            'depositAmount' => 'nullable|numeric|min:0|max:9999999',
+            'annualTax' => 'nullable|numeric|min:0|max:999999',
+            'buildingTypeId' => 'nullable|integer|exists:building_types,id',
+            'windowTypeId' => 'nullable|integer|exists:window_types,id',
+            'floorTypeId' => 'nullable|integer|exists:floor_types,id',
+
+            // Admin form fields (snake_case)
+            'document_type_id' => 'required|integer|exists:property_document_types,id',
+            'pet_policy' => 'nullable|string|max:255',
+            'building_age' => 'nullable|integer|min:0|max:200',
+            'building_type_id' => 'nullable|integer|exists:building_types,id',
+            'floor_type_id' => 'nullable|integer|exists:floor_types,id',
+            'window_type_id' => 'nullable|integer|exists:window_types,id',
+            'maintenance_fee' => 'nullable|numeric|min:0|max:99999',
+            'hoa_fees' => 'nullable|string|max:100',
+            'deposit_amount' => 'nullable|numeric|min:0|max:9999999',
+            'annual_tax' => 'nullable|numeric|min:0|max:999999',
+            'floor_number' => 'nullable|integer|min:0|max:200',
+            'total_floors' => 'nullable|integer|min:1|max:200',
+            'balcony_count' => 'nullable|integer|min:0|max:20',
+            'view_type' => 'nullable|string|max:50',
+            'features' => 'nullable|array',
+            'features.*' => 'integer|exists:features,id',
+            'utilities' => 'nullable|array',
+            'utilities.*' => 'integer|exists:utilities,id'
         ]);
 
         // Set price_type based on listing_type
@@ -358,9 +495,70 @@ class PropertyController extends Controller
             }
         }
 
+        // Convert camelCase field names to snake_case for database
+        $fieldMappings = [
+            'floorNumber' => 'floor_number',
+            'totalFloors' => 'total_floors',
+            'balconyCount' => 'balcony_count',
+            'viewType' => 'view_type',
+            'buildingAge' => 'building_age',
+            'buildingType' => 'building_type',
+            'floorType' => 'floor_type',
+            'windowType' => 'window_type',
+            'maintenanceFee' => 'maintenance_fee',
+            'depositAmount' => 'deposit_amount',
+            'annualTax' => 'annual_tax',
+            'buildingTypeId' => 'building_type_id',
+            'windowTypeId' => 'window_type_id',
+            'floorTypeId' => 'floor_type_id'
+        ];
+
+        // Transform camelCase to snake_case
+        foreach ($fieldMappings as $camelCase => $snakeCase) {
+            if (isset($validated[$camelCase])) {
+                $validated[$snakeCase] = $validated[$camelCase];
+                unset($validated[$camelCase]);
+            }
+        }
+
+        // Set types to null if they don't match constraints (to avoid constraint violations)
+        // The real values should come from the type IDs
+        if (isset($validated['building_type'])) {
+            $allowedBuildingTypes = ['new', 'resale', 'under_construction', 'project'];
+            if (!in_array($validated['building_type'], $allowedBuildingTypes)) {
+                $validated['building_type'] = null;
+            }
+        }
+
+        if (isset($validated['floor_type'])) {
+            $allowedFloorTypes = ['laminate', 'hardwood', 'tile', 'marble', 'carpet', 'vinyl', 'concrete', 'parquet'];
+            if (!in_array($validated['floor_type'], $allowedFloorTypes)) {
+                $validated['floor_type'] = null;
+            }
+        }
+
+        if (isset($validated['window_type'])) {
+            $allowedWindowTypes = ['aluminum', 'pvc', 'wood', 'steel'];
+            if (!in_array($validated['window_type'], $allowedWindowTypes)) {
+                $validated['window_type'] = null;
+            }
+        }
+
         DB::beginTransaction();
         try {
             $property->update($validated);
+
+            // Sync features and utilities
+            if ($request->has('features')) {
+                $property->features()->sync($request->features);
+            } else {
+                $property->features()->detach();
+            }
+            if ($request->has('utilities')) {
+                $property->utilities()->sync($request->utilities);
+            } else {
+                $property->utilities()->detach();
+            }
 
             // Remove selected images
             if ($request->has('remove_images')) {

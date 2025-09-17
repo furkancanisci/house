@@ -60,6 +60,8 @@ import { propertyTypeService, PropertyType } from '../services/propertyTypeServi
 import { buildingTypeService, BuildingType } from '../services/buildingTypeService';
 import { windowTypeService, WindowType } from '../services/windowTypeService';
 import { floorTypeService, FloorType } from '../services/floorTypeService';
+import { viewTypeService, ViewType } from '../services/viewTypeService';
+import { directionService, Direction } from '../services/directionService';
 import { compressImages, formatFileSize } from '../lib/imageUtils';
 import api from '../services/api';
 
@@ -145,16 +147,16 @@ const createPropertySchema = (t: any) => z.object({
   floorNumber: z.number().min(0, t('validation.floorNumberMin')).max(200, t('validation.floorNumberMax')).optional(),
   totalFloors: z.number().min(1, t('validation.totalFloorsMin')).max(200, t('validation.totalFloorsMax')).optional(),
   balconyCount: z.number().min(0, t('validation.balconyCountMin')).max(20, t('validation.balconyCountMax')).optional(),
-  orientation: z.enum(['north', 'south', 'east', 'west', 'northeast', 'northwest', 'southeast', 'southwest']).optional(),
-  viewType: z.enum(['city', 'sea', 'mountain', 'garden', 'street', 'courtyard', 'pool', 'park']).optional(),
+  orientation: z.string().optional(),
+  viewType: z.string().optional(),
   
   // Phase 2 Advanced Enhancement Fields
   buildingAge: z.number().min(0, t('validation.buildingAgeMin')).max(200, t('validation.buildingAgeMax')).optional(),
-  buildingType: z.enum(['new_construction', 'resale', 'under_construction', 'renovated', 'historic']).optional(),
+  buildingType: z.string().optional(),
   buildingTypeId: z.number().optional(),
-  floorType: z.enum(['marble', 'ceramic', 'hardwood', 'laminate', 'carpet', 'tile', 'concrete', 'vinyl']).optional(),
+  floorType: z.string().optional(),
   floorTypeId: z.number().optional(),
-  windowType: z.enum(['single_pane', 'double_pane', 'triple_pane', 'energy_efficient', 'soundproof']).optional(),
+  windowType: z.string().optional(),
   windowTypeId: z.number().optional(),
   maintenanceFee: z.number().min(0, t('validation.maintenanceFeeMin')).max(99999, t('validation.maintenanceFeeMax')).optional(),
   depositAmount: z.number().min(0, t('validation.depositAmountMin')).max(9999999, t('validation.depositAmountMax')).optional(),
@@ -232,6 +234,14 @@ const AddProperty: React.FC = () => {
   // Floor types state
   const [floorTypes, setFloorTypes] = useState<FloorType[]>([]);
   const [loadingFloorTypes, setLoadingFloorTypes] = useState(false);
+
+  // View types state
+  const [viewTypes, setViewTypes] = useState<ViewType[]>([]);
+  const [loadingViewTypes, setLoadingViewTypes] = useState(false);
+
+  // Directions state
+  const [directions, setDirections] = useState<Direction[]>([]);
+  const [loadingDirections, setLoadingDirections] = useState(false);
 
   // Location state
   const [selectedCity, setSelectedCity] = useState<string>(() => {
@@ -492,6 +502,42 @@ const AddProperty: React.FC = () => {
     };
 
     loadFloorTypes();
+  }, [i18n.language]);
+
+  // Load view types
+  React.useEffect(() => {
+    const loadViewTypes = async () => {
+      setLoadingViewTypes(true);
+      try {
+        const types = await viewTypeService.getViewTypeOptions();
+        setViewTypes(types);
+      } catch (error) {
+        console.error('Failed to load view types:', error);
+        setViewTypes([]);
+      } finally {
+        setLoadingViewTypes(false);
+      }
+    };
+
+    loadViewTypes();
+  }, [i18n.language]);
+
+  // Load directions
+  React.useEffect(() => {
+    const loadDirections = async () => {
+      setLoadingDirections(true);
+      try {
+        const directions = await directionService.getDirectionOptions();
+        setDirections(directions);
+      } catch (error) {
+        console.error('Failed to load directions:', error);
+        setDirections([]);
+      } finally {
+        setLoadingDirections(false);
+      }
+    };
+
+    loadDirections();
   }, [i18n.language]);
 
   // Load features and utilities only when reaching step 2 (Property Details) or language changes
@@ -1122,7 +1168,6 @@ const AddProperty: React.FC = () => {
         maintenanceFee: data.maintenanceFee ? Number(data.maintenanceFee) : undefined,
         depositAmount: data.depositAmount ? Number(data.depositAmount) : undefined,
         annualTax: data.annualTax ? Number(data.annualTax) : undefined,
-        notes: data.notes || undefined,
       };
 
       // Create FormData for file uploads
@@ -1641,7 +1686,7 @@ const AddProperty: React.FC = () => {
                   {errors.lotSize && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
-                      {errors.lotSize.message}
+                      {String(errors.lotSize?.message || 'Invalid lot size')}
                     </p>
                   )}
                 </div>
@@ -1807,30 +1852,25 @@ const AddProperty: React.FC = () => {
                           </div>
                         </SelectTrigger>
                         <SelectContent className="bg-white border-2 border-gray-100 rounded-lg shadow-lg">
-                          <SelectItem value="north" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.orientation.north')}
-                          </SelectItem>
-                          <SelectItem value="south" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.orientation.south')}
-                          </SelectItem>
-                          <SelectItem value="east" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.orientation.east')}
-                          </SelectItem>
-                          <SelectItem value="west" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.orientation.west')}
-                          </SelectItem>
-                          <SelectItem value="northeast" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.orientation.northeast')}
-                          </SelectItem>
-                          <SelectItem value="northwest" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.orientation.northwest')}
-                          </SelectItem>
-                          <SelectItem value="southeast" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.orientation.southeast')}
-                          </SelectItem>
-                          <SelectItem value="southwest" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.orientation.southwest')}
-                          </SelectItem>
+                          {loadingDirections ? (
+                            <SelectItem value="loading" disabled className="text-sm py-2 px-3">
+                              Loading...
+                            </SelectItem>
+                          ) : directions.length > 0 ? (
+                            directions.map((direction) => (
+                              <SelectItem
+                                key={direction.id}
+                                value={direction.value}
+                                className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer"
+                              >
+                                {directionService.getDisplayName(direction, i18n.language)}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-data" disabled className="text-sm py-2 px-3">
+                              No directions available
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     )}
@@ -1859,24 +1899,25 @@ const AddProperty: React.FC = () => {
                           </div>
                         </SelectTrigger>
                         <SelectContent className="bg-white border-2 border-gray-100 rounded-lg shadow-lg">
-                          <SelectItem value="city" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.viewType.city')}
-                          </SelectItem>
-                          <SelectItem value="sea" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.viewType.sea')}
-                          </SelectItem>
-                          <SelectItem value="mountain" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.viewType.mountain')}
-                          </SelectItem>
-                          <SelectItem value="garden" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.viewType.garden')}
-                          </SelectItem>
-                          <SelectItem value="street" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.viewType.street')}
-                          </SelectItem>
-                          <SelectItem value="courtyard" className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer">
-                            {t('property.viewType.courtyard')}
-                          </SelectItem>
+                          {loadingViewTypes ? (
+                            <SelectItem value="loading" disabled className="text-sm py-2 px-3">
+                              Loading...
+                            </SelectItem>
+                          ) : viewTypes.length > 0 ? (
+                            viewTypes.map((viewType) => (
+                              <SelectItem
+                                key={viewType.id}
+                                value={viewType.value}
+                                className="text-sm py-2 px-3 hover:bg-blue-50 focus:bg-blue-100 transition-colors cursor-pointer"
+                              >
+                                {viewTypeService.getDisplayName(viewType, i18n.language)}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-data" disabled className="text-sm py-2 px-3">
+                              No view types available
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     )}

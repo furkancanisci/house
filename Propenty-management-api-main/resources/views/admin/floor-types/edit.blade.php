@@ -184,7 +184,36 @@
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <!-- Value Field -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card card-outline card-warning">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-code"></i> {{ __('System Information') }}
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="value" class="required">{{ __('Value/Code') }}</label>
+                                            <input type="text"
+                                                   class="form-control @error('value') is-invalid @enderror"
+                                                   id="value"
+                                                   name="value"
+                                                   value="{{ old('value', $floorType->value) }}"
+                                                   placeholder="{{ __('Enter unique value/code (e.g., marble, tile, hardwood)') }}"
+                                                   required>
+                                            @error('value')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <small class="form-text text-muted">{{ __('Unique identifier for this floor type (used internally, no spaces or special characters)') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Settings -->
                         <div class="row mt-3">
                             <div class="col-12">

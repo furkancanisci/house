@@ -123,4 +123,52 @@ class WindowTypeController extends Controller
         return redirect()->route('admin.window-types.index')
             ->with('success', "Window type {$status} successfully.");
     }
+
+    /**
+     * Handle bulk actions on window types.
+     */
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $this->authorize('edit window types');
+
+        $request->validate([
+            'action' => 'required|in:activate,deactivate,delete',
+            'window_types' => 'required|array',
+            'window_types.*' => 'exists:window_types,id'
+        ]);
+
+        $windowTypes = $request->window_types;
+        $action = $request->action;
+
+        switch ($action) {
+            case 'activate':
+                WindowType::whereIn('id', $windowTypes)->update(['is_active' => true]);
+                $message = 'Selected window types activated successfully.';
+                break;
+
+            case 'deactivate':
+                WindowType::whereIn('id', $windowTypes)->update(['is_active' => false]);
+                $message = 'Selected window types deactivated successfully.';
+                break;
+
+            case 'delete':
+                $canDelete = WindowType::whereIn('id', $windowTypes)->doesntHave('properties')->pluck('id');
+                if ($canDelete->count() > 0) {
+                    WindowType::whereIn('id', $canDelete)->delete();
+                    $message = $canDelete->count() . ' window types deleted successfully.';
+
+                    // Check if some couldn't be deleted
+                    $couldntDelete = count($windowTypes) - $canDelete->count();
+                    if ($couldntDelete > 0) {
+                        $message .= " ({$couldntDelete} window types couldn't be deleted because they are associated with properties.)";
+                    }
+                } else {
+                    return redirect()->route('admin.window-types.index')
+                        ->with('error', 'Cannot delete window types that are associated with properties.');
+                }
+                break;
+        }
+
+        return redirect()->route('admin.window-types.index')->with('success', $message);
+    }
 }

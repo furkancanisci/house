@@ -133,4 +133,4 @@ class FloorTypeService {
 }
 
 // Export singleton instance
-export const floorTypeService = new
+export const floorTypeService = new FloorTypeService();

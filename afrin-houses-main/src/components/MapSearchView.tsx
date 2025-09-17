@@ -103,14 +103,16 @@ const MapController: React.FC<{
     if (!map) return;
     
     if (selectedProperty && selectedProperty.latitude && selectedProperty.longitude) {
-      const lat = typeof selectedProperty.latitude === 'string' 
-        ? parseFloat(selectedProperty.latitude) 
+      const lat = typeof selectedProperty.latitude === 'string'
+        ? parseFloat(selectedProperty.latitude)
         : selectedProperty.latitude;
-      const lng = typeof selectedProperty.longitude === 'string' 
-        ? parseFloat(selectedProperty.longitude) 
+      const lng = typeof selectedProperty.longitude === 'string'
+        ? parseFloat(selectedProperty.longitude)
         : selectedProperty.longitude;
-      
-      if (!isNaN(lat) && !isNaN(lng)) {
+
+      // More comprehensive validation
+      if (lat !== null && lng !== null && lat !== undefined && lng !== undefined &&
+          !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
         // Use panTo for smooth animation to center, then setView for proper zoom
         map.panTo([lat, lng], {
           animate: true,
@@ -255,15 +257,16 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
   // Filter properties based on filters only
   const filteredProperties = useMemo(() => {
     let filtered = properties.filter(property => {
-      // Validate coordinates
-      const lat = typeof property.latitude === 'string' 
-        ? parseFloat(property.latitude) 
+      // Validate coordinates with comprehensive null checks
+      const lat = typeof property.latitude === 'string'
+        ? parseFloat(property.latitude)
         : property.latitude;
-      const lng = typeof property.longitude === 'string' 
-        ? parseFloat(property.longitude) 
+      const lng = typeof property.longitude === 'string'
+        ? parseFloat(property.longitude)
         : property.longitude;
-      
-      return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+
+      return lat !== null && lng !== null && lat !== undefined && lng !== undefined &&
+             !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
     });
     
     // Apply other filters
@@ -412,34 +415,39 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
   
   // Render property markers
   const renderMarkers = () => {
-    return filteredProperties.map((property) => {
-      const lat = typeof property.latitude === 'string' 
-        ? parseFloat(property.latitude) 
-        : property.latitude;
-      const lng = typeof property.longitude === 'string' 
-        ? parseFloat(property.longitude) 
-        : property.longitude;
-      
-      if (isNaN(lat) || isNaN(lng)) return null;
-      
-      const icon = createPropertyIcon(property.propertyType, property.listingType);
-      
-      return (
-        <Marker
-          key={property.id}
-          position={[lat, lng]}
-          icon={icon}
-          eventHandlers={{
-            click: () => {
-              console.log('Map marker clicked:', property.title);
-              handlePropertySelect(property);
-            }
-          }}
-          // Add special styling for selected property
-          {...(selectedProperty?.id === property.id && {
-            zIndexOffset: 1000 // Bring selected marker to front
-          })}
-        >
+    return filteredProperties
+      .map((property) => {
+        const lat = typeof property.latitude === 'string'
+          ? parseFloat(property.latitude)
+          : property.latitude;
+        const lng = typeof property.longitude === 'string'
+          ? parseFloat(property.longitude)
+          : property.longitude;
+
+        // More comprehensive validation
+        if (lat === null || lng === null || lat === undefined || lng === undefined ||
+            isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+          return null;
+        }
+
+        const icon = createPropertyIcon(property.propertyType, property.listingType);
+
+        return (
+          <Marker
+            key={property.id}
+            position={[lat, lng]}
+            icon={icon}
+            eventHandlers={{
+              click: () => {
+                console.log('Map marker clicked:', property.title);
+                handlePropertySelect(property);
+              }
+            }}
+            // Add special styling for selected property
+            {...(selectedProperty?.id === property.id && {
+              zIndexOffset: 1000 // Bring selected marker to front
+            })}
+          >
           <Popup className="custom-popup" maxWidth={340}>
             <div className="overflow-hidden rounded-lg">
               <div className="relative">
@@ -502,7 +510,8 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
           </Popup>
         </Marker>
       );
-    });
+    })
+    .filter(Boolean); // Remove null entries
   };
   
   return (
@@ -772,11 +781,32 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
                             
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                               <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                                {property.features && property.features.slice(0, 2).map((feature, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs bg-[#067977]/10 text-[#067977] border-[#067977]/30 px-2 py-1">
-                                    {feature}
-                                  </Badge>
-                                ))}
+                                {property.features && property.features.slice(0, 2).map((feature, index) => {
+                                  const getFeatureName = (feature: any): string => {
+                                    if (feature === null || feature === undefined) {
+                                      return '';
+                                    }
+
+                                    if (typeof feature === 'string') {
+                                      return feature;
+                                    }
+
+                                    if (typeof feature === 'object' && feature !== null) {
+                                      return feature.name_en || feature.name_ar || feature.name_ku || feature.name || '';
+                                    }
+
+                                    return String(feature);
+                                  };
+
+                                  const featureName = getFeatureName(feature);
+                                  if (!featureName) return null;
+
+                                  return (
+                                    <Badge key={index} variant="outline" className="text-xs bg-[#067977]/10 text-[#067977] border-[#067977]/30 px-2 py-1">
+                                      {featureName}
+                                    </Badge>
+                                  );
+                                }).filter(Boolean)}
                                 {property.features && property.features.length > 2 && (
                                   <Badge variant="outline" className="text-xs text-gray-500 px-2 py-1">
                                     +{property.features.length - 2}
@@ -921,8 +951,8 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
               </div>
             ) : (
               <MapContainer
-                center={mapCenter}
-                zoom={mapZoom}
+                center={mapCenter || DEFAULT_CENTER}
+                zoom={mapZoom || DEFAULT_ZOOM}
                 style={{ height: '100%', width: '100%' }}
                 maxBounds={SYRIA_BOUNDS}
                 maxBoundsViscosity={1.0}

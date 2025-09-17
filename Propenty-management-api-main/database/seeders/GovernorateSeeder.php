@@ -18,7 +18,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'دمشق',
                 'name_en' => 'Damascus',
-                'name_ku' => 'دیمەشق',
+                'name_ku' => 'Şam',
                 'latitude' => 33.5138,
                 'longitude' => 36.2765,
                 'is_active' => true,
@@ -26,7 +26,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'ريف دمشق',
                 'name_en' => 'Rif Dimashq',
-                'name_ku' => 'ڕیفی دیمەشق',
+                'name_ku' => 'Rîfa Şamê',
                 'latitude' => 33.6000,
                 'longitude' => 36.3000,
                 'is_active' => true,
@@ -34,7 +34,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'حلب',
                 'name_en' => 'Aleppo',
-                'name_ku' => 'حەلەب',
+                'name_ku' => 'Heleb',
                 'latitude' => 36.2021,
                 'longitude' => 37.1343,
                 'is_active' => true,
@@ -42,7 +42,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'حمص',
                 'name_en' => 'Homs',
-                'name_ku' => 'حمس',
+                'name_ku' => 'Hims',
                 'latitude' => 34.7394,
                 'longitude' => 36.7163,
                 'is_active' => true,
@@ -50,7 +50,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'حماة',
                 'name_en' => 'Hama',
-                'name_ku' => 'حەما',
+                'name_ku' => 'Hema',
                 'latitude' => 35.1320,
                 'longitude' => 36.7500,
                 'is_active' => true,
@@ -58,7 +58,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'اللاذقية',
                 'name_en' => 'Latakia',
-                'name_ku' => 'لازقیە',
+                'name_ku' => 'Lazqiye',
                 'latitude' => 35.5138,
                 'longitude' => 35.7831,
                 'is_active' => true,
@@ -66,7 +66,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'طرطوس',
                 'name_en' => 'Tartus',
-                'name_ku' => 'تەرتووس',
+                'name_ku' => 'Tertûs',
                 'latitude' => 34.8886,
                 'longitude' => 35.8869,
                 'is_active' => true,
@@ -74,7 +74,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'إدلب',
                 'name_en' => 'Idlib',
-                'name_ku' => 'ئیدلیب',
+                'name_ku' => 'Îdlîb',
                 'latitude' => 35.9333,
                 'longitude' => 36.6333,
                 'is_active' => true,
@@ -82,7 +82,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'درعا',
                 'name_en' => 'Daraa',
-                'name_ku' => 'دەرعا',
+                'name_ku' => 'Dera',
                 'latitude' => 32.6189,
                 'longitude' => 36.1021,
                 'is_active' => true,
@@ -90,7 +90,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'السويداء',
                 'name_en' => 'As-Suwayda',
-                'name_ku' => 'سوێیدا',
+                'name_ku' => 'Siwêda',
                 'latitude' => 32.7094,
                 'longitude' => 36.5694,
                 'is_active' => true,
@@ -98,7 +98,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'القنيطرة',
                 'name_en' => 'Quneitra',
-                'name_ku' => 'قونێیترە',
+                'name_ku' => 'Qinêtra',
                 'latitude' => 33.1264,
                 'longitude' => 35.8244,
                 'is_active' => true,
@@ -106,7 +106,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'دير الزور',
                 'name_en' => 'Deir ez-Zor',
-                'name_ku' => 'دێرەزۆر',
+                'name_ku' => 'Dêrika Zor',
                 'latitude' => 35.3394,
                 'longitude' => 40.1467,
                 'is_active' => true,
@@ -114,7 +114,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'الرقة',
                 'name_en' => 'Raqqa',
-                'name_ku' => 'ڕەققە',
+                'name_ku' => 'Reqqa',
                 'latitude' => 35.9500,
                 'longitude' => 39.0167,
                 'is_active' => true,
@@ -122,7 +122,7 @@ class GovernorateSeeder extends Seeder
             [
                 'name_ar' => 'الحسكة',
                 'name_en' => 'Al-Hasakah',
-                'name_ku' => 'حەسەکە',
+                'name_ku' => 'Hesekê',
                 'latitude' => 36.5000,
                 'longitude' => 40.7500,
                 'is_active' => true,
@@ -132,10 +132,13 @@ class GovernorateSeeder extends Seeder
         foreach ($governorates as $governorateData) {
             // Generate slug from English name
             $governorateData['slug'] = Str::slug($governorateData['name_en']);
-            
-            Governorate::create($governorateData);
+
+            Governorate::updateOrCreate(
+                ['slug' => $governorateData['slug']], // Match by slug
+                $governorateData // Update or create with this data
+            );
         }
 
-        $this->command->info('Syrian governorates seeded successfully!');
+        $this->command->info('Syrian governorates seeded successfully with Kurmanci names!');
     }
 }

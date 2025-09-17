@@ -118,7 +118,27 @@
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <div class="row">
+                            <!-- Value Field -->
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="value" class="required">{{ __('Value/Code') }}</label>
+                                    <input type="text"
+                                           class="form-control @error('value') is-invalid @enderror"
+                                           id="value"
+                                           name="value"
+                                           value="{{ old('value', $windowType->value) }}"
+                                           placeholder="{{ __('Enter unique value/code (e.g., sliding, double_hung, casement)') }}"
+                                           required>
+                                    @error('value')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <small class="form-text text-muted">{{ __('Unique identifier for this window type (used internally, no spaces or special characters)') }}</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <!-- English Description -->
                             <div class="col-md-6">

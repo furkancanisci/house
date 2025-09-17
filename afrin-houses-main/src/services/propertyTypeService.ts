@@ -18,6 +18,7 @@ export interface PropertyType {
     name: string;
     slug: string;
     preferred_name: string;
+    sort_order: number;
   };
 }
 

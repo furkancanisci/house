@@ -312,6 +312,7 @@
       "villa": "Villa",
       "commercial": "Commercial",
       "land": "Land",
+      "retail": "Retail",
       "description": "Description"
     },
     "listingTypes": {

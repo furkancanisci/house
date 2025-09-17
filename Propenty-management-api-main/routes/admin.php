@@ -24,6 +24,9 @@ use App\Http\Controllers\Admin\PriceTypeController;
 use App\Http\Controllers\Admin\BuildingTypeController;
 use App\Http\Controllers\Admin\WindowTypeController;
 use App\Http\Controllers\Admin\FloorTypeController;
+use App\Http\Controllers\Admin\ViewTypeController;
+use App\Http\Controllers\Admin\DirectionController;
+use App\Http\Controllers\Admin\HomeStatController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -118,18 +121,85 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::post('utilities/bulk-action', [UtilityController::class, 'bulkAction'])->name('admin.utilities.bulk');
 
     // Advanced Property Details
-    Route::prefix('advanced-details')->middleware('can:view advanced details')->group(function () {
-        // Building Types
-        Route::resource('building-types', BuildingTypeController::class)->names('admin.building-types');
-        Route::post('building-types/{buildingType}/toggle-status', [BuildingTypeController::class, 'toggleStatus'])->name('admin.building-types.toggle-status');
-        
-        // Window Types
-        Route::resource('window-types', WindowTypeController::class)->names('admin.window-types');
-        Route::post('window-types/{windowType}/toggle-status', [WindowTypeController::class, 'toggleStatus'])->name('admin.window-types.toggle-status');
-        
-        // Floor Types
-        Route::resource('floor-types', FloorTypeController::class)->names('admin.floor-types');
-        Route::post('floor-types/{floorType}/toggle-status', [FloorTypeController::class, 'toggleStatus'])->name('admin.floor-types.toggle-status');
+    // Building Types
+    Route::prefix('building-types')->middleware('can:view building types')->group(function () {
+        Route::get('/', [BuildingTypeController::class, 'index'])->name('admin.building-types.index');
+        Route::get('/create', [BuildingTypeController::class, 'create'])->name('admin.building-types.create')->middleware('can:create building types');
+        Route::post('/', [BuildingTypeController::class, 'store'])->name('admin.building-types.store')->middleware('can:create building types');
+        Route::get('/{buildingType}', [BuildingTypeController::class, 'show'])->name('admin.building-types.show');
+        Route::get('/{buildingType}/edit', [BuildingTypeController::class, 'edit'])->name('admin.building-types.edit')->middleware('can:edit building types');
+        Route::put('/{buildingType}', [BuildingTypeController::class, 'update'])->name('admin.building-types.update')->middleware('can:edit building types');
+        Route::patch('/{buildingType}', [BuildingTypeController::class, 'update'])->middleware('can:edit building types');
+        Route::delete('/{buildingType}', [BuildingTypeController::class, 'destroy'])->name('admin.building-types.destroy')->middleware('can:delete building types');
+        Route::post('/{buildingType}/toggle-status', [BuildingTypeController::class, 'toggleStatus'])->name('admin.building-types.toggle-status')->middleware('can:edit building types');
+        Route::post('/bulk-action', [BuildingTypeController::class, 'bulkAction'])->name('admin.building-types.bulk-action')->middleware('can:edit building types');
+    });
+
+    // Window Types
+    Route::prefix('window-types')->middleware('can:view window types')->group(function () {
+        Route::get('/', [WindowTypeController::class, 'index'])->name('admin.window-types.index');
+        Route::get('/create', [WindowTypeController::class, 'create'])->name('admin.window-types.create')->middleware('can:create window types');
+        Route::post('/', [WindowTypeController::class, 'store'])->name('admin.window-types.store')->middleware('can:create window types');
+        Route::get('/{windowType}', [WindowTypeController::class, 'show'])->name('admin.window-types.show');
+        Route::get('/{windowType}/edit', [WindowTypeController::class, 'edit'])->name('admin.window-types.edit')->middleware('can:edit window types');
+        Route::put('/{windowType}', [WindowTypeController::class, 'update'])->name('admin.window-types.update')->middleware('can:edit window types');
+        Route::patch('/{windowType}', [WindowTypeController::class, 'update'])->middleware('can:edit window types');
+        Route::delete('/{windowType}', [WindowTypeController::class, 'destroy'])->name('admin.window-types.destroy')->middleware('can:delete window types');
+        Route::post('/{windowType}/toggle-status', [WindowTypeController::class, 'toggleStatus'])->name('admin.window-types.toggle-status')->middleware('can:edit window types');
+        Route::post('/bulk-action', [WindowTypeController::class, 'bulkAction'])->name('admin.window-types.bulk-action')->middleware('can:edit window types');
+    });
+
+    // Floor Types
+    Route::prefix('floor-types')->middleware('can:view floor types')->group(function () {
+        Route::get('/', [FloorTypeController::class, 'index'])->name('admin.floor-types.index');
+        Route::get('/create', [FloorTypeController::class, 'create'])->name('admin.floor-types.create')->middleware('can:create floor types');
+        Route::post('/', [FloorTypeController::class, 'store'])->name('admin.floor-types.store')->middleware('can:create floor types');
+        Route::get('/{floorType}', [FloorTypeController::class, 'show'])->name('admin.floor-types.show');
+        Route::get('/{floorType}/edit', [FloorTypeController::class, 'edit'])->name('admin.floor-types.edit')->middleware('can:edit floor types');
+        Route::put('/{floorType}', [FloorTypeController::class, 'update'])->name('admin.floor-types.update')->middleware('can:edit floor types');
+        Route::patch('/{floorType}', [FloorTypeController::class, 'update'])->middleware('can:edit floor types');
+        Route::delete('/{floorType}', [FloorTypeController::class, 'destroy'])->name('admin.floor-types.destroy')->middleware('can:delete floor types');
+        Route::post('/{floorType}/toggle-status', [FloorTypeController::class, 'toggleStatus'])->name('admin.floor-types.toggle-status')->middleware('can:edit floor types');
+        Route::post('/bulk-action', [FloorTypeController::class, 'bulkAction'])->name('admin.floor-types.bulk-action')->middleware('can:edit floor types');
+    });
+
+    // View Types
+    Route::prefix('view-types')->middleware('can:view view types')->group(function () {
+        Route::get('/', [ViewTypeController::class, 'index'])->name('admin.view-types.index');
+        Route::get('/create', [ViewTypeController::class, 'create'])->name('admin.view-types.create')->middleware('can:create view types');
+        Route::post('/', [ViewTypeController::class, 'store'])->name('admin.view-types.store')->middleware('can:create view types');
+        Route::get('/{viewType}', [ViewTypeController::class, 'show'])->name('admin.view-types.show');
+        Route::get('/{viewType}/edit', [ViewTypeController::class, 'edit'])->name('admin.view-types.edit')->middleware('can:edit view types');
+        Route::put('/{viewType}', [ViewTypeController::class, 'update'])->name('admin.view-types.update')->middleware('can:edit view types');
+        Route::patch('/{viewType}', [ViewTypeController::class, 'update'])->middleware('can:edit view types');
+        Route::delete('/{viewType}', [ViewTypeController::class, 'destroy'])->name('admin.view-types.destroy')->middleware('can:delete view types');
+        Route::post('/{viewType}/toggle-status', [ViewTypeController::class, 'toggleStatus'])->name('admin.view-types.toggle-status')->middleware('can:edit view types');
+        Route::post('/bulk-action', [ViewTypeController::class, 'bulkAction'])->name('admin.view-types.bulk-action')->middleware('can:edit view types');
+    });
+
+    // Directions
+    Route::prefix('directions')->middleware('can:view directions')->group(function () {
+        Route::get('/', [DirectionController::class, 'index'])->name('admin.directions.index');
+        Route::get('/create', [DirectionController::class, 'create'])->name('admin.directions.create')->middleware('can:create directions');
+        Route::post('/', [DirectionController::class, 'store'])->name('admin.directions.store')->middleware('can:create directions');
+        Route::get('/{direction}', [DirectionController::class, 'show'])->name('admin.directions.show');
+        Route::get('/{direction}/edit', [DirectionController::class, 'edit'])->name('admin.directions.edit')->middleware('can:edit directions');
+        Route::put('/{direction}', [DirectionController::class, 'update'])->name('admin.directions.update')->middleware('can:edit directions');
+        Route::patch('/{direction}', [DirectionController::class, 'update'])->middleware('can:edit directions');
+        Route::delete('/{direction}', [DirectionController::class, 'destroy'])->name('admin.directions.destroy')->middleware('can:delete directions');
+        Route::post('/{direction}/toggle-status', [DirectionController::class, 'toggleStatus'])->name('admin.directions.toggle-status')->middleware('can:edit directions');
+        Route::post('/bulk-action', [DirectionController::class, 'bulkAction'])->name('admin.directions.bulk-action')->middleware('can:edit directions');
+    });
+
+    // Home Statistics
+    Route::prefix('home-stats')->group(function () {
+        Route::get('/', [HomeStatController::class, 'index'])->name('admin.home-stats.index');
+        Route::get('/create', [HomeStatController::class, 'create'])->name('admin.home-stats.create');
+        Route::post('/', [HomeStatController::class, 'store'])->name('admin.home-stats.store');
+        Route::get('/{homeStat}/edit', [HomeStatController::class, 'edit'])->name('admin.home-stats.edit');
+        Route::put('/{homeStat}', [HomeStatController::class, 'update'])->name('admin.home-stats.update');
+        Route::delete('/{homeStat}', [HomeStatController::class, 'destroy'])->name('admin.home-stats.destroy');
+        Route::patch('/{homeStat}/toggle-status', [HomeStatController::class, 'toggleStatus'])->name('admin.home-stats.toggle-status');
     });
 
     // Users & Agents Management

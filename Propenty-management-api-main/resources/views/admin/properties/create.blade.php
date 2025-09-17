@@ -51,6 +51,7 @@
                                         <option value="townhouse" {{ old('property_type') === 'townhouse' ? 'selected' : '' }}>Townhouse</option>
                                         <option value="land" {{ old('property_type') === 'land' ? 'selected' : '' }}>Land</option>
                                         <option value="commercial" {{ old('property_type') === 'commercial' ? 'selected' : '' }}>Commercial</option>
+                                        <option value="retail" {{ old('property_type') === 'retail' ? 'selected' : '' }}>Retail</option>
                                     </select>
                                     @error('property_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -81,6 +82,39 @@
                                         @endcan
                                     </select>
                                     @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="document_type_id">Document Type <span class="text-danger">*</span></label>
+                                    <select name="document_type_id" id="document_type_id" class="form-control @error('document_type_id') is-invalid @enderror" required>
+                                        <option value="">Select Document Type</option>
+                                        @if(isset($documentTypes) && $documentTypes->count() > 0)
+                                            @foreach($documentTypes as $documentType)
+                                                <option value="{{ $documentType->id }}" {{ old('document_type_id') == $documentType->id ? 'selected' : '' }}>
+                                                    {{ $documentType->name_ar }} - {{ $documentType->name_en }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No document types available</option>
+                                        @endif
+                                    </select>
+                                    @error('document_type_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pet_policy">Pet Policy</label>
+                                    <input type="text" name="pet_policy" id="pet_policy" class="form-control @error('pet_policy') is-invalid @enderror"
+                                           value="{{ old('pet_policy') }}" placeholder="e.g., Cats and small dogs allowed">
+                                    @error('pet_policy')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -160,23 +194,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="state">{{ __('admin.state') }} <span class="text-danger">*</span></label>
-                                    <select name="state" id="state" class="form-control @error('state') is-invalid @enderror" required>
-                                        <option value="">{{ __('admin.select') }} {{ __('admin.state') }}</option>
-                                        @foreach($states as $stateEn => $stateData)
-                                            <option value="{{ app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en'] }}" 
-                                                    {{ old('state') === (app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en']) ? 'selected' : '' }}>
-                                                {{ app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en'] }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('state')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                            <!-- State field removed - using governorate instead for better data integrity -->
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="city">{{ __('admin.city') }} <span class="text-danger">*</span></label>
@@ -201,19 +219,41 @@
                             </div>
                         </div>
 
+                        <!-- Map Location -->
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="postal_code">{{ __('admin.postal_code') ?? 'Postal Code' }}</label>
-                                    <input type="text" name="postal_code" id="postal_code" class="form-control @error('postal_code') is-invalid @enderror" 
-                                           value="{{ old('postal_code') }}">
-                                    @error('postal_code')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <label class="font-weight-bold mb-3">
+                                        <i class="fas fa-map-marker-alt text-primary"></i>
+                                        Select Property Location on Map
+                                    </label>
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <input type="text" id="mapSearch" class="form-control" placeholder="Search for address or click on map...">
+                                            <div class="input-group-append">
+                                                <button type="button" id="searchButton" class="btn btn-primary">
+                                                    <i class="fas fa-search"></i> Search
+                                                </button>
+                                                <button type="button" id="getCurrentLocation" class="btn btn-success">
+                                                    <i class="fas fa-crosshairs"></i> My Location
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="propertyMap" style="height: 400px; width: 100%; border: 2px solid #ddd; border-radius: 8px; position: relative; z-index: 1;"></div>
+                                    <div id="selectedLocation" class="mt-3" style="display: none;">
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            <strong>Location Selected:</strong>
+                                            <span id="locationText"></span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
+                                    <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
                                 </div>
                             </div>
-
                         </div>
+
                     </div>
                 </div>
 
@@ -304,6 +344,218 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Advanced Property Details -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="floor_number">Floor Number</label>
+                                    <input type="number" name="floor_number" id="floor_number" class="form-control @error('floor_number') is-invalid @enderror"
+                                           value="{{ old('floor_number') }}" min="0" max="200">
+                                    @error('floor_number')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="total_floors">Total Floors</label>
+                                    <input type="number" name="total_floors" id="total_floors" class="form-control @error('total_floors') is-invalid @enderror"
+                                           value="{{ old('total_floors') }}" min="1" max="200">
+                                    @error('total_floors')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="balcony_count">Balcony Count</label>
+                                    <input type="number" name="balcony_count" id="balcony_count" class="form-control @error('balcony_count') is-invalid @enderror"
+                                           value="{{ old('balcony_count', 0) }}" min="0" max="20">
+                                    @error('balcony_count')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="orientation">{{ __('Property Orientation') }}</label>
+                                    <select name="orientation" id="orientation" class="form-control @error('orientation') is-invalid @enderror">
+                                        <option value="">{{ __('Select Orientation') }}</option>
+                                        @if(isset($directions) && $directions->count() > 0)
+                                            @foreach($directions as $direction)
+                                                <option value="{{ $direction->value }}" {{ old('orientation') === $direction->value ? 'selected' : '' }}>
+                                                    {{ $direction->name }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No directions available</option>
+                                        @endif
+                                    </select>
+                                    @error('orientation')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="view_type">{{ __('View Type') }}</label>
+                                    <select name="view_type" id="view_type" class="form-control @error('view_type') is-invalid @enderror">
+                                        <option value="">{{ __('Select View Type') }}</option>
+                                        @if(isset($viewTypes) && $viewTypes->count() > 0)
+                                            @foreach($viewTypes as $viewType)
+                                                <option value="{{ $viewType->value }}" {{ old('view_type') === $viewType->value ? 'selected' : '' }}>
+                                                    {{ $viewType->name }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No view types available</option>
+                                        @endif
+                                    </select>
+                                    @error('view_type')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Building Details -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="building_age">Building Age (Years)</label>
+                                    <input type="number" name="building_age" id="building_age" class="form-control @error('building_age') is-invalid @enderror"
+                                           value="{{ old('building_age') }}" min="0" max="200">
+                                    @error('building_age')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="building_type_id">Building Type</label>
+                                    <select name="building_type_id" id="building_type_id" class="form-control @error('building_type_id') is-invalid @enderror">
+                                        <option value="">Select Building Type</option>
+                                        @if(isset($buildingTypes) && $buildingTypes->count() > 0)
+                                            @foreach($buildingTypes as $buildingType)
+                                                <option value="{{ $buildingType->id }}" {{ old('building_type_id') == $buildingType->id ? 'selected' : '' }}>
+                                                    {{ $buildingType->name_ar }} - {{ $buildingType->name_en }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No building types available</option>
+                                        @endif
+                                    </select>
+                                    @error('building_type_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="floor_type_id">Floor Type</label>
+                                    <select name="floor_type_id" id="floor_type_id" class="form-control @error('floor_type_id') is-invalid @enderror">
+                                        <option value="">Select Floor Type</option>
+                                        @if(isset($floorTypes) && $floorTypes->count() > 0)
+                                            @foreach($floorTypes as $floorType)
+                                                <option value="{{ $floorType->id }}" {{ old('floor_type_id') == $floorType->id ? 'selected' : '' }}>
+                                                    {{ $floorType->name_ar }} - {{ $floorType->name_en }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No floor types available</option>
+                                        @endif
+                                    </select>
+                                    @error('floor_type_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="window_type_id">Window Type</label>
+                                    <select name="window_type_id" id="window_type_id" class="form-control @error('window_type_id') is-invalid @enderror">
+                                        <option value="">Select Window Type</option>
+                                        @if(isset($windowTypes) && $windowTypes->count() > 0)
+                                            @foreach($windowTypes as $windowType)
+                                                <option value="{{ $windowType->id }}" {{ old('window_type_id') == $windowType->id ? 'selected' : '' }}>
+                                                    {{ $windowType->name_ar }} - {{ $windowType->name_en }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No window types available</option>
+                                        @endif
+                                    </select>
+                                    @error('window_type_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="maintenance_fee">Maintenance Fee</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="number" name="maintenance_fee" id="maintenance_fee" class="form-control @error('maintenance_fee') is-invalid @enderror"
+                                               value="{{ old('maintenance_fee') }}" min="0" step="0.01">
+                                    </div>
+                                    @error('maintenance_fee')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="hoa_fees">HOA Fees</label>
+                                    <input type="text" name="hoa_fees" id="hoa_fees" class="form-control @error('hoa_fees') is-invalid @enderror"
+                                           value="{{ old('hoa_fees') }}" placeholder="e.g., $200/month">
+                                    @error('hoa_fees')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="deposit_amount">Deposit Amount</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="number" name="deposit_amount" id="deposit_amount" class="form-control @error('deposit_amount') is-invalid @enderror"
+                                               value="{{ old('deposit_amount') }}" min="0" step="0.01">
+                                    </div>
+                                    @error('deposit_amount')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="annual_tax">Annual Tax</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="number" name="annual_tax" id="annual_tax" class="form-control @error('annual_tax') is-invalid @enderror"
+                                               value="{{ old('annual_tax') }}" min="0" step="0.01">
+                                    </div>
+                                    @error('annual_tax')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -325,6 +577,63 @@
                             @enderror
                         </div>
                         <div id="imagePreview" class="row mt-3"></div>
+                    </div>
+                </div>
+
+                <!-- Features & Utilities -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Features & Utilities</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Property Features</h5>
+                                <div class="row">
+                                    @if(isset($features) && $features->count() > 0)
+                                        @foreach($features as $feature)
+                                            <div class="col-md-6 mb-2">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" name="features[]" value="{{ $feature->id }}"
+                                                           id="feature_{{ $feature->id }}" class="custom-control-input"
+                                                           {{ in_array($feature->id, old('features', [])) ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="feature_{{ $feature->id }}">
+                                                        {{ $feature->name_ar }} - {{ $feature->name_en }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="col-12">
+                                            <p class="text-muted">No features available</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Property Utilities</h5>
+                                <div class="row">
+                                    @if(isset($utilities) && $utilities->count() > 0)
+                                        @foreach($utilities as $utility)
+                                            <div class="col-md-6 mb-2">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" name="utilities[]" value="{{ $utility->id }}"
+                                                           id="utility_{{ $utility->id }}" class="custom-control-input"
+                                                           {{ in_array($utility->id, old('utilities', [])) ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="utility_{{ $utility->id }}">
+                                                        {{ $utility->name_ar }} - {{ $utility->name_en }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="col-12">
+                                            <p class="text-muted">No utilities available</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -452,6 +761,9 @@
 @endpush
 
 @push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
 <script>
 $(document).ready(function() {
     // Show price type for both rent and sale listings
@@ -479,7 +791,14 @@ $(document).ready(function() {
                 if (file.type.startsWith('image/')) {
                     var reader = new FileReader();
                     reader.onload = function(e) {
-                        var img = $('<div class="col-md-4 mb-3"><img src="' + e.target.result + '" class="img-thumbnail" style="height: 150px; object-fit: cover;"></div>');
+                        var img = $('<div class="col-md-4 mb-3">' +
+                                   '<div class="position-relative image-preview">' +
+                                   '<img src="' + e.target.result + '" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">' +
+                                   '<div class="position-absolute" style="top: 5px; left: 5px; background: rgba(40, 167, 69, 0.9); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">' +
+                                   '<i class="fas fa-image"></i> Preview' +
+                                   '</div>' +
+                                   '</div>' +
+                                   '</div>');
                         preview.append(img);
                     };
                     reader.readAsDataURL(file);
@@ -488,9 +807,285 @@ $(document).ready(function() {
         }
     });
 
+    // Initialize Leaflet map
+    let propertyMap = null;
+    let marker = null;
+
+    // Syria center coordinates and bounds
+    const SYRIA_CENTER = [35.0, 38.0];
+    const SYRIA_BOUNDS = [[32.0, 35.5], [37.5, 42.5]]; // Southwest to Northeast
+    const DEFAULT_ZOOM = 7;
+    const DETAIL_ZOOM = 16;
+
+    // Custom marker icon function
+    function createMarkerIcon() {
+        return L.divIcon({
+            html: `
+                <div style="
+                    background-color: #dc3545;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    border: 2px solid white;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <div style="
+                        width: 8px;
+                        height: 8px;
+                        background-color: white;
+                        border-radius: 50%;
+                        transform: rotate(45deg);
+                    "></div>
+                </div>
+            `,
+            className: 'custom-location-marker',
+            iconSize: [24, 24],
+            iconAnchor: [12, 24],
+            popupAnchor: [0, -24]
+        });
+    }
+
+    function initializeMap() {
+        try {
+            // Create map with Syria bounds restriction
+            propertyMap = L.map('propertyMap', {
+                center: SYRIA_CENTER,
+                zoom: DEFAULT_ZOOM,
+                maxBounds: SYRIA_BOUNDS,
+                maxBoundsViscosity: 1.0,
+                minZoom: 6,
+                maxZoom: 18
+            });
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors | Syria Property Map',
+                maxZoom: 18,
+                bounds: SYRIA_BOUNDS
+            }).addTo(propertyMap);
+
+            // Fit map to Syria bounds
+            propertyMap.fitBounds(SYRIA_BOUNDS);
+        } catch (error) {
+            console.error('Map initialization error:', error);
+            alert('خطأ في تحميل الخريطة / Map loading error. Please refresh the page.');
+            return;
+        }
+
+        // Handle map clicks (only within Syria bounds)
+        propertyMap.on('click', async function(e) {
+            const { lat, lng } = e.latlng;
+
+            // Check if click is within Syria bounds
+            if (lat >= SYRIA_BOUNDS[0][0] && lat <= SYRIA_BOUNDS[1][0] &&
+                lng >= SYRIA_BOUNDS[0][1] && lng <= SYRIA_BOUNDS[1][1]) {
+                await setMarkerPosition(lat, lng);
+            } else {
+                alert('يرجى تحديد موقع داخل سوريا فقط / Please select a location within Syria only');
+            }
+        });
+
+        // Load existing coordinates if available
+        const existingLat = $('#latitude').val();
+        const existingLng = $('#longitude').val();
+        if (existingLat && existingLng) {
+            setMarkerPosition(parseFloat(existingLat), parseFloat(existingLng));
+        }
+    }
+
+    async function setMarkerPosition(lat, lng) {
+        // Remove existing marker
+        if (marker) {
+            propertyMap.removeLayer(marker);
+        }
+
+        // Add new marker
+        marker = L.marker([lat, lng], {
+            icon: createMarkerIcon(),
+            draggable: true
+        }).addTo(propertyMap);
+
+        // Handle marker drag (keep within Syria bounds)
+        marker.on('dragend', function(e) {
+            const newPos = e.target.getLatLng();
+            const lat = newPos.lat;
+            const lng = newPos.lng;
+
+            // Check if dragged position is within Syria bounds
+            if (lat >= SYRIA_BOUNDS[0][0] && lat <= SYRIA_BOUNDS[1][0] &&
+                lng >= SYRIA_BOUNDS[0][1] && lng <= SYRIA_BOUNDS[1][1]) {
+                updateCoordinates(lat, lng);
+            } else {
+                // Reset marker to previous valid position if dragged outside Syria
+                alert('يرجى إبقاء الموقع داخل سوريا / Please keep the location within Syria');
+                const currentLat = $('#latitude').val();
+                const currentLng = $('#longitude').val();
+                if (currentLat && currentLng) {
+                    marker.setLatLng([parseFloat(currentLat), parseFloat(currentLng)]);
+                } else {
+                    // If no previous position, reset to Syria center
+                    marker.setLatLng(SYRIA_CENTER);
+                    updateCoordinates(SYRIA_CENTER[0], SYRIA_CENTER[1]);
+                }
+            }
+        });
+
+        // Update coordinates
+        updateCoordinates(lat, lng);
+
+        // Center map on marker
+        propertyMap.setView([lat, lng], DETAIL_ZOOM);
+
+        // Reverse geocode to get address
+        try {
+            const address = await reverseGeocode(lat, lng);
+            if (address) {
+                $('#mapSearch').val(address);
+            }
+        } catch (error) {
+            console.error('Reverse geocoding failed:', error);
+        }
+    }
+
+    function updateCoordinates(lat, lng) {
+        $('#latitude').val(lat);
+        $('#longitude').val(lng);
+        $('#locationText').text(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        $('#selectedLocation').show();
+    }
+
+    // Reverse geocoding using Nominatim
+    async function reverseGeocode(lat, lng) {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+            );
+            if (response.ok) {
+                const data = await response.json();
+                return data.display_name || null;
+            }
+        } catch (error) {
+            console.error('Reverse geocoding error:', error);
+        }
+        return null;
+    }
+
+    // Forward geocoding using Nominatim
+    async function forwardGeocode(query) {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1&countrycodes=sy`
+            );
+            if (response.ok) {
+                const data = await response.json();
+                if (data.length > 0) {
+                    const result = data[0];
+                    return {
+                        lat: parseFloat(result.lat),
+                        lng: parseFloat(result.lon),
+                        address: result.display_name
+                    };
+                }
+            }
+        } catch (error) {
+            console.error('Forward geocoding error:', error);
+        }
+        return null;
+    }
+
+    // Search functionality
+    $('#searchButton').on('click', async function() {
+        const query = $('#mapSearch').val().trim();
+        if (!query) {
+            alert('Please enter an address to search');
+            return;
+        }
+
+        try {
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Searching...');
+
+            const result = await forwardGeocode(query);
+            if (result) {
+                await setMarkerPosition(result.lat, result.lng);
+                $('#mapSearch').val(result.address);
+            } else {
+                alert('Address not found. Please try a different search term.');
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            alert('Search failed. Please try again.');
+        } finally {
+            $(this).prop('disabled', false).html('<i class="fas fa-search"></i> Search');
+        }
+    });
+
+    // Get current location
+    $('#getCurrentLocation').on('click', function() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by this browser');
+            return;
+        }
+
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Getting Location...');
+
+        navigator.geolocation.getCurrentPosition(
+            async function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                await setMarkerPosition(lat, lng);
+                $('#getCurrentLocation').prop('disabled', false).html('<i class="fas fa-crosshairs"></i> My Location');
+            },
+            function(error) {
+                console.error('Geolocation error:', error);
+                alert('Unable to get your location. Please use the search or click on the map.');
+                $('#getCurrentLocation').prop('disabled', false).html('<i class="fas fa-crosshairs"></i> My Location');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    });
+
+    // Allow search on Enter key
+    $('#mapSearch').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#searchButton').click();
+        }
+    });
+
+    // Initialize map when page loads - wait for DOM, CSS and Leaflet to be ready
+    function tryInitializeMap(attempts = 0) {
+        if (typeof L === 'undefined') {
+            if (attempts < 10) {
+                setTimeout(() => tryInitializeMap(attempts + 1), 200);
+            } else {
+                console.error('Leaflet library failed to load');
+                alert('خطأ في تحميل مكتبة الخرائط / Map library failed to load');
+            }
+            return;
+        }
+
+        initializeMap();
+        // Force map to refresh its size after initialization
+        setTimeout(function() {
+            if (propertyMap) {
+                propertyMap.invalidateSize();
+            }
+        }, 200);
+    }
+
+    setTimeout(tryInitializeMap, 500);
+
     // Cascading dropdowns for location
-    $('#state').on('change', function() {
-        var state = $(this).val();
+    $('#governorate').on('change', function() {
+        var governorateId = $(this).val();
         var citySelect = $('#city');
         var neighborhoodSelect = $('#neighborhood');
         
@@ -498,11 +1093,11 @@ $(document).ready(function() {
         citySelect.html('<option value="">Loading...</option>').prop('disabled', true);
         neighborhoodSelect.html('<option value="">Select state first</option>').prop('disabled', true);
         
-        if (state) {
+        if (governorateId) {
             $.ajax({
                 url: '{{ route('admin.properties.cities-by-state') }}',
                 type: 'GET',
-                data: { state: state },
+                data: { governorate_id: governorateId },
                 dataType: 'json',
                 success: function(data) {
                     citySelect.html('<option value="">Select City</option>');
@@ -522,7 +1117,7 @@ $(document).ready(function() {
                 }
             });
         } else {
-            citySelect.html('<option value="">Select state first</option>').prop('disabled', true);
+            citySelect.html('<option value="">Select governorate first</option>').prop('disabled', true);
         }
     });
 
@@ -597,10 +1192,10 @@ $(document).ready(function() {
 
     // Handle form validation for dependent dropdowns
     $('form').on('submit', function(e) {
-        var state = $('#state').val();
+        var governorateId = $('#governorate_id').val();
         var city = $('#city').val();
         var listingType = $('#listing_type').val();
-        
+
         // Check listing type
         if (!listingType) {
             e.preventDefault();
@@ -608,9 +1203,9 @@ $(document).ready(function() {
             $('#listing_type').focus();
             return false;
         }
-        
-        // Check state and city dependency
-        if (state && !city) {
+
+        // Check governorate and city dependency
+        if (governorateId && !city) {
             e.preventDefault();
             alert('Please select a city');
             $('#city').focus();
@@ -637,4 +1232,59 @@ $(document).ready(function() {
 
 });
 </script>
+
+<style>
+.image-preview {
+    transition: all 0.3s ease;
+}
+
+.image-preview:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.image-preview img {
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+#imagePreview .col-md-4 {
+    transition: all 0.3s ease;
+}
+
+#imagePreview .col-md-4:hover {
+    transform: scale(1.02);
+}
+
+/* Map styling */
+#propertyMap {
+    border-radius: 8px !important;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.leaflet-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.leaflet-control-zoom {
+    border-radius: 6px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+.leaflet-control-attribution {
+    background-color: rgba(255,255,255,0.9) !important;
+    font-size: 10px !important;
+}
+
+.custom-location-marker {
+    cursor: pointer;
+}
+
+.custom-location-marker:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+</style>
 @endpush

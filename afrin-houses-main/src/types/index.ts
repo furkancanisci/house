@@ -26,14 +26,14 @@ export interface Property {
   floor_number?: number;
   total_floors?: number;
   balcony_count?: number;
-  orientation?: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
-  view_type?: 'city' | 'sea' | 'mountain' | 'garden' | 'street' | 'courtyard' | 'pool' | 'park';
-  
+  orientation?: string;
+  view_type?: string;
+
   // Phase 2 Advanced Enhancement Fields
   building_age?: number;
-  building_type?: 'new_construction' | 'resale' | 'under_construction' | 'renovated' | 'historic';
-  floor_type?: 'marble' | 'ceramic' | 'hardwood' | 'laminate' | 'carpet' | 'tile' | 'concrete' | 'vinyl';
-  window_type?: 'single_pane' | 'double_pane' | 'triple_pane' | 'energy_efficient' | 'soundproof';
+  building_type?: string;
+  floor_type?: string;
+  window_type?: string;
   maintenance_fee?: number;
   deposit_amount?: number;
   annual_tax?: number;
@@ -190,15 +190,15 @@ export interface SearchFilters {
   maxTotalFloors?: number;
   minBalconyCount?: number;
   maxBalconyCount?: number;
-  orientation?: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
-  viewType?: 'city' | 'sea' | 'mountain' | 'garden' | 'street' | 'courtyard' | 'pool' | 'park';
-  
+  orientation?: string;
+  viewType?: string;
+
   // Phase 2 Advanced Enhancement Filters
   minBuildingAge?: number;
   maxBuildingAge?: number;
-  buildingType?: 'new_construction' | 'resale' | 'under_construction' | 'renovated' | 'historic';
-  floorType?: 'marble' | 'ceramic' | 'hardwood' | 'laminate' | 'carpet' | 'tile' | 'concrete' | 'vinyl';
-  windowType?: 'single_pane' | 'double_pane' | 'triple_pane' | 'energy_efficient' | 'soundproof';
+  buildingType?: string;
+  floorType?: string;
+  windowType?: string;
   minMaintenanceFee?: number;
   maxMaintenanceFee?: number;
   minDepositAmount?: number;
@@ -286,8 +286,8 @@ export interface PropertyFormData {
   floorNumber?: number;
   totalFloors?: number;
   balconyCount?: number;
-  orientation?: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
-  viewType?: 'city' | 'sea' | 'mountain' | 'garden' | 'street' | 'courtyard' | 'pool' | 'park';
+  orientation?: string;
+  viewType?: string;
   
   contact: {
     name: string;
