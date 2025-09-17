@@ -254,9 +254,20 @@
                 </li>
                 @endcan
 
-                <!-- Media -->
-                @can('view media')
+                <!-- Content Management -->
+                @canany(['view media'])
                 <li class="nav-header">{{ strtoupper(__('admin.content_management')) }}</li>
+                @endcanany
+
+                <!-- Home Statistics -->
+                <li class="nav-item">
+                    <a href="{{ route('admin.home-stats.index') }}" class="nav-link {{ request()->routeIs('admin.home-stats*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p>إحصائيات الصفحة الرئيسية</p>
+                    </a>
+                </li>
+
+                @can('view media')
                 <li class="nav-item">
                     <a href="{{ route('admin.media.index') }}" class="nav-link {{ request()->routeIs('admin.media*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-photo-video"></i>

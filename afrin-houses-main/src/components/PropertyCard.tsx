@@ -68,28 +68,42 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     if (feature === null || feature === undefined) {
       return '';
     }
-    
+
     // Handle string features
     if (typeof feature === 'string') {
       return feature;
     }
-    
+
     // Handle object features
     if (typeof feature === 'object' && feature !== null) {
       try {
         // Try to get the name based on current language
         const locale = i18n.language;
-        if (locale === 'ar' && feature.name_ar) return feature.name_ar;
-        if (locale === 'ku' && feature.name_ku) return feature.name_ku;
-        return feature.name_en || feature.name || '';
+        let name = '';
+
+        if (locale === 'ar' && feature.name_ar) {
+          name = feature.name_ar;
+        } else if (locale === 'ku' && feature.name_ku) {
+          name = feature.name_ku;
+        } else if (feature.name_en) {
+          name = feature.name_en;
+        } else if (feature.name_ar) {
+          name = feature.name_ar;
+        } else if (feature.name) {
+          name = feature.name;
+        }
+
+        // Ensure we return a string
+        return typeof name === 'string' ? name : String(name || '');
       } catch (error) {
         console.error('Error getting feature name:', error, feature);
         return '';
       }
     }
-    
-    // Convert other types to string
-    return String(feature);
+
+    // Fallback: convert to string, but avoid [object Object]
+    const stringValue = String(feature);
+    return stringValue === '[object Object]' ? '' : stringValue;
   };
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
@@ -272,16 +286,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                   const featureName = getFeatureName(feature);
                   // Ensure featureName is a valid string before processing
                   const safeFeatureName = typeof featureName === 'string' ? featureName : '';
-                  const translated = safeFeatureName 
-                    ? t(`property.features.${safeFeatureName.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: safeFeatureName })
-                    : safeFeatureName;
-                  const displayText = typeof translated === 'string' ? translated : safeFeatureName;
+
+                  if (!safeFeatureName) return null;
+
+                  const translated = t(`property.features.${safeFeatureName.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: safeFeatureName });
+                  // Ensure displayText is always a string
+                  const displayText = typeof translated === 'string' ? translated :
+                                    typeof translated === 'object' && translated !== null ? safeFeatureName :
+                                    String(translated || safeFeatureName);
+
                   return (
                     <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1">
                       {displayText}
                     </Badge>
                   );
-                })}
+                }).filter(Boolean)}
                 {Array.isArray(property.features) && property.features.length > 3 && (
                   <Badge variant="outline" className="text-xs text-gray-500 px-2 py-1">
                     +{property.features.length - 3} {t('property.more')}
@@ -393,16 +412,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             const featureName = getFeatureName(feature);
             // Ensure featureName is a valid string before processing
             const safeFeatureName = typeof featureName === 'string' ? featureName : '';
-            const translated = safeFeatureName 
-              ? t(`property.features.${safeFeatureName.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: safeFeatureName })
-              : safeFeatureName;
-            const displayText = typeof translated === 'string' ? translated : safeFeatureName;
+
+            if (!safeFeatureName) return null;
+
+            const translated = t(`property.features.${safeFeatureName.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: safeFeatureName });
+            // Ensure displayText is always a string
+            const displayText = typeof translated === 'string' ? translated :
+                              typeof translated === 'object' && translated !== null ? safeFeatureName :
+                              String(translated || safeFeatureName);
+
             return (
               <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1.5 py-0.5">
                 {displayText}
               </Badge>
             );
-          })}
+          }).filter(Boolean)}
 
           {(property.features?.length ?? 0) > 2 && (
             <Badge variant="outline" className="text-xs text-gray-500 px-1.5 py-0.5">

@@ -90,44 +90,13 @@ class PropertyController extends Controller
     {
         $this->authorize('create properties');
 
+        $governorates = Governorate::orderBy('name_ar')->get();
         $cities = City::active()->orderBy('name_en')->get();
         $propertyTypes = PropertyType::orderBy('name')->get();
         $users = User::select('id', 'first_name', 'last_name', 'email')->get()
             ->mapWithKeys(fn($user) => [$user->id => $user->full_name . ' (' . $user->email . ')']);
-        
-        // Get unique states from cities
-        $states = City::active()
-            ->select('state_en', 'state_ar')
-            ->whereNotNull('state_en')
-            ->where('state_en', '!=', '')
-            ->distinct()
-            ->orderBy('state_en')
-            ->get()
-            ->mapWithKeys(function($city) {
-                return [$city->state_en => [
-                    'en' => $city->state_en,
-                    'ar' => $city->state_ar ?: $city->state_en
-                ]];
-            });
-        
-        // If no states found in database, provide Syria's states as fallback
-        if ($states->isEmpty()) {
-            $states = collect([
-                'Damascus' => ['en' => 'Damascus', 'ar' => 'دمشق'],
-                'Aleppo' => ['en' => 'Aleppo', 'ar' => 'حلب'],
-                'Homs' => ['en' => 'Homs', 'ar' => 'حمص'],
-                'Hama' => ['en' => 'Hama', 'ar' => 'حماة'],
-                'Latakia' => ['en' => 'Latakia', 'ar' => 'اللاذقية'],
-                'Tartus' => ['en' => 'Tartus', 'ar' => 'طرطوس'],
-                'Daraa' => ['en' => 'Daraa', 'ar' => 'درعا'],
-                'Deir ez-Zor' => ['en' => 'Deir ez-Zor', 'ar' => 'دير الزور'],
-                'Al-Hasakah' => ['en' => 'Al-Hasakah', 'ar' => 'الحسكة'],
-                'Ar-Raqqah' => ['en' => 'Ar-Raqqah', 'ar' => 'الرقة'],
-                'As-Suwayda' => ['en' => 'As-Suwayda', 'ar' => 'السويداء'],
-                'Quneitra' => ['en' => 'Quneitra', 'ar' => 'القنيطرة'],
-                'Idlib' => ['en' => 'Idlib', 'ar' => 'إدلب']
-            ]);
-        }
+
+        // States data removed - using governorates relationship instead
         
         // Get all neighborhoods (will be filtered by city via AJAX)
         $neighborhoods = collect();
@@ -148,8 +117,8 @@ class PropertyController extends Controller
         $utilities = Utility::active()->orderBy('sort_order')->orderBy('name_ar')->get();
 
         return view('admin.properties.create', compact(
+            'governorates',
             'cities',
-            'states',
             'neighborhoods',
             'propertyTypes',
             'priceTypes',
@@ -178,10 +147,12 @@ class PropertyController extends Controller
             'property_type' => 'required|string',
             'listing_type' => 'required|in:rent,sale',
             'price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:monthly,yearly,total,fixed,negotiable,final_price,popular_saying,price_from_last',
+            'price_type' => 'required|in:negotiable,final_price,popular_saying,price_from_last,monthly,yearly,total,fixed',
             'street_address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
+            'governorate_id' => 'required|integer|exists:governorates,id',
+            'city_id' => 'required|integer|exists:cities,id',
+            'neighborhood_id' => 'nullable|integer|exists:neighborhoods,id',
             'neighborhood' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
@@ -373,22 +344,7 @@ class PropertyController extends Controller
         $users = User::select('id', 'first_name', 'last_name', 'email')->get()
             ->mapWithKeys(fn($user) => [$user->id => $user->full_name . ' (' . $user->email . ')']);
 
-        // Add states data for dropdowns (same as in create method)
-        $states = collect([
-            'Damascus' => ['en' => 'Damascus', 'ar' => 'دمشق'],
-            'Aleppo' => ['en' => 'Aleppo', 'ar' => 'حلب'],
-            'Homs' => ['en' => 'Homs', 'ar' => 'حمص'],
-            'Hama' => ['en' => 'Hama', 'ar' => 'حماة'],
-            'Latakia' => ['en' => 'Latakia', 'ar' => 'اللاذقية'],
-            'Tartus' => ['en' => 'Tartus', 'ar' => 'طرطوس'],
-            'Daraa' => ['en' => 'Daraa', 'ar' => 'درعا'],
-            'Deir ez-Zor' => ['en' => 'Deir ez-Zor', 'ar' => 'دير الزور'],
-            'Al-Hasakah' => ['en' => 'Al-Hasakah', 'ar' => 'الحسكة'],
-            'Ar-Raqqah' => ['en' => 'Ar-Raqqah', 'ar' => 'الرقة'],
-            'As-Suwayda' => ['en' => 'As-Suwayda', 'ar' => 'السويداء'],
-            'Quneitra' => ['en' => 'Quneitra', 'ar' => 'القنيطرة'],
-            'Idlib' => ['en' => 'Idlib', 'ar' => 'إدلب']
-        ]);
+        // States data removed - using governorates relationship instead
         
         // Get neighborhoods for the current city
         $neighborhoods = collect();
@@ -428,7 +384,6 @@ class PropertyController extends Controller
             'property',
             'governorates',
             'cities',
-            'states',
             'neighborhoods',
             'propertyTypes',
             'priceTypes',
@@ -460,7 +415,9 @@ class PropertyController extends Controller
             'price_type' => 'required|in:monthly,yearly,total,fixed,negotiable,final_price,popular_saying,price_from_last',
             'street_address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
+            'governorate_id' => 'required|integer|exists:governorates,id',
+            'city_id' => 'required|integer|exists:cities,id',
+            'neighborhood_id' => 'nullable|integer|exists:neighborhoods,id',
             'neighborhood' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',

@@ -29,7 +29,7 @@ class StorePropertyRequest extends FormRequest
             'property_type_id' => 'nullable|integer|exists:property_types,id', // Foreign key validation
             'listingType' => 'required|string|in:rent,sale',
             'price' => 'required|numeric|min:0',
-            'price_type' => 'nullable|string|in:monthly,yearly,total',
+            'price_type' => 'nullable|string|in:negotiable,final_price,popular_saying,price_from_last,monthly,yearly,total,fixed',
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',

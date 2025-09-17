@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\WindowTypeController;
 use App\Http\Controllers\Admin\FloorTypeController;
 use App\Http\Controllers\Admin\ViewTypeController;
 use App\Http\Controllers\Admin\DirectionController;
+use App\Http\Controllers\Admin\HomeStatController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -188,6 +189,17 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
         Route::delete('/{direction}', [DirectionController::class, 'destroy'])->name('admin.directions.destroy')->middleware('can:delete directions');
         Route::post('/{direction}/toggle-status', [DirectionController::class, 'toggleStatus'])->name('admin.directions.toggle-status')->middleware('can:edit directions');
         Route::post('/bulk-action', [DirectionController::class, 'bulkAction'])->name('admin.directions.bulk-action')->middleware('can:edit directions');
+    });
+
+    // Home Statistics
+    Route::prefix('home-stats')->group(function () {
+        Route::get('/', [HomeStatController::class, 'index'])->name('admin.home-stats.index');
+        Route::get('/create', [HomeStatController::class, 'create'])->name('admin.home-stats.create');
+        Route::post('/', [HomeStatController::class, 'store'])->name('admin.home-stats.store');
+        Route::get('/{homeStat}/edit', [HomeStatController::class, 'edit'])->name('admin.home-stats.edit');
+        Route::put('/{homeStat}', [HomeStatController::class, 'update'])->name('admin.home-stats.update');
+        Route::delete('/{homeStat}', [HomeStatController::class, 'destroy'])->name('admin.home-stats.destroy');
+        Route::patch('/{homeStat}/toggle-status', [HomeStatController::class, 'toggleStatus'])->name('admin.home-stats.toggle-status');
     });
 
     // Users & Agents Management

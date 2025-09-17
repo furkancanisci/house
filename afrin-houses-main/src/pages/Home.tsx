@@ -22,19 +22,21 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { getProperties, getFeaturedProperties } from '../services/propertyService';
+import { getHomeStats, getLocalizedLabel, HomeStat } from '../services/homeStatsService';
 import { processPropertyImages } from '../lib/imageUtils';
 import leftTopOrnament from '../assets/left top_bb.png';
 import rightBottomOrnament from '../assets/right_bottom_bb.png';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [rentalProperties, setRentalProperties] = useState<Property[]>([]);
   const [saleProperties, setSaleProperties] = useState<Property[]>([]);
   const [trendingProperties, setTrendingProperties] = useState<Property[]>([]);
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [allProperties, setAllProperties] = useState<Property[]>([]);
+  const [homeStats, setHomeStats] = useState<HomeStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // showMapSearch state removed - now using separate page
@@ -47,15 +49,28 @@ const Home: React.FC = () => {
     bathrooms: undefined
   });
 
+  // Function to fetch home statistics
+  const fetchHomeStats = async () => {
+    try {
+      const stats = await getHomeStats();
+      setHomeStats(stats);
+    } catch (error) {
+      console.error('Error fetching home statistics:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchPropertiesByCategory = async () => {
       try {
         setLoading(true);
-        
+
+        // Fetch home statistics
+        await fetchHomeStats();
+
         // Get search query from URL if present
         const searchParams = new URLSearchParams(window.location.search);
         const searchQuery = searchParams.get('q') || '';
-        
+
         // If there's a search query, update the search input
         if (searchQuery) {
           setSearchQuery(searchQuery);
@@ -207,7 +222,28 @@ const Home: React.FC = () => {
     };
   };
 
-  const stats = [
+  // Map icon names to actual icon components
+  const iconMap: { [key: string]: React.ComponentType<any> } = {
+    HomeIcon: HomeIcon,
+    Users: Users,
+    TrendingUp: TrendingUp,
+    Award: Award,
+    Search: Search,
+    MapPin: MapPin,
+    Home: HomeIcon,
+    User: Users,
+    Chart: TrendingUp,
+    Trophy: Award,
+  };
+
+  // Generate stats array from API data with fallback to default values
+  const stats = homeStats.length > 0 ? homeStats.map((stat) => ({
+    icon: iconMap[stat.icon] || HomeIcon,
+    number: stat.number,
+    label: getLocalizedLabel(stat, i18n.language),
+    color: stat.color || 'text-primary-600',
+  })) : [
+    // Fallback stats if API fails
     {
       icon: HomeIcon,
       number: (rentalProperties.length + saleProperties.length + trendingProperties.length).toString(),
@@ -477,14 +513,14 @@ const Home: React.FC = () => {
               {t('home.stats.sectionSubtitle') || 'Trusted by thousands of property seekers and agents across the region'}
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             {stats.map((stat, index) => (
-              <div key={index} className="stats-card enhanced-card text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-primary-100">
-                <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <stat.icon className="h-8 w-8 text-white" />
+              <div key={index} className="stats-card enhanced-card text-center p-3 md:p-6 bg-white rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-primary-100">
+                <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-full w-10 h-10 md:w-16 md:h-16 mx-auto mb-2 md:mb-4 flex items-center justify-center">
+                  <stat.icon className="h-5 w-5 md:h-8 md:w-8 text-white" />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</h3>
-                <p className="text-gray-600 font-medium">{stat.label}</p>
+                <h3 className="text-xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">{stat.number}</h3>
+                <p className="text-xs md:text-base text-gray-600 font-medium">{stat.label}</p>
               </div>
             ))}
           </div>

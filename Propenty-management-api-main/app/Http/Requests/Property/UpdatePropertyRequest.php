@@ -43,7 +43,7 @@ class UpdatePropertyRequest extends FormRequest
             
             // Pricing
             'price' => 'sometimes|required|numeric|min:0|max:99999999.99',
-            'price_type' => 'sometimes|nullable|in:monthly,yearly,total',
+            'price_type' => 'sometimes|nullable|in:negotiable,final_price,popular_saying,price_from_last,monthly,yearly,total,fixed',
             
             // Location
             'street_address' => 'sometimes|required|string|max:255',

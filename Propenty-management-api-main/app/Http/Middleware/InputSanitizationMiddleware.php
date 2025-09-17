@@ -33,10 +33,13 @@ class InputSanitizationMiddleware
             'api/v1/window-types/options',
             'api/v1/floor-types/options',
             'api/v1/view-types/options',
-            'api/v1/directions/options'
+            'api/v1/directions/options',
+            'api/home-stats',
+            'api/v1/home-stats',
+            'admin/home-stats'
         ];
         $currentPath = trim($request->path(), '/');
-        
+
         // Also skip if path starts with api/v1/properties/ (for specific property endpoints)
         $isPropertyEndpoint = str_starts_with($currentPath, 'api/v1/properties/');
 
@@ -64,6 +67,13 @@ class InputSanitizationMiddleware
         // Also skip if path starts with api/v1/directions/ (for specific direction endpoints)
         $isDirectionEndpoint = str_starts_with($currentPath, 'api/v1/directions/');
 
+        // Also skip admin home-stats paths to allow special characters in labels
+        $isAdminHomeStatsEndpoint = str_starts_with($currentPath, 'admin/home-stats') || $currentPath === 'admin/home-stats';
+
+        // Also skip API home-stats paths
+        $isApiHomeStatsEndpoint = str_starts_with($currentPath, 'api/home-stats') || $currentPath === 'api/home-stats' ||
+                                  str_starts_with($currentPath, 'api/v1/home-stats') || $currentPath === 'api/v1/home-stats';
+
         if (!in_array($currentPath, $skipPaths) &&
             !$isPropertyEndpoint &&
             !$isCityStateEndpoint &&
@@ -73,7 +83,9 @@ class InputSanitizationMiddleware
             !$isWindowTypeEndpoint &&
             !$isFloorTypeEndpoint &&
             !$isViewTypeEndpoint &&
-            !$isDirectionEndpoint) {
+            !$isDirectionEndpoint &&
+            !$isAdminHomeStatsEndpoint &&
+            !$isApiHomeStatsEndpoint) {
             // Sanitize input data
             $this->sanitizeInput($request);
             
@@ -153,7 +165,13 @@ class InputSanitizationMiddleware
     protected function containsSuspiciousContent(Request $request): bool
     {
         $input = json_encode($request->all());
-        
+        $currentPath = trim($request->path(), '/');
+
+        // Skip suspicious content check for home-stats paths completely
+        if (str_contains($currentPath, 'home-stats')) {
+            return false;
+        }
+
         // SQL injection patterns
         $sqlPatterns = [
             '/\b(union|select|insert|update|delete|drop|create|alter|exec|execute)\s+/i',

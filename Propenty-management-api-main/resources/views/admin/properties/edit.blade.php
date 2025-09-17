@@ -228,6 +228,7 @@
                                     <label for="city">{{ __('admin.city') ?? 'City' }} <span class="text-danger">*</span></label>
                                     <select name="city" id="city" class="form-control @error('city') is-invalid @enderror" required>
                                         <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.city') ?? 'City' }}</option>
+                                        {{-- Cities loaded: {{ $cities->count() }} cities --}}
                                         @foreach($cities as $city)
                                             <option value="{{ $city->id }}" 
                                                     data-governorate-id="{{ $city->governorate_id }}"
@@ -280,23 +281,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="state">{{ __('admin.state') ?? 'State' }} <span class="text-danger">*</span></label>
-                                    <select name="state" id="state" class="form-control @error('state') is-invalid @enderror" required>
-                                        <option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.state') ?? 'State' }}</option>
-                                        @foreach($states as $stateEn => $stateData)
-                                            <option value="{{ app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en'] }}" 
-                                                    {{ old('state', $property->state) === (app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en']) ? 'selected' : '' }}>
-                                                {{ app()->getLocale() === 'ar' ? $stateData['ar'] : $stateData['en'] }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('state')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                            <!-- State field removed - using governorate instead for better data integrity -->
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="latitude">Latitude</label>
@@ -318,6 +303,40 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Map Location -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="font-weight-bold mb-3">
+                                        <i class="fas fa-map-marker-alt text-primary"></i>
+                                        Select Property Location on Map
+                                    </label>
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <input type="text" id="mapSearch" class="form-control" placeholder="Search for address or click on map...">
+                                            <div class="input-group-append">
+                                                <button type="button" id="searchButton" class="btn btn-primary">
+                                                    <i class="fas fa-search"></i> Search
+                                                </button>
+                                                <button type="button" id="getCurrentLocation" class="btn btn-success">
+                                                    <i class="fas fa-crosshairs"></i> My Location
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="propertyMap" style="height: 400px; width: 100%; border: 2px solid #ddd; border-radius: 8px; position: relative; z-index: 1;"></div>
+                                    <div id="selectedLocation" class="mt-3" style="display: none;">
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            <strong>Location Selected:</strong>
+                                            <span id="locationText"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -853,18 +872,22 @@
 @endsection
 
 @push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
 <script>
 $(document).ready(function() {
     // Function to update price type options based on listing type
     function updatePriceTypeOptions() {
         var listingType = $('#listing_type').val();
         var priceTypeSelect = $('#price_type');
+        var currentValue = priceTypeSelect.val(); // Save current value
         var rentOptions = priceTypeSelect.find('.rent-option');
         var saleOptions = priceTypeSelect.find('.sale-option');
-        
+
         // Always show negotiation options
         priceTypeSelect.find('.negotiation-option').show();
-        
+
         if (listingType === 'rent') {
             rentOptions.show();
             saleOptions.hide();
@@ -874,6 +897,11 @@ $(document).ready(function() {
         } else {
             rentOptions.show();
             saleOptions.show();
+        }
+
+        // Restore the selected value if it's still visible
+        if (currentValue && priceTypeSelect.find('option[value="' + currentValue + '"]').is(':visible')) {
+            priceTypeSelect.val(currentValue);
         }
     }
     
@@ -939,10 +967,300 @@ $(document).ready(function() {
         }
     });
 
-    // Store original options for filtering
-    var originalCities = $('#city').html();
-    var originalNeighborhoods = $('#neighborhood').html();
-    
+    // Initialize Leaflet map
+    let propertyMap = null;
+    let marker = null;
+
+    // Syria center coordinates and bounds
+    const SYRIA_CENTER = [35.0, 38.0];
+    const SYRIA_BOUNDS = [[32.0, 35.5], [37.5, 42.5]]; // Southwest to Northeast
+    const DEFAULT_ZOOM = 7;
+    const DETAIL_ZOOM = 16;
+
+    // Custom marker icon function
+    function createMarkerIcon() {
+        return L.divIcon({
+            html: `
+                <div style="
+                    background-color: #dc3545;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    border: 2px solid white;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <div style="
+                        width: 8px;
+                        height: 8px;
+                        background-color: white;
+                        border-radius: 50%;
+                        transform: rotate(45deg);
+                    "></div>
+                </div>
+            `,
+            className: 'custom-location-marker',
+            iconSize: [24, 24],
+            iconAnchor: [12, 24],
+            popupAnchor: [0, -24]
+        });
+    }
+
+    function initializeMap() {
+        try {
+            // Create map with Syria bounds restriction
+            propertyMap = L.map('propertyMap', {
+                center: SYRIA_CENTER,
+                zoom: DEFAULT_ZOOM,
+                maxBounds: SYRIA_BOUNDS,
+                maxBoundsViscosity: 1.0,
+                minZoom: 6,
+                maxZoom: 18
+            });
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors | Syria Property Map',
+                maxZoom: 18,
+                bounds: SYRIA_BOUNDS
+            }).addTo(propertyMap);
+
+            // Fit map to Syria bounds
+            propertyMap.fitBounds(SYRIA_BOUNDS);
+        } catch (error) {
+            console.error('Map initialization error:', error);
+            alert('خطأ في تحميل الخريطة / Map loading error. Please refresh the page.');
+            return;
+        }
+
+        // Handle map clicks (only within Syria bounds)
+        propertyMap.on('click', async function(e) {
+            const { lat, lng } = e.latlng;
+
+            // Check if click is within Syria bounds
+            if (lat >= SYRIA_BOUNDS[0][0] && lat <= SYRIA_BOUNDS[1][0] &&
+                lng >= SYRIA_BOUNDS[0][1] && lng <= SYRIA_BOUNDS[1][1]) {
+                await setMarkerPosition(lat, lng);
+            } else {
+                alert('يرجى تحديد موقع داخل سوريا فقط / Please select a location within Syria only');
+            }
+        });
+
+        // Load existing coordinates if available
+        const existingLat = $('#latitude').val();
+        const existingLng = $('#longitude').val();
+        if (existingLat && existingLng && existingLat !== '' && existingLng !== '') {
+            setMarkerPosition(parseFloat(existingLat), parseFloat(existingLng));
+        }
+    }
+
+    async function setMarkerPosition(lat, lng) {
+        // Remove existing marker
+        if (marker) {
+            propertyMap.removeLayer(marker);
+        }
+
+        // Add new marker
+        marker = L.marker([lat, lng], {
+            icon: createMarkerIcon(),
+            draggable: true
+        }).addTo(propertyMap);
+
+        // Handle marker drag (keep within Syria bounds)
+        marker.on('dragend', function(e) {
+            const newPos = e.target.getLatLng();
+            const lat = newPos.lat;
+            const lng = newPos.lng;
+
+            // Check if dragged position is within Syria bounds
+            if (lat >= SYRIA_BOUNDS[0][0] && lat <= SYRIA_BOUNDS[1][0] &&
+                lng >= SYRIA_BOUNDS[0][1] && lng <= SYRIA_BOUNDS[1][1]) {
+                updateCoordinates(lat, lng);
+            } else {
+                // Reset marker to previous valid position if dragged outside Syria
+                alert('يرجى إبقاء الموقع داخل سوريا / Please keep the location within Syria');
+                const currentLat = $('#latitude').val();
+                const currentLng = $('#longitude').val();
+                if (currentLat && currentLng) {
+                    marker.setLatLng([parseFloat(currentLat), parseFloat(currentLng)]);
+                } else {
+                    // If no previous position, reset to Syria center
+                    marker.setLatLng(SYRIA_CENTER);
+                    updateCoordinates(SYRIA_CENTER[0], SYRIA_CENTER[1]);
+                }
+            }
+        });
+
+        // Update coordinates
+        updateCoordinates(lat, lng);
+
+        // Center map on marker
+        propertyMap.setView([lat, lng], DETAIL_ZOOM);
+
+        // Reverse geocode to get address
+        try {
+            const address = await reverseGeocode(lat, lng);
+            if (address) {
+                $('#mapSearch').val(address);
+            }
+        } catch (error) {
+            console.error('Reverse geocoding failed:', error);
+        }
+    }
+
+    function updateCoordinates(lat, lng) {
+        $('#latitude').val(lat);
+        $('#longitude').val(lng);
+        $('#locationText').text(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        $('#selectedLocation').show();
+    }
+
+    // Reverse geocoding using Nominatim
+    async function reverseGeocode(lat, lng) {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+            );
+            if (response.ok) {
+                const data = await response.json();
+                return data.display_name || null;
+            }
+        } catch (error) {
+            console.error('Reverse geocoding error:', error);
+        }
+        return null;
+    }
+
+    // Forward geocoding using Nominatim
+    async function forwardGeocode(query) {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1&countrycodes=sy`
+            );
+            if (response.ok) {
+                const data = await response.json();
+                if (data.length > 0) {
+                    const result = data[0];
+                    return {
+                        lat: parseFloat(result.lat),
+                        lng: parseFloat(result.lon),
+                        address: result.display_name
+                    };
+                }
+            }
+        } catch (error) {
+            console.error('Forward geocoding error:', error);
+        }
+        return null;
+    }
+
+    // Search functionality
+    $('#searchButton').on('click', async function() {
+        const query = $('#mapSearch').val().trim();
+        if (!query) {
+            alert('Please enter an address to search');
+            return;
+        }
+
+        try {
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Searching...');
+
+            const result = await forwardGeocode(query);
+            if (result) {
+                await setMarkerPosition(result.lat, result.lng);
+                $('#mapSearch').val(result.address);
+            } else {
+                alert('Address not found. Please try a different search term.');
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            alert('Search failed. Please try again.');
+        } finally {
+            $(this).prop('disabled', false).html('<i class="fas fa-search"></i> Search');
+        }
+    });
+
+    // Get current location
+    $('#getCurrentLocation').on('click', function() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by this browser');
+            return;
+        }
+
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Getting Location...');
+
+        navigator.geolocation.getCurrentPosition(
+            async function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                await setMarkerPosition(lat, lng);
+                $('#getCurrentLocation').prop('disabled', false).html('<i class="fas fa-crosshairs"></i> My Location');
+            },
+            function(error) {
+                console.error('Geolocation error:', error);
+                alert('Unable to get your location. Please use the search or click on the map.');
+                $('#getCurrentLocation').prop('disabled', false).html('<i class="fas fa-crosshairs"></i> My Location');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    });
+
+    // Allow search on Enter key
+    $('#mapSearch').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#searchButton').click();
+        }
+    });
+
+    // Initialize map when page loads - wait for DOM, CSS and Leaflet to be ready
+    function tryInitializeMap(attempts = 0) {
+        if (typeof L === 'undefined') {
+            if (attempts < 10) {
+                setTimeout(() => tryInitializeMap(attempts + 1), 200);
+            } else {
+                console.error('Leaflet library failed to load');
+                alert('خطأ في تحميل مكتبة الخرائط / Map library failed to load');
+            }
+            return;
+        }
+
+        initializeMap();
+        // Force map to refresh its size after initialization
+        setTimeout(function() {
+            if (propertyMap) {
+                propertyMap.invalidateSize();
+            }
+        }, 200);
+    }
+
+    setTimeout(tryInitializeMap, 500);
+
+    // Store original options for filtering - wait for DOM to be ready
+    var originalCities = '';
+    var originalNeighborhoods = '';
+
+    // Initialize original options after DOM is ready
+    setTimeout(function() {
+        originalCities = $('#city').html();
+        originalNeighborhoods = $('#neighborhood').html();
+        console.log('Original cities stored:', originalCities.length);
+
+        // Debug: Log all available cities
+        $('#city option').each(function() {
+            if ($(this).val() !== '') {
+                console.log('Available city:', $(this).text(), 'ID:', $(this).val(), 'Governorate ID:', $(this).data('governorate-id'));
+            }
+        });
+    }, 100);
+
     // Handle governorate change to update cities
     $('#governorate').on('change', function() {
         var selectedGovernorateId = $(this).val();
@@ -959,28 +1277,11 @@ $(document).ready(function() {
         $('#neighborhood_id').val('');
         
         if (selectedGovernorateId) {
-            // Filter cities based on selected governorate
-            $(originalCities).filter('option').each(function() {
-                var cityGovernorateId = $(this).data('governorate-id');
-                if (cityGovernorateId == selectedGovernorateId && $(this).val() !== '') {
-                    var option = $(this).clone();
-                    // Update option text based on current locale
-                    var locale = '{{ app()->getLocale() }}';
-                    var nameKu = $(this).data('name-ku');
-                    var nameAr = $(this).data('name-ar');
-                    var nameEn = $(this).data('name-en');
-                    
-                    if (locale === 'ku') {
-                        option.text(nameKu || nameAr);
-                    } else if (locale === 'ar') {
-                        option.text(nameAr);
-                    } else {
-                        option.text(nameEn);
-                    }
-                    
-                    citySelect.append(option);
-                }
-            });
+            // Filter cities using the dedicated function
+            filterCitiesByGovernorate(selectedGovernorateId);
+        } else {
+            // No governorate selected, disable city dropdown
+            citySelect.html('<option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.city') ?? 'City' }}</option>').prop('disabled', true);
         }
     });
 
@@ -1033,35 +1334,96 @@ $(document).ready(function() {
         var currentGovernorateId = $('#governorate_id').val();
         var currentCityId = $('#city_id').val();
         var currentNeighborhoodId = $('#neighborhood_id').val();
-        
+
+        console.log('Initializing dropdowns with values:', {
+            governorate: currentGovernorateId,
+            city: currentCityId,
+            neighborhood: currentNeighborhoodId
+        });
+
+        // Set governorate without triggering change (to avoid clearing cities)
         if (currentGovernorateId) {
-            $('#governorate').val(currentGovernorateId).trigger('change');
-            
+            $('#governorate').val(currentGovernorateId);
+            $('#governorate_id').val(currentGovernorateId);
+
+            // Filter cities based on current governorate
+            filterCitiesByGovernorate(currentGovernorateId);
+
+            // Set city value after filtering
             setTimeout(function() {
                 if (currentCityId) {
-                    $('#city').val(currentCityId).trigger('change');
-                    
+                    $('#city').val(currentCityId);
+                    $('#city_id').val(currentCityId);
+
+                    // Trigger city change to load neighborhoods
+                    $('#city').trigger('change');
+
                     setTimeout(function() {
                         if (currentNeighborhoodId) {
                             $('#neighborhood').val(currentNeighborhoodId);
+                            $('#neighborhood_id').val(currentNeighborhoodId);
                         }
                     }, 100);
                 }
             }, 100);
         }
     }
-    
-    // Call initialization
-    initializeDropdowns();
 
-    // Handle state change to update cities (legacy support)
-    $('#state').on('change', function() {
-        var selectedState = $(this).val();
-        // This can be used for additional state-based logic if needed
-    });
+    // Separate function to filter cities
+    function filterCitiesByGovernorate(selectedGovernorateId) {
+        var citySelect = $('#city');
+
+        if (!selectedGovernorateId || !originalCities) {
+            return;
+        }
+
+        console.log('Filtering cities for governorate:', selectedGovernorateId);
+
+        // Clear current options except the first one
+        citySelect.html('<option value="">{{ __('admin.select') ?? 'Select' }} {{ __('admin.city') ?? 'City' }}</option>');
+
+        // Add filtered cities
+        $(originalCities).filter('option').each(function() {
+            var cityGovernorateId = $(this).data('governorate-id');
+            if (cityGovernorateId == selectedGovernorateId && $(this).val() !== '') {
+                var option = $(this).clone();
+                // Update option text based on current locale
+                var locale = '{{ app()->getLocale() }}';
+                var nameKu = $(this).data('name-ku');
+                var nameAr = $(this).data('name-ar');
+                var nameEn = $(this).data('name-en');
+
+                if (locale === 'ku') {
+                    option.text(nameKu || nameAr);
+                } else if (locale === 'ar') {
+                    option.text(nameAr);
+                } else {
+                    option.text(nameEn);
+                }
+
+                citySelect.append(option);
+                console.log('Added city:', option.text(), 'with ID:', option.val());
+            }
+        });
+
+        citySelect.prop('disabled', false);
+        console.log('Total cities added:', citySelect.find('option').length - 1);
+    }
+    
+    // Call initialization after original options are stored
+    setTimeout(function() {
+        initializeDropdowns();
+    }, 200);
+
+    // State field removed - using governorate relationship instead
 });
 </script>
+@endpush
 
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
 <style>
 .image-container {
     transition: all 0.3s ease;
@@ -1107,6 +1469,37 @@ $(document).ready(function() {
 .custom-control-input:checked ~ .custom-control-label {
     color: #dc3545 !important;
     font-weight: bold;
+}
+
+/* Map styling */
+#propertyMap {
+    border-radius: 8px !important;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.leaflet-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.leaflet-control-zoom {
+    border-radius: 6px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+.leaflet-control-attribution {
+    background-color: rgba(255,255,255,0.9) !important;
+    font-size: 10px !important;
+}
+
+.custom-location-marker {
+    cursor: pointer;
+}
+
+.custom-location-marker:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
 }
 </style>
 @endpush
