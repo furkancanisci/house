@@ -353,7 +353,7 @@
       "orientation": "Orientation",
       "balconyCount": "Balcony Count",
       "viewType": "View Type"
-    }
+    },
     "features": {
       "airconditioning": "Air Conditioning",
       "heating": "Heating",
@@ -1013,7 +1013,8 @@
       "additionalDetails": "Additional Details",
       "propertyImages": "Property Images"
     },
-    "placeholders": {
+    "placeholders": {                  
+      "selectDocumentType" : "Select document type",
       "selectAdType": "Select listing type",
       "selectPropertyType": "Select property type",
       "bedroomCount": "Number of bedrooms",

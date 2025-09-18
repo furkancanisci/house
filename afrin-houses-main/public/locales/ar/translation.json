@@ -1013,6 +1013,7 @@
     },
     "placeholders": {
       "selectAdType": "اختر نوع الإعلان",
+      "selectDocumentType": "اختر نوع الطابو",
       "selectPropertyType": "اختر نوع العقار",
       "bedroomCount": "عدد الغرف",
       "bathroomCount": "عدد الحمامات",

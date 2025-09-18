@@ -13,15 +13,20 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
+            AdvancedDetailsPermissionsSeeder::class,
             PriceTypePermissionsSeeder::class,
             PropertyDocumentTypeSeeder::class,
             PropertyTypeSeeder::class,
             FeaturesAndUtilitiesSeeder::class,
+            ViewTypeAndDirectionSeeder::class,
             GovernorateSeeder::class,
             UserSeeder::class,
             PropertySeeder::class,
             PropertyFavoriteSeeder::class,
             PropertyViewSeeder::class,
+            AdvancedFeaturesSeeder::class,
+            CitySeeder::class,
+            SyrianCitiesSeeder::class,
         ]);
     }
 }

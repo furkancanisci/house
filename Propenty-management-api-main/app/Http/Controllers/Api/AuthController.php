@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -95,12 +96,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         return response()->json([
-            'user' => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-            ]
+            'user' => new UserResource($user)
         ]);
     }
 

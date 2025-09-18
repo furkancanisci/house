@@ -64,6 +64,8 @@ import { viewTypeService, ViewType } from '../services/viewTypeService';
 import { directionService, Direction } from '../services/directionService';
 import { compressImages, formatFileSize } from '../lib/imageUtils';
 import api from '../services/api';
+import { authService } from '../services/authService';
+import config from '../utils/config';
 
 // Types for features and utilities
 interface Feature {
@@ -434,16 +436,26 @@ const AddProperty: React.FC = () => {
   // Load property types
   React.useEffect(() => {
     const loadPropertyTypes = async () => {
+      console.log('🔄 Starting to load property types...');
       setLoadingPropertyTypes(true);
       try {
+        console.log('📡 Making API call to propertyTypeService.getPropertyTypeOptions...');
         const types = await propertyTypeService.getPropertyTypeOptions(true, true);
+        console.log('✅ Property types loaded successfully:', types);
+        console.log('📊 Number of property types:', types.length);
         setPropertyTypes(types);
       } catch (error) {
-        console.error('Failed to load property types:', error);
+        console.error('❌ Failed to load property types:', error);
+        console.error('🔍 Error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
         // Use fallback empty array if API fails
         setPropertyTypes([]);
       } finally {
         setLoadingPropertyTypes(false);
+        console.log('🏁 Property types loading finished');
       }
     };
 
@@ -564,7 +576,14 @@ const AddProperty: React.FC = () => {
     console.log('Image preview URLs count:', imagePreviewUrls.length);
     console.log('Selected images:', selectedImages);
     console.log('Image preview URLs:', imagePreviewUrls.map(url => url.substring(0, 50) + '...'));
-  }, [currentStep, selectedImages, imagePreviewUrls]);
+    
+    // Test API connection
+    console.log('🔍 Testing API connection...');
+    console.log('🔑 Token exists:', !!authService.getToken());
+    console.log('🌐 API Base URL:', config.apiBaseUrl);
+    console.log('📊 Property types count:', propertyTypes.length);
+    console.log('🔄 Loading property types:', loadingPropertyTypes);
+  }, [currentStep, selectedImages, imagePreviewUrls, propertyTypes, loadingPropertyTypes]);
 
   // State for features and utilities from API
   const [availableFeatures, setAvailableFeatures] = useState<Feature[]>([]);
@@ -1069,9 +1088,9 @@ const AddProperty: React.FC = () => {
       case 4:
         return ['description'] as (keyof PropertyFormData)[];
       case 5:
-        return [] as (keyof PropertyFormData)[]; // Advanced details step - all fields are optional
+        return ['contactName', 'contactPhone', 'contactEmail'] as (keyof PropertyFormData)[]; // Move contact validation to step 5
       case 6:
-        return ['contactName', 'contactPhone', 'contactEmail'] as (keyof PropertyFormData)[];
+        return [] as (keyof PropertyFormData)[]; // Final step - no validation needed, user must click submit manually
       default:
         return [];
     }
@@ -1390,7 +1409,13 @@ const AddProperty: React.FC = () => {
                             <SelectValue placeholder={t('addProperty.placeholders.selectPropertyType')} />
                           </div>
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
+                        {/* Debug info */}
+                        <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
+                          <div>Loading: {loadingPropertyTypes ? 'Yes' : 'No'}</div>
+                          <div>Property Types Count: {propertyTypes.length}</div>
+                          <div>First 3 types: {propertyTypes.slice(0, 3).map(t => t.slug || 'no-slug').join(', ')}</div>
+                        </div>
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                           {loadingPropertyTypes ? (
                             <SelectItem value="loading" disabled className="text-sm py-3 px-4">
                               <div className="flex items-center gap-2">
@@ -1399,28 +1424,33 @@ const AddProperty: React.FC = () => {
                               </div>
                             </SelectItem>
                           ) : propertyTypes.length > 0 ? (
-                            propertyTypes.map((type) => {
-                              const displayName = propertyTypeService.getDisplayName(type, i18n.language);
-                              const iconClass = propertyTypeService.getIconClass(type);
+                            propertyTypes
+                              .filter((type, index, array) => {
+                                // Remove duplicates based on slug
+                                return array.findIndex(t => t.slug === type.slug) === index;
+                              })
+                              .map((type, index) => {
+                                const displayName = propertyTypeService.getDisplayName(type, i18n.language);
+                                const iconClass = propertyTypeService.getIconClass(type);
 
-                              return (
-                                <SelectItem
-                                  key={type.slug}
-                                  value={type.slug}
-                                  className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <i className={`${iconClass} h-3 w-3 text-[#067977]`}></i>
-                                    {displayName}
-                                    {type.parent && (
-                                      <span className="text-xs text-gray-500 ml-1">
-                                        ({propertyTypeService.getDisplayName(type.parent, i18n.language)})
-                                      </span>
-                                    )}
-                                  </div>
-                                </SelectItem>
-                              );
-                            })
+                                return (
+                                  <SelectItem
+                                    key={`${type.slug}-${type.id || index}`}
+                                    value={type.slug}
+                                    className="text-sm py-3 px-4 hover:bg-[#067977]/10 focus:bg-[#067977]/20 transition-colors duration-150 cursor-pointer"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <i className={`${iconClass} h-3 w-3 text-[#067977]`}></i>
+                                      {displayName}
+                                      {type.parent && (
+                                        <span className="text-xs text-gray-500 ml-1">
+                                          ({propertyTypeService.getDisplayName(type.parent, i18n.language)})
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })
                           ) : (
                             <SelectItem value="no-types" disabled className="text-sm py-3 px-4">
                               <div className="flex items-center gap-2">
@@ -1451,7 +1481,7 @@ const AddProperty: React.FC = () => {
                         console.log('Document type selected:', value);
                         field.onChange(value);
                       }}
-                      placeholder="اختر نوع الطابو"
+                      placeholder={t('addProperty.placeholders.selectDocumentType')}
                       loading={loadingDocumentTypes}
                       documentTypes={documentTypes}
                       showDescriptions={false}
@@ -1491,7 +1521,9 @@ const AddProperty: React.FC = () => {
                     placeholder={watch('listingType') === 'rent' ? t('forms.monthlyRent') : t('forms.salePrice')}
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.price ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'
                       }`}
-                    {...register('price', { valueAsNumber: true })}
+                    {...register('price', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                   />
                   {errors.price && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -1570,7 +1602,9 @@ const AddProperty: React.FC = () => {
                     placeholder={t('addProperty.placeholders.bedroomCount')}
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${errors.bedrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
                       }`}
-                    {...register('bedrooms', { valueAsNumber: true })}
+                    {...register('bedrooms', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                   />
                   {errors.bedrooms && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -1593,7 +1627,9 @@ const AddProperty: React.FC = () => {
                     placeholder={t('addProperty.placeholders.bathroomCount')}
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${errors.bathrooms ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
                       }`}
-                    {...register('bathrooms', { valueAsNumber: true })}
+                    {...register('bathrooms', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                   />
                   {errors.bathrooms && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -1615,7 +1651,9 @@ const AddProperty: React.FC = () => {
                     placeholder={t('addProperty.placeholders.areaSquareMeters')}
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-[#067977]/20 hover:border-[#067977]/50 ${errors.squareFootage ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-[#067977]'
                       }`}
-                    {...register('squareFootage', { valueAsNumber: true })}
+                    {...register('squareFootage', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                   />
                   {errors.squareFootage && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -1647,7 +1685,9 @@ const AddProperty: React.FC = () => {
                     placeholder={t('addProperty.placeholders.yearBuilt')}
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-orange-100 hover:border-orange-300 ${errors.yearBuilt ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-orange-500'
                       }`}
-                    {...register('yearBuilt', { valueAsNumber: true })}
+                    {...register('yearBuilt', { 
+                   setValueAs: (value) => value === '' ? undefined : Number(value)
+                 })}
                   />
                   {errors.yearBuilt && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -1681,7 +1721,9 @@ const AddProperty: React.FC = () => {
                     placeholder={t('forms.lotSizePlaceholder')}
                     className={`h-12 text-lg border-2 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-orange-100 hover:border-orange-300 ${errors.lotSize ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-orange-500'
                       }`}
-                    {...register('lotSize', { valueAsNumber: true })}
+                    {...register('lotSize', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                   />
                   {errors.lotSize && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -1778,7 +1820,9 @@ const AddProperty: React.FC = () => {
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-100 hover:border-blue-300 ${
                       errors.floorNumber ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
                     }`}
-                    {...register('floorNumber', { valueAsNumber: true })}
+                    {...register('floorNumber', { 
+                      setValueAs: (value) => value === '' ? undefined : Number(value)
+                    })}
                   />
                   {errors.floorNumber && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -1802,7 +1846,9 @@ const AddProperty: React.FC = () => {
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-100 hover:border-blue-300 ${
                       errors.totalFloors ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
                     }`}
-                    {...register('totalFloors', { valueAsNumber: true })}
+                    {...register('totalFloors', { 
+                      setValueAs: (value) => value === '' ? undefined : Number(value)
+                    })}
                   />
                   {errors.totalFloors && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -1826,7 +1872,9 @@ const AddProperty: React.FC = () => {
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-100 hover:border-blue-300 ${
                       errors.balconyCount ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-blue-500'
                     }`}
-                    {...register('balconyCount', { valueAsNumber: true })}
+                    {...register('balconyCount', { 
+                      setValueAs: (value) => value === '' ? undefined : Number(value)
+                    })}
                   />
                   {errors.balconyCount && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -2224,7 +2272,9 @@ const AddProperty: React.FC = () => {
                   type="number"
                   placeholder={t('forms.buildingAgePlaceholder')}
                   className={`text-sm h-9 ${errors.buildingAge ? 'border-red-500' : ''}`}
-                  {...register('buildingAge', { valueAsNumber: true })}
+                  {...register('buildingAge', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                 />
                 {errors.buildingAge && (
                   <p className="text-sm text-red-600 mt-1">{errors.buildingAge.message}</p>
@@ -2316,7 +2366,9 @@ const AddProperty: React.FC = () => {
                   type="number"
                   placeholder={t('forms.maintenanceFeePlaceholder')}
                   className={`text-sm h-9 ${errors.maintenanceFee ? 'border-red-500' : ''}`}
-                  {...register('maintenanceFee', { valueAsNumber: true })}
+                  {...register('maintenanceFee', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                 />
                 {errors.maintenanceFee && (
                   <p className="text-sm text-red-600 mt-1">{errors.maintenanceFee.message}</p>
@@ -2330,7 +2382,9 @@ const AddProperty: React.FC = () => {
                   type="number"
                   placeholder={t('forms.depositAmountPlaceholder')}
                   className={`text-sm h-9 ${errors.depositAmount ? 'border-red-500' : ''}`}
-                  {...register('depositAmount', { valueAsNumber: true })}
+                  {...register('depositAmount', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                 />
                 {errors.depositAmount && (
                   <p className="text-sm text-red-600 mt-1">{errors.depositAmount.message}</p>
@@ -2344,7 +2398,9 @@ const AddProperty: React.FC = () => {
                   type="number"
                   placeholder={t('forms.annualTaxPlaceholder')}
                   className={`text-sm h-9 ${errors.annualTax ? 'border-red-500' : ''}`}
-                  {...register('annualTax', { valueAsNumber: true })}
+                  {...register('annualTax', { 
+                   setValueAs: (value) => value === '' ? undefined : Number(value)
+                 })}
                 />
                 {errors.annualTax && (
                   <p className="text-sm text-red-600 mt-1">{errors.annualTax.message}</p>
@@ -2352,90 +2408,116 @@ const AddProperty: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <h4 className="font-semibold text-blue-700 mb-2 text-sm">{t('forms.note')}</h4>
-              <p className="text-blue-600 text-xs">
-                {t('forms.advancedDetailsNote')}
-              </p>
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-4">
-            <div>
+            {/* Contact Information Section */}
+            <div className="mt-8">
               <h3 className="text-base font-semibold mb-3">{t('steps.contactInformation')}</h3>
               <p className="text-gray-600 mb-4 text-sm">
                 {t('forms.contactInfoDescription')}
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="contactName" className="text-sm">{t('forms.contactName')} *</Label>
-              <InputWithIcon
-                id="contactName"
-                icon={User}
-                placeholder={t('forms.yourFullName')}
-                className={`text-sm h-9 ${errors.contactName ? 'border-red-500' : ''}`}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                  }
-                }}
-                {...register('contactName')}
-              />
-              {errors.contactName && (
-                <p className="text-sm text-red-600 mt-1">{errors.contactName.message}</p>
-              )}
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="contactName" className="text-sm">{t('forms.contactName')} *</Label>
+                <InputWithIcon
+                  id="contactName"
+                  icon={User}
+                  placeholder={t('forms.yourFullName')}
+                  className={`text-sm h-9 ${errors.contactName ? 'border-red-500' : ''}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
+                  {...register('contactName')}
+                />
+                {errors.contactName && (
+                  <p className="text-sm text-red-600 mt-1">{errors.contactName.message}</p>
+                )}
+              </div>
 
-            <div>
-              <Label htmlFor="contactPhone" className="text-sm">{t('forms.phoneNumber')}</Label>
-              <InputWithIcon
-                id="contactPhone"
-                name="contactPhone"
-                icon={Phone}
-                placeholder={t('forms.phoneNumberPlaceholder')}
-                className={`text-sm h-9 ${errors.contactPhone ? 'border-red-500' : ''}`}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                  }
-                }}
-                {...register('contactPhone')}
-              />
-              {errors.contactPhone && (
-                <p className="text-sm text-red-600 mt-1">{errors.contactPhone.message}</p>
-              )}
-            </div>
+              <div>
+                <Label htmlFor="contactPhone" className="text-sm">{t('forms.phoneNumber')}</Label>
+                <InputWithIcon
+                  id="contactPhone"
+                  name="contactPhone"
+                  icon={Phone}
+                  placeholder={t('forms.phoneNumberPlaceholder')}
+                  className={`text-sm h-9 ${errors.contactPhone ? 'border-red-500' : ''}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
+                  {...register('contactPhone')}
+                />
+                {errors.contactPhone && (
+                  <p className="text-sm text-red-600 mt-1">{errors.contactPhone.message}</p>
+                )}
+              </div>
 
-            <div>
-              <Label htmlFor="contactEmail" className="text-sm">{t('forms.emailAddress')} *</Label>
-              <InputWithIcon
-                id="contactEmail"
-                type="email"
-                icon={Mail}
-                placeholder={t('forms.emailAddressPlaceholder')}
-                className={`text-sm h-9 ${errors.contactEmail ? 'border-red-500' : ''}`}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                  }
-                }}
-                {...register('contactEmail')}
-              />
-              {errors.contactEmail && (
-                <p className="text-sm text-red-600 mt-1">{errors.contactEmail.message}</p>
-              )}
+              <div>
+                <Label htmlFor="contactEmail" className="text-sm">{t('forms.emailAddress')} *</Label>
+                <InputWithIcon
+                  id="contactEmail"
+                  type="email"
+                  icon={Mail}
+                  placeholder={t('forms.emailAddressPlaceholder')}
+                  className={`text-sm h-9 ${errors.contactEmail ? 'border-red-500' : ''}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
+                  {...register('contactEmail')}
+                />
+                {errors.contactEmail && (
+                  <p className="text-sm text-red-600 mt-1">{errors.contactEmail.message}</p>
+                )}
+              </div>
             </div>
+            
+          </div>
+        );
 
-            <div className="bg-[#067977]/10 p-3 rounded-lg">
-              <h4 className="font-semibold text-[#067977] mb-2 text-sm">{t('forms.note')}</h4>
-              <p className="text-[#067977] text-xs">
-                Property listing will be created with the uploaded images.
+      case 6:
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{t('addProperty.finalStep.title')}</h3>
+              <p className="text-gray-600 text-sm">
+                {t('addProperty.finalStep.description')}
               </p>
             </div>
+
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium mb-3">{t('addProperty.finalStep.summary')}</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p><span className="font-medium">{t('forms.propertyType')}:</span> {watch('propertyType')}</p>
+                <p><span className="font-medium">{t('forms.price')}:</span> {watch('price') ? `${watch('price')} ${t('common.currency')}` : t('common.notSpecified')}</p>
+                <p><span className="font-medium">{t('forms.location')}:</span> {watch('address')}</p>
+                <p><span className="font-medium">{t('forms.contactName')}:</span> {watch('contactName')}</p>
+                <p><span className="font-medium">{t('forms.emailAddress')}:</span> {watch('contactEmail')}</p>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h5 className="font-medium text-blue-900 mb-1">{t('addProperty.finalStep.readyTitle')}</h5>
+                  <p className="text-blue-700 text-sm">{t('addProperty.finalStep.readyDescription')}</p>
+                </div>
+              </div>
+            </div>
+
           </div>
         );
 

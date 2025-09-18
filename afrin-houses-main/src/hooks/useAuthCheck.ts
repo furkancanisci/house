@@ -21,7 +21,22 @@ export const useAuthCheck = (): AuthCheckResult => {
   const [showActivationModal, setShowActivationModal] = useState(false);
 
   const isAuthenticated = !!user;
-  const isEmailVerified = user?.is_verified || false;
+  // Fix: Handle both boolean and undefined/null values properly
+  const isEmailVerified = user ? Boolean(user.is_verified) : false;
+
+  // Debug logging
+  console.log('DEBUG useAuthCheck:', {
+    user: user ? { 
+      id: user.id, 
+      name: user.name, 
+      email: user.email, 
+      is_verified: user.is_verified,
+      is_verified_type: typeof user.is_verified,
+      is_verified_boolean: Boolean(user.is_verified)
+    } : null,
+    isAuthenticated,
+    isEmailVerified
+  });
 
   const openAuthModal = () => {
     setShowAuthModal(true);
@@ -40,6 +55,7 @@ export const useAuthCheck = (): AuthCheckResult => {
   };
 
   const requireAuth = (action: () => void) => {
+    console.log('DEBUG requireAuth called:', { isAuthenticated });
     if (isAuthenticated) {
       action();
     } else {
@@ -48,11 +64,22 @@ export const useAuthCheck = (): AuthCheckResult => {
   };
 
   const requireVerifiedEmail = (action: () => void) => {
+    console.log('DEBUG requireVerifiedEmail called:', { 
+      isAuthenticated, 
+      isEmailVerified,
+      user_is_verified: user?.is_verified,
+      user_is_verified_type: typeof user?.is_verified,
+      user_is_verified_boolean: Boolean(user?.is_verified)
+    });
+    
     if (!isAuthenticated) {
+      console.log('DEBUG: User not authenticated, showing auth modal');
       openAuthModal();
     } else if (!isEmailVerified) {
+      console.log('DEBUG: User authenticated but email not verified, showing activation modal');
       openActivationModal();
     } else {
+      console.log('DEBUG: User authenticated and email verified, executing action');
       action();
     }
   };

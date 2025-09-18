@@ -156,12 +156,18 @@ class FeaturesAndUtilitiesSeeder extends Seeder
 
         // Insert features
         foreach ($features as $feature) {
-            Feature::create($feature);
+            Feature::updateOrCreate(
+                ['name_en' => $feature['name_en']],
+                $feature
+            );
         }
 
         // Insert utilities
         foreach ($utilities as $utility) {
-            Utility::create($utility);
+            Utility::updateOrCreate(
+                ['name_en' => $utility['name_en']],
+                $utility
+            );
         }
 
         $this->command->info('Features and Utilities seeded successfully!');
