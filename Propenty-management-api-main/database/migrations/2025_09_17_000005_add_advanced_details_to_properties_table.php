@@ -12,34 +12,74 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('properties', function (Blueprint $table) {
-            // Add foreign key columns for advanced property details
-            $table->unsignedBigInteger('building_type_id')->nullable()->after('building_type');
-            $table->unsignedBigInteger('window_type_id')->nullable()->after('window_type');
-            $table->unsignedBigInteger('floor_type_id')->nullable()->after('floor_type');
+            // Add foreign key columns for advanced property details only if they don't exist
+            if (!Schema::hasColumn('properties', 'building_type_id')) {
+                $table->unsignedBigInteger('building_type_id')->nullable()->after('building_type');
+            }
+            if (!Schema::hasColumn('properties', 'window_type_id')) {
+                $table->unsignedBigInteger('window_type_id')->nullable()->after('window_type');
+            }
+            if (!Schema::hasColumn('properties', 'floor_type_id')) {
+                $table->unsignedBigInteger('floor_type_id')->nullable()->after('floor_type');
+            }
+        });
+
+        // Add foreign key constraints in a separate schema modification
+        Schema::table('properties', function (Blueprint $table) {
+            // Check if foreign key constraints don't already exist before adding them
+            $existingConstraints = collect(\DB::select("
+                SELECT constraint_name 
+                FROM information_schema.table_constraints 
+                WHERE table_name = 'properties' 
+                AND constraint_type = 'FOREIGN KEY' 
+                AND (constraint_name LIKE '%building_type_id%' 
+                     OR constraint_name LIKE '%window_type_id%' 
+                     OR constraint_name LIKE '%floor_type_id%')
+            "))->pluck('constraint_name')->toArray();
             
-            // Add foreign key constraints
-            $table->foreign('building_type_id')
-                  ->references('id')
-                  ->on('building_types')
-                  ->onDelete('set null')
-                  ->onUpdate('cascade');
-                  
-            $table->foreign('window_type_id')
-                  ->references('id')
-                  ->on('window_types')
-                  ->onDelete('set null')
-                  ->onUpdate('cascade');
-                  
-            $table->foreign('floor_type_id')
-                  ->references('id')
-                  ->on('floor_types')
-                  ->onDelete('set null')
-                  ->onUpdate('cascade');
+            if (!in_array('properties_building_type_id_foreign', $existingConstraints)) {
+                $table->foreign('building_type_id')
+                      ->references('id')
+                      ->on('building_types')
+                      ->onDelete('set null')
+                      ->onUpdate('cascade');
+            }
+                      
+            if (!in_array('properties_window_type_id_foreign', $existingConstraints)) {
+                $table->foreign('window_type_id')
+                      ->references('id')
+                      ->on('window_types')
+                      ->onDelete('set null')
+                      ->onUpdate('cascade');
+            }
+                      
+            if (!in_array('properties_floor_type_id_foreign', $existingConstraints)) {
+                $table->foreign('floor_type_id')
+                      ->references('id')
+                      ->on('floor_types')
+                      ->onDelete('set null')
+                      ->onUpdate('cascade');
+            }
             
-            // Add indexes for better performance
-            $table->index('building_type_id');
-            $table->index('window_type_id');
-            $table->index('floor_type_id');
+            // Check for existing indexes
+            $existingIndexes = collect(\DB::select("
+                SELECT indexname 
+                FROM pg_indexes 
+                WHERE tablename = 'properties' 
+                AND (indexname LIKE '%building_type_id%' 
+                     OR indexname LIKE '%window_type_id%' 
+                     OR indexname LIKE '%floor_type_id%')
+            "))->pluck('indexname')->toArray();
+                
+            if (!in_array('properties_building_type_id_index', $existingIndexes)) {
+                $table->index('building_type_id');
+            }
+            if (!in_array('properties_window_type_id_index', $existingIndexes)) {
+                $table->index('window_type_id');
+            }
+            if (!in_array('properties_floor_type_id_index', $existingIndexes)) {
+                $table->index('floor_type_id');
+            }
         });
     }
 

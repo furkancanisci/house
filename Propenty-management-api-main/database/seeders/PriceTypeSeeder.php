@@ -21,7 +21,7 @@ class PriceTypeSeeder extends Seeder
             [
                 'name_ar' => 'قابل للتفاوض',
                 'name_en' => 'Negotiable',
-                'name_ku' => 'گفتوگۆکراو',
+                'name_ku' => 'Danûstandinî',
                 'key' => 'negotiable',
                 'listing_type' => 'both',
                 'is_active' => true,
@@ -29,7 +29,7 @@ class PriceTypeSeeder extends Seeder
             [
                 'name_ar' => 'سعر نهائي',
                 'name_en' => 'Final Price',
-                'name_ku' => 'نرخی کۆتایی',
+                'name_ku' => 'Nirxa Dawîn',
                 'key' => 'final_price',
                 'listing_type' => 'both',
                 'is_active' => true,
@@ -37,7 +37,7 @@ class PriceTypeSeeder extends Seeder
             [
                 'name_ar' => 'مثل شعبي (فوقو سكرا)',
                 'name_en' => 'Popular Saying (Above Sugar)',
-                'name_ku' => 'وتەی گەل (لەسەر شەکر)',
+                'name_ku' => 'Gotina Gel (Li ser Şekir)',
                 'key' => 'popular_saying',
                 'listing_type' => 'both',
                 'is_active' => true,
@@ -45,7 +45,7 @@ class PriceTypeSeeder extends Seeder
             [
                 'name_ar' => 'سعر من الآخر',
                 'name_en' => 'Price From Last',
-                'name_ku' => 'نرخ لە کۆتاییەوە',
+                'name_ku' => 'Nirx ji Dawîyê',
                 'key' => 'price_from_last',
                 'listing_type' => 'both',
                 'is_active' => true,
@@ -53,7 +53,7 @@ class PriceTypeSeeder extends Seeder
             [
                 'name_ar' => 'شهري',
                 'name_en' => 'Monthly',
-                'name_ku' => 'مانگانە',
+                'name_ku' => 'Mehane',
                 'key' => 'monthly',
                 'listing_type' => 'rent',
                 'is_active' => true,
@@ -61,7 +61,7 @@ class PriceTypeSeeder extends Seeder
             [
                 'name_ar' => 'سنوي',
                 'name_en' => 'Yearly',
-                'name_ku' => 'ساڵانە',
+                'name_ku' => 'Salane',
                 'key' => 'yearly',
                 'listing_type' => 'rent',
                 'is_active' => true,
@@ -69,7 +69,7 @@ class PriceTypeSeeder extends Seeder
             [
                 'name_ar' => 'السعر الإجمالي',
                 'name_en' => 'Total Price',
-                'name_ku' => 'نرخی گشتی',
+                'name_ku' => 'Nirxa Giştî',
                 'key' => 'total',
                 'listing_type' => 'sale',
                 'is_active' => true,
@@ -77,7 +77,7 @@ class PriceTypeSeeder extends Seeder
             [
                 'name_ar' => 'سعر ثابت',
                 'name_en' => 'Fixed Price',
-                'name_ku' => 'نرخی جێگیر',
+                'name_ku' => 'Nirxa Sabît',
                 'key' => 'fixed',
                 'listing_type' => 'both',
                 'is_active' => true,
