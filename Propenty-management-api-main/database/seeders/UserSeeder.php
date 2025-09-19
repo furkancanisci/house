@@ -34,6 +34,7 @@ class UserSeeder extends Seeder
         // Assign SuperAdmin role if it exists
         if (Role::where('name', 'SuperAdmin')->exists()) {
             $superAdmin->assignRole('SuperAdmin');
-        }
+        }  
+
     }
 }

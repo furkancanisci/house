@@ -159,6 +159,7 @@ class FeaturesAndUtilitiesSeeder extends Seeder
             Feature::updateOrCreate(
                 ['name_en' => $feature['name_en']],
                 $feature
+
             );
         }
 
@@ -167,6 +168,7 @@ class FeaturesAndUtilitiesSeeder extends Seeder
             Utility::updateOrCreate(
                 ['name_en' => $utility['name_en']],
                 $utility
+
             );
         }
 
