@@ -144,7 +144,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
   useEffect(() => {
     // Only update form values on initial mount or when current form is empty
     if (isInitialMount.current && initialFilters) {
-      console.log('SearchFilters: Setting initial form values from props:', initialFilters);
+  
       setFormValues(prev => ({
         ...prev,
         ...initialFilters,
@@ -192,9 +192,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('SearchFilters: Form submitted');
-    console.log('SearchFilters: Current formValues:', formValues);
-    console.log('SearchFilters: Current localValues:', localValues);
+
     
     // Create a copy of form values
     const newFilters = { ...formValues };
@@ -207,19 +205,16 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     if (minPrice !== undefined) newFilters.minPrice = minPrice;
     if (maxPrice !== undefined) newFilters.maxPrice = maxPrice;
     
-    console.log('SearchFilters: Final filters to apply:', newFilters);
+
     
     // Location is already handled by handleLocationChange and stored in formValues.location
     
     // Call the appropriate callback
     if (onApplyFilters) {
-      console.log('SearchFilters: Calling onApplyFilters');
+
       onApplyFilters(newFilters);
     } else if (onFiltersChange) {
-      console.log('SearchFilters: Calling onFiltersChange');
       onFiltersChange(newFilters);
-    } else {
-      console.log('SearchFilters: No callback provided!');
     }
   };
   
@@ -255,7 +250,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
 
   // Handle location change with debouncing to prevent excessive API calls
   const handleLocationChange = useCallback(async (type: 'state' | 'city', value: string) => {
-    console.log(`SearchFilters: handleLocationChange called - ${type}:`, value);
     
     try {
       if (type === 'state') {
@@ -265,7 +259,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           const newValues = { ...prev, state: value, city: '' };
           // Update location string
           newValues.location = value;
-          console.log('SearchFilters: Updated formValues after state change:', newValues);
           return newValues;
         });
         
@@ -278,10 +271,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           // Debounce API call by 500ms (increased from 300ms)
           debounceTimerRef.current = setTimeout(async () => {
             try {
-              console.log('SearchFilters: Loading cities for state:', value);
               const citiesData = await cityService.getCitiesByState(value);
               const newCities = citiesData.map(city => ({ value: city.name, label: city.name }));
-              console.log('SearchFilters: Loaded cities:', newCities);
               setCities(prevCities => {
                 // Only update if cities actually changed
                 if (JSON.stringify(prevCities) === JSON.stringify(newCities)) {
@@ -290,7 +281,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
                 return newCities;
               });
             } catch (error) {
-              console.error('Error loading cities:', error);
               notification.error('خطأ في تحميل المدن');
               setCities([]);
             }
@@ -307,21 +297,17 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
           if (value) locationParts.push(value);
           if (prev.state) locationParts.push(prev.state);
           newValues.location = locationParts.join(', ');
-          console.log('SearchFilters: Updated formValues after city change:', newValues);
           return newValues;
         });
-        
-        console.log('SearchFilters: City updated in form only, waiting for Apply Filters button');
+
       }
     } catch (error) {
-      console.error(`Error handling ${type} change:`, error);
       notification.error(`خطأ في معالجة ${type === 'state' ? 'الولاية' : 'المدينة'}`);
     }
   }, [onFiltersChange, formValues]);
 
   // Handle location changes from LocationSelector with debouncing
   const handleLocationSelectorChange = useCallback((location: { state?: string; city?: string }) => {
-    console.log('SearchFilters: Location selector changed:', location);
     
     // Only update form values for display - don't update selectedState/selectedCity
     // to prevent infinite loops with LocationSelector
@@ -331,8 +317,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     
     const newLocation = locationParts.join(', ');
     
-    console.log('SearchFilters: New location string:', newLocation);
-    
     // Use functional update to prevent stale closure issues
     setFormValues(prev => {
       if (prev.location === newLocation) return prev; // Prevent unnecessary updates
@@ -341,8 +325,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
         location: newLocation
       };
     });
-    
-    // Don't notify parent component - wait for form submission
   }, []);
 
   // Handle filter changes - update local form values

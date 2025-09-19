@@ -44,7 +44,7 @@ class WindowTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch window types');
     } catch (error) {
-      console.error('Error fetching window types:', error);
+  
       throw error;
     }
   }
@@ -62,7 +62,7 @@ class WindowTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch window type options');
     } catch (error) {
-      console.error('Error fetching window type options:', error);
+  
       throw error;
     }
   }
@@ -80,7 +80,7 @@ class WindowTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch window types with counts');
     } catch (error) {
-      console.error('Error fetching window types with counts:', error);
+  
       throw error;
     }
   }
@@ -98,7 +98,7 @@ class WindowTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch window type');
     } catch (error) {
-      console.error('Error fetching window type:', error);
+  
       throw error;
     }
   }

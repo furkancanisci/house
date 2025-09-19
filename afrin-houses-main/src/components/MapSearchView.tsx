@@ -333,7 +333,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
         zoom
       };
       // Only update local state, don't call API on map movement
-      console.log('Map bounds changed:', viewport);
+  
     }, 500),
     []
   );
@@ -439,7 +439,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
             icon={icon}
             eventHandlers={{
               click: () => {
-                console.log('Map marker clicked:', property.title);
+          
                 handlePropertySelect(property);
               }
             }}
@@ -497,7 +497,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
                     size="sm" 
                     onClick={(e) => {
                       e.stopPropagation();
-                      console.log('Popup button clicked for property:', property.id);
+                
                       navigate(`/property/${property.id}`);
                     }}
                     className="bg-[#067977] hover:bg-[#067977]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg hover:scale-105 font-medium"
@@ -706,7 +706,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
                           : 'hover:shadow-gray-200'
                       }`}
                       onClick={() => {
-                        console.log('Property card clicked:', property.title);
+                
                         handlePropertySelect(property);
                       }}
                     >
@@ -819,7 +819,7 @@ const MapSearchView: React.FC<MapSearchViewProps> = ({
                                 className="text-[#067977] hover:text-white hover:bg-[#067977] border border-[#067977]/30 hover:border-[#067977] transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 font-medium"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  console.log('Navigating to property details:', property.id);
+                            
                                   navigate(`/property/${property.id}`);
                                 }}
                               >

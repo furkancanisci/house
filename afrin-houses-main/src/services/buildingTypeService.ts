@@ -44,7 +44,7 @@ class BuildingTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch building types');
     } catch (error) {
-      console.error('Error fetching building types:', error);
+  
       throw error;
     }
   }
@@ -62,7 +62,7 @@ class BuildingTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch building type options');
     } catch (error) {
-      console.error('Error fetching building type options:', error);
+  
       throw error;
     }
   }
@@ -80,7 +80,7 @@ class BuildingTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch building types with counts');
     } catch (error) {
-      console.error('Error fetching building types with counts:', error);
+  
       throw error;
     }
   }
@@ -98,7 +98,7 @@ class BuildingTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch building type');
     } catch (error) {
-      console.error('Error fetching building type:', error);
+  
       throw error;
     }
   }

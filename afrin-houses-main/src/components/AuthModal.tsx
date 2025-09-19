@@ -103,7 +103,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         notification.error(notificationMessages.loginError);
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+
       
       // Extract error message from API response
       let errorMessage = t('auth.errorOccurred');
@@ -150,7 +150,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         notification.error(notificationMessages.actionError);
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
+
       
       // Extract error message from API response
       let errorMessage = t('auth.errorOccurred');

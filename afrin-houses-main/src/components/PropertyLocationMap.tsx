@@ -154,7 +154,7 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
         return data.display_name || null;
       }
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
+      
     }
     
     return null;
@@ -179,7 +179,7 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
         }
       }
     } catch (error) {
-      console.error('Forward geocoding error:', error);
+      
     }
     
     return null;
@@ -298,7 +298,7 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
           toast.success(t('map.currentLocationFound'));
         },
         (error) => {
-          console.error('Error getting current location:', error);
+
           toast.error(t('map.currentLocationError'));
         }
       );

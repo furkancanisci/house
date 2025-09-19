@@ -55,7 +55,7 @@ class PriceTypeService {
         throw new Error('Failed to fetch price types');
       }
     } catch (error) {
-      console.error('Error fetching price types:', error);
+
       throw error;
     }
   }

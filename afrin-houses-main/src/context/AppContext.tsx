@@ -155,10 +155,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const loadProperties = async (filters?: SearchFilters) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      console.log('DEBUG: Fetching properties from API...');
+
       
       const response = await getProperties(filters);
-      console.log('DEBUG: Properties API response:', response);
+
       
       // Handle different response structures safely with proper type checking
       let propertiesData: any[] = [];
@@ -179,11 +179,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       } 
       // Handle unexpected response structure
       else {
-        console.warn('Unexpected properties API response structure:', response);
+
         propertiesData = [];
       }
       
-      console.log('DEBUG: Extracted properties data:', propertiesData);
+
 
       // Normalize location fields coming from API (they may be objects with name_ar/name_en/name_ku)
       const currentLang = i18n.language;
@@ -260,10 +260,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         } as Property;
       });
       
-      console.log('DEBUG: Transformed properties:', properties);
+
       dispatch({ type: 'SET_PROPERTIES', payload: properties });
     } catch (error: any) {
-      console.error('Failed to load properties:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load properties' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -272,19 +272,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   // Filter properties based on search criteria - now uses API
   const filterProperties = React.useCallback(async (filters: SearchFilters) => {
-    console.log('filterProperties called with:', filters);
+
     dispatch({ type: 'SET_SEARCH_FILTERS', payload: filters });
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
       // Use the updated getProperties function with filters
       const response = await getProperties(filters);
-      console.log('API response for filtered properties:', response);
+
       
       // Transform the response data
       const responseData = Array.isArray(response) ? response : (response?.data || []);
       if (!Array.isArray(responseData)) {
-        console.warn('API response data is not an array:', responseData);
+
         dispatch({ type: 'SET_PROPERTIES', payload: [] });
         dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: [] });
         return;
@@ -328,11 +328,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       });
       
-      console.log('Filtered properties from API:', properties);
+
       dispatch({ type: 'SET_PROPERTIES', payload: properties });
       dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: properties });
     } catch (error: any) {
-      console.error('Failed to filter properties:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Failed to filter properties' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -347,7 +347,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // The images and mainImage are already properly structured as File objects
       // No need to extract imageFiles anymore since AddProperty.tsx now sends the correct structure
       
-      console.log('Sending property data to API service:', propertyData);
+
       const response = await createPropertyAPI(propertyData);
       
       // Transform API response back to frontend format
@@ -401,7 +401,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Endpoint has been removed from backend
       }
     } catch (error: any) {
-      console.error('Failed to add property:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add property' });
       throw error;
     } finally {
@@ -502,7 +502,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       dispatch({ type: 'UPDATE_PROPERTY', payload: updatedProperty });
     } catch (error: any) {
-      console.error('Failed to update property:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update property' });
       throw error;
     } finally {
@@ -526,7 +526,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         dispatch({ type: 'SET_USER', payload: updatedUser });
       }
     } catch (error: any) {
-      console.error('Failed to delete property:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete property' });
       throw error;
     } finally {
@@ -552,7 +552,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       
       return response.is_favorited;
     } catch (error: any) {
-      console.error('Failed to toggle favorite:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update favorite' });
       throw error;
     }
@@ -562,10 +562,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      console.log('DEBUG: Starting login process for:', email);
+
       
       const response = await authService.login({ email, password });
-      console.log('DEBUG: Login response received:', response);
+
       
       // Transform API response to frontend user format
       const user: User = {
@@ -590,19 +590,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         updated_at: (response.user as any)?.updated_at || new Date().toISOString()
       };
       
-      console.log('DEBUG: Setting user in state:', user);
+
       dispatch({ type: 'SET_USER', payload: user });
       
       // Load user's properties and favorites
-      console.log('DEBUG: Loading properties...');
+
       await loadProperties();
-      console.log('DEBUG: Loading user favorites...');
+      
       await loadUserFavorites();
-      console.log('DEBUG: Login process completed');
+      
       
       return true;
     } catch (error: any) {
-      console.error('Login failed:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
       return false;
     } finally {
@@ -617,7 +617,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       dispatch({ type: 'SET_USER', payload: null });
       dispatch({ type: 'SET_PROPERTIES', payload: [] });
     } catch (error: any) {
-      console.error('Logout failed:', error);
+
       // Still clear local state even if API call fails
       dispatch({ type: 'SET_USER', payload: null });
       dispatch({ type: 'SET_PROPERTIES', payload: [] });
@@ -627,12 +627,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // Add a function to refresh user data
   const refreshUser = async () => {
     try {
-      console.log('DEBUG: Manually refreshing user data...');
+
       
       // Clear any cached data first
       const token = authService.getToken();
       if (!token) {
-        console.log('DEBUG: No token found, user needs to log in');
+
         dispatch({ type: 'SET_USER', payload: null });
         return null;
       }
@@ -662,16 +662,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           updated_at: user.updated_at || new Date().toISOString()
         };
         
-        console.log('DEBUG: Refreshed user data:', frontendUser);
-        console.log('DEBUG: Raw API user data:', user);
+
+
         dispatch({ type: 'SET_USER', payload: frontendUser });
         return frontendUser;
       } else {
-        console.log('DEBUG: No user data received from API');
+
         dispatch({ type: 'SET_USER', payload: null });
       }
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+
       // If refresh fails, clear user data
       dispatch({ type: 'SET_USER', payload: null });
     }
@@ -692,7 +692,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       
       // Debug: Log the incoming userData
-      console.log('Registration form data:', userData);
+
       
       // Ensure password_confirmation is set and include terms_accepted
       const registrationData = {
@@ -706,7 +706,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       };
       
       // Debug: Log the registration data being sent
-      console.log('Registration data being sent:', registrationData);
+
 
       const response = await authService.register(registrationData);
       
@@ -739,7 +739,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       
       return false;
     } catch (error: any) {
-      console.error('Registration failed:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
       return false;
     } finally {
@@ -751,23 +751,23 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const loadUserFavorites = async () => {
     try {
       if (!state.user) {
-        console.log('DEBUG: No user found, skipping favorites load');
+
         return;
       }
       
-      console.log('DEBUG: Loading user favorites...');
+
       const favorites = await getFavoriteProperties();
-      console.log('DEBUG: Favorites response:', favorites);
+
       
       const favoriteIds = favorites.map((prop: any) => prop.id.toString());
-      console.log('DEBUG: Favorite IDs:', favoriteIds);
+
       
       dispatch({ type: 'SET_FAVORITES', payload: favoriteIds });
     } catch (error: any) {
-      console.error('Failed to load user favorites:', error);
+
       // If we get a 401, the user might not be authenticated properly
       if (error?.response?.status === 401) {
-        console.error('Authentication error when loading favorites');
+
       }
     }
   };
@@ -778,7 +778,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     
     const initializeApp = async () => {
       try {
-        console.log('DEBUG: Initializing app...');
+
         
         // Set initial loading state
         if (isMounted) {
@@ -791,7 +791,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         
         if (token && storedUser) {
           // Immediately set the stored user to prevent flash of unauthenticated content
-          console.log('DEBUG: Found stored user, setting initial state');
+
           const initialUser: User = {
             id: storedUser.id?.toString() || '',
             name: (storedUser.name || `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim() || 'User').toString(),
@@ -823,11 +823,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Then try to refresh the session
         if (token) {
           try {
-            console.log('DEBUG: Refreshing user session...');
+
             const user = await authService.getCurrentUser();
             
             if (user) {
-              console.log('DEBUG: Successfully refreshed user session');
+
               // Transform API response to frontend user format
               const frontendUser: User = {
                 id: user.id?.toString() || '',
@@ -850,39 +850,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 created_at: user.created_at || new Date().toISOString()
               };
               
-              console.log('DEBUG: Setting authenticated user in state:', frontendUser);
+
               dispatch({ type: 'SET_USER', payload: frontendUser });
               
               // Load user's favorites in parallel
-              console.log('DEBUG: Loading user data...');
+
               await Promise.all([
                 loadUserFavorites()
               ]);
             } else {
-              console.log('DEBUG: No user data found, clearing auth data');
+
               authService.clearAuthData();
               dispatch({ type: 'SET_USER', payload: null });
             }
           } catch (error) {
-            console.error('Error during session refresh:', error);
+
             // If we get a 401, clear the invalid token
             if ((error as any)?.response?.status === 401) {
-              console.log('DEBUG: Invalid token, clearing auth data');
+
               authService.clearAuthData();
               dispatch({ type: 'SET_USER', payload: null });
             }
           }
         } else {
-          console.log('DEBUG: No authentication token found');
+
           dispatch({ type: 'SET_USER', payload: null });
         }
         
         // Load properties regardless of authentication status
-        console.log('DEBUG: Loading all properties...');
+
         await loadProperties();
-        console.log('DEBUG: App initialization completed');
+
       } catch (error) {
-        console.error('Failed to initialize app:', error);
+
         // Still load properties even if user auth fails
         if (isMounted) {
           await loadProperties();
@@ -921,7 +921,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         changeLanguage(savedLanguage);
       } else if (i18n.language) {
         // Otherwise sync with current i18n language
-        console.log('DEBUG: Syncing with i18n language:', i18n.language);
+
         document.documentElement.lang = i18n.language;
         document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
         dispatch({ type: 'SET_LANGUAGE', payload: i18n.language });
@@ -959,7 +959,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         dispatch({ type: 'SET_USER', payload: updatedUser });
       }
     } catch (error: any) {
-      console.error('Failed to update user:', error);
+
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update user' });
       throw error;
     }

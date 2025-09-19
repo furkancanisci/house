@@ -32,7 +32,7 @@ export const dashboardService = {
       const response = await api.get('/dashboard/overview');
       return response.data;
     } catch (error) {
-      console.error('Error fetching dashboard overview:', error);
+  
       throw error;
     }
   },
@@ -52,7 +52,7 @@ export const dashboardService = {
         myProperties: response.data.stats.total_properties || 0
       };
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+  
       // Return default values in case of error
       return {
         totalProperties: 0,
@@ -77,7 +77,7 @@ export const dashboardService = {
         myProperties: response.data.myProperties || 0
       };
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+  
       // Return default values in case of error
       return {
         totalProperties: 0,
@@ -95,7 +95,7 @@ export const dashboardService = {
       const response = await api.get('/dashboard/favorites');
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching favorite properties:', error);
+  
       return [];
     }
   },
@@ -106,7 +106,7 @@ export const dashboardService = {
       const response = await api.post('/profile', profileData, { baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://api.besttrend-sy.com/api/v1').replace('/v1', '') });
       return response.data.user;
     } catch (error) {
-      console.error('Error updating profile:', error);
+  
       throw error;
     }
   },
@@ -117,7 +117,7 @@ export const dashboardService = {
       const response = await api.get('/notifications');
       return response.data;
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+  
       throw error;
     }
   }

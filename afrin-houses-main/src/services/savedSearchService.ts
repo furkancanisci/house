@@ -53,7 +53,7 @@ class SavedSearchService {
       const response = await api.get('/v1/saved-searches');
       return response.data;
     } catch (error: any) {
-      console.error('Error getting saved searches:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to get saved searches'
@@ -69,7 +69,7 @@ class SavedSearchService {
       const response = await api.get(`/v1/saved-searches/${id}`);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting saved search:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to get saved search'
@@ -89,7 +89,7 @@ class SavedSearchService {
       const response = await api.post('/v1/saved-searches', data);
       return response.data;
     } catch (error: any) {
-      console.error('Error creating saved search:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to create saved search'
@@ -112,7 +112,7 @@ class SavedSearchService {
       const response = await api.put(`/v1/saved-searches/${id}`, data);
       return response.data;
     } catch (error: any) {
-      console.error('Error updating saved search:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to update saved search'
@@ -128,7 +128,7 @@ class SavedSearchService {
       const response = await api.delete(`/v1/saved-searches/${id}`);
       return response.data;
     } catch (error: any) {
-      console.error('Error deleting saved search:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to delete saved search'
@@ -162,7 +162,7 @@ class SavedSearchService {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error executing saved search:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to execute saved search'
@@ -178,7 +178,7 @@ class SavedSearchService {
       const response = await api.get(`/v1/saved-searches/${id}/count`);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting saved search count:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to get saved search count'
@@ -194,7 +194,7 @@ class SavedSearchService {
       const response = await api.post(`/v1/saved-searches/${id}/toggle-notifications`);
       return response.data;
     } catch (error: any) {
-      console.error('Error toggling notifications:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to toggle notifications'

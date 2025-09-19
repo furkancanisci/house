@@ -55,7 +55,7 @@ const Home: React.FC = () => {
       const stats = await getHomeStats();
       setHomeStats(stats);
     } catch (error) {
-      console.error('Error fetching home statistics:', error);
+      
     }
   };
 
@@ -88,15 +88,15 @@ const Home: React.FC = () => {
           limit: 10
         });
         
-        console.log('API Response:', response);
-        console.log('Featured Properties Response:', featuredResponse);
+
+
         
         // Handle the response structure - getProperties might return an array or an object with data
         const allProps = Array.isArray(response) ? response : (response?.data || []);
         const featuredProps = Array.isArray(featuredResponse) ? featuredResponse : (featuredResponse?.data || []);
         
         if (!Array.isArray(allProps)) {
-          console.error('Invalid properties data:', allProps);
+
           return;
         }
         
@@ -120,7 +120,7 @@ const Home: React.FC = () => {
         setAllProperties(allProps);
         
       } catch (err) {
-        console.error('Error fetching properties:', err);
+
         setError(t('errors.failedToLoadProperties'));
       } finally {
         setLoading(false);

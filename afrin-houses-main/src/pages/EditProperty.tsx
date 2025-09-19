@@ -179,12 +179,12 @@ const EditProperty: React.FC = () => {
 
         // If not found in state, fetch from API
         if (!foundProperty) {
-          console.log('Property not found in state, fetching from API...');
+  
           try {
             foundProperty = await getProperty(id);
-            console.log('Fetched property from API:', foundProperty);
+  
           } catch (apiError) {
-            console.error('Error fetching property from API:', apiError);
+  
             toast.error('Property not found');
             navigate('/dashboard');
             return;
@@ -257,7 +257,7 @@ const EditProperty: React.FC = () => {
           navigate('/dashboard');
         }
       } catch (error) {
-        console.error('Error loading property:', error);
+  
         toast.error('Failed to load property');
         navigate('/dashboard');
       }
@@ -276,7 +276,7 @@ const EditProperty: React.FC = () => {
         });
         setDocumentTypes(types);
       } catch (error) {
-        console.error('Failed to load document types:', error);
+  
         // Use fallback data if API fails
         const fallbackTypes = propertyDocumentTypeService.getFallbackDocumentTypes('ar');
         setDocumentTypes(fallbackTypes);
@@ -296,7 +296,7 @@ const EditProperty: React.FC = () => {
       const priceTypesData = await priceTypeService.getPriceTypes(listingType);
       setPriceTypes(priceTypesData);
     } catch (error) {
-      console.error('Error fetching price types:', error);
+
       setPriceTypesError('Failed to load price types');
       toast.error('Failed to load price types');
     } finally {

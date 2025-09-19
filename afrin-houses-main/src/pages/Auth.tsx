@@ -98,7 +98,7 @@ const Auth: React.FC = () => {
         notification.error(notificationMessages.loginError);
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+
       
       // Extract error message from API response
       let errorMessage = t('auth.errorOccurred');
@@ -126,7 +126,7 @@ const Auth: React.FC = () => {
 
   const onRegisterSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
-    console.log('Form data:', data); // Debug log
+
     try {
       const success = await register({
         first_name: data.first_name,
@@ -145,7 +145,7 @@ const Auth: React.FC = () => {
         notification.error(t('auth.accountCreationFailed'));
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
+
       
       // Extract error message from API response
       let errorMessage = t('auth.errorOccurred');

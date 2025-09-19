@@ -57,7 +57,7 @@ export const searchService = {
       });
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching search suggestions:', error);
+
       throw error;
     }
   },
@@ -68,7 +68,7 @@ export const searchService = {
       const response = await api.get('/locations/states');
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching states:', error);
+
       throw error;
     }
   },
@@ -79,7 +79,7 @@ export const searchService = {
       const response = await api.get('/locations/cities', { params });
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching cities:', error);
+
       throw error;
     }
   },
@@ -93,7 +93,7 @@ export const searchService = {
       const response = await api.get('/locations/neighborhoods', { params });
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching neighborhoods:', error);
+
       throw error;
     }
   },
@@ -104,7 +104,7 @@ export const searchService = {
       const response = await api.get('/stats/overview');
       return response.data;
     } catch (error) {
-      console.error('Error fetching stats overview:', error);
+
       throw error;
     }
   },
@@ -114,7 +114,7 @@ export const searchService = {
       const response = await api.get('/stats/price-ranges');
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching price ranges:', error);
+
       throw error;
     }
   },

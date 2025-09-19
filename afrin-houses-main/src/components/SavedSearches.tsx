@@ -61,7 +61,7 @@ const SavedSearches: React.FC<SavedSearchesProps> = ({ onCreateNew, onEditSearch
         ));
       }
     } catch (error) {
-      console.error('Failed to load search count:', error);
+      
     }
   };
 

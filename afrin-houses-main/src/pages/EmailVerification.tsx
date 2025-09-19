@@ -46,15 +46,11 @@ const EmailVerification: React.FC = () => {
   const signature = searchParams.get('signature');
 
   useEffect(() => {
-    console.log('EmailVerification component loaded with params:', {
-      id, hash, token, data: data ? 'present' : 'missing', 
-      signature: signature ? 'present' : 'missing',
-      userVerified: state.user?.is_verified
-    });
+
     
     // If user is already verified, don't attempt verification
     if (state.user?.is_verified) {
-      console.log('User is already verified, skipping verification process');
+
       return;
     }
     
@@ -77,7 +73,7 @@ const EmailVerification: React.FC = () => {
     try {
       // Double check if user is already verified before making API call
       if (state.user?.is_verified) {
-        console.log('User is already verified, aborting verification process');
+
         return;
       }
       
@@ -123,13 +119,7 @@ const EmailVerification: React.FC = () => {
         toast.error(result.message || t('emailVerification.verificationFailedMessage'));
       }
     } catch (error: any) {
-      console.error('Email verification error:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message
-      });
+
       
       setVerificationStatus('error');
       
@@ -138,7 +128,7 @@ const EmailVerification: React.FC = () => {
       // Handle specific error cases
       if (error.response?.status === 422 && error.response?.data?.message?.includes('already verified')) {
         // User is already verified - this should not happen with our new logic, but just in case
-        console.log('API returned already verified status');
+
         if (state.user) {
           dispatch({ type: 'SET_USER', payload: { ...state.user, is_verified: true } });
         }
@@ -163,7 +153,7 @@ const EmailVerification: React.FC = () => {
       const response = await api.get('/auth/email/verification-status');
       setVerificationStats(response.data);
     } catch (error) {
-      console.error('Failed to load verification status:', error);
+
     }
   };
 
@@ -180,7 +170,7 @@ const EmailVerification: React.FC = () => {
         toast.error(response.data.message || t('emailVerification.verificationFailedMessage'));
       }
     } catch (error: any) {
-      console.error('Resend verification error:', error);
+
       
       if (error.response?.status === 429) {
         toast.error(t('emailVerification.tooManyAttempts'));

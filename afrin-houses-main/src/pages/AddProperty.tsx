@@ -197,14 +197,11 @@ const AddProperty: React.FC = () => {
     // Restore image preview URLs from localStorage
     const savedPreviewUrls = localStorage.getItem('addProperty_imagePreviewUrls');
     const urls = savedPreviewUrls ? JSON.parse(savedPreviewUrls) : [];
-    console.log('AddProperty - Initial imagePreviewUrls from localStorage:', urls.length, urls.map(url => url.substring(0, 50) + '...'));
+
     return urls;
   });
 
-  // Debug: Log imagePreviewUrls changes
-  useEffect(() => {
-    console.log('AddProperty - imagePreviewUrls state updated:', imagePreviewUrls.length, imagePreviewUrls.map(url => url.substring(0, 50) + '...'));
-  }, [imagePreviewUrls]);
+
   const [mainImageIndex, setMainImageIndex] = useState<number>(() => {
     // Restore main image index from localStorage
     const savedMainImageIndex = localStorage.getItem('addProperty_mainImageIndex');
@@ -284,7 +281,7 @@ const AddProperty: React.FC = () => {
             contactPhone: (parsedData.contactPhone && parsedData.contactPhone.trim() !== '') ? parsedData.contactPhone : (user?.phone || ''),
           };
         } catch (error) {
-          console.error('Error parsing saved form data:', error);
+
         }
       }
       
@@ -363,7 +360,7 @@ const AddProperty: React.FC = () => {
       try {
         localStorage.setItem('addProperty_formData', JSON.stringify(data));
       } catch (error) {
-        console.error('Error saving form data to localStorage:', error);
+
       }
     });
     return () => subscription.unsubscribe();
@@ -421,7 +418,7 @@ const AddProperty: React.FC = () => {
         });
         setDocumentTypes(types);
       } catch (error) {
-        console.error('Failed to load document types:', error);
+
         // Use fallback data if API fails
         const fallbackTypes = propertyDocumentTypeService.getFallbackDocumentTypes(i18n.language);
         setDocumentTypes(fallbackTypes);
@@ -436,26 +433,17 @@ const AddProperty: React.FC = () => {
   // Load property types
   React.useEffect(() => {
     const loadPropertyTypes = async () => {
-      console.log('🔄 Starting to load property types...');
       setLoadingPropertyTypes(true);
       try {
-        console.log('📡 Making API call to propertyTypeService.getPropertyTypeOptions...');
         const types = await propertyTypeService.getPropertyTypeOptions(true, true);
-        console.log('✅ Property types loaded successfully:', types);
-        console.log('📊 Number of property types:', types.length);
         setPropertyTypes(types);
       } catch (error) {
-        console.error('❌ Failed to load property types:', error);
-        console.error('🔍 Error details:', {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data
-        });
+
         // Use fallback empty array if API fails
         setPropertyTypes([]);
       } finally {
         setLoadingPropertyTypes(false);
-        console.log('🏁 Property types loading finished');
+
       }
     };
 
@@ -470,7 +458,7 @@ const AddProperty: React.FC = () => {
         const types = await buildingTypeService.getBuildingTypeOptions();
         setBuildingTypes(types);
       } catch (error) {
-        console.error('Failed to load building types:', error);
+
         setBuildingTypes([]);
       } finally {
         setLoadingBuildingTypes(false);
@@ -488,7 +476,7 @@ const AddProperty: React.FC = () => {
         const types = await windowTypeService.getWindowTypeOptions();
         setWindowTypes(types);
       } catch (error) {
-        console.error('Failed to load window types:', error);
+
         setWindowTypes([]);
       } finally {
         setLoadingWindowTypes(false);
@@ -506,7 +494,7 @@ const AddProperty: React.FC = () => {
         const types = await floorTypeService.getFloorTypeOptions();
         setFloorTypes(types);
       } catch (error) {
-        console.error('Failed to load floor types:', error);
+
         setFloorTypes([]);
       } finally {
         setLoadingFloorTypes(false);
@@ -524,7 +512,7 @@ const AddProperty: React.FC = () => {
         const types = await viewTypeService.getViewTypeOptions();
         setViewTypes(types);
       } catch (error) {
-        console.error('Failed to load view types:', error);
+
         setViewTypes([]);
       } finally {
         setLoadingViewTypes(false);
@@ -542,7 +530,7 @@ const AddProperty: React.FC = () => {
         const directions = await directionService.getDirectionOptions();
         setDirections(directions);
       } catch (error) {
-        console.error('Failed to load directions:', error);
+
         setDirections([]);
       } finally {
         setLoadingDirections(false);
@@ -568,22 +556,6 @@ const AddProperty: React.FC = () => {
     }
   }, [currentStep, watch('listingType')]);
   
-  // Debug logging
-  useEffect(() => {
-    console.log('AddProperty component state:');
-    console.log('Current step:', currentStep);
-    console.log('Selected images count:', selectedImages.length);
-    console.log('Image preview URLs count:', imagePreviewUrls.length);
-    console.log('Selected images:', selectedImages);
-    console.log('Image preview URLs:', imagePreviewUrls.map(url => url.substring(0, 50) + '...'));
-    
-    // Test API connection
-    console.log('🔍 Testing API connection...');
-    console.log('🔑 Token exists:', !!authService.getToken());
-    console.log('🌐 API Base URL:', config.apiBaseUrl);
-    console.log('📊 Property types count:', propertyTypes.length);
-    console.log('🔄 Loading property types:', loadingPropertyTypes);
-  }, [currentStep, selectedImages, imagePreviewUrls, propertyTypes, loadingPropertyTypes]);
 
   // State for features and utilities from API
   const [availableFeatures, setAvailableFeatures] = useState<Feature[]>([]);
@@ -615,7 +587,7 @@ const AddProperty: React.FC = () => {
       
       setAvailableFeatures(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching features:', error);
+
       setFeaturesError('Failed to load features');
       notification.error('Failed to load features');
     } finally {
@@ -640,7 +612,7 @@ const AddProperty: React.FC = () => {
       
       setAvailableUtilities(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching utilities:', error);
+
       setUtilitiesError('Failed to load utilities');
       notification.error('Failed to load utilities');
     } finally {
@@ -678,7 +650,7 @@ const AddProperty: React.FC = () => {
         setValue('priceType', defaultPriceType.key);
       }
     } catch (error) {
-      console.error('Error fetching price types:', error);
+
       setPriceTypesError('Failed to load price types');
       notification.error('Failed to load price types');
     } finally {
@@ -747,71 +719,34 @@ const AddProperty: React.FC = () => {
 
 
   const nextStep = async () => {
-    console.log('=== NEXT STEP DEBUG ===');
-    console.log('Next button clicked, current step:', currentStep);
-    console.log('Total steps:', totalSteps);
-    
     // Prevent moving beyond the last step
     if (currentStep >= totalSteps) {
-      console.log('Already at the last step, cannot proceed further');
       return;
     }
     
     const fieldsToValidate = getFieldsForStep(currentStep);
-    console.log('Fields to validate for step', currentStep, ':', fieldsToValidate);
     
     // Get current form values
     const currentValues = getValues();
-    console.log('Current form values:', currentValues);
     
-    // Special debugging for step 5 contactPhone issue
-    if (currentStep === 5) {
-      console.log('=== STEP 5 CONTACT PHONE DEBUG ===');
-      console.log('contactPhone value:', currentValues.contactPhone);
-      console.log('contactPhone type:', typeof currentValues.contactPhone);
-      console.log('contactPhone length:', currentValues.contactPhone?.length);
-      console.log('contactPhone trimmed length:', currentValues.contactPhone?.trim()?.length);
-      console.log('User phone from context:', user?.phone);
-      console.log('User object:', user);
-      console.log('=== END STEP 5 DEBUG ===');
-    }
+
     
-    // Check each field individually
-    fieldsToValidate.forEach(field => {
-      const value = currentValues[field];
-      const error = errors[field];
-      console.log(`Field ${field}:`, { value, error, isEmpty: !value || value === '' });
-    });
+
 
     try {
-      console.log('Triggering validation...');
       const isValid = await trigger(fieldsToValidate);
-      console.log('Validation result:', isValid);
-      console.log('Current errors after validation:', errors);
-      
-      // Log specific field errors
-      fieldsToValidate.forEach(field => {
-        if (errors[field]) {
-          console.log(`Error for ${field}:`, errors[field]?.message);
-        }
-      });
 
       if (isValid) {
-        console.log('Validation passed, moving to next step');
         setCurrentStep(prev => {
           const newStep = Math.min(prev + 1, totalSteps);
-          console.log('Moving from step', prev, 'to step', newStep);
           return newStep;
         });
       } else {
-        console.log('Validation failed, staying on current step');
         const failedFields = fieldsToValidate.filter(field => errors[field]);
-        console.log('Failed fields:', failedFields);
         
         // Focus on the first field with an error
         if (failedFields.length > 0) {
           const firstErrorField = failedFields[0];
-          console.log('Focusing on first error field:', firstErrorField);
           
           // Use setTimeout to ensure the DOM is updated
           setTimeout(() => {
@@ -824,7 +759,7 @@ const AddProperty: React.FC = () => {
                                   document.querySelector(`label[for="${firstErrorField}"] + div button[role="combobox"]`) ||
                                   document.querySelector(`div:has(label[for="${firstErrorField}"]) button[role="combobox"]`);
               element = selectTrigger as HTMLElement;
-              console.log(`Found Select trigger for ${firstErrorField}:`, element);
+
             } else {
               // For regular input fields
               element = document.getElementById(firstErrorField) || 
@@ -835,18 +770,15 @@ const AddProperty: React.FC = () => {
             }
             
             if (element) {
-              console.log('Found element to focus:', element);
               element.focus();
               element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
-              console.log('Could not find element to focus for field:', firstErrorField);
               // Try a more generic approach - find any focusable element in the section with the error
               const errorSection = document.querySelector(`[data-field="${firstErrorField}"]`) ||
                                   document.querySelector(`label[for="${firstErrorField}"]`)?.closest('div');
               if (errorSection) {
                 const focusableElement = errorSection.querySelector('input, select, textarea, button[role="combobox"]') as HTMLElement;
                 if (focusableElement) {
-                  console.log('Found focusable element in error section:', focusableElement);
                   focusableElement.focus();
                   focusableElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -856,10 +788,8 @@ const AddProperty: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error during validation:', error);
       // Validation errors are already displayed below each input field with red borders
     }
-    console.log('=== END NEXT STEP DEBUG ===');
   };
 
   const prevStep = () => {
@@ -867,18 +797,9 @@ const AddProperty: React.FC = () => {
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('=== handleImageUpload CALLED ===');
-    console.log('handleImageUpload - Event object:', event);
-    console.log('handleImageUpload - Event target:', event.target);
-    console.log('handleImageUpload - Event target files:', event.target.files);
-    
     const files = Array.from(event.target.files || []);
-    console.log('handleImageUpload - Files selected:', files.length, files);
-    console.log('handleImageUpload - Current selectedImages:', selectedImages.length);
-    console.log('handleImageUpload - Current imagePreviewUrls:', imagePreviewUrls.length);
     
     if (!files || files.length === 0) {
-      console.log('handleImageUpload - No files selected, returning');
       return;
     }
     
@@ -886,93 +807,57 @@ const AddProperty: React.FC = () => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     const invalidFiles = files.filter(file => !validTypes.includes(file.type));
     if (invalidFiles.length > 0) {
-      console.error('handleImageUpload - Invalid file types:', invalidFiles.map(f => f.type));
       notification.error('Only JPG, PNG, GIF, and WebP images are allowed');
       return;
     }
     
     // Check total file count limit
     if (files.length + selectedImages.length > 10) {
-      console.log('handleImageUpload - Too many files, limit exceeded');
       notification.error('Maximum 10 images allowed');
       return;
     }
 
     // Show initial file sizes for comparison
     const totalOriginalSize = files.reduce((sum, file) => sum + file.size, 0);
-    console.log('handleImageUpload - Original total size:', formatFileSize(totalOriginalSize));
     notification.info(`Processing ${files.length} image(s)... Original size: ${formatFileSize(totalOriginalSize)}`);
 
     try {
       // Compress images before processing
-      console.log('handleImageUpload - Starting image compression...');
       const compressedFiles = await compressImages(files, 1920, 1080, 0.8);
       
       // Show compression results
       const totalCompressedSize = compressedFiles.reduce((sum, file) => sum + file.size, 0);
       const compressionRatio = ((totalOriginalSize - totalCompressedSize) / totalOriginalSize * 100).toFixed(1);
-      console.log('handleImageUpload - Compressed total size:', formatFileSize(totalCompressedSize));
-      console.log('handleImageUpload - Compression ratio:', compressionRatio + '%');
       
       // Validate compressed file sizes (max 2MB per file after compression)
       const maxSize = 2 * 1024 * 1024; // 2MB
       const oversizedFiles = compressedFiles.filter(file => file.size > maxSize);
       if (oversizedFiles.length > 0) {
-        console.error('handleImageUpload - Files still too large after compression:', oversizedFiles.map(f => ({ name: f.name, size: formatFileSize(f.size) })));
         notification.error(`Some images are still too large after compression. Please use smaller images or reduce quality.`);
         return;
       }
 
-      console.log('handleImageUpload - All validations passed, processing compressed files...');
       notification.success(`Images compressed successfully! Reduced size by ${compressionRatio}%`);
       
       const newImages = [...selectedImages, ...compressedFiles];
       setSelectedImages(newImages);
-      console.log('handleImageUpload - Updated selectedImages:', newImages.length);
 
       // If this is the first image, set it as main image
       if (selectedImages.length === 0 && compressedFiles.length > 0) {
         setMainImageIndex(0);
-        console.log('handleImageUpload - Set main image index to 0');
       }
 
       // Create preview URLs
-      console.log('handleImageUpload - Starting to create preview URLs...');
       const promises: Promise<string>[] = [];
       
       compressedFiles.forEach((file, index) => {
-      console.log(`handleImageUpload - Processing file ${index + 1}:`, {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        lastModified: file.lastModified
-      });
-      
       const promise = new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         
-        reader.onloadstart = () => {
-          console.log(`handleImageUpload - Started reading file ${index + 1}`);
-        };
-        
-        reader.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const progress = (e.loaded / e.total) * 100;
-            console.log(`handleImageUpload - File ${index + 1} progress: ${progress.toFixed(2)}%`);
-          }
-        };
-        
         reader.onload = (e) => {
           const result = e.target?.result as string;
-          console.log(`handleImageUpload - File ${index + 1} loaded successfully:`, {
-            urlLength: result?.length,
-            isDataUrl: result?.startsWith('data:'),
-            mimeType: result?.split(';')[0]?.split(':')[1],
-            preview: result?.substring(0, 100) + '...'
-          });
           
           if (!result || !result.startsWith('data:')) {
-            console.error(`handleImageUpload - Invalid result for file ${index + 1}:`, result);
             reject(new Error(`Invalid file result for ${file.name}`));
             return;
           }
@@ -981,77 +866,47 @@ const AddProperty: React.FC = () => {
         };
         
         reader.onerror = (error) => {
-          console.error(`handleImageUpload - Error reading file ${index + 1}:`, {
-            error,
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type
-          });
           reject(new Error(`Failed to read file: ${file.name}`));
         };
         
         reader.onabort = () => {
-          console.error(`handleImageUpload - Reading aborted for file ${index + 1}`);
           reject(new Error(`Reading aborted for file: ${file.name}`));
         };
         
-        console.log(`handleImageUpload - Starting to read file ${index + 1} as data URL`);
         reader.readAsDataURL(file);
       });
       
       promises.push(promise);
     });
 
-    console.log('handleImageUpload - Waiting for all files to be processed...');
     // Wait for all files to be processed, then update preview URLs
     Promise.all(promises)
       .then((urls) => {
-        console.log('handleImageUpload - All files processed successfully:', {
-          urlsCount: urls.length,
-          urlsValid: urls.every(url => url.startsWith('data:')),
-          urlsPreviews: urls.map((url, i) => `${i + 1}: ${url.substring(0, 50)}...`)
-        });
         
         setImagePreviewUrls(prev => {
           const newUrls = [...prev, ...urls];
-          console.log('handleImageUpload - Updating imagePreviewUrls state:', {
-            previousCount: prev.length,
-            newUrlsCount: urls.length,
-            totalCount: newUrls.length,
-            allUrlsValid: newUrls.every(url => url.startsWith('data:')),
-            urlsPreviews: newUrls.map((url, i) => `${i + 1}: ${url.substring(0, 30)}...`)
-          });
           
           // Save to localStorage
           try {
             localStorage.setItem('addProperty_imagePreviewUrls', JSON.stringify(newUrls));
-            console.log('handleImageUpload - Successfully saved to localStorage');
           } catch (error) {
-            console.error('handleImageUpload - Error saving to localStorage:', error);
+            // Handle localStorage error silently
           }
           
           return newUrls;
         });
         
-        console.log('handleImageUpload - Image upload completed successfully');
         notification.success(`Successfully uploaded ${urls.length} image(s)`);
       })
       .catch((error) => {
-        console.error('handleImageUpload - Error processing files:', {
-          error,
-          message: error.message,
-          stack: error.stack
-        });
         notification.error(`Error processing images: ${error.message}`);
       });
     } catch (compressionError) {
-      console.error('handleImageUpload - Error during image compression:', compressionError);
       notification.error(`Failed to compress images: ${compressionError instanceof Error ? compressionError.message : 'Unknown error'}`);
     }
 
     // Clear the input value to allow re-uploading the same file
     event.target.value = '';
-    console.log('handleImageUpload - Input value cleared');
   };
 
   const removeImage = (index: number) => {
@@ -1098,7 +953,6 @@ const AddProperty: React.FC = () => {
 
   const onSubmit = async (data: PropertyFormData) => {
     if (isSubmitting) {
-      console.log('Form submission already in progress');
       return; // Prevent multiple submissions
     }
 
@@ -1120,10 +974,7 @@ const AddProperty: React.FC = () => {
       parking: data.parking ? Number(data.parking) : 0
     };
 
-    console.log('Processed form data:', formData);
-
     try {
-      console.log('Starting form submission with data:', data);
 
       // Parse address components
       const addressParts = formData.address?.split(',').map(part => part.trim()) || [];
@@ -1131,7 +982,7 @@ const AddProperty: React.FC = () => {
       let city = selectedCity || formData.city || addressParts[1] || '';
       let state = selectedState || formData.state || '';
 
-      console.log('Parsed address:', { street, city, state });
+
 
       // If city, state are not provided, try to parse from address
       if (!city || !state) {
@@ -1223,37 +1074,24 @@ const AddProperty: React.FC = () => {
         }
       });
 
-      console.log('Prepared property data for submission');
-
       try {
-        console.log('Calling addProperty API...');
         const result = await addProperty(formDataToSend);
-        console.log('Property added successfully:', result);
 
         // Clear localStorage after successful submission
         clearFormDataFromStorage();
         
         notification.success(t('messages.propertyPendingApproval'));
-        console.log('Navigating to dashboard...');
         navigate('/dashboard');
       } catch (apiError) {
-        console.error('Error in addProperty API call:', apiError);
         throw apiError; // Re-throw to be caught by the outer catch
       }
     } catch (error: any) {
-      console.error('Error adding property:', error);
-
-      // Log the full error for debugging
-      console.error('Full error object:', JSON.stringify(error, null, 2));
-
       // Extract error message from different possible locations in the error object
       const errorMessage = error?.response?.data?.message ||
         error?.response?.data?.error ||
         error?.message ||
         'فشل في إضافة العقار. يرجى المحاولة مرة أخرى.';
 
-      // Show detailed error in console and toast
-      console.error('Error details:', errorMessage);
       notification.error(errorMessage, {
         duration: 5000
       });
@@ -1409,12 +1247,7 @@ const AddProperty: React.FC = () => {
                             <SelectValue placeholder={t('addProperty.placeholders.selectPropertyType')} />
                           </div>
                         </SelectTrigger>
-                        {/* Debug info */}
-                        <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
-                          <div>Loading: {loadingPropertyTypes ? 'Yes' : 'No'}</div>
-                          <div>Property Types Count: {propertyTypes.length}</div>
-                          <div>First 3 types: {propertyTypes.slice(0, 3).map(t => t.slug || 'no-slug').join(', ')}</div>
-                        </div>
+                        
                         <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                           {loadingPropertyTypes ? (
                             <SelectItem value="loading" disabled className="text-sm py-3 px-4">
@@ -1478,7 +1311,7 @@ const AddProperty: React.FC = () => {
                     <EnhancedDocumentTypeSelect
                       value={field.value || undefined}
                       onValueChange={(value) => {
-                        console.log('Document type selected:', value);
+
                         field.onChange(value);
                       }}
                       placeholder={t('addProperty.placeholders.selectDocumentType')}
@@ -2030,8 +1863,7 @@ const AddProperty: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {imagePreviewUrls.map((url, index) => {
-                      console.log(`Rendering image ${index + 1} with URL:`, url.substring(0, 50) + '...');
-                      console.log(`Image ${index + 1} full URL type:`, typeof url, 'starts with data:', url.startsWith('data:'));
+
                       return (
                         <div key={index} className="relative group">
                           <div 
@@ -2697,12 +2529,6 @@ const AddProperty: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  onClick={() => {
-                    console.log('Create Listing button clicked');
-                    console.log('Form isSubmitting:', isSubmitting);
-                    console.log('Form errors:', errors);
-                    console.log('Current step:', currentStep);
-                  }}
                   className="px-8 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
                 >
                   {isSubmitting ? (

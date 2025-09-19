@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
       setUserProperties(prev => prev.filter(p => p.id.toString() !== propertyId.toString()));
       toast.success('Property deleted successfully');
     } catch (error) {
-      console.error('Error deleting property:', error);
+
       toast.error('Failed to delete property');
     }
   };

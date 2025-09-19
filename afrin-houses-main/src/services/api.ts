@@ -137,13 +137,13 @@ api.interceptors.response.use(
         
         const delay = calculateDelay(currentAttempt, retryConfig.retryDelay);
         
-        console.warn(`Request failed with ${error.response?.status || error.code}. Retrying in ${delay}ms (attempt ${currentAttempt + 1}/${retryConfig.retries})`);
+
         
         await new Promise(resolve => setTimeout(resolve, delay));
         
         return api(originalRequest);
       } else {
-        console.error(`Request failed after ${retryConfig.retries} retries:`, error.response?.status || error.code);
+
       }
     }
     
@@ -176,7 +176,7 @@ const refreshToken = async (): Promise<string | null> => {
     }
     return null;
   } catch (error) {
-    console.error('Failed to refresh token:', error);
+
     throw error;
   }
 };

@@ -34,7 +34,7 @@ class NotificationService {
       duration: options?.duration || 6000,
       action: options?.action || {
         label: 'Retry',
-        onClick: () => console.log('Retry clicked'),
+        onClick: () => {},
       },
     });
   }

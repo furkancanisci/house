@@ -44,7 +44,6 @@ class ViewTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch view types');
     } catch (error) {
-      console.error('Error fetching view types:', error);
       throw error;
     }
   }
@@ -62,7 +61,7 @@ class ViewTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch view type options');
     } catch (error) {
-      console.error('Error fetching view type options:', error);
+  
       throw error;
     }
   }
@@ -80,7 +79,7 @@ class ViewTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch view types with counts');
     } catch (error) {
-      console.error('Error fetching view types with counts:', error);
+  
       throw error;
     }
   }
@@ -98,7 +97,7 @@ class ViewTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch view type');
     } catch (error) {
-      console.error('Error fetching view type:', error);
+  
       throw error;
     }
   }

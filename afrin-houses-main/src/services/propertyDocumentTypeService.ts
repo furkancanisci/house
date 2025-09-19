@@ -96,12 +96,7 @@ class PropertyDocumentTypeService {
       
       return documentType;
     } catch (error: any) {
-      console.error('Error fetching property document type:', {
-        id,
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText
-      });
+
       
       // Return null on error instead of throwing
       return null;
@@ -129,11 +124,7 @@ class PropertyDocumentTypeService {
       
       return documentTypes;
     } catch (error: any) {
-      console.error('Error fetching property document types (all languages):', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText
-      });
+
       
       // Return empty array on error
       return [];
@@ -157,13 +148,7 @@ class PropertyDocumentTypeService {
       
       return documentTypes;
     } catch (error: any) {
-      console.error('Error fetching property document types:', {
-        endpoint,
-        params,
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText
-      });
+
       
       // Return empty array on error instead of throwing
       return [];

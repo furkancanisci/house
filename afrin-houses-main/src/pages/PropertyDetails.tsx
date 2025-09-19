@@ -91,37 +91,14 @@ const PropertyDetails: React.FC = () => {
       
       try {
         setLoading(true);
-        console.log('Fetching property with slug:', slug);
+
         const propertyData = await getProperty(slug);
         
         if (!propertyData) {
           throw new Error('No property data found in response');
         }
 
-        // Log the raw API response with all its properties
-        console.group('Raw API Response');
-        console.log('Full response:', propertyData);
-        console.log('Property ID:', propertyData.id);
-        console.log('Price:', propertyData.price);
-        console.log('Bedrooms:', propertyData.details?.bedrooms);
-        console.log('Bathrooms:', propertyData.details?.bathrooms);
-        console.log('Square Feet:', propertyData.details?.square_feet);
-        console.log('Property Type:', propertyData.property_type);
-        console.log('Listing Type:', propertyData.listing_type);
-        console.log('Document Type ID:', propertyData.document_type_id);
-        console.log('Document Type Object:', propertyData.document_type);
-        console.log('All response keys:', Object.keys(propertyData));
-        
-        // Debug image data specifically
-        console.group('Image Data Debug');
-        console.log('propertyData.media:', propertyData.media);
-        console.log('propertyData.images:', propertyData.images);
-        console.log('propertyData.images?.main (raw from API):', propertyData.images?.main);
-        console.log('propertyData.images?.gallery (raw from API):', propertyData.images?.gallery);
-        console.log('propertyData.mainImage (raw from API):', propertyData.mainImage);
-        console.groupEnd();
-        
-        console.groupEnd();
+
         
         // Transform the property data to match the expected format
         const transformedProperty: Property = {
@@ -217,17 +194,7 @@ const PropertyDetails: React.FC = () => {
           ...(() => {
             const processedImages = processPropertyImages(propertyData);
             
-            console.log('Raw image data from API:', {
-              images: propertyData.images,
-              mainImage: propertyData.mainImage,
-              media: propertyData.media
-            });
 
-            console.log('Processed image data:', {
-              mainImage: processedImages.mainImage,
-              images: processedImages.images,
-              imageCount: processedImages.images.length
-            });
             
             return {
               images: processedImages.images,
@@ -257,13 +224,11 @@ const PropertyDetails: React.FC = () => {
           documentType: propertyData.document_type
         };
         
-        // Log the transformed property
 
-        console.groupEnd();
         
         setProperty(transformedProperty);
       } catch (err: any) {
-        console.error('Error fetching property:', err);
+
         
         // Handle specific error types
         if (err.response?.status === 404) {
@@ -287,48 +252,44 @@ const PropertyDetails: React.FC = () => {
   // Fetch document type if property has document_type_id but no document type object
   useEffect(() => {
     const fetchDocumentType = async () => {
-      console.log('fetchDocumentType called with:', {
-        property_document_type_id: property?.document_type_id,
-        property_documentType: property?.documentType,
-        currentLanguage: i18n.language
-      });
+
       
       if (property?.document_type_id && !property?.documentType) {
         setLoadingDocumentType(true);
         try {
-          console.log('Fetching document type with ID:', property.document_type_id);
+
           const docType = await propertyDocumentTypeService.getPropertyDocumentTypeById(
             Number(property.document_type_id),
             { lang: i18n.language }
           );
-          console.log('Fetched document type:', docType);
+
           if (docType) {
             setDocumentType(docType);
           }
         } catch (error) {
-          console.error('Error fetching document type:', error);
+
         } finally {
           setLoadingDocumentType(false);
         }
       } else if (property?.documentType) {
         // If document type is already included in property data
-        console.log('Using document type from property data:', property.documentType);
+
         setDocumentType(property.documentType);
       } else if (property?.document_type_id) {
         // If we have a document_type_id but no documentType, still try to fetch
-        console.log('Property has document_type_id but no documentType object, forcing fetch');
+
         setLoadingDocumentType(true);
         try {
           const docType = await propertyDocumentTypeService.getPropertyDocumentTypeById(
             Number(property.document_type_id),
             { lang: i18n.language }
           );
-          console.log('Force fetched document type:', docType);
+
           if (docType) {
             setDocumentType(docType);
           }
         } catch (error) {
-          console.error('Error force fetching document type:', error);
+
         } finally {
           setLoadingDocumentType(false);
         }
@@ -364,7 +325,7 @@ const PropertyDetails: React.FC = () => {
         setFeatures(featuresData);
         setUtilities(utilitiesData);
       } catch (error) {
-        console.error('Error fetching features and utilities:', error);
+
       } finally {
         setLoadingFeatures(false);
         setLoadingUtilities(false);
@@ -487,7 +448,7 @@ const PropertyDetails: React.FC = () => {
       // Add /month for rent listings
       return listingType === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
     } catch (error) {
-      console.error('Error formatting price:', error, price);
+
       return t('property.priceOnRequest');
     }
   };
@@ -609,8 +570,7 @@ const PropertyDetails: React.FC = () => {
                       src={property.mainImage}
                       alt={property.title}
                       className="w-full h-96 object-cover"
-                      onLoad={() => console.log('Main image loaded:', property.mainImage)}
-                      onError={(e) => console.log('Main image failed to load:', property.mainImage, e)}
+
                     />
                   </div>
                 ) : (

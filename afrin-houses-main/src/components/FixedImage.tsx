@@ -26,7 +26,7 @@ const fixImageUrl = (url: string | undefined | null | any, propertyId?: string |
       url.startsWith('https://') ||
       url.startsWith('data:') ||
       url.startsWith('/images/')) {
-    console.log('FixedImage fixImageUrl - URL already complete:', url);
+
     return url;
   }
   
@@ -36,18 +36,18 @@ const fixImageUrl = (url: string | undefined | null | any, propertyId?: string |
   // Handle relative URLs from backend (e.g., /storage/media/...)
   if (url.startsWith('/storage/') || url.startsWith('/media/')) {
     const fixedUrl = `${baseUrl}${url}`;
-    console.log('FixedImage fixImageUrl - Fixed relative URL:', url, '->', fixedUrl);
+
     return fixedUrl;
   }
   
   // If it looks like a valid URL path, assume it's from the backend
   if (url.startsWith('/') && !url.startsWith('/images/')) {
     const fixedUrl = `${baseUrl}${url}`;
-    console.log('FixedImage fixImageUrl - Fixed path URL:', url, '->', fixedUrl);
+
     return fixedUrl;
   }
   
-  console.log('FixedImage fixImageUrl - Returning unchanged:', url);
+
   return url;
 };
 
@@ -79,7 +79,7 @@ const FixedImage: React.FC<FixedImageProps> = ({
   }, [src, hasError, propertyId]);
 
   const handleError = () => {
-    console.log('FixedImage - Image failed to load:', currentSrc);
+
     if (!hasError) {
       setHasError(true);
       // Use placeholder image when original fails to load

@@ -64,7 +64,6 @@ const ContactForm: React.FC = () => {
         });
       }
     } catch (error: any) {
-      console.error('Contact form submission error:', error);
       setSubmitMessage({
         type: 'error',
         message: 'An error occurred while sending your message. Please try again.'
@@ -215,7 +214,7 @@ const ContactUs: React.FC = () => {
           setContactSettings(response.data);
         }
       } catch (error) {
-        console.error('Failed to fetch contact settings:', error);
+
       } finally {
         setSettingsLoading(false);
       }

@@ -29,7 +29,7 @@ const MapSearch: React.FC = () => {
         setLoading(true);
         setError(null);
         const response = await getProperties();
-        console.log('Properties response:', response);
+  
         // Handle the response structure from getProperties
         let properties = [];
         if (response && typeof response === 'object') {
@@ -39,11 +39,11 @@ const MapSearch: React.FC = () => {
             properties = response.data;
           }
         }
-        console.log('Processed properties:', properties);
+  
         
         // Add some test properties if no properties are returned
         if (!properties || properties.length === 0) {
-          console.log('No properties found, adding test data');
+  
 
         } else {
           setAllProperties(properties);
@@ -51,7 +51,7 @@ const MapSearch: React.FC = () => {
         
 
       } catch (err) {
-        console.error('Error fetching properties:', err);
+  
    
         setError(null); // Clear any error since we have fallback data
       } finally {
@@ -65,7 +65,7 @@ const MapSearch: React.FC = () => {
   // Update properties when state.properties changes from AppContext
   useEffect(() => {
     if (state.properties && state.properties.length > 0) {
-      console.log('MapSearch: Updating properties from context:', state.properties);
+  
       setAllProperties(state.properties);
     }
   }, [state.properties]);
@@ -80,14 +80,14 @@ const MapSearch: React.FC = () => {
 
   // Handle filters change and call API
   const handleFiltersChange = useCallback(async (newFilters: SearchFilters) => {
-    console.log('MapSearch: Filters changed:', newFilters);
+
     
     // Update local filters state
     setSearchFilters(newFilters);
     
     // Call filterProperties from AppContext to fetch filtered data from API
     try {
-      console.log('MapSearch: Calling filterProperties with:', newFilters);
+  
       await filterProperties(newFilters);
       
       // Update properties from the context state
@@ -95,7 +95,7 @@ const MapSearch: React.FC = () => {
         setAllProperties(state.properties);
       }
     } catch (error) {
-      console.error('MapSearch: Error filtering properties:', error);
+
       setError(t('search.errorLoadingProperties'));
     }
   }, [filterProperties, state.properties]);

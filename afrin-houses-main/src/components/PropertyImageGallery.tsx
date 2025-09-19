@@ -25,25 +25,25 @@ const fixImageUrl = (url: string | undefined | null | any): string => {
       url.startsWith('https://') ||
       url.startsWith('data:') ||
       url.startsWith('/images/')) {
-    console.log('PropertyImageGallery fixImageUrl - URL already complete:', url);
+
     return url;
   }
   
   // Handle relative URLs from backend (e.g., /storage/media/...)
   if (url.startsWith('/storage/') || url.startsWith('/media/')) {
     const fixedUrl = `http://localhost:8000${url}`;
-    console.log('PropertyImageGallery fixImageUrl - Fixed relative URL:', url, '->', fixedUrl);
+
     return fixedUrl;
   }
   
   // If it looks like a valid URL path, assume it's from the backend
   if (url.startsWith('/') && !url.startsWith('/images/')) {
     const fixedUrl = `http://localhost:8000${url}`;
-    console.log('PropertyImageGallery fixImageUrl - Fixed path URL:', url, '->', fixedUrl);
+
     return fixedUrl;
   }
   
-  console.log('PropertyImageGallery fixImageUrl - Returning unchanged:', url);
+
   return url;
 };
 
@@ -65,22 +65,17 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   // Process images to ensure they're valid - handle undefined/null images
   const processedImages = (images && Array.isArray(images) && images.length > 0) 
     ? images.map(img => {
-        console.log('PropertyImageGallery - Processing image:', img, 'Type:', typeof img);
-        
         // If URL is already complete (starts with http), don't process it at all
         if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://'))) {
-          console.log('PropertyImageGallery - URL already complete, using as-is:', img);
           return img;
         }
         
         const result = fixImageUrl(img);
-        console.log('PropertyImageGallery - Fixed URL result:', img, '->', result);
         return result;
       }).filter(url => url !== '') // Remove empty URLs
     : [];
     
-  console.log('PropertyImageGallery - Original images array:', images);
-  console.log('PropertyImageGallery - Final processed images:', processedImages);
+
   
   // Only use fallback if NO valid images exist at all
   const finalImages = processedImages.length > 0 ? processedImages : ['/images/placeholder-property.svg'];

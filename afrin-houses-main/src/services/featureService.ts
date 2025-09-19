@@ -47,10 +47,9 @@ export class FeatureService {
         return response.data;
       }
 
-      console.warn('Unexpected features API response structure:', response.data);
+
       return [];
     } catch (error) {
-      console.error('Error fetching features:', error);
       throw new Error('Failed to fetch features');
     }
   }
@@ -77,7 +76,7 @@ export class FeatureService {
 
       return null;
     } catch (error) {
-      console.error(`Error fetching feature ${id}:`, error);
+  
       return null;
     }
   }
@@ -108,7 +107,7 @@ export class FeatureService {
 
       return [];
     } catch (error) {
-      console.error(`Error fetching features for category ${category}:`, error);
+  
       return [];
     }
   }
@@ -139,7 +138,7 @@ export class FeatureService {
 
       return [];
     } catch (error) {
-      console.error(`Error searching features with query "${query}":`, error);
+  
       return [];
     }
   }
