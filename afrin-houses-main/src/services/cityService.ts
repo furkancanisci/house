@@ -145,11 +145,7 @@ class CityService {
       
       return cities;
     } catch (error: any) {
-      console.error('Error fetching cities:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText
-      });
+
     
     }
   }
@@ -197,7 +193,7 @@ class CityService {
     // Check rate limit
     if (!this.rateLimiter.canMakeRequest(requestKey)) {
       const waitTime = this.rateLimiter.getWaitTime(requestKey);
-      console.warn(`Rate limit exceeded for ${requestKey}. Wait ${waitTime}ms`);
+      
       
       // Return fallback data immediately
       return this.getFallbackSyrianStates(params?.locale);
@@ -217,15 +213,11 @@ class CityService {
       
       return states;
     } catch (error: any) {
-      console.error('Error fetching states:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText
-      });
+
       
       // Handle 429 specifically
       if (error.response?.status === 429) {
-        console.warn('Rate limit hit (429), using fallback states');
+
         // Reset rate limiter to allow retry sooner
         this.rateLimiter.reset(requestKey);
       }
@@ -257,7 +249,7 @@ class CityService {
     // Check rate limit
     if (!this.rateLimiter.canMakeRequest(requestKey)) {
       const waitTime = this.rateLimiter.getWaitTime(requestKey);
-      console.warn(`تم تجاوز حد المعدل المسموح به لطلب مدن الولاية ${state}. يرجى الانتظار لمدة ${waitTime} مللي ثانية قبل إعادة المحاولة.`);
+      
       
      
     }
@@ -288,11 +280,11 @@ class CityService {
       
       return cities;
     } catch (error: any) {
-      console.error('Error fetching cities by state:', error);
+
       
       // Handle 429 specifically
       if (error.response?.status === 429) {
-        console.warn('Rate limit hit (429), using fallback data');
+
         // Reset rate limiter to allow retry sooner
         this.rateLimiter.reset(requestKey);
       }
@@ -326,11 +318,7 @@ class CityService {
       
       return cities;
     } catch (error: any) {
-      console.error('Error searching cities:', {
-        message: error.message,
-        status: error.response?.status,
-        query: params.q
-      });
+
       
     }
   }
@@ -344,7 +332,7 @@ class CityService {
     try {
       return await this.getStates({ locale });
     } catch (error) {
-      console.warn('Using fallback Syrian states data');
+
       return this.getFallbackSyrianStates(locale);
     }
   }

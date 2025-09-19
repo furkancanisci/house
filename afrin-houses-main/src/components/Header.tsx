@@ -157,7 +157,6 @@ const Header: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={async () => {
-                console.log('DEBUG: List Property button clicked, refreshing user data...');
                 await refreshUser();
                 requireVerifiedEmail(() => {
                   navigate('/add-property');
@@ -240,7 +239,6 @@ const Header: React.FC = () => {
               {/* List Property Button - Mobile */}
               <button
                 onClick={async () => {
-                  console.log('DEBUG: Mobile List Property button clicked, refreshing user data...');
                   await refreshUser();
                   requireVerifiedEmail(() => {
                     navigate('/add-property');

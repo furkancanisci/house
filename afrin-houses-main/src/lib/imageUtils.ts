@@ -92,18 +92,18 @@ export const fixImageUrl = (url: string | undefined | null | any): string => {
   // Handle relative URLs from backend (e.g., /storage/media/...)
   if (url.startsWith('/storage/') || url.startsWith('/media/')) {
     const fixedUrl = `http://localhost:8000${url}`;
-    console.log('fixImageUrl - Fixed relative URL:', url, '->', fixedUrl);
+
     return fixedUrl;
   }
   
   // If it looks like a valid URL path, assume it's from the backend
   if (url.startsWith('/') && !url.startsWith('/images/')) {
     const fixedUrl = `http://localhost:8000${url}`;
-    console.log('fixImageUrl - Fixed path URL:', url, '->', fixedUrl);
+
     return fixedUrl;
   }
   
-  console.log('fixImageUrl - Returning URL unchanged:', url);
+
   return url;
 };
 
@@ -308,7 +308,7 @@ export const compressImages = async (
       const compressedFile = await compressImage(file, maxWidth, maxHeight, quality);
       compressedFiles.push(compressedFile);
     } catch (error) {
-      console.error('Failed to compress image:', file.name, error);
+
       // If compression fails, use original file
       compressedFiles.push(file);
     }

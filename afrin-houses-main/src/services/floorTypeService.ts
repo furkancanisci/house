@@ -44,7 +44,7 @@ class FloorTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch floor types');
     } catch (error) {
-      console.error('Error fetching floor types:', error);
+  
       throw error;
     }
   }
@@ -62,7 +62,7 @@ class FloorTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch floor type options');
     } catch (error) {
-      console.error('Error fetching floor type options:', error);
+  
       throw error;
     }
   }
@@ -80,7 +80,7 @@ class FloorTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch floor types with counts');
     } catch (error) {
-      console.error('Error fetching floor types with counts:', error);
+  
       throw error;
     }
   }
@@ -98,7 +98,7 @@ class FloorTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch floor type');
     } catch (error) {
-      console.error('Error fetching floor type:', error);
+  
       throw error;
     }
   }

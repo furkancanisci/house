@@ -41,7 +41,7 @@ const AboutUs: React.FC = () => {
         setAboutData(null); // This will trigger fallback to getDefaultAboutData()
         setError(null);
       } catch (err) {
-        console.error('Error fetching About Us data:', err);
+  
         setError('Failed to load About Us data');
         setAboutData(null); // This will trigger fallback to getDefaultAboutData()
       } finally {

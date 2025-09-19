@@ -57,7 +57,7 @@ class PropertyStatisticsService {
       const response = await api.post(`/v1/property-statistics/${propertyId}/track-view`);
       return response.data;
     } catch (error: any) {
-      console.error('Error tracking view:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to track view'
@@ -73,7 +73,7 @@ class PropertyStatisticsService {
       const response = await api.post(`/v1/property-statistics/${propertyId}/track-inquiry`);
       return response.data;
     } catch (error: any) {
-      console.error('Error tracking inquiry:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to track inquiry'
@@ -89,7 +89,7 @@ class PropertyStatisticsService {
       const response = await api.post(`/v1/property-statistics/${propertyId}/track-favorite-add`);
       return response.data;
     } catch (error: any) {
-      console.error('Error tracking favorite add:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to track favorite add'
@@ -105,7 +105,7 @@ class PropertyStatisticsService {
       const response = await api.post(`/v1/property-statistics/${propertyId}/track-favorite-remove`);
       return response.data;
     } catch (error: any) {
-      console.error('Error tracking favorite remove:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to track favorite remove'
@@ -121,7 +121,7 @@ class PropertyStatisticsService {
       const response = await api.get(`/v1/property-statistics/${propertyId}/statistics`);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting property statistics:', error);
+
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to get property statistics'
@@ -137,7 +137,7 @@ class PropertyStatisticsService {
       const response = await api.get('/v1/property-statistics/dashboard');
       return response.data;
     } catch (error: any) {
-      console.error('Error getting dashboard statistics:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to get dashboard statistics'
@@ -158,7 +158,7 @@ class PropertyStatisticsService {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error getting popular properties:', error);
+  
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to get popular properties'

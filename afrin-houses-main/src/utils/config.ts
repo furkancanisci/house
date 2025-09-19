@@ -30,11 +30,7 @@ export const validateEnvironmentVariables = (): void => {
     );
   }
 
-  console.log('✅ Environment configuration validated successfully');
-  console.log('🔗 API Base URL:', config.apiBaseUrl);
-  console.log('🏠 App Name:', config.appName);
-  console.log('📦 App Version:', config.appVersion);
-  console.log('🔧 Development Mode:', config.isDevelopment);
+
 };
 
 export default config;

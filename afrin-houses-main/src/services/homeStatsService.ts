@@ -31,7 +31,7 @@ export const getHomeStats = async (): Promise<HomeStat[]> => {
       throw new Error('Invalid response format');
     }
   } catch (error) {
-    console.error('Error fetching home statistics:', error);
+
     // Return empty array as fallback
     return [];
   }

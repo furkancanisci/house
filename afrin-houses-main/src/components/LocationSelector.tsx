@@ -94,35 +94,24 @@ const LocationSelector: FC<LocationSelectorProps> = ({
     const cityExists = cities && cities.length > 0 ? cities.some(city => {
       const cityDisplayName = locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name);
       const match = city.name === value || cityDisplayName === value;
-      console.log(`LocationSelector: Checking city '${city.name}' (display: '${cityDisplayName}') against '${value}': ${match}`);
       return match;
     }) : false;
-    console.log('LocationSelector: Does selected city exist in options?', cityExists);
+
     
-    // If city doesn't exist in options, log warning but still proceed
+    // If city doesn't exist in options, proceed silently
     if (!cityExists && cities && cities.length > 0) {
-      console.warn('LocationSelector: Selected city not found in available cities:', {
-        selectedCity: value,
-        availableCities: cities ? cities.map(c => {
-          const displayName = locale === 'ar' && c.name_ar ? c.name_ar : (c.name_en || c.name);
-          return { original: c.name, display: displayName };
-        }) : [],
-        citiesCount: cities ? cities.length : 0
-      });
+      // City not found in available options
     }
     
     // Always update internal state first to ensure UI responsiveness
     if (propOnCityChange) {
-      console.log('LocationSelector: Calling propOnCityChange with:', value);
       propOnCityChange(value);
     } else {
-      console.log('LocationSelector: Updating internal city state to:', value);
       setInternalCity(value);
     }
     
     // Also notify via onLocationChange if provided
     if (onLocationChange) {
-      console.log('LocationSelector: Calling onLocationChange with state and city');
       onLocationChange({ state: selectedState, city: value });
     }
     
@@ -136,7 +125,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
         const data = await cityService.getStates();
         setStates(data);
       } catch (error) {
-        console.error('Error loading states:', error);
+        // Error loading states
       } finally {
         setLoading(prev => ({ ...prev, states: false }));
       }
@@ -155,7 +144,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
       const data = await cityService.getCitiesByState(state);
       setCities(data);
     } catch (error) {
-      console.error('Error loading cities:', error);
+      // Error loading cities
       toast.error('خطأ في تحميل المدن. يرجى المحاولة مرة أخرى.');
       // Set empty array on error to prevent UI issues
       setCities([]);
@@ -177,8 +166,6 @@ const LocationSelector: FC<LocationSelectorProps> = ({
       // Only reset city when state changes AND city is currently set
       // But preserve it if the user just selected a city for the current state
       if (selectedCity) {
-        console.log('LocationSelector: State changed, checking if city should be cleared');
-        console.log('LocationSelector: Current state:', selectedState, 'Current city:', selectedCity);
         
         // Only clear the city if we're confident it's a new state selection
         // (not just a re-render with the same state)
@@ -190,8 +177,6 @@ const LocationSelector: FC<LocationSelectorProps> = ({
           } else {
             setInternalCity('');
           }
-        } else {
-          console.log('LocationSelector: Preserving city selection:', selectedCity);
         }
       }
       
@@ -219,23 +204,14 @@ const LocationSelector: FC<LocationSelectorProps> = ({
         return city.name === selectedCity || cityDisplayName === selectedCity;
       });
       
-      console.log('LocationSelector: Verifying selected city after cities loaded:');
-      console.log('LocationSelector: Selected city:', selectedCity);
-      console.log('LocationSelector: Available cities:', cities ? cities.map(c => {
-        const displayName = locale === 'ar' && c.name_ar ? c.name_ar : (c.name_en || c.name);
-        return { original: c.name, display: displayName };
-      }) : []);
-      console.log('LocationSelector: City exists in list:', cityExists);
+
       
       if (!cityExists) {
-        console.warn('LocationSelector: Selected city not found in loaded cities, clearing selection');
         if (propOnCityChange) {
           propOnCityChange('');
         } else {
           setInternalCity('');
         }
-      } else {
-        console.log('LocationSelector: Selected city is valid, preserving selection');
       }
     }
   }, [cities, selectedCity, propOnCityChange, locale]);
@@ -295,9 +271,7 @@ const LocationSelector: FC<LocationSelectorProps> = ({
               <SelectTrigger className="h-12 text-sm border-2 rounded-xl bg-gradient-to-r from-[#067977]/10 to-[#067977]/5 border-gray-200 hover:border-purple-500 focus:border-[#067977] focus:ring-2 focus:ring-[#067977]/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 <SelectValue>
                   {(() => {
-                    
                     if (normalizedSelectedCity) {
-                      console.log('LocationSelector SelectValue: Displaying selectedCity:', normalizedSelectedCity);
                       return (
                         <span className="font-medium text-gray-800">
                           {normalizedSelectedCity}
@@ -307,7 +281,6 @@ const LocationSelector: FC<LocationSelectorProps> = ({
                       const placeholderText = selectedState 
                         ? t('location.selectCity')
                         : t('location.selectStateFirst');
-                      console.log('LocationSelector SelectValue: Displaying placeholder:', placeholderText);
                       return (
                         <span className="text-gray-500">
                           {placeholderText}
@@ -319,23 +292,10 @@ const LocationSelector: FC<LocationSelectorProps> = ({
               </SelectTrigger>
               <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
                 {(() => {
-                  console.log('LocationSelector: Rendering SelectContent with cities:', cities ? cities.length : 0);
-                  console.log('LocationSelector: Cities data:', cities ? cities.map(c => ({ id: c.id, name: c.name, state: c.state })) : []);
-                  
                   return cities && cities.length > 0 ? cities.map((city) => {
-                    console.log('LocationSelector: Rendering city option:', {
-                      id: city.id,
-                      name: city.name,
-                      name_ar: city.name_ar,
-                      name_en: city.name_en,
-                      state: city.state
-                    });
-                    
                     // Use the same logic for both display and value to ensure consistency
                     const cityDisplayName = locale === 'ar' && city.name_ar ? city.name_ar : (city.name_en || city.name);
                     const cityValue = cityDisplayName; // Use display name as value to maintain consistency
-                    
-                    console.log('LocationSelector: City display name for', city.name, ':', cityDisplayName);
                     
                     return (
                       <SelectItem 

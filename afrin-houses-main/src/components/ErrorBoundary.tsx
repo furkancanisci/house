@@ -23,7 +23,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+
     
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -86,7 +86,7 @@ export default ErrorBoundary;
 // Hook version for functional components
 export const useErrorHandler = () => {
   const handleError = (error: Error, context?: string) => {
-    console.error(`Error in ${context || 'component'}:`, error);
+
     
     // You can add error reporting service here
     // Example: Sentry.captureException(error);

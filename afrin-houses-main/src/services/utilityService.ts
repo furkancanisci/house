@@ -47,10 +47,10 @@ export class UtilityService {
         return response.data;
       }
 
-      console.warn('Unexpected utilities API response structure:', response.data);
+
       return [];
     } catch (error) {
-      console.error('Error fetching utilities:', error);
+  
       throw new Error('Failed to fetch utilities');
     }
   }
@@ -77,7 +77,7 @@ export class UtilityService {
 
       return null;
     } catch (error) {
-      console.error(`Error fetching utility ${id}:`, error);
+  
       return null;
     }
   }
@@ -108,7 +108,7 @@ export class UtilityService {
 
       return [];
     } catch (error) {
-      console.error(`Error fetching utilities for category ${category}:`, error);
+  
       return [];
     }
   }
@@ -139,7 +139,7 @@ export class UtilityService {
 
       return [];
     } catch (error) {
-      console.error(`Error searching utilities with query "${query}":`, error);
+  
       return [];
     }
   }

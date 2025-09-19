@@ -68,7 +68,7 @@ const EnhancedPropertyGallery: React.FC<EnhancedPropertyGalleryProps> = ({
           url: window.location.href,
         });
       } catch (error) {
-        console.error('Error sharing:', error);
+        // Error sharing
       }
     } else {
       // Fallback: Copy to clipboard

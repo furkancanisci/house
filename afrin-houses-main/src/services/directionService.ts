@@ -44,7 +44,7 @@ class DirectionService {
 
       throw new Error(response.data?.message || 'Failed to fetch directions');
     } catch (error) {
-      console.error('Error fetching directions:', error);
+
       throw error;
     }
   }
@@ -62,7 +62,7 @@ class DirectionService {
 
       throw new Error(response.data?.message || 'Failed to fetch direction options');
     } catch (error) {
-      console.error('Error fetching direction options:', error);
+
       throw error;
     }
   }
@@ -80,7 +80,7 @@ class DirectionService {
 
       throw new Error(response.data?.message || 'Failed to fetch directions with counts');
     } catch (error) {
-      console.error('Error fetching directions with counts:', error);
+
       throw error;
     }
   }
@@ -98,7 +98,7 @@ class DirectionService {
 
       throw new Error(response.data?.message || 'Failed to fetch direction');
     } catch (error) {
-      console.error('Error fetching direction:', error);
+
       throw error;
     }
   }

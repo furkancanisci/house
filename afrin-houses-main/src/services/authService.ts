@@ -56,7 +56,7 @@ export const authService: AuthService = {
         token: token // Normalize to token for consistency
       };
     } catch (error) {
-      console.error('Login error:', error);
+
       throw error;
     }
   },
@@ -78,7 +78,7 @@ export const authService: AuthService = {
         token: token // Normalize to token for consistency
       };
     } catch (error) {
-      console.error('Registration error:', error);
+
       throw error;
     }
   },
@@ -88,7 +88,7 @@ export const authService: AuthService = {
     try {
       await api.post('/auth/logout');
     } catch (error) {
-      console.error('Logout error:', error);
+
     } finally {
       this.clearAuthData();
     }
@@ -140,7 +140,7 @@ export const authService: AuthService = {
 
       // If we get a successful response but no user data, clear auth
       if (!response.data?.user) {
-        console.warn('No user data in response');
+  
         this.clearAuthData();
         return null;
       }
@@ -151,7 +151,7 @@ export const authService: AuthService = {
       
       // Also ensure the token is still valid
       if (!this.isTokenValid(userData)) {
-        console.warn('Token is no longer valid');
+  
         this.clearAuthData();
         return null;
       }
@@ -159,26 +159,26 @@ export const authService: AuthService = {
       return userData;
       
     } catch (error: any) {
-      console.error('Failed to fetch current user:', error);
+  
       
       // Handle different types of errors
       if (error.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
+  
+  
         
         // Clear auth data for authentication errors
         if ([401, 403, 419].includes(error.response.status)) {
-          console.warn('Authentication error, clearing auth data');
+  
           this.clearAuthData();
         }
       } else if (error.request) {
         // The request was made but no response was received
-        console.error('No response received from server');
+
       } else {
         // Something happened in setting up the request that triggered an Error
-        console.error('Error setting up request:', error.message);
+
       }
       
       return null;
@@ -202,7 +202,7 @@ export const authService: AuthService = {
       const response = await api.post('/auth/forgot-password', { email });
       return response.data;
     } catch (error) {
-      console.error('Forgot password error:', error);
+
       throw error;
     }
   },
@@ -218,7 +218,7 @@ export const authService: AuthService = {
       const response = await api.post('/auth/reset-password', data);
       return response.data;
     } catch (error) {
-      console.error('Reset password error:', error);
+
       throw error;
     }
   },
@@ -226,15 +226,15 @@ export const authService: AuthService = {
   // Update user profile
   async updateUser(userData: Partial<User>): Promise<{ user: User; message: string }> {
     try {
-      console.log('Sending profile update data:', userData);
-      console.log('API Base URL:', import.meta.env.VITE_API_BASE_URL || 'https://api.besttrend-sy.com/api/v1');
+  
+  
 
       // Let's log the full request details
       const requestUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://api.besttrend-sy.com/api/v1'}/dashboard/profile`;
-      console.log('Full request URL:', requestUrl);
+  
       
       const response = await api.post('/dashboard/profile', userData);
-      console.log('Profile update response:', response.data);
+  
       
       // Update the stored user data in localStorage
       const currentUser = this.getStoredUser();
@@ -245,10 +245,10 @@ export const authService: AuthService = {
       
       return response.data;
     } catch (error: any) {
-      console.error('Update user error:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error headers:', error.response?.headers);
+  
+  
+  
+  
       throw error;
     }
   },
@@ -260,7 +260,7 @@ export const authService: AuthService = {
       const response = await api.post('/auth/resend-verification', requestData);
       return response.data;
     } catch (error) {
-      console.error('Resend verification email error:', error);
+
       throw error;
     }
   },

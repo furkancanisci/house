@@ -37,15 +37,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
   // Debug: Log the property data to understand the structure (only in development)
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('PropertyCard received property:', property);
-      console.log('Property bedrooms:', property.bedrooms);
-      console.log('Property details:', property.details);
+      // Property data logging removed
     }
   }, [property]);
 
   // Safety check: If property is null or undefined, return null
   if (!property) {
-    console.error('PropertyCard: property is null or undefined');
+
     return null;
   }
 
@@ -96,7 +94,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
         // Ensure we return a string
         return typeof name === 'string' ? name : String(name || '');
       } catch (error) {
-        console.error('Error getting feature name:', error, feature);
+  
         return '';
       }
     }
@@ -128,7 +126,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
         });
       }
     } catch (error) {
-      console.error('Failed to toggle favorite:', error);
+
       notification.error('Failed to update favorite. Please try again.');
     }
   };

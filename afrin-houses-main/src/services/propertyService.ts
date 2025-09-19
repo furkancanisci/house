@@ -4,7 +4,7 @@ import api from './api';
 const fixImageUrl = (url: string | null | undefined | any, fallbackType?: string): string => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://api.besttrend-sy.com/';
   
-  console.log('propertyService fixImageUrl - Input:', url, 'BaseUrl:', baseUrl);
+
   
   // Return appropriate placeholder if no URL is provided
   if (!url || typeof url !== 'string') {
@@ -24,20 +24,20 @@ const fixImageUrl = (url: string | null | undefined | any, fallbackType?: string
   // Handle relative paths
   if (url.startsWith('/')) {
     const result = `${baseUrl}${url}`;
-    console.log('propertyService fixImageUrl - Fixed relative path:', url, '->', result);
+
     return result;
   }
   
   // Handle storage paths
   if (url.startsWith('storage/')) {
     const result = `${baseUrl}/${url}`;
-    console.log('propertyService fixImageUrl - Fixed storage path:', url, '->', result);
+
     return result;
   }
   
   // Default case - prepend base URL
   const result = `${baseUrl}/${url}`;
-  console.log('propertyService fixImageUrl - Default case:', url, '->', result);
+
   return result;
 };
 
@@ -126,7 +126,7 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     // Handle search query - use multiple parameter names for compatibility
     const searchQuery = filters.searchQuery || filters.search;
     if (searchQuery) {
-      console.log('Search query found:', searchQuery);
+  
       params.searchQuery = searchQuery;
       params.search = searchQuery;
       params.q = searchQuery;
@@ -222,15 +222,15 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       }
     }
     
-    console.log('Sending property filters to API:', params);
+
     const response = await api.get('/properties', { params });
     
     // Log the full response for debugging
-    console.log('API Response:', response);
+
     
     // Ensure we always return a consistent response structure
     if (!response || !response.data) {
-      console.warn('No data in API response');
+
       return [];
     }
     
@@ -240,22 +240,22 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
     // Check if the response has a data property that contains the array of properties
     if (response.data.data && Array.isArray(response.data.data)) {
       // Handle paginated response (Laravel default)
-      console.log('Found properties in response.data.data');
+
       properties = response.data.data;
     } else if (Array.isArray(response.data)) {
       // Handle direct array response
-      console.log('Found properties directly in response.data');
+
       properties = response.data;
     } else if (response.data.properties && Array.isArray(response.data.properties)) {
       // Handle response with properties key (alternative format)
-      console.log('Found properties in response.data.properties');
+
       properties = response.data.properties;
     } else {
-      console.warn('Unexpected API response structure. Response data:', response.data);
+
       return [];
     }
     
-    console.log(`Found ${properties.length} properties in API response`);
+
     
     // Fix image URLs in all properties
     const processedProperties = properties.map((property: any) => {
@@ -286,12 +286,7 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       filters: response.data.filters || {}
     };
   } catch (error: any) {
-    console.error('Error fetching properties:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url
-    });
+
     
     // Return fallback data instead of throwing
     return {
@@ -310,11 +305,11 @@ export const getProperty = async (slugOrId: string) => {
     const isNumericId = /^\d+$/.test(slugOrId);
     const endpoint = isNumericId ? `/properties/${slugOrId}/show` : `/properties/${slugOrId}`;
     
-    console.log(`Fetching property from: ${endpoint}`);
+
     const response = await api.get(endpoint);
     const property = response.data.property || response.data;
     
-    console.log('Raw property data from API:', property);
+
     
     // Fix image URLs in the property
     if (property && property.images) {
@@ -335,11 +330,7 @@ export const getProperty = async (slugOrId: string) => {
     
     return property;
   } catch (error: any) {
-    console.error(`Error fetching property ${slugOrId}:`, {
-      message: error.message,
-      status: error.response?.status,
-      slug: slugOrId
-    });
+
     
     // Return null for not found properties
     if (error.response?.status === 404) {
@@ -390,10 +381,7 @@ export const getFeaturedProperties = async (params: FeaturedPropertiesParams = {
       return property;
     });
   } catch (error: any) {
-    console.error('Error fetching featured properties:', {
-      message: error.message,
-      status: error.response?.status
-    });
+
     
     // Return empty array as fallback
     return [];
@@ -408,13 +396,9 @@ export const createProperty = async (propertyData: any) => {
     if (propertyData instanceof FormData) {
       // If it's already FormData, use it directly
       formData = propertyData;
-      console.log('Using FormData directly from caller');
+  
     } else {
       // If it's a plain object, convert it to FormData
-      console.log('Starting createProperty with data:', JSON.parse(JSON.stringify(propertyData, (key, value) => 
-        value instanceof File ? `[File ${value.name}]` : value
-      )));
-      
       formData = new FormData();
       
       // Add all property data to FormData
@@ -444,12 +428,12 @@ export const createProperty = async (propertyData: any) => {
     }
     
     // Log FormData contents for debugging
-    console.log('FormData contents:');
+
     for (const pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
+
     }
     
-    console.log('Sending property data to API with FormData');
+
     const response = await api.post('/properties', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -457,20 +441,10 @@ export const createProperty = async (propertyData: any) => {
       timeout: 30000, // 30 second timeout
     });
     
-    console.log('Property created successfully:', response.data);
+
     return response.data;
   } catch (error: any) {
-    console.error('Error in createProperty:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        headers: error.config?.headers,
-        data: error.config?.data,
-      },
-    });
+
     
     // Create a more detailed error object
     const enhancedError = new Error(error.message || 'Failed to create property');
@@ -513,7 +487,7 @@ export const updateProperty = async (id: number, propertyData: any) => {
       }
     });
     
-    console.log('Sending property update data to API with FormData');
+
     const response = await api.put(`/properties/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -521,7 +495,7 @@ export const updateProperty = async (id: number, propertyData: any) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error updating property:', error);
+
     throw error;
   }
 };
@@ -531,31 +505,31 @@ export const deleteProperty = async (id: number) => {
     const response = await api.delete(`/properties/${id}`);
     return response.data;
   } catch (error) {
-    console.error('Error deleting property:', error);
+
     throw error;
   }
 };
 
 export const toggleFavorite = async (id: number) => {
   try {
-    console.log('Toggling favorite for property ID:', id);
+
     
     // Get current token for debugging
     const token = localStorage.getItem('token');
-    console.log('Current auth token:', token ? 'Present' : 'Missing');
+
     
     const response = await api.post(`/properties/${id}/favorite`);
-    console.log('Toggle favorite response:', response.data);
+
     
     return response.data;
   } catch (error: any) {
-    console.error('Error toggling favorite:', error);
-    console.error('Error response:', error.response?.data);
-    console.error('Error status:', error.response?.status);
+
+
+
     
     // If it's an auth error, clear local auth data
     if (error.response?.status === 401) {
-      console.log('Authentication error, clearing local auth data');
+
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }
@@ -590,7 +564,7 @@ export const getFavoriteProperties = async () => {
       return property;
     });
   } catch (error: any) {
-    console.error('Error fetching favorite properties:', error);
+
     // Return empty array as fallback
     return [];
   }
@@ -601,7 +575,7 @@ export const getPropertyAnalytics = async (id: number) => {
     const response = await api.get(`/properties/${id}/analytics`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching property analytics:', error);
+
     throw error;
   }
 };
@@ -632,7 +606,7 @@ export const getSimilarProperties = async (slug: string) => {
       return property;
     });
   } catch (error) {
-    console.error('Error fetching similar properties:', error);
+
     throw error;
   }
 };
@@ -642,7 +616,7 @@ export const getAmenities = async () => {
     const response = await api.get('/properties/amenities');
     return response.data || [];
   } catch (error) {
-    console.error('Error fetching amenities:', error);
+
     throw error;
   }
 };

@@ -505,7 +505,15 @@
                             </div>
                         </div>
 
-                        <!-- Advanced Building Details -->
+                    </div>
+                </div>
+
+                <!-- Advanced Details -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ __('admin.advanced_details') }}</h3>
+                    </div>
+                    <div class="card-body">
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">

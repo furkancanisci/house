@@ -45,11 +45,11 @@ const Favorites: React.FC = () => {
     const loadFavorites = async () => {
       try {
         setIsLoading(true);
-        console.log('Loading favorite properties from API...');
+  
         
         // Fetch favorite properties from the API
         const favoritesFromAPI = await getFavoriteProperties();
-        console.log('Favorite properties loaded:', favoritesFromAPI);
+  
         
         // Transform the properties to ExtendedProperty format
         let favProps = favoritesFromAPI.map((property: any) => ({
@@ -124,7 +124,6 @@ const Favorites: React.FC = () => {
 
     setFavoriteProperties(favProps);
     } catch (error) {
-      console.error('Failed to load favorite properties:', error);
       setFavoriteProperties([]);
     } finally {
       setIsLoading(false);

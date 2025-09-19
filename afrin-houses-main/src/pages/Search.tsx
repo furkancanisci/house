@@ -566,7 +566,7 @@ const Search: React.FC = () => {
 
   // Handle filter changes with proper typing
   const handleFilterChange = useCallback(async (newFilters: Partial<SearchFiltersType>) => {
-    console.log('Search: handleFilterChange called with:', newFilters);
+
     
     // Convert string prices to numbers for the filter and ensure proper typing
     const processedFilters: SearchFiltersType = {
@@ -592,7 +592,7 @@ const Search: React.FC = () => {
       }
     });
 
-    console.log('Search: Processed filters:', processedFilters);
+
 
     // Update filters state
     setFilters(prevFilters => ({
@@ -606,10 +606,10 @@ const Search: React.FC = () => {
     
     // Call filterProperties from AppContext to fetch filtered data from API
     try {
-      console.log('Search: Calling filterProperties with:', processedFilters);
+
       await filterProperties(processedFilters);
     } catch (error) {
-      console.error('Search: Error filtering properties:', error);
+
     }
   }, [filters, updateURL, filterProperties]);
 
@@ -633,9 +633,7 @@ const Search: React.FC = () => {
       
       // Log initial filters for debugging
       if (Object.keys(filtersFromParams).length > 0) {
-        console.log('Initial filters from URL:', filtersFromParams);
-      } else {
-        console.log('No initial filters in URL');
+
       }
     }
   }, [filtersFromParams]);

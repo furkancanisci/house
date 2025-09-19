@@ -44,7 +44,7 @@ class PropertyTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch property types');
     } catch (error) {
-      console.error('Error fetching property types:', error);
+  
       throw error;
     }
   }
@@ -64,7 +64,7 @@ class PropertyTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch property type options');
     } catch (error) {
-      console.error('Error fetching property type options:', error);
+  
       throw error;
     }
   }
@@ -82,7 +82,7 @@ class PropertyTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch parent property types');
     } catch (error) {
-      console.error('Error fetching parent property types:', error);
+  
       throw error;
     }
   }
@@ -101,7 +101,7 @@ class PropertyTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch child property types');
     } catch (error) {
-      console.error('Error fetching child property types:', error);
+  
       throw error;
     }
   }
@@ -119,7 +119,7 @@ class PropertyTypeService {
 
       throw new Error(response.data?.message || 'Failed to fetch property type');
     } catch (error) {
-      console.error('Error fetching property type:', error);
+  
       throw error;
     }
   }
