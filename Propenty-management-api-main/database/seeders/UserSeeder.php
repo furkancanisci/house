@@ -35,33 +35,35 @@ class UserSeeder extends Seeder
         if (Role::where('name', 'SuperAdmin')->exists()) {
             $superAdmin->assignRole('SuperAdmin');
         }
-        // Use raw SQL to insert the first user with proper boolean values
-        DB::statement("INSERT INTO users (first_name, last_name, email, password, phone, user_type, is_verified, is_active, email_verified_at, bio, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, true, true, ?, ?, NOW(), NOW())",
+        // Create demo property owner user
+        User::firstOrCreate(
+            ['email' => 'property.owner@example.com'],
             [
-                'John',
-                'Smith',
-                'property.owner@example.com',
-                Hash::make('password123'),
-                '+1-555-0123',
-                'property_owner',
-                now(),
-                'Experienced property owner with over 10 years in real estate investment.'
+                'first_name' => 'John',
+                'last_name' => 'Smith',
+                'password' => Hash::make('password123'),
+                'phone' => '+1-555-0123',
+                'user_type' => 'property_owner',
+                'is_verified' => true,
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'bio' => 'Experienced property owner with over 10 years in real estate investment.'
             ]
         );
 
-        // Create demo general user with raw SQL
-        DB::statement("INSERT INTO users (first_name, last_name, email, password, phone, user_type, is_verified, is_active, email_verified_at, bio, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, true, true, ?, ?, NOW(), NOW())",
+        // Create demo general user
+        User::firstOrCreate(
+            ['email' => 'user@example.com'],
             [
-                'Sarah',
-                'Johnson',
-                'user@example.com',
-                Hash::make('password123'),
-                '+1-555-0456',
-                'general_user',
-                now(),
-                'Looking for the perfect home for my family.'
+                'first_name' => 'Sarah',
+                'last_name' => 'Johnson',
+                'password' => Hash::make('password123'),
+                'phone' => '+1-555-0456',
+                'user_type' => 'general_user',
+                'is_verified' => true,
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'bio' => 'Looking for the perfect home for my family.'
             ]
         );
 
@@ -82,16 +84,18 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($propertyOwners as $owner) {
-            DB::statement("INSERT INTO users (first_name, last_name, email, password, phone, user_type, is_verified, is_active, email_verified_at, bio, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, 'property_owner', true, true, ?, ?, NOW(), NOW())",
+            User::firstOrCreate(
+                ['email' => $owner[2]],
                 [
-                    $owner[0], // first_name
-                    $owner[1], // last_name
-                    $owner[2], // email
-                    Hash::make('password123'),
-                    '+1-555-' . rand(1000, 9999),
-                    now(),
-                    $owner[3] // bio
+                    'first_name' => $owner[0],
+                    'last_name' => $owner[1],
+                    'password' => Hash::make('password123'),
+                    'phone' => '+1-555-' . rand(1000, 9999),
+                    'user_type' => 'property_owner',
+                    'is_verified' => true,
+                    'is_active' => true,
+                    'email_verified_at' => now(),
+                    'bio' => $owner[3]
                 ]
             );
         }
@@ -117,39 +121,45 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($generalUsers as $user) {
-            DB::statement("INSERT INTO users (first_name, last_name, email, password, phone, user_type, is_verified, is_active, email_verified_at, bio, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, 'general_user', true, true, ?, ?, NOW(), NOW())",
+            User::firstOrCreate(
+                ['email' => $user[2]],
                 [
-                    $user[0], // first_name
-                    $user[1], // last_name
-                    $user[2], // email
-                    Hash::make('password123'),
-                    '+1-555-' . rand(1000, 9999),
-                    now(),
-                    $user[3] // bio
+                    'first_name' => $user[0],
+                    'last_name' => $user[1],
+                    'password' => Hash::make('password123'),
+                    'phone' => '+1-555-' . rand(1000, 9999),
+                    'user_type' => 'general_user',
+                    'is_verified' => true,
+                    'is_active' => true,
+                    'email_verified_at' => now(),
+                    'bio' => $user[3]
                 ]
             );
         }
 
-        // Create inactive user with raw SQL
-        DB::statement("INSERT INTO users (first_name, last_name, email, password, user_type, is_verified, is_active, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, 'general_user', false, false, NOW(), NOW())",
+        // Create inactive user
+        User::firstOrCreate(
+            ['email' => 'inactive@example.com'],
             [
-                'Test',
-                'Inactive',
-                'inactive@example.com',
-                Hash::make('password123')
+                'first_name' => 'Test',
+                'last_name' => 'Inactive',
+                'password' => Hash::make('password123'),
+                'user_type' => 'general_user',
+                'is_verified' => false,
+                'is_active' => false
             ]
         );
 
-        // Create unverified user with raw SQL
-        DB::statement("INSERT INTO users (first_name, last_name, email, password, user_type, is_verified, is_active, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, 'property_owner', false, true, NOW(), NOW())",
+        // Create unverified user
+        User::firstOrCreate(
+            ['email' => 'unverified@example.com'],
             [
-                'Test',
-                'Unverified',
-                'unverified@example.com',
-                Hash::make('password123')
+                'first_name' => 'Test',
+                'last_name' => 'Unverified',
+                'password' => Hash::make('password123'),
+                'user_type' => 'property_owner',
+                'is_verified' => false,
+                'is_active' => true
             ]
         );
     }
