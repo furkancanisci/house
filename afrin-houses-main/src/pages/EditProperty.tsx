@@ -542,7 +542,7 @@ const EditProperty: React.FC = () => {
                     <EnhancedDocumentTypeSelect
                       value={field.value}
                       onValueChange={field.onChange}
-                      placeholder="اختر نوع التابو"
+                      placeholder={t('addProperty.placeholders.selectDocumentType')}
                       loading={loadingDocumentTypes}
                       documentTypes={documentTypes}
                       showDescriptions={true}
@@ -570,7 +570,9 @@ const EditProperty: React.FC = () => {
                       type="number"
                       placeholder="Monthly rent or sale price"
                       className={`pl-10 ${errors.price ? 'border-red-500' : ''}`}
-                      {...register('price', { valueAsNumber: true })}
+                      {...register('price', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                     />
                   </div>
                   {errors.price && (
@@ -633,7 +635,9 @@ const EditProperty: React.FC = () => {
                       type="number"
                       min="0"
                       className={`pl-10 ${errors.bedrooms ? 'border-red-500' : ''}`}
-                      {...register('bedrooms', { valueAsNumber: true })}
+                      {...register('bedrooms', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                     />
                   </div>
                   {errors.bedrooms && (
@@ -651,7 +655,9 @@ const EditProperty: React.FC = () => {
                       min="0"
                       step="0.5"
                       className={`pl-10 ${errors.bathrooms ? 'border-red-500' : ''}`}
-                      {...register('bathrooms', { valueAsNumber: true })}
+                      {...register('bathrooms', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                     />
                   </div>
                   {errors.bathrooms && (
@@ -668,7 +674,9 @@ const EditProperty: React.FC = () => {
                       type="number"
                       min="1"
                       className={`pl-10 ${errors.squareFootage ? 'border-red-500' : ''}`}
-                      {...register('squareFootage', { valueAsNumber: true })}
+                      {...register('squareFootage', { 
+                  setValueAs: (value) => value === '' ? undefined : Number(value)
+                })}
                     />
                   </div>
                   {errors.squareFootage && (
@@ -688,7 +696,9 @@ const EditProperty: React.FC = () => {
                       min="1800"
                       max={new Date().getFullYear()}
                       className={`pl-10 ${errors.yearBuilt ? 'border-red-500' : ''}`}
-                      {...register('yearBuilt', { valueAsNumber: true })}
+                      {...register('yearBuilt', { 
+                   setValueAs: (value) => value === '' ? undefined : Number(value)
+                 })}
                     />
                   </div>
                   {errors.yearBuilt && (

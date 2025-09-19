@@ -20,6 +20,7 @@ class UserResource extends JsonResource
             'first_name' => $this->ensureUtf8($this->first_name),
             'last_name' => $this->ensureUtf8($this->last_name),
             'full_name' => $this->ensureUtf8($this->full_name),
+            'name' => $this->ensureUtf8($this->full_name), // Add name field for frontend consistency
             'email' => $this->email,
             'phone' => $this->phone,
             'date_of_birth' => $this->getDateOfBirth(),

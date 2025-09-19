@@ -109,6 +109,7 @@ interface AppContextType {
   register: (userData: Omit<User, 'id' | 'properties' | 'favorites'>) => Promise<boolean>;
   changeLanguage: (lang: string) => void;
   updateUser: (userData: Partial<User>) => Promise<void>;
+  refreshUser: () => Promise<User | null>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -623,6 +624,60 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  // Add a function to refresh user data
+  const refreshUser = async () => {
+    try {
+      console.log('DEBUG: Manually refreshing user data...');
+      
+      // Clear any cached data first
+      const token = authService.getToken();
+      if (!token) {
+        console.log('DEBUG: No token found, user needs to log in');
+        dispatch({ type: 'SET_USER', payload: null });
+        return null;
+      }
+      
+      const user = await authService.getCurrentUser();
+      
+      if (user) {
+        const frontendUser: User = {
+          id: user.id?.toString() || '',
+          name: (user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User').toString(),
+          first_name: user.first_name || user.name?.split(' ')[0] || '',
+          last_name: user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          avatar: (() => {
+            if (!user.avatar) return '';
+            return typeof user.avatar === 'string' 
+              ? user.avatar 
+              : (user.avatar as any)?.url || '';
+          })() as string | { url: string },
+          properties: [],
+          favorites: [],
+          is_verified: Boolean(user.is_verified),
+          user_type: user.user_type || 'user',
+          date_joined: user.date_joined || user.created_at || new Date().toISOString(),
+          created_at: user.created_at || new Date().toISOString(),
+          updated_at: user.updated_at || new Date().toISOString()
+        };
+        
+        console.log('DEBUG: Refreshed user data:', frontendUser);
+        console.log('DEBUG: Raw API user data:', user);
+        dispatch({ type: 'SET_USER', payload: frontendUser });
+        return frontendUser;
+      } else {
+        console.log('DEBUG: No user data received from API');
+        dispatch({ type: 'SET_USER', payload: null });
+      }
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      // If refresh fails, clear user data
+      dispatch({ type: 'SET_USER', payload: null });
+    }
+    return null;
+  };
+
   // Register using API
   const register = async (userData: {
     first_name: string;
@@ -789,7 +844,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 })() as string | { url: string },
                 properties: [],
                 favorites: [],
-                is_verified: user.is_verified || false,
+                is_verified: Boolean(user.is_verified),
                 user_type: user.user_type || 'user',
                 date_joined: user.date_joined || user.created_at || new Date().toISOString(),
                 created_at: user.created_at || new Date().toISOString()
@@ -923,7 +978,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     logout,
     register,
     changeLanguage,
-    updateUser
+    updateUser,
+    refreshUser
   };
 
   return (

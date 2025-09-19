@@ -19,7 +19,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Damascus',
                 'name_ar' => 'دمشق',
-                'name_ku' => 'دیمەشق',
+                'name_ku' => 'Dimaşq',
                 'state_en' => 'Damascus',
                 'state_ar' => 'دمشق',
                 'country_en' => 'Syria',
@@ -31,7 +31,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Douma',
                 'name_ar' => 'دوما',
-                'name_ku' => 'دووما',
+                'name_ku' => 'Dûma',
                 'state_en' => 'Damascus',
                 'state_ar' => 'دمشق',
                 'country_en' => 'Syria',
@@ -45,7 +45,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Aleppo',
                 'name_ar' => 'حلب',
-                'name_ku' => 'حەلەب',
+                'name_ku' => 'Heleb',
                 'state_en' => 'Aleppo',
                 'state_ar' => 'حلب',
                 'country_en' => 'Syria',
@@ -57,7 +57,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Afrin',
                 'name_ar' => 'عفرين',
-                'name_ku' => 'عەفرین',
+                'name_ku' => 'Efrîn',
                 'state_en' => 'Aleppo',
                 'state_ar' => 'حلب',
                 'country_en' => 'Syria',
@@ -71,7 +71,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Homs',
                 'name_ar' => 'حمص',
-                'name_ku' => 'حمس',
+                'name_ku' => 'Hims',
                 'state_en' => 'Homs',
                 'state_ar' => 'حمص',
                 'country_en' => 'Syria',
@@ -83,7 +83,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Palmyra',
                 'name_ar' => 'تدمر',
-                'name_ku' => 'تەدمور',
+                'name_ku' => 'Tedmûr',
                 'state_en' => 'Homs',
                 'state_ar' => 'حمص',
                 'country_en' => 'Syria',
@@ -97,7 +97,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Hama',
                 'name_ar' => 'حماة',
-                'name_ku' => 'حەما',
+                'name_ku' => 'Hema',
                 'state_en' => 'Hama',
                 'state_ar' => 'حماة',
                 'country_en' => 'Syria',
@@ -111,7 +111,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Latakia',
                 'name_ar' => 'اللاذقية',
-                'name_ku' => 'لازقیە',
+                'name_ku' => 'Lazkiye',
                 'state_en' => 'Latakia',
                 'state_ar' => 'اللاذقية',
                 'country_en' => 'Syria',
@@ -123,7 +123,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Jableh',
                 'name_ar' => 'جبلة',
-                'name_ku' => 'جەبلە',
+                'name_ku' => 'Cible',
                 'state_en' => 'Latakia',
                 'state_ar' => 'اللاذقية',
                 'country_en' => 'Syria',
@@ -137,7 +137,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Tartus',
                 'name_ar' => 'طرطوس',
-                'name_ku' => 'تەرتووس',
+                'name_ku' => 'Tertûs',
                 'state_en' => 'Tartus',
                 'state_ar' => 'طرطوس',
                 'country_en' => 'Syria',
@@ -151,7 +151,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Daraa',
                 'name_ar' => 'درعا',
-                'name_ku' => 'دەرعا',
+                'name_ku' => 'Deraa',
                 'state_en' => 'Daraa',
                 'state_ar' => 'درعا',
                 'country_en' => 'Syria',
@@ -165,7 +165,7 @@ class SyrianCitiesSeeder extends Seeder
             [
                 'name_en' => 'Idlib',
                 'name_ar' => 'إدلب',
-                'name_ku' => 'ئیدلیب',
+                'name_ku' => 'Îdlîb',
                 'state_en' => 'Idlib',
                 'state_ar' => 'إدلب',
                 'country_en' => 'Syria',

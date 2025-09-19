@@ -502,13 +502,19 @@
             "propertyImages": "Wêneyên Mîlkê"
         },
         "placeholders": {
+            "selectDocumentType": "Cure tabu hilbijêre",
             "selectAdType": "Cure reklam hilbijêre",
             "selectPropertyType": "Cure mîlk hilbijêre",
             "bedroomCount": "Hejmara odeyên razan",
             "bathroomCount": "Hejmara avdestîxanan",
             "areaSquareMeters": "Rûberî (m²)",
             "yearBuilt": "Sala avakirinê",
-            "selectParkingType": "Cure parkkirinê hilbijêre"
+            "selectParkingType": "Cure parkkirinê hilbijêre",
+            "totalFloors": "Hejmara tîma rêveberiyên razan",
+            "floorNumber": "Hejmara tîma rêveberiyên",
+            "selectOrientation": "Cure atjîhilbijêre",
+            "balconyCount": "Hejmara shîraên razan",
+            "selectViewType": "Cure atjîhilbijêre"
         },
         "parkingTypes": {
             "noParking": "Parkkirinek tune",

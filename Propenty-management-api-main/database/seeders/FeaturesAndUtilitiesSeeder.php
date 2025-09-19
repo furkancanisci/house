@@ -156,19 +156,19 @@ class FeaturesAndUtilitiesSeeder extends Seeder
 
         // Insert features
         foreach ($features as $feature) {
-            $slug = \Illuminate\Support\Str::slug($feature['name_en']);
             Feature::updateOrCreate(
-                ['slug' => $slug],
-                array_merge($feature, ['slug' => $slug])
+                ['name_en' => $feature['name_en']],
+                $feature
+
             );
         }
 
         // Insert utilities
         foreach ($utilities as $utility) {
-            $slug = \Illuminate\Support\Str::slug($utility['name_en']);
             Utility::updateOrCreate(
-                ['slug' => $slug],
-                array_merge($utility, ['slug' => $slug])
+                ['name_en' => $utility['name_en']],
+                $utility
+
             );
         }
 

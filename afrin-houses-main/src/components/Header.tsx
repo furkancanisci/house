@@ -31,7 +31,7 @@ import AuthModal from './AuthModal';
 import EmailActivationModal from './EmailActivationModal';
 
 const Header: React.FC = () => {
-  const { state, logout, changeLanguage } = useApp();
+  const { state, logout, changeLanguage, refreshUser } = useApp();
   const { user, language } = state;
   const navigate = useNavigate();
   const location = useLocation();
@@ -156,7 +156,9 @@ const Header: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
+              onClick={async () => {
+                console.log('DEBUG: List Property button clicked, refreshing user data...');
+                await refreshUser();
                 requireVerifiedEmail(() => {
                   navigate('/add-property');
                 });
@@ -237,7 +239,9 @@ const Header: React.FC = () => {
               
               {/* List Property Button - Mobile */}
               <button
-                onClick={() => {
+                onClick={async () => {
+                  console.log('DEBUG: Mobile List Property button clicked, refreshing user data...');
+                  await refreshUser();
                   requireVerifiedEmail(() => {
                     navigate('/add-property');
                   });

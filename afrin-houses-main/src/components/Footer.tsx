@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Building, Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Building, Facebook, Twitter, Instagram, Mail, Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import logo from '../assets/logo.png';
 
@@ -78,21 +78,15 @@ const Footer: React.FC = () => {
             <h3 className="text-base sm:text-lg font-semibold mb-2">{t('footer.contactUs')}</h3>
             <ul className="space-y-2">
               <li className="flex items-center space-x-2">
-                <MapPin className="h-3 w-3 text-[#067977] flex-shrink-0" />
-                <span className="text-gray-300 text-xs">
-                  {t('footer.address')}
-                </span>
-              </li>
-              <li className="flex items-center space-x-2">
                 <Phone className="h-3 w-3 text-[#067977] flex-shrink-0" />
-                <span className="text-gray-300 text-xs">
-                  (555) 123-4567
+                <span className="text-gray-300 text-xs" dir="ltr">
+                  +90 537 867 71 29
                 </span>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-3 w-3 text-[#067977] flex-shrink-0" />
                 <span className="text-gray-300 text-xs">
-                  info@realestate.com
+                  besttrendinfo@gmail.com
                 </span>
               </li>
             </ul>
