@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button';
 import { LayoutGrid, List, Loader2, X, MapPin } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import PropertyCard from '../components/PropertyCard';
+import { webhookService } from '../services/webhookService';
 
 // Define types for better type safety
 
@@ -625,6 +626,29 @@ const Search: React.FC = () => {
     updateURL(newFilters);
   }, [filters, updateURL]);
 
+
+  // Send search results to webhook when filteredProperties change
+  useEffect(() => {
+    if (filteredProperties && filteredProperties.length > 0 && memoizedFilters) {
+      // Send search results to webhook
+      const sendToWebhook = async () => {
+        try {
+          const searchQuery = memoizedFilters.search || memoizedFilters.searchQuery || '';
+          await webhookService.sendSearchResults({
+            searchQuery,
+            filters: memoizedFilters,
+            results: filteredProperties,
+            timestamp: new Date().toISOString(),
+            source: 'search_page'
+          });
+        } catch (error) {
+          console.error('Failed to send search results to webhook:', error);
+        }
+      };
+
+      sendToWebhook();
+    }
+  }, [filteredProperties, memoizedFilters]);
 
   // Track initial mount for logging purposes
   useEffect(() => {

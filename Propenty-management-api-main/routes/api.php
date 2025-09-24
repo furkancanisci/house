@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\DirectionController;
 use App\Http\Controllers\Api\HomeStatController;
 use App\Http\Controllers\Api\PropertyDetailController;
 use App\Http\Controllers\Api\AdvancedDetailsController;
+use App\Http\Controllers\Api\WebhookController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\ImageUploadController;
@@ -324,6 +325,13 @@ Route::prefix('v1')->group(function () {
             Route::patch('/messages/{contactMessage}/mark-read', [ContactController::class, 'markAsRead']);
             Route::delete('/messages/{contactMessage}', [ContactController::class, 'destroy']);
         });
+    });
+
+    // Webhook Routes - For receiving data from n8n
+    Route::prefix('webhook')->group(function () {
+        // Public webhook endpoint for n8n
+        Route::post('/n8n-data', [WebhookController::class, 'receiveWebhookData']);
+        Route::get('/health', [WebhookController::class, 'healthCheck']);
     });
 });
 

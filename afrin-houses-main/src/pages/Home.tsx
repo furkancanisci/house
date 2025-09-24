@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { getProperties, getFeaturedProperties } from '../services/propertyService';
 import { getHomeStats, getLocalizedLabel, HomeStat } from '../services/homeStatsService';
 import { processPropertyImages } from '../lib/imageUtils';
+import { webhookService } from '../services/webhookService';
 import leftTopOrnament from '../assets/left top_bb.png';
 import rightBottomOrnament from '../assets/right_bottom_bb.png';
 
@@ -130,8 +131,23 @@ const Home: React.FC = () => {
     fetchPropertiesByCategory();
   }, [t]);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (searchQuery.trim()) {
+      // Send search query to webhook before navigating
+      try {
+        const searchData = {
+          searchQuery: searchQuery,
+          listingType: 'all',
+          propertyType: 'all',
+          timestamp: new Date().toISOString(),
+          source: 'home_page'
+        };
+        
+        await webhookService.sendSearchQuery(searchQuery, searchData, 'home_page');
+      } catch (error) {
+        console.error('Failed to send search query to webhook:', error);
+      }
+      
       navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
