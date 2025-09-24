@@ -167,7 +167,8 @@
       "noPropertiesInCityState": "No properties currently available in {{city}}, {{state}}",
       "tryDifferentLocation": "Try searching in a different governorate or adjust your search criteria",
       "clearLocationFilter": "Clear Location Filter",
-      "clearAllFilters": "Clear All Filters"
+      "clearAllFilters": "Clear All Filters",
+      "signInToViewContactInfo": "Sign in to view contact information"
     },
     "view": {
       "grid": "Grid View",
@@ -296,6 +297,7 @@
     },
   "property": {
     "selectPriceType": "Select Price Type",
+    "totalPrice": "Total Price",
     "forRent": "For Rent",
     "forSale": "For Sale",
     "propertyDetails": "Property Details",
@@ -324,6 +326,7 @@
     },
     "priceType": "Price Type",
     "priceTypes": {
+      "all": "All",
       "monthly": "Monthly",
       "yearly": "Yearly",
       "total": "Total",
@@ -750,7 +753,18 @@
     "removeLocation": "Remove",
     "clearAllLocations": "Clear All",
     "state": "state",
-    "city": "city"
+    "city": "city",
+    "floorDetails": "Floor Details",
+    "totalFloors": "Total Floors",
+    "balconyCount": "Balcony Count",
+    "orientation": "Orientation",
+    "viewType": "View Type",
+    "minFloor": "Min Floor",
+    "maxFloor": "Max Floor",
+    "minTotalFloors": "Min Total Floors",
+    "maxTotalFloors": "Max Total Floors",
+    "minBalconies": "Min Balconies",
+    "maxBalconies": "Max Balconies"
   },
   "forms": {
     "propertyTitle": "Property Title",

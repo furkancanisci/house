@@ -154,7 +154,8 @@
       "noPropertiesInCityState": "لا توجد عقارات حالياً في {{city}}، {{state}}",
       "tryDifferentLocation": "جرب البحث في محافظة أخرى أو قم بتعديل معايير البحث",
       "clearLocationFilter": "مسح فلتر الموقع",
-      "clearAllFilters": "مسح جميع الفلاتر"
+      "clearAllFilters": "مسح جميع الفلاتر",
+      "signInToViewContactInfo": "سجل الدخول لعرض معلومات الاتصال"
     }
   },
   "property": {
@@ -193,6 +194,7 @@
     },
     "priceType": "نوع السعر",
     "priceTypes": {
+      "all": "الكل",
       "monthly": "شهري",
       "yearly": "سنوي",
       "total": "إجمالي",
@@ -848,7 +850,18 @@
     "applyFilters": "تطبيق الفلاتر",
     "locationPlaceholder": "أدخل المدينة أو العنوان أو الرمز البريدي",
     "state": "المحافظة",
-    "city": "المدينة"
+    "city": "المدينة",
+    "floorDetails": "تفاصيل الطابق",
+    "totalFloors": "إجمالي الطوابق",
+    "balconyCount": "عدد الشرفات",
+    "orientation": "الاتجاه",
+    "viewType": "نوع الإطلالة",
+    "minFloor": "أقل طابق",
+    "maxFloor": "أعلى طابق",
+    "minTotalFloors": "أقل عدد طوابق",
+    "maxTotalFloors": "أعلى عدد طوابق",
+    "minBalconies": "أقل عدد شرفات",
+    "maxBalconies": "أعلى عدد شرفات"
   },
   "footer": {
     "description": "شريكك الموثوق في العثور على المنزل المثالي. نحن نربط المشترين والبائعين والمستأجرين بعقارات عالية الجودة وخدمة استثنائية.",
