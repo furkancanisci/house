@@ -223,6 +223,7 @@
     "property": {
         "forRent": "Kirê",
         "forSale": "Firotinê",
+        "totalPrice": "Bihayê Tevahî",
         "propertyDetails": "Hûragahîyên Mîlkê",
         "month": "Meh",
         "types": {
@@ -234,6 +235,7 @@
         },
         "priceType": "Celeba Bihayê",
         "priceTypes": {
+            "all": "Hemû",
             "monthly": "Mehane",
             "yearly": "Salane",
             "total": "Tevahî",
@@ -443,7 +445,18 @@
         "selectedLocations": "Cîhan Hilbijartî",
         "addLocation": "Cîh zêde bike",
         "removeLocation": "Jê bibe",
-        "clearAllLocations": "Hemû cîhan paqij bikin"
+        "clearAllLocations": "Hemû cîhan paqij bikin",
+        "floorDetails": "Hûragahiyên Qatê",
+        "totalFloors": "Tevahiya Qatan",
+        "balconyCount": "Hejmara Eywan",
+        "orientation": "Alîkarî",
+        "viewType": "Cureyê Dîmenê",
+        "minFloor": "Qata Herî Kêm",
+        "maxFloor": "Qata Herî Zêde",
+        "minTotalFloors": "Hejmara Qatan Herî Kêm",
+        "maxTotalFloors": "Hejmara Qatan Herî Zêde",
+        "minBalconies": "Hejmara Eywan Herî Kêm",
+        "maxBalconies": "Hejmara Eywan Herî Zêde"
     },
     "messages": {
         "propertyDeletedSuccess": "Mîlk bi serkeftî hate jêbirin",
@@ -453,7 +466,8 @@
         "linkCopied": "Lînk hate kopîkirin",
         "signInToSaveFavorites": "Ji kerema xwe têkeve da ku bijartî rizgar bikî",
         "signInToContact": "Ji kerema xwe têkeve da ku bi xwediyên mîlkan re têkilî danînî",
-        "contactInfoDisplayed": "Agahiyên têkiliyê li jêr têne nîşandan"
+        "contactInfoDisplayed": "Agahiyên têkiliyê li jêr têne nîşandan",
+        "signInToViewContactInfo": "Ji kerema xwe têkeve da ku agahiyên têkiliyê bibînî"
     },
     "housesForRent": {
         "title": "Malên bo Kirê",
