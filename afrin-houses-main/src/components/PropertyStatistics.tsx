@@ -113,7 +113,7 @@ const PropertyStatistics: React.FC<PropertyStatisticsProps> = ({
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center mb-6">
             <BarChart3 className="h-6 w-6 text-blue-600 mr-2" />
-            <h2 className="text-xl font-semibold text-gray-900">Property Statistics Dashboard</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Property Statistics</h2>
           </div>
 
           {/* Summary Cards */}

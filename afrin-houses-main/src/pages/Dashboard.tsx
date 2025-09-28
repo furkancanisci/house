@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Dashboard
+              Profile
             </h1>
             <p className="text-gray-600">
               Manage your properties

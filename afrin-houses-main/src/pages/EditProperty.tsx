@@ -432,7 +432,7 @@ const EditProperty: React.FC = () => {
             className="flex items-center"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            Back to Profile
           </Button>
           <div className="flex items-center space-x-2">
             <Home className="h-6 w-6 text-[#067977]" />
