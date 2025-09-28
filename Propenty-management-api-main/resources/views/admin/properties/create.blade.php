@@ -611,7 +611,7 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <h5>Property Utilities</h5>
+                                <h5>Property Services</h5>
                                 <div class="row">
                                     @if(isset($utilities) && $utilities->count() > 0)
                                         @foreach($utilities as $utility)
@@ -628,7 +628,7 @@
                                         @endforeach
                                     @else
                                         <div class="col-12">
-                                            <p class="text-muted">No utilities available</p>
+                                            <p class="text-muted">No services available</p>
                                         </div>
                                     @endif
                                 </div>
