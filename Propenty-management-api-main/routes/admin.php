@@ -239,7 +239,7 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::post('media/bulk-delete', [MediaController::class, 'bulkDelete'])->name('admin.media.bulk-delete');
     Route::get('media/download/{media}', [MediaController::class, 'download'])->name('admin.media.download');
     Route::post('media/upload', [MediaController::class, 'upload'])->name('admin.media.upload');
-    Route::post('media/{media}/regenerate', [MediaController::class, 'regenerateConversions'])->name('admin.media.regenerate');
+
     Route::get('media/cleanup', [MediaController::class, 'cleanup'])->name('admin.media.cleanup');
 
     // Moderation Queue

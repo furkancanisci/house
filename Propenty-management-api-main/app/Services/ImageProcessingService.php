@@ -6,11 +6,8 @@ use Illuminate\Http\UploadedFile;
 use Intervention\Image\ImageManagerStatic as Image;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Services\BunnyStorageService;
-
 class ImageProcessingService
 {
-    protected $bunnyStorage;
 
     // Get quality settings from config
     private function getQualitySettings(): array
@@ -36,9 +33,8 @@ class ImageProcessingService
         return config('images.upload.max_file_size', 5 * 1024 * 1024);
     }
 
-    public function __construct(BunnyStorageService $bunnyStorage)
+    public function __construct()
     {
-        $this->bunnyStorage = $bunnyStorage;
         // Configure Intervention Image to use GD driver
         Image::configure(['driver' => 'gd']);
     }
@@ -74,10 +70,24 @@ class ImageProcessingService
 
         // Check dimensions
         try {
+            \Illuminate\Support\Facades\Log::info('ImageProcessingService: Checking image dimensions', [
+                'file_path' => $file->getPathname(),
+                'original_name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime_type' => $file->getMimeType()
+            ]);
+            
             $imageInfo = getimagesize($file->getPathname());
             if ($imageInfo) {
                 $width = $imageInfo[0];
                 $height = $imageInfo[1];
+                
+                \Illuminate\Support\Facades\Log::info('ImageProcessingService: Image dimensions read successfully', [
+                    'width' => $width,
+                    'height' => $height,
+                    'max_width' => $maxWidth,
+                    'max_height' => $maxHeight
+                ]);
                 
                 // Minimum dimension check removed - only checking maximum file size
                 
@@ -85,9 +95,21 @@ class ImageProcessingService
                 if ($width > $maxWidth || $height > $maxHeight) {
                     $errors[] = "Image dimensions too large. Maximum size is {$maxWidth}x{$maxHeight} pixels. The image will be automatically resized.";
                 }
+            } else {
+                \Illuminate\Support\Facades\Log::warning('ImageProcessingService: getimagesize returned false', [
+                    'file_path' => $file->getPathname(),
+                    'original_name' => $file->getClientOriginalName()
+                ]);
+                $errors[] = 'Unable to read image dimensions. File may be corrupted or not a valid image.';
             }
         } catch (\Exception $e) {
-            $errors[] = 'Unable to read image dimensions.';
+            \Illuminate\Support\Facades\Log::error('ImageProcessingService: Exception while reading image dimensions', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file_path' => $file->getPathname(),
+                'original_name' => $file->getClientOriginalName()
+            ]);
+            $errors[] = 'Unable to read image dimensions: ' . $e->getMessage();
         }
 
         return $errors;
@@ -284,11 +306,165 @@ class ImageProcessingService
             
             return $processedImages;
             
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Unable to decode image from file (' . $tempPath . '). Error: ' . $e->getMessage()];
         } finally {
             // Clean up temporary file
             if (file_exists($tempPath)) {
                 unlink($tempPath);
             }
+        }
+    }
+
+    /**
+     * Process base64 image with custom dimensions and quality (simple version)
+     */
+    public function processBase64ImageSimple(string $base64Data, ?int $width = null, ?int $height = null, int $quality = 85, ?string $customFilename = null): array
+    {
+        // Extract image data and format
+        if (!preg_match('/^data:image\/(\w+);base64,/', $base64Data, $matches)) {
+            return ['success' => false, 'message' => 'Invalid base64 image format'];
+        }
+        
+        $imageFormat = strtolower($matches[1]);
+        $supportedFormats = $this->getSupportedFormats();
+        if (!in_array($imageFormat, $supportedFormats)) {
+            return ['success' => false, 'message' => 'Unsupported image format'];
+        }
+        
+        // Decode base64 data
+        $imageData = base64_decode(substr($base64Data, strpos($base64Data, ',') + 1));
+        if (!$imageData) {
+            return ['success' => false, 'message' => 'Failed to decode base64 image'];
+        }
+        
+        // Check file size
+        $maxFileSize = $this->getMaxFileSize();
+        if (strlen($imageData) > $maxFileSize) {
+            return ['success' => false, 'message' => 'Image size cannot exceed ' . ($maxFileSize / 1024 / 1024) . 'MB'];
+        }
+        
+        // Create temporary file
+        $tempPath = tempnam(sys_get_temp_dir(), 'image_upload_');
+        file_put_contents($tempPath, $imageData);
+        
+        try {
+            // Verify temp file exists and has content
+            if (!file_exists($tempPath)) {
+                return ['success' => false, 'message' => 'Temporary file was not created'];
+            }
+            
+            if (filesize($tempPath) === 0) {
+                return ['success' => false, 'message' => 'Temporary file is empty'];
+            }
+            
+            // Load the image
+            $image = Image::make($tempPath);
+            
+            // Resize if dimensions are provided
+            if ($width && $height) {
+                $image->resize($width, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+            } elseif ($width) {
+                $image->resize($width, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+            } elseif ($height) {
+                $image->resize(null, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+            }
+            
+            // Generate filename
+            $filename = $customFilename ?: (time() . '_' . Str::random(10) . '.jpg');
+            if (!str_ends_with($filename, '.jpg')) {
+                $filename .= '.jpg';
+            }
+            
+            // Encode the image with specified quality
+            $processedImageData = $image->encode('jpg', $quality)->__toString();
+            
+            return [
+                'success' => true,
+                'filename' => $filename,
+                'image_data' => $processedImageData
+            ];
+            
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Unable to process image: ' . $e->getMessage()];
+        } finally {
+            // Clean up temporary file
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+        }
+    }
+
+    /**
+     * Process uploaded image with custom dimensions and quality
+     */
+    public function processUploadedImage(UploadedFile $file, ?int $width = null, ?int $height = null, int $quality = 85): string
+    {
+        try {
+            // Debug: Log file information
+            \Log::info('Processing uploaded image', [
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'path' => $file->getPathname(),
+                'file_exists' => file_exists($file->getPathname())
+            ]);
+            
+            // Validate the uploaded file
+            $errors = $this->validateImage($file);
+            if (!empty($errors)) {
+                \Log::error('Image validation failed', ['errors' => $errors]);
+                throw new \InvalidArgumentException(implode(', ', $errors));
+            }
+
+            // Load the image
+            \Log::info('Attempting to load image with Intervention Image');
+            $image = Image::make($file->getPathname());
+            \Log::info('Image loaded successfully', [
+                'width' => $image->width(),
+                'height' => $image->height()
+            ]);
+            
+            // Resize if dimensions are provided
+            if ($width && $height) {
+                $image->resize($width, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+            } elseif ($width) {
+                $image->resize($width, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+            } elseif ($height) {
+                $image->resize(null, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+            }
+            
+            // Encode the image with specified quality
+            \Log::info('Encoding image to JPG');
+            $encodedImage = $image->encode('jpg', $quality)->__toString();
+            \Log::info('Image processed successfully', ['encoded_size' => strlen($encodedImage)]);
+            
+            return $encodedImage;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error processing uploaded image', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
     }
 
@@ -323,11 +499,16 @@ class ImageProcessingService
     {
         $deleted = true;
         $qualitySettings = $this->getQualitySettings();
+        $storagePath = config('images.storage.path', 'properties');
         
         foreach (array_keys($qualitySettings) as $sizeName) {
-            $filePath = "properties/{$propertySlug}/{$baseFileName}_{$sizeName}.webp";
-            if ($this->bunnyStorage->fileExists($filePath)) {
-                $deleted = $this->bunnyStorage->deleteFile($filePath) && $deleted;
+            $filePath = $storagePath . "/" . $propertySlug . "_" . $sizeName . "_*.jpg";
+            // Use glob pattern to find files with timestamp
+            $files = glob(storage_path('app/public/' . $storagePath . '/') . $propertySlug . '_' . $sizeName . '_*.jpg');
+            foreach ($files as $file) {
+                if (file_exists($file)) {
+                    $deleted = unlink($file) && $deleted;
+                }
             }
         }
         
@@ -341,13 +522,16 @@ class ImageProcessingService
     {
         $variants = [];
         $qualitySettings = $this->getQualitySettings();
+        $storagePath = config('images.storage.path', 'properties');
         
         foreach ($qualitySettings as $sizeName => $settings) {
-            $filePath = "properties/{$propertySlug}/{$baseFileName}_{$sizeName}.webp";
-            if ($this->bunnyStorage->fileExists($filePath)) {
+            // Use glob pattern to find files with timestamp
+            $files = glob(storage_path('app/public/' . $storagePath . '/') . $propertySlug . '_' . $sizeName . '_*.jpg');
+            if (!empty($files)) {
+                $filePath = str_replace(storage_path('app/public/'), '', $files[0]);
                 $variants[$sizeName] = [
                     'path' => $filePath,
-                    'url' => $this->bunnyStorage->getCdnUrl($filePath),
+                    'url' => Storage::url($filePath),
                     'size' => $settings
                 ];
             }

@@ -289,7 +289,8 @@
             "phone": "Telefon",
             "email": "Email",
             "owner": "Xwediyê Mîlkê"
-        }
+        },
+        "videos": "Vîdyoyên Mîlkê"
     },
     "auth": {
         "signIn": "Têkeve",
@@ -549,6 +550,38 @@
                 "differentAngles": "Ji aliyên cuda wêneyan bikişîne",
                 "showFeatures": "Taybetmendiyên sereke yên mîlkê nîşan bide",
                 "ensureQuality": "Piştrast bike ku wêne zelal û kalîteya bilind in"
+            }
+        },
+        "videoUpload": {
+            "uploadVideos": "Heta 1 vîdyoyê mîlkê barkirin (herî zêde 100MB ji bo her vîdyoyê)",
+            "clickToUpload": "Ji bo barkirina vîdyoyan bitikîne",
+            "selectedVideos": "Vîdyoyên Hilbijartî",
+            "uploading": "Tê barkirin...",
+            "processing": "Tê pêvajokirin...",
+            "duration": "Dem",
+            "size": "Mezinahî",
+            "remove": "Rake",
+            "play": "Lêde",
+            "pause": "Rawestîne",
+            "mute": "Bêdeng bike",
+            "unmute": "Deng veke",
+            "supportedFormats": "Formatên piştgirî: MP4, AVI, MOV, WMV, WebM",
+            "maxSize": "Herî zêde: 100MB ji bo her vîdyoyê",
+            "maxCount": "Herî zêde: 1 vîdyo",
+            "tips": {
+                "title": "Şêret ji bo Encamên Çêtir",
+                "goodLighting": "Ronayîya baş bikar bîne",
+                "steadyCamera": "Kamerayê sabit bihêle",
+                "showAllAreas": "Hemû qadên mîlkê nîşan bide",
+                "keepShort": "Vîdyoyan kurt û fêdeyî bike",
+                "landscapeOrientation": "Ji bo dîtina çêtir bi awayê berwarî tomar bike"
+            },
+            "errors": {
+                "invalidFormat": "Formata vîdyoyê nayê piştgirîkirin",
+                "fileTooLarge": "Pelê vîdyoyê pir mezin e (herî zêde 100MB)",
+                "tooManyFiles": "Nikare ji 1 vîdyoyê zêdetir barkirin",
+                "uploadFailed": "Barkirina vîdyoyê têk çû",
+                "processingFailed": "Pêvajoya vîdyoyê têk çû"
             }
         },
         "progress": {

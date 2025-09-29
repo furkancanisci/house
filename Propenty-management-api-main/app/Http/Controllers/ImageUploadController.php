@@ -2,37 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\BunnyStorageService;
 use App\Services\ImageProcessingService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Exception;
 
 class ImageUploadController extends Controller
 {
-    protected $bunnyStorage;
     protected $imageProcessor;
 
-    public function __construct(BunnyStorageService $bunnyStorage, ImageProcessingService $imageProcessor)
+    public function __construct(ImageProcessingService $imageProcessor)
     {
-        $this->bunnyStorage = $bunnyStorage;
         $this->imageProcessor = $imageProcessor;
     }
 
-    /**
-     * Upload single image to Bunny Storage
-     */
-    public function uploadImage(Request $request): JsonResponse
+    public function uploadImage(Request $request)
     {
         try {
+            // Validate required fields
             $validator = Validator::make($request->all(), [
-                'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
-                'folder' => 'nullable|string|max:100',
-                'resize_width' => 'nullable|integer|min:50|max:2000',
-                'resize_height' => 'nullable|integer|min:50|max:2000',
-                'quality' => 'nullable|integer|min:10|max:100'
+                'image' => 'required|file|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+                'property_id' => 'required|integer|exists:properties,id'
             ]);
 
             if ($validator->fails()) {
@@ -43,36 +36,74 @@ class ImageUploadController extends Controller
                 ], 422);
             }
 
+            // Enhanced logging for debugging 500 errors
+            \Log::info('ImageUploadController: uploadImage started', [
+                'request_method' => $request->method(),
+                'content_type' => $request->header('Content-Type'),
+                'content_length' => $request->header('Content-Length'),
+                'user_agent' => $request->header('User-Agent'),
+                'has_image_file' => $request->hasFile('image'),
+                'property_id' => $request->input('property_id'),
+                'all_files' => array_keys($request->allFiles()),
+                'request_size' => strlen($request->getContent()),
+                'memory_usage' => memory_get_usage(true),
+                'memory_peak' => memory_get_peak_usage(true),
+                'php_version' => PHP_VERSION,
+                'laravel_version' => app()->version()
+            ]);
+            
             $image = $request->file('image');
-            $folder = $request->input('folder', 'uploads');
-            $resizeWidth = $request->input('resize_width');
-            $resizeHeight = $request->input('resize_height');
-            $quality = $request->input('quality', 85);
-
-            // Generate unique filename
-            $filename = $this->generateUniqueFilename($image->getClientOriginalExtension());
-            $path = $folder . '/' . $filename;
-
-            // Process image (resize, compress)
-            $processedImage = $this->imageProcessor->processUploadedImage(
-                $image,
-                $resizeWidth,
-                $resizeHeight,
-                $quality
-            );
-
-            // Upload to Bunny Storage
-            $uploadResult = $this->bunnyStorage->uploadFile($path, $processedImage);
-
-            if (!$uploadResult) {
+            $propertyId = $request->input('property_id');
+            
+            if (!$image) {
+                \Log::warning('ImageUploadController: No image file provided', [
+                    'request_data' => $request->all(),
+                    'files' => $request->allFiles(),
+                    'raw_input' => substr($request->getContent(), 0, 500) // First 500 chars
+                ]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to upload image to storage'
-                ], 500);
+                    'message' => 'No image file provided'
+                ], 400);
             }
 
-            // Get CDN URL
-            $cdnUrl = $this->bunnyStorage->getCdnUrl($path);
+            \Log::info('ImageUploadController: Processing image', [
+                'original_name' => $image->getClientOriginalName(),
+                'mime_type' => $image->getMimeType(),
+                'size' => $image->getSize(),
+                'extension' => $image->getClientOriginalExtension(),
+                'is_valid' => $image->isValid(),
+                'error' => $image->getError(),
+                'temp_path' => $image->getPathname(),
+                'real_path' => $image->getRealPath()
+            ]);
+
+            // Use the correct service property and method
+            $result = $this->imageProcessor->processUploadedImage($image);
+
+            \Log::info('ImageUploadController: Image processed successfully', [
+                'result_size' => strlen($result),
+                'result_type' => 'binary_image_data',
+                'final_memory_usage' => memory_get_usage(true),
+                'final_memory_peak' => memory_get_peak_usage(true)
+            ]);
+
+            // Generate a unique filename for the processed image
+            $filename = $this->generateUniqueFilename('jpg');
+            $propertyFolder = "properties/{$propertyId}/images";
+            $path = $propertyFolder . '/' . $filename;
+            
+            // Create directory if it doesn't exist
+            if (!Storage::disk('public')->exists($propertyFolder)) {
+                Storage::disk('public')->makeDirectory($propertyFolder);
+            }
+            
+            // Store the processed image
+            $uploadResult = Storage::disk('public')->put($path, $result);
+            
+            if (!$uploadResult) {
+                throw new \Exception('Failed to store processed image');
+            }
 
             return response()->json([
                 'success' => true,
@@ -80,15 +111,31 @@ class ImageUploadController extends Controller
                 'data' => [
                     'filename' => $filename,
                     'path' => $path,
-                    'url' => $cdnUrl,
-                    'size' => strlen($processedImage)
+                    'url' => Storage::disk('public')->url($path),
+                    'size' => strlen($result)
                 ]
             ]);
-
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            \Log::error('ImageUploadController: Exception in uploadImage', [
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'stack_trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['image']), // Exclude image data from log
+                'memory_usage' => memory_get_usage(true),
+                'memory_peak' => memory_get_peak_usage(true),
+                'image_info' => $request->hasFile('image') ? [
+                    'name' => $request->file('image')->getClientOriginalName(),
+                    'size' => $request->file('image')->getSize(),
+                    'mime' => $request->file('image')->getMimeType(),
+                    'error' => $request->file('image')->getError()
+                ] : 'No image file'
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Upload failed: ' . $e->getMessage()
+                'message' => 'Failed to upload image: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -102,7 +149,7 @@ class ImageUploadController extends Controller
             $validator = Validator::make($request->all(), [
                 'images' => 'required|array|max:10',
                 'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-                'folder' => 'nullable|string|max:100',
+                'property_id' => 'required|integer|exists:properties,id',
                 'resize_width' => 'nullable|integer|min:50|max:2000',
                 'resize_height' => 'nullable|integer|min:50|max:2000',
                 'quality' => 'nullable|integer|min:10|max:100'
@@ -117,10 +164,16 @@ class ImageUploadController extends Controller
             }
 
             $images = $request->file('images');
-            $folder = $request->input('folder', 'uploads');
+            $propertyId = $request->input('property_id');
+            $propertyFolder = "properties/{$propertyId}/images";
             $resizeWidth = $request->input('resize_width');
             $resizeHeight = $request->input('resize_height');
             $quality = $request->input('quality', 85);
+
+            // Create directory if it doesn't exist
+            if (!Storage::disk('public')->exists($propertyFolder)) {
+                Storage::disk('public')->makeDirectory($propertyFolder);
+            }
 
             $uploadedImages = [];
             $errors = [];
@@ -129,7 +182,7 @@ class ImageUploadController extends Controller
                 try {
                     // Generate unique filename
                     $filename = $this->generateUniqueFilename($image->getClientOriginalExtension());
-                    $path = $folder . '/' . $filename;
+                    $path = $propertyFolder . '/' . $filename;
 
                     // Process image
                     $processedImage = $this->imageProcessor->processUploadedImage(
@@ -139,14 +192,14 @@ class ImageUploadController extends Controller
                         $quality
                     );
 
-                    // Upload to Bunny Storage
-                    $uploadResult = $this->bunnyStorage->uploadFile($path, $processedImage);
+                    // Upload to local storage
+                    $uploadResult = Storage::disk('public')->put($path, $processedImage);
 
                     if ($uploadResult) {
                         $uploadedImages[] = [
                             'filename' => $filename,
                             'path' => $path,
-                            'url' => $this->bunnyStorage->getCdnUrl($path),
+                            'url' => Storage::disk('public')->url($path),
                             'size' => strlen($processedImage)
                         ];
                     } else {
@@ -208,7 +261,7 @@ class ImageUploadController extends Controller
             $quality = $request->input('quality', 85);
 
             // Process base64 image
-            $result = $this->imageProcessor->processBase64Image(
+            $result = $this->imageProcessor->processBase64ImageSimple(
                 $imageData,
                 $resizeWidth,
                 $resizeHeight,
@@ -227,13 +280,13 @@ class ImageUploadController extends Controller
             $processedImage = $result['image_data'];
             $path = $folder . '/' . $filename;
 
-            // Upload to Bunny Storage
-            $uploadResult = $this->bunnyStorage->uploadFile($path, $processedImage);
+            // Upload to local storage
+            $uploadResult = Storage::disk('public')->put($path, $processedImage);
 
             if (!$uploadResult) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to upload image to storage'
+                    'message' => 'Failed to upload image to local storage'
                 ], 500);
             }
 
@@ -243,7 +296,7 @@ class ImageUploadController extends Controller
                 'data' => [
                     'filename' => $filename,
                     'path' => $path,
-                    'url' => $this->bunnyStorage->getCdnUrl($path),
+                    'url' => Storage::disk('public')->url($path),
                     'size' => strlen($processedImage)
                 ]
             ]);
@@ -277,20 +330,20 @@ class ImageUploadController extends Controller
             $path = $request->input('path');
 
             // Check if file exists
-            if (!$this->bunnyStorage->fileExists($path)) {
+            if (!Storage::disk('public')->exists($path)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File not found'
                 ], 404);
             }
 
-            // Delete from Bunny Storage
-            $deleteResult = $this->bunnyStorage->deleteFile($path);
+            // Delete from local storage
+            $deleteResult = Storage::disk('public')->delete($path);
 
             if (!$deleteResult) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to delete image from storage'
+                    'message' => 'Failed to delete image from local storage'
                 ], 500);
             }
 
@@ -328,7 +381,7 @@ class ImageUploadController extends Controller
             $path = $request->input('path');
 
             // Check if file exists
-            if (!$this->bunnyStorage->fileExists($path)) {
+            if (!Storage::disk('public')->exists($path)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File not found'
@@ -339,7 +392,7 @@ class ImageUploadController extends Controller
                 'success' => true,
                 'data' => [
                     'path' => $path,
-                    'url' => $this->bunnyStorage->getCdnUrl($path),
+                    'url' => Storage::disk('public')->url($path),
                     'exists' => true
                 ]
             ]);

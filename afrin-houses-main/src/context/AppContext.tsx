@@ -10,6 +10,7 @@ import {
   getFavoriteProperties
 } from '../services/propertyService';
 import authService from '../services/authService';
+import { mockPropertiesWithImages } from '../data/mockPropertiesWithImages';
 
 // Update the AppState interface to use the correct User type
 interface AppState {
@@ -156,6 +157,36 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
+      // For testing: Add mock properties with real images to the beginning
+      const mockProperties: Property[] = mockPropertiesWithImages.map((mockProp: any) => ({
+        id: mockProp.id.toString(),
+        title: mockProp.title,
+        description: mockProp.description,
+        price: mockProp.price,
+        address: mockProp.address,
+        city: mockProp.city,
+        state: mockProp.state,
+        zip_code: '',
+        property_type: mockProp.property_type,
+        listing_type: mockProp.listing_type,
+        bedrooms: mockProp.bedrooms,
+        bathrooms: mockProp.bathrooms,
+        square_feet: mockProp.square_feet,
+        year_built: 2020,
+        status: 'available',
+        is_featured: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: null,
+        media: [],
+        slug: `mock-${mockProp.id}`,
+        features: [],
+        latitude: 33.5138,
+        longitude: 36.2765,
+        // Include the original mock data for image processing
+        ...mockProp
+      }));
+
       
       const response = await getProperties(filters);
 
@@ -260,11 +291,44 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         } as Property;
       });
       
+      // Combine mock properties with API properties
+      const allProperties = [...mockProperties, ...properties];
 
-      dispatch({ type: 'SET_PROPERTIES', payload: properties });
+      dispatch({ type: 'SET_PROPERTIES', payload: allProperties });
     } catch (error: any) {
 
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to load properties' });
+      // If API fails, still show mock properties
+      const mockProperties: Property[] = mockPropertiesWithImages.map((mockProp: any) => ({
+        id: mockProp.id.toString(),
+        title: mockProp.title,
+        description: mockProp.description,
+        price: mockProp.price,
+        address: mockProp.address,
+        city: mockProp.city,
+        state: mockProp.state,
+        zip_code: '',
+        property_type: mockProp.property_type,
+        listing_type: mockProp.listing_type,
+        bedrooms: mockProp.bedrooms,
+        bathrooms: mockProp.bathrooms,
+        square_feet: mockProp.square_feet,
+        year_built: 2020,
+        status: 'available',
+        is_featured: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: null,
+        media: [],
+        slug: `mock-${mockProp.id}`,
+        features: [],
+        latitude: 33.5138,
+        longitude: 36.2765,
+        // Include the original mock data for image processing
+        ...mockProp
+      }));
+      
+      dispatch({ type: 'SET_PROPERTIES', payload: mockProperties });
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load properties from API, showing test data' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }

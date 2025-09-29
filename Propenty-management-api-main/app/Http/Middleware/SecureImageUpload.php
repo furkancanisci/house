@@ -13,7 +13,7 @@ class SecureImageUpload
     /**
      * Handle an incoming request.
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): ResponseAlias
     {
         // Rate limiting for image uploads
         $key = 'image-upload:' . $request->ip();

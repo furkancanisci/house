@@ -1,5 +1,20 @@
 import api from './api';
 
+// Helper function to safely check if object is a File
+const isFile = (obj: any): obj is File => {
+  try {
+    return obj && 
+           typeof obj === 'object' && 
+           obj.constructor && 
+           obj.constructor.name === 'File' &&
+           typeof obj.size === 'number' &&
+           typeof obj.name === 'string' &&
+           typeof obj.type === 'string';
+  } catch (error) {
+    return false;
+  }
+};
+
 // Utility function to fix image URLs with fallback support
 const fixImageUrl = (url: string | null | undefined | any, fallbackType?: string): string => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'https://api.besttrend-sy.com/';
@@ -61,6 +76,25 @@ const fixImageObject = (imageObj: any): any => {
   return imageObj;
 };
 
+// Utility function to fix video objects
+const fixVideoObject = (videoObj: any): any => {
+  if (!videoObj) return null;
+  
+  if (typeof videoObj === 'string') {
+    return fixImageUrl(videoObj); // Reuse the same URL fixing logic
+  }
+  
+  if (typeof videoObj === 'object') {
+    const fixed = { ...videoObj };
+    if (fixed.url) fixed.url = fixImageUrl(fixed.url);
+    if (fixed.thumbnail) fixed.thumbnail = fixImageUrl(fixed.thumbnail);
+    if (fixed.preview) fixed.preview = fixImageUrl(fixed.preview);
+    return fixed;
+  }
+  
+  return videoObj;
+};
+
 export interface Property {
   id?: number;
   title: string;
@@ -78,6 +112,7 @@ export interface Property {
   yearBuilt: number;
   amenities?: string[];
   images?: any;
+  videos?: any;
   contactName?: string;
   contactPhone?: string;
   contactEmail?: string;
@@ -328,6 +363,18 @@ export const getProperty = async (slugOrId: string) => {
       property.images = fixedImages;
     }
     
+    // Fix video URLs in the property
+    if (property && property.videos) {
+      const fixedVideos = { ...property.videos };
+      
+      // Fix video gallery URLs
+      if (fixedVideos.gallery && Array.isArray(fixedVideos.gallery)) {
+        fixedVideos.gallery = fixedVideos.gallery.map(fixVideoObject);
+      }
+      
+      property.videos = fixedVideos;
+    }
+    
     return property;
   } catch (error: any) {
 
@@ -408,12 +455,37 @@ export const createProperty = async (propertyData: any) => {
           propertyData[key].forEach((amenity: string, index: number) => {
             formData.append(`amenities[${index}]`, amenity);
           });
+        } else if (key === 'features' && Array.isArray(propertyData[key])) {
+          // Handle features array
+          propertyData[key].forEach((feature: number, index: number) => {
+            formData.append(`features[${index}]`, feature.toString());
+          });
+        } else if (key === 'utilities' && Array.isArray(propertyData[key])) {
+          // Handle utilities array
+          propertyData[key].forEach((utility: number, index: number) => {
+            formData.append(`utilities[${index}]`, utility.toString());
+          });
+        } else if (key === 'features' && Array.isArray(propertyData[key])) {
+          // Handle features array
+          propertyData[key].forEach((feature: number, index: number) => {
+            formData.append(`features[${index}]`, feature.toString());
+          });
+        } else if (key === 'utilities' && Array.isArray(propertyData[key])) {
+          // Handle utilities array
+          propertyData[key].forEach((utility: number, index: number) => {
+            formData.append(`utilities[${index}]`, utility.toString());
+          });
         } else if (key === 'images' && Array.isArray(propertyData[key])) {
           // Handle image files
-          propertyData[key].forEach((file: File) => {
-            formData.append('images[]', file);
+          propertyData[key].forEach((file: File, index: number) => {
+            formData.append(`images[${index}]`, file);
           });
-        } else if (key === 'mainImage' && propertyData[key] instanceof File) {
+        } else if (key === 'videos' && Array.isArray(propertyData[key])) {
+          // Handle video files
+          propertyData[key].forEach((file: File, index: number) => {
+            formData.append(`videos[${index}]`, file);
+          });
+        } else if (key === 'mainImage' && isFile(propertyData[key])) {
           // Handle main image file
           formData.append('main_image', propertyData[key]);
         } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
@@ -428,12 +500,17 @@ export const createProperty = async (propertyData: any) => {
     }
     
     // Log FormData contents for debugging
-
+    console.log('🔍 PropertyService: About to POST to /properties');
+    console.log('📋 FormData entries:');
     for (const pair of formData.entries()) {
-
+      if (pair[1] instanceof File) {
+        console.log(`  ${pair[0]}: File(${pair[1].name}, ${pair[1].size} bytes)`);
+      } else {
+        console.log(`  ${pair[0]}: ${pair[1]}`);
+      }
     }
     
-
+    console.log('🚀 Making API call to POST /properties...');
     const response = await api.post('/properties', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -464,18 +541,38 @@ export const updateProperty = async (id: number, propertyData: any) => {
         propertyData[key].forEach((amenity: string, index: number) => {
           formData.append(`amenities[${index}]`, amenity);
         });
+      } else if (key === 'features' && Array.isArray(propertyData[key])) {
+        // Handle features array
+        propertyData[key].forEach((feature: number, index: number) => {
+          formData.append(`features[${index}]`, feature.toString());
+        });
+      } else if (key === 'utilities' && Array.isArray(propertyData[key])) {
+        // Handle utilities array
+        propertyData[key].forEach((utility: number, index: number) => {
+          formData.append(`utilities[${index}]`, utility.toString());
+        });
       } else if (key === 'images' && Array.isArray(propertyData[key])) {
         // Handle new image files
-        propertyData[key].forEach((file: File) => {
-          formData.append('images[]', file);
+        propertyData[key].forEach((file: File, index: number) => {
+          formData.append(`images[${index}]`, file);
         });
-      } else if (key === 'mainImage' && propertyData[key] instanceof File) {
+      } else if (key === 'videos' && Array.isArray(propertyData[key])) {
+        // Handle new video files
+        propertyData[key].forEach((file: File, index: number) => {
+          formData.append(`videos[${index}]`, file);
+        });
+      } else if (key === 'mainImage' && isFile(propertyData[key])) {
         // Handle main image file
         formData.append('main_image', propertyData[key]);
       } else if (key === 'imagesToRemove' && Array.isArray(propertyData[key])) {
         // Handle images to remove
         propertyData[key].forEach((imageId: string, index: number) => {
           formData.append(`remove_images[${index}]`, imageId);
+        });
+      } else if (key === 'videosToRemove' && Array.isArray(propertyData[key])) {
+        // Handle videos to remove
+        propertyData[key].forEach((videoId: string, index: number) => {
+          formData.append(`remove_videos[${index}]`, videoId);
         });
       } else if (propertyData[key] !== null && propertyData[key] !== undefined) {
         // Handle boolean values properly for Laravel validation

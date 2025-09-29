@@ -220,21 +220,17 @@ class Property extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('images')
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
 
         $this->addMediaCollection('main_image')
             ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
+
+        $this->addMediaCollection('videos')
+            ->acceptsMimeTypes(['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/webm']);
     }
 
-    /**
-     * Define media conversions - DISABLED to avoid read operations on Bunny Storage
-     */
-    public function registerMediaConversions(?Media $media = null): void
-    {
-        // Conversions disabled because Bunny Storage adapter doesn't support reading files
-        // This prevents the media library from trying to process images
-    }
+
 
     /**
      * The property owner.
@@ -357,6 +353,72 @@ class Property extends Model implements HasMedia
     public function floorType()
     {
         return $this->belongsTo(FloorType::class);
+    }
+
+    /**
+     * Get property images from storage.
+     * Returns array of image information including URLs.
+     */
+    public function getPropertyImages()
+    {
+        $imagePath = "properties/{$this->id}/images";
+        $images = [];
+        
+        if (\Storage::disk('public')->exists($imagePath)) {
+            $files = \Storage::disk('public')->files($imagePath);
+            
+            foreach ($files as $file) {
+                $filename = basename($file);
+                $images[] = [
+                    'filename' => $filename,
+                    'path' => $file,
+                    'url' => \Storage::disk('public')->url($file),
+                    'size' => \Storage::disk('public')->size($file),
+                    'last_modified' => \Storage::disk('public')->lastModified($file),
+                ];
+            }
+        }
+        
+        return $images;
+    }
+
+    /**
+     * Get property videos from storage.
+     * Returns array of video information including URLs.
+     */
+    public function getPropertyVideos()
+    {
+        $videoPath = "properties/{$this->id}/videos";
+        $videos = [];
+        
+        if (\Storage::disk('public')->exists($videoPath)) {
+            $files = \Storage::disk('public')->files($videoPath);
+            
+            foreach ($files as $file) {
+                $filename = basename($file);
+                $videos[] = [
+                    'filename' => $filename,
+                    'path' => $file,
+                    'url' => \Storage::disk('public')->url($file),
+                    'size' => \Storage::disk('public')->size($file),
+                    'last_modified' => \Storage::disk('public')->lastModified($file),
+                ];
+            }
+        }
+        
+        return $videos;
+    }
+
+    /**
+     * Get all property media (images and videos).
+     * Returns array with separate images and videos arrays.
+     */
+    public function getPropertyMedia()
+    {
+        return [
+            'images' => $this->getPropertyImages(),
+            'videos' => $this->getPropertyVideos(),
+        ];
     }
 
     /**

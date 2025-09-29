@@ -42,6 +42,7 @@ import i18n from '../i18n';
 import FixedImage from '../components/FixedImage';
 import LocationSelector from '../components/LocationSelector';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
+import VideoUpload, { VideoFile } from '../components/VideoUpload';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import { priceTypeService, PriceType } from '../services/priceTypeService';
 
@@ -89,6 +90,10 @@ const EditProperty: React.FC = () => {
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<any[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
+  const [selectedVideos, setSelectedVideos] = useState<VideoFile[]>([]);
+  const [videoPreviewUrls, setVideoPreviewUrls] = useState<string[]>([]);
+  const [existingVideos, setExistingVideos] = useState<any[]>([]);
+  const [videosToRemove, setVideosToRemove] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('');
   
@@ -367,6 +372,14 @@ const EditProperty: React.FC = () => {
     setImagesToRemove(prev => prev.filter(id => id !== imageId));
   };
 
+  const removeExistingVideo = (videoId: string) => {
+    setVideosToRemove(prev => [...prev, videoId]);
+  };
+
+  const restoreExistingVideo = (videoId: string) => {
+    setVideosToRemove(prev => prev.filter(id => id !== videoId));
+  };
+
   const onSubmit = async (data: PropertyFormData) => {
     if (!property) return;
 
@@ -399,6 +412,9 @@ const EditProperty: React.FC = () => {
         // Image handling
         images: selectedImages, // New images to upload
         imagesToRemove: imagesToRemove, // Existing images to remove
+        // Video handling
+        videos: selectedVideos.map(video => video.file), // New videos to upload
+        videosToRemove: videosToRemove, // Existing videos to remove
       };
 
       // Update the property using the API service
@@ -920,6 +936,62 @@ const EditProperty: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Video Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('addProperty.videoUpload.title')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Existing Videos */}
+              {existingVideos.length > 0 && (
+                <div>
+                  <Label>{t('addProperty.videoUpload.currentVideos')}</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                    {existingVideos.map((video, index) => (
+                      <div key={video.id || index} className="relative group">
+                        <video
+                          src={video.url || video.original_url}
+                          className={`w-full h-32 object-cover rounded-lg border shadow-sm ${
+                            videosToRemove.includes(video.id) ? 'opacity-50 grayscale' : ''
+                          }`}
+                          controls
+                          preload="metadata"
+                        />
+                        {!videosToRemove.includes(video.id) ? (
+                          <button
+                            type="button"
+                            onClick={() => removeExistingVideo(video.id)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => restoreExistingVideo(video.id)}
+                            className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1 opacity-100"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload New Videos */}
+              <div>
+                <VideoUpload
+                  selectedVideos={selectedVideos}
+                  onVideosChange={setSelectedVideos}
+                  maxVideos={1}
+                  maxSizePerVideo={100 * 1024 * 1024} // 100MB
+                />
               </div>
             </CardContent>
           </Card>
