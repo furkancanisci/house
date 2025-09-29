@@ -36,7 +36,22 @@ class InputSanitizationMiddleware
             'api/v1/directions/options',
             'api/home-stats',
             'api/v1/home-stats',
-            'admin/home-stats'
+            'admin/home-stats',
+            'api/v1/images/upload',
+            'api/v1/images/upload-multiple',
+            'api/v1/images/upload-base64',
+            'api/v1/videos/upload',
+            'api/v1/videos/upload-multiple',
+            'api/v1/upload/initialize',
+            'api/v1/upload/chunk',
+            'api/v1/upload/complete'
+        ];
+        
+        // Property media endpoints patterns
+        $propertyMediaPatterns = [
+            '/^api\/v1\/properties\/\d+\/images$/',
+            '/^api\/v1\/properties\/\d+\/videos$/',
+            '/^api\/v1\/properties\/\d+\/media$/'
         ];
         $currentPath = trim($request->path(), '/');
 
@@ -74,6 +89,15 @@ class InputSanitizationMiddleware
         $isApiHomeStatsEndpoint = str_starts_with($currentPath, 'api/home-stats') || $currentPath === 'api/home-stats' ||
                                   str_starts_with($currentPath, 'api/v1/home-stats') || $currentPath === 'api/v1/home-stats';
 
+        // Check if current path matches property media patterns
+        $isPropertyMediaEndpoint = false;
+        foreach ($propertyMediaPatterns as $pattern) {
+            if (preg_match($pattern, $currentPath)) {
+                $isPropertyMediaEndpoint = true;
+                break;
+            }
+        }
+
         if (!in_array($currentPath, $skipPaths) &&
             !$isPropertyEndpoint &&
             !$isCityStateEndpoint &&
@@ -85,7 +109,8 @@ class InputSanitizationMiddleware
             !$isViewTypeEndpoint &&
             !$isDirectionEndpoint &&
             !$isAdminHomeStatsEndpoint &&
-            !$isApiHomeStatsEndpoint) {
+            !$isApiHomeStatsEndpoint &&
+            !$isPropertyMediaEndpoint) {
             // Sanitize input data
             $this->sanitizeInput($request);
             

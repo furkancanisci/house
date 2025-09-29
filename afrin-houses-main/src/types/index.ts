@@ -56,6 +56,15 @@ export interface Property {
     type: string;
     is_featured?: boolean;
   }>;
+  videos?: Array<{
+    id: number;
+    url: string;
+    original_url?: string;
+    thumbnail_url?: string;
+    duration?: number;
+    size?: number;
+    mime_type?: string;
+  }>;
   
   // Additional fields
   slug?: string;
@@ -140,6 +149,15 @@ export interface ExtendedProperty extends Omit<Property, 'property_type' | 'list
   // Additional display properties
   mainImage?: string;
   images?: string[];
+  videos?: Array<{
+    id: number;
+    url: string;
+    original_url?: string;
+    thumbnail_url?: string;
+    duration?: number;
+    size?: number;
+    mime_type?: string;
+  }>;
   
   // Details object for additional property information
   details?: {

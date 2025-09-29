@@ -116,6 +116,7 @@ return [
     'villa' => 'فيلا',
     'commercial' => 'تجاري',
     'land' => 'أرض',
+    'factory' => 'مصنع',
     'price_type' => 'نوع السعر',
     'monthly' => 'شهري',
     'yearly' => 'سنوي',
@@ -262,6 +263,16 @@ return [
 
     // Additional terms
     'owner' => 'المالك',
+    
+    // Add Property Final Step
+    'add_property_final_step_title' => 'الخطوة الأخيرة',
+    'add_property_final_step_description' => 'مراجعة وإرسال إعلان العقار الخاص بك',
+    'add_property_final_step_ready_description' => 'إعلان العقار الخاص بك جاهز للنشر',
+    'add_property_final_step_summary' => 'ملخص العقار',
+    'add_property_final_step_ready_title' => 'جاهز للنشر',
+    
+    // Forms
+    'forms_property_type' => 'نوع العقار',
     'recent' => 'الأحدث',
     'by' => 'حسب',
     'last' => 'آخر',

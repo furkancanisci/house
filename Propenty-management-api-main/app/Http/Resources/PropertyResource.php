@@ -153,7 +153,26 @@ class PropertyResource extends JsonResource
                 }
 
                 $firstImage = $this->getFirstMedia('images');
-                return $firstImage ? $firstImage->getUrl() : '/images/placeholder-property.svg';
+                if ($firstImage) {
+                    return $firstImage->getUrl();
+                }
+
+                // Only return placeholder if no images AND no videos exist
+                $hasVideos = $this->getMedia('videos')->count() > 0;
+                return $hasVideos ? null : '/images/placeholder-property.svg';
+            }),
+
+            // Videos - similar to images structure
+            'videos' => $this->whenLoaded('media', function() {
+                return $this->getMedia('videos')->map(function($media) {
+                    return [
+                        'id' => $media->id,
+                        'url' => $media->getUrl(),
+                        'name' => $media->name,
+                        'size' => $media->size,
+                        'mime_type' => $media->mime_type,
+                    ];
+                })->toArray();
             }),
 
             // Phase 1 Enhancement Fields

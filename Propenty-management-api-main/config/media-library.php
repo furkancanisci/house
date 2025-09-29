@@ -6,13 +6,13 @@ return [
      * The disk on which to store added files and derived images by default. Choose
      * one or more of the disks you've configured in config/filesystems.php.
      */
-    'disk_name' => env('MEDIA_DISK', 'public'),
+    'disk_name' => env('MEDIA_DISK', 'properties'),
 
     /*
      * The maximum file size of an item in bytes.
      * Adding a larger file will result in an exception.
      */
-    'max_file_size' => 1024 * 1024 * 10, // 10MB
+    'max_file_size' => 1024 * 1024 * 100, // 100MB for video support
 
     /*
      * This queue connection will be used to generate derived and responsive images.
@@ -30,7 +30,7 @@ return [
      * By default all conversions will be performed on a queue.
      * DISABLED - No conversions are being created
      */
-    'queue_conversions_by_default' => env('QUEUE_CONVERSIONS_BY_DEFAULT', false),
+    'queue_conversions_by_default' => false,
 
     /*
      * The fully qualified class name of the media model.
@@ -181,8 +181,8 @@ return [
      * thumbnails and have installed the php-ffmpeg/php-ffmpeg composer
      * dependency.
      */
-    'ffmpeg_path' => env('FFMPEG_PATH', '/usr/bin/ffmpeg'),
-    'ffprobe_path' => env('FFPROBE_PATH', '/usr/bin/ffprobe'),
+    'ffmpeg_path' => env('FFMPEG_PATH', 'C:\\ffmpeg\\bin\\ffmpeg.exe'),
+    'ffprobe_path' => env('FFPROBE_PATH', 'C:\\ffmpeg\\bin\\ffprobe.exe'),
 
     /*
      * Here you can override the class names of the jobs used by this package. Make sure

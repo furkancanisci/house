@@ -5,15 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm install && vite",
-    "dev:local": "pnpm install && cp .env.local .env && vite",
-    "dev:production": "pnpm install && cp .env.production .env && vite",
+    "dev:local": "pnpm install && copy .env.local .env && vite",
+    "dev:production": "pnpm install && copy .env.production .env && vite",
     "build": "pnpm install && rm -rf node_modules/.vite-temp && tsc -b && vite build",
-    "build:local": "pnpm install && cp .env.local .env && rm -rf node_modules/.vite-temp && tsc -b && vite build",
-    "build:production": "pnpm install && cp .env.production .env && rm -rf node_modules/.vite-temp && tsc -b && vite build",
+    "build:local": "pnpm install && copy .env.local .env && tsc -b && vite build",
+    "build:production": "pnpm install && copy .env.production .env && tsc -b && vite build",
     "lint": "pnpm install && eslint .",
     "preview": "pnpm install && vite preview",
-    "env:local": "cp .env.local .env && echo 'Switched to local environment'",
-    "env:production": "cp .env.production .env && echo 'Switched to production environment'",
+    "env:local": "copy .env.local .env && echo Switched to local environment",
+    "env:production": "copy .env.production .env && echo Switched to production environment",
     "env:status": "echo 'Current API URL:' && grep VITE_API_BASE_URL .env || echo 'No .env file found'"
   },
   "dependencies": {

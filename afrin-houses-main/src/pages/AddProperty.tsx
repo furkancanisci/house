@@ -33,7 +33,8 @@ import {
   Car,
   File,
   Eye,
-  Settings
+  Settings,
+  Clock
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -66,6 +67,8 @@ import { compressImages, formatFileSize } from '../lib/imageUtils';
 import api from '../services/api';
 import { authService } from '../services/authService';
 import config from '../utils/config';
+import VideoUpload, { VideoFile } from '../components/VideoUpload';
+import EnhancedPropertyService from '../services/enhancedPropertyService';
 
 // Types for features and utilities
 interface Feature {
@@ -200,6 +203,12 @@ const AddProperty: React.FC = () => {
 
     return urls;
   });
+  
+  // Video state
+  const [selectedVideos, setSelectedVideos] = useState<VideoFile[]>([]);
+  const [videoPreviewUrls, setVideoPreviewUrls] = useState<string[]>([]);
+  
+  // Removed upload progress states - now using direct property creation with all files
 
 
   const [mainImageIndex, setMainImageIndex] = useState<number>(() => {
@@ -540,6 +549,8 @@ const AddProperty: React.FC = () => {
     loadDirections();
   }, [i18n.language]);
 
+  // Removed upload queue monitoring - now using direct property creation
+
   // Load features and utilities only when reaching step 2 (Property Details) or language changes
   useEffect(() => {
     if (currentStep >= 2) {
@@ -817,6 +828,24 @@ const AddProperty: React.FC = () => {
       return;
     }
 
+    // Check individual file sizes before processing
+    const maxIndividualSize = 50 * 1024 * 1024; // 50MB per file
+    const oversizedFiles = files.filter(file => file.size > maxIndividualSize);
+    if (oversizedFiles.length > 0) {
+      const oversizedNames = oversizedFiles.map(f => `${f.name} (${formatFileSize(f.size)})`).join(', ');
+      notification.error(`The following files are too large (max 50MB each): ${oversizedNames}`);
+      return;
+    }
+
+    // Check total upload size and warn about chunked upload
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    const existingSize = selectedImages.reduce((sum, file) => sum + file.size, 0);
+    const combinedSize = totalSize + existingSize;
+    
+    if (combinedSize > 10 * 1024 * 1024) { // 10MB threshold
+      notification.info(`Large files detected (${formatFileSize(combinedSize)} total). Will use chunked upload for better reliability.`);
+    }
+
     // Show initial file sizes for comparison
     const totalOriginalSize = files.reduce((sum, file) => sum + file.size, 0);
     notification.info(`Processing ${files.length} image(s)... Original size: ${formatFileSize(totalOriginalSize)}`);
@@ -962,6 +991,9 @@ const AddProperty: React.FC = () => {
       return;
     }
 
+    // Reset upload progress states
+    // Removed upload progress state resets - now using direct property creation
+
     // Ensure numeric fields are properly converted
     const formData = {
       ...data,
@@ -1040,42 +1072,70 @@ const AddProperty: React.FC = () => {
         annualTax: data.annualTax ? Number(data.annualTax) : undefined,
       };
 
-      // Create FormData for file uploads
-      const formDataToSend = new FormData();
-
-      // Add all property data fields to FormData
-      Object.keys(propertyData).forEach(key => {
-        const value = propertyData[key];
-        if (value !== null && value !== undefined) {
-          if ((key === 'features' || key === 'utilities') && Array.isArray(value)) {
-            // Handle features and utilities arrays
-            value.forEach((id: number, index: number) => {
-              formDataToSend.append(`${key}[${index}]`, String(id));
-            });
-          } else if (typeof value === 'boolean') {
-            // Handle boolean values
-            formDataToSend.append(key, value ? '1' : '0');
-          } else {
-            // Handle all other values
-            formDataToSend.append(key, String(value));
-          }
-        }
-      });
-
-      // Add images to FormData
+      // Prepare files for upload
+      const files: { [key: string]: File | File[] } = {};
+      
+      // Add main image
       if (selectedImages[mainImageIndex]) {
-        formDataToSend.append('main_image', selectedImages[mainImageIndex]);
+        files.mainImage = selectedImages[mainImageIndex];
+      }
+      
+      // Add gallery images (excluding the main image)
+      const galleryImages = selectedImages.filter((_, index) => index !== mainImageIndex);
+      if (galleryImages.length > 0) {
+        files.images = galleryImages;
+      }
+      
+      // Helper function to safely check if object is a File
+      const isFile = (obj: any): obj is File => {
+        try {
+          return obj && 
+                 typeof obj === 'object' && 
+                 obj.constructor && 
+                 obj.constructor.name === 'File' &&
+                 typeof obj.size === 'number' &&
+                 typeof obj.name === 'string' &&
+                 typeof obj.type === 'string';
+        } catch (error) {
+          return false;
+        }
+      };
+
+      // Add videos - filter out any videos with undefined/null file property
+      const videoFiles = selectedVideos
+        .filter(video => video && video.file && isFile(video.file))
+        .map(video => video.file);
+      if (videoFiles.length > 0) {
+        files.videos = videoFiles;
       }
 
-      // Add gallery images (excluding the main image)
-      selectedImages.forEach((image, index) => {
-        if (index !== mainImageIndex) {
-          formDataToSend.append('images[]', image);
-        }
-      });
+      // Check if we need chunked upload or queue system
+      const allFiles = [
+        ...(files.mainImage ? [files.mainImage] : []),
+        ...(Array.isArray(files.images) ? files.images : []),
+        ...(Array.isArray(files.videos) ? files.videos : [])
+      ];
+      
+      // Use enhanced property service with static methods
+      const enhancedOptions = {
+        chunkThreshold: 10 * 1024 * 1024, // 10MB
+        enableCompression: true,
+        maxImageSize: 50 * 1024 * 1024, // 50MB
+        compressionQuality: 0.8,
+        throttleDelay: 200 // 200ms delay between requests
+      };
 
       try {
-        const result = await addProperty(formDataToSend);
+        console.log('🚀 About to create property with data:', { ...propertyData, ...files });
+        console.log('📁 Files being sent:', files);
+        console.log('⚙️ Enhanced options:', enhancedOptions);
+        console.log('🔍 Calling EnhancedPropertyService.createProperty...');
+        
+        // Create property with all files using the enhanced service
+        // The backend will handle all file uploads as part of the property creation process
+        const result = await EnhancedPropertyService.createProperty({ ...propertyData, ...files }, enhancedOptions);
+        
+        console.log('✅ Property creation result:', result);
 
         // Clear localStorage after successful submission
         clearFormDataFromStorage();
@@ -1950,6 +2010,24 @@ const AddProperty: React.FC = () => {
                 </div>
               )}
             </div>
+            
+            {/* Video Upload Section */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 mt-6">
+              <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <FileText className="h-4 w-4 text-blue-600" />
+                {t('addProperty.sectionTitles.propertyVideos')}
+              </h3>
+              <p className="text-sm text-gray-600 mb-6 font-['Cairo',_'Tajawal',_sans-serif]">
+                {t('addProperty.videoUpload.uploadHighQuality')}
+              </p>
+              
+              <VideoUpload
+                selectedVideos={selectedVideos}
+                onVideosChange={setSelectedVideos}
+                maxVideos={1}
+                maxSizePerVideo={100 * 1024 * 1024} // 100MB
+              />
+            </div>
           </div>
         );
 
@@ -2443,6 +2521,8 @@ const AddProperty: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Removed upload queue status UI - now using direct property creation */}
 
         {/* Enhanced Form */}
         <form onSubmit={handleSubmit(onSubmit)}>

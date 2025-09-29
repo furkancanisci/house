@@ -15,17 +15,18 @@ class PropertyPathGenerator implements PathGenerator
         // Get the property ID from the model
         $propertyId = $media->model_id;
         
-        // Create a folder structure: properties/{property_id}/
-        return "properties/{$propertyId}/";
+        // Create a folder structure: {property_id}/ (without 'properties' prefix since it's already in the disk root)
+        return "{$propertyId}/";
     }
 
     /**
      * Get the path for conversions of the given media, relative to the root storage path.
+     * Disabled - no conversions will be created
      */
     public function getPathForConversions(Media $media): string
     {
-        // Use the same path for conversions
-        return $this->getPath($media) . 'conversions/';
+        // Return empty path to disable conversions
+        return '';
     }
 
     /**

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExtendedProperty } from '../types';
 import { useApp } from '../context/AppContext';
@@ -10,7 +10,8 @@ import {
   MapPin,
   Calendar,
   DollarSign,
-  ArrowRight
+  ArrowRight,
+  Play
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardFooter } from './ui/card';
@@ -33,6 +34,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
   const { t, i18n } = useTranslation();
   const isFavorite = state.favorites.includes(property.id.toString());
   const user = state.user;
+  const [videoError, setVideoError] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(true);
 
   // Debug: Log the property data to understand the structure (only in development)
   React.useEffect(() => {
@@ -131,9 +134,75 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     }
   };
 
-  const processedImages = useGallery ? processPropertyImages(property) : { mainImage: property.mainImage || '/images/placeholder-property.svg', images: [] };
+  // Get the first video if available
+  const getMainVideo = () => {
+    if (property.videos && Array.isArray(property.videos) && property.videos.length > 0) {
+      return property.videos[0];
+    }
+    return null;
+  };
+
+  // Always process property images to get the correct main image and gallery
+  const processedImages = processPropertyImages(property, property.propertyType);
   const images = processedImages.images || [];
-  const mainImage = processedImages.mainImage || property.mainImage || '/images/placeholder-property.svg';
+  const mainImage = processedImages.mainImage || '/images/placeholder-property.svg';
+  const mainVideo = getMainVideo();
+
+  // Enhanced debugging for property images
+  console.log('🎯 PropertyCard - Enhanced debugging for property', property.id, ':', {
+    // Raw property data
+    rawPropertyData: {
+      id: property.id,
+      title: property.title,
+      hasMedia: !!property.media,
+      mediaLength: property.media?.length || 0,
+      mediaItems: property.media?.map((item: any) => ({
+        id: item.id,
+        collection: item.collection_name,
+        filename: item.file_name || item.filename,
+        mime_type: item.mime_type,
+        url: item.url,
+        original_url: item.original_url
+      })) || [],
+      hasImages: !!property.images,
+      imagesType: typeof property.images,
+      hasMainImage: !!property.mainImage,
+      hasMainImageUrl: !!property.main_image_url
+    },
+    // Processed results
+    processedResults: {
+      mainImage,
+      imagesCount: images.length,
+      hasMainVideo: !!mainVideo,
+      hasRealImages: mainImage !== '/images/placeholder-property.svg' && 
+                     !mainImage.includes('/images/properties/') && 
+                     !mainImage.includes('placeholder')
+    }
+  });
+
+  // Debug: Check if property.media exists and has items
+  if (property.media && Array.isArray(property.media)) {
+    console.log('🔍 PropertyCard - property.media exists with', property.media.length, 'items');
+    property.media.forEach((item: any, index: number) => {
+      console.log(`📷 PropertyCard - Media item ${index}:`, {
+        id: item.id,
+        collection_name: item.collection_name,
+        file_name: item.file_name,
+        mime_type: item.mime_type,
+        original_url: item.original_url
+      });
+    });
+  } else {
+    console.log('❌ PropertyCard - property.media is missing or not an array:', property.media);
+  }
+
+  console.log('🎯 PropertyCard - Processed images for property', property.id, ':', {
+    mainImage,
+    imagesCount: images.length,
+    hasMainVideo: !!mainVideo,
+    propertyTitle: property.title,
+    hasRealImages: mainImage !== '/images/placeholder-property.svg'
+  });
 
   const propertySlug = property.slug || `property-${property.id}`;
 
@@ -182,17 +251,75 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     }
   };
 
+  // Video component for property card
+  const VideoPlayer = ({ video, className }: { video: any, className: string }) => {
+    return (
+      <div className={`relative ${className}`}>
+        <video
+          className="w-full h-full object-cover"
+          muted
+          loop
+          playsInline
+          onLoadStart={() => setVideoLoading(true)}
+          onLoadedData={() => setVideoLoading(false)}
+          onError={() => {
+            setVideoError(true);
+            setVideoLoading(false);
+          }}
+          onMouseEnter={(e) => {
+            const video = e.target as HTMLVideoElement;
+            video.play().catch(() => {});
+          }}
+          onMouseLeave={(e) => {
+            const video = e.target as HTMLVideoElement;
+            video.pause();
+            video.currentTime = 0;
+          }}
+        >
+          <source src={video.url} type={video.mime_type || 'video/mp4'} />
+        </video>
+        
+        {/* Play button overlay */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-100 hover:opacity-0 transition-opacity duration-200">
+          <div className="bg-white/90 rounded-full p-3 shadow-lg">
+            <Play className="h-6 w-6 text-gray-800 fill-current" />
+          </div>
+        </div>
+        
+        {/* Loading state */}
+        {videoLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#067977]"></div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (view === 'list') {
     return (
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-[#067977] lg:min-h-[200px] rounded-lg">
         <div className="flex flex-col lg:flex-row lg:items-center lg:h-full">
-          {/* Image Section */}
+          {/* Image/Video Section */}
           <div className="relative lg:flex-shrink-0 lg:self-center lg:m-2">
-            <FixedImage
-              className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
-              src={mainImage}
-              alt={property.title}
-            />
+            {mainImage ? (
+              <FixedImage
+                className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
+                src={mainImage}
+                alt={property.title}
+              />
+            ) : mainVideo && !videoError ? (
+              <VideoPlayer 
+                video={mainVideo}
+                className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 rounded-t-lg lg:rounded-lg shadow-sm"
+              />
+            ) : (
+              <FixedImage
+                className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
+                src="/placeholder-property.jpg"
+                alt={property.title}
+              />
+            )}
             {/* Listing Type Badge */}
             <Badge
               className={`absolute top-1.5 left-1.5 ${property.listingType === 'rent' ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-to-r from-[#067977] to-[#067977]/80'
@@ -330,19 +457,31 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-[#067977] rounded-lg">
       <Link to={`/property/${propertySlug}`}>
         <div className="relative">
-          {useGallery && images && images.length > 1 ? (
-            <PropertyImageGallery
-              images={images}
-              alt={property.title}
-              containerClassName="h-32 sm:h-36"
-              className="w-full h-full object-cover"
-              showThumbnails={false}
-              enableZoom={false}
-              propertyId={property.id}
+          {mainImage ? (
+            useGallery && images && images.length > 1 ? (
+              <PropertyImageGallery
+                images={images}
+                alt={property.title}
+                containerClassName="h-32 sm:h-36"
+                className="w-full h-full object-cover"
+                showThumbnails={false}
+                enableZoom={false}
+              />
+            ) : (
+              <FixedImage
+                src={mainImage}
+                alt={property.title}
+                className="h-32 sm:h-36 w-full object-cover"
+              />
+            )
+          ) : mainVideo && !videoError ? (
+            <VideoPlayer 
+              video={mainVideo}
+              className="h-32 sm:h-36 w-full"
             />
           ) : (
             <FixedImage
-              src={mainImage}
+              src="/placeholder-property.jpg"
               alt={property.title}
               className="h-32 sm:h-36 w-full object-cover"
             />

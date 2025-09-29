@@ -33,6 +33,47 @@ Route::get('/health', function () {
     ]);
 });
 
+// Test upload configuration
+Route::get('/test-upload-config', function () {
+    return response()->json([
+        'upload_max_filesize' => ini_get('upload_max_filesize'),
+        'post_max_size' => ini_get('post_max_size'),
+        'max_file_uploads' => ini_get('max_file_uploads'),
+        'memory_limit' => ini_get('memory_limit'),
+        'max_execution_time' => ini_get('max_execution_time'),
+        'max_input_time' => ini_get('max_input_time'),
+    ]);
+});
+
+Route::post('/test-video-upload', function (Illuminate\Http\Request $request) {
+    \Log::info('Test Video Upload Debug', [
+        'request_all' => $request->all(),
+        'files' => $_FILES,
+        'has_videos' => $request->hasFile('videos'),
+        'videos_count' => $request->hasFile('videos') ? count($request->file('videos')) : 0,
+        'content_length' => $request->header('Content-Length'),
+        'content_type' => $request->header('Content-Type'),
+    ]);
+    
+    if ($request->hasFile('videos')) {
+        foreach ($request->file('videos') as $index => $video) {
+            \Log::info("Video {$index} details", [
+                'original_name' => $video->getClientOriginalName(),
+                'size' => $video->getSize(),
+                'mime_type' => $video->getMimeType(),
+                'error' => $video->getError(),
+                'is_valid' => $video->isValid(),
+            ]);
+        }
+    }
+    
+    return response()->json([
+        'status' => 'debug_complete',
+        'has_files' => $request->hasFile('videos'),
+        'files_count' => $_FILES ? count($_FILES) : 0,
+    ]);
+});
+
 // Documentation route (placeholder)
 Route::get('/docs', function () {
     return response()->json([
