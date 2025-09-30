@@ -219,26 +219,26 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     return Number(property.square_feet ?? property.squareFootage ?? property.sqft ?? property.details?.square_feet ?? 0) || 0;
   };
 
-  const formatPrice = (price: number | string | { amount?: number } | undefined, type: string = 'sale') => {
+  const formatPrice = (price: number | string | { amount?: number } | undefined, type: string = 'sale', currency?: string) => {
     const numPrice = typeof price === 'object' && price !== null
       ? (price as any).amount || 0
       : Number(price) || 0;
-    
+
     if (numPrice === 0) return t('property.priceOnRequest');
-    
-    // Format the price based on the current language
-    const formattedPrice = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
-      style: 'currency',
-      currency: 'SAR',
+
+    // Format the price
+    const formattedNumber = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(numPrice);
-    
+
+    const formattedPrice = formattedNumber;
+
     // Add rental period if needed
     if (type === 'rent') {
       return `${formattedPrice}/${t('property.month')}`;
     }
-    
+
     return formattedPrice;
   };
 

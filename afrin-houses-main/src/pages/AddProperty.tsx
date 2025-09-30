@@ -57,6 +57,7 @@ import PropertyLocationMap from '../components/PropertyLocationMap';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import { priceTypeService, PriceType } from '../services/priceTypeService';
+import { currencyService, Currency } from '../services/currencyService';
 import { propertyTypeService, PropertyType } from '../services/propertyTypeService';
 import { buildingTypeService, BuildingType } from '../services/buildingTypeService';
 import { windowTypeService, WindowType } from '../services/windowTypeService';
@@ -110,6 +111,7 @@ const createPropertySchema = (t: any) => z.object({
   city: z.string().min(1, t('validation.cityRequired')).max(100, t('validation.cityMaxLength')),
   state: z.string().min(1, t('validation.stateRequired')).max(100, t('validation.stateMaxLength')),
   price: z.number().min(1, t('validation.priceRequired')).max(99999999.99, t('validation.priceTooHigh')),
+  currency: z.string().min(1, t('validation.currencyRequired')).default('TRY'),
   priceType: z.string().min(1, t('validation.priceTypeRequired')),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.string().min(1, t('validation.propertyTypeRequired')),
@@ -303,6 +305,7 @@ const AddProperty: React.FC = () => {
         listingType: 'rent',
         propertyType: '',
         priceType: undefined, // Use undefined for proper Select component behavior
+        currency: 'TRY', // Default to Turkish Lira
         documentTypeId: '', // Required field
         bedrooms: 1,
         bathrooms: 1,
@@ -559,6 +562,13 @@ const AddProperty: React.FC = () => {
     }
   }, [currentStep, i18n.language]);
 
+  // Load currencies when reaching step 2 (Property Details)
+  useEffect(() => {
+    if (currentStep >= 2) {
+      fetchCurrencies();
+    }
+  }, [currentStep, i18n.language]);
+
   // Load price types only when in step 2 (Property Details) and listing type is selected
   useEffect(() => {
     const listingType = watch('listingType');
@@ -580,6 +590,10 @@ const AddProperty: React.FC = () => {
   const [availablePriceTypes, setAvailablePriceTypes] = useState<PriceType[]>([]);
   const [loadingPriceTypes, setLoadingPriceTypes] = useState(false);
   const [priceTypesError, setPriceTypesError] = useState<string | null>(null);
+
+  // State for currencies from API
+  const [availableCurrencies, setAvailableCurrencies] = useState<Currency[]>([]);
+  const [loadingCurrencies, setLoadingCurrencies] = useState(false);
 
   // Fetch features from API
   const fetchFeatures = async () => {
@@ -628,6 +642,21 @@ const AddProperty: React.FC = () => {
       notification.error('Failed to load utilities');
     } finally {
       setLoadingUtilities(false);
+    }
+  };
+
+  // Fetch currencies from API
+  const fetchCurrencies = async () => {
+    setLoadingCurrencies(true);
+    try {
+      const currencies = await currencyService.getAllCurrencies(i18n.language);
+      setAvailableCurrencies(currencies);
+    } catch (error) {
+      console.error('Failed to load currencies:', error);
+      // Use default currencies as fallback
+      setAvailableCurrencies(currencyService['getDefaultCurrencies']());
+    } finally {
+      setLoadingCurrencies(false);
     }
   };
 
@@ -1042,6 +1071,7 @@ const AddProperty: React.FC = () => {
         property_type_id: selectedPropertyType?.id, // New foreign key relationship
         listingType: data.listingType,
         price: parseFloat(data.price.toString()),
+        currency: data.currency || 'TRY',
         address: street,
         city: city,
         state: state,
@@ -1402,7 +1432,7 @@ const AddProperty: React.FC = () => {
                 <DollarSign className="h-4 w-4 text-emerald-600" />
                 {t('addProperty.sectionTitles.priceAndCost')}
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="price" className="text-sm font-medium text-gray-700 mb-2 block">
                     {t('forms.price')} <span className="text-red-500">*</span>
@@ -1414,7 +1444,7 @@ const AddProperty: React.FC = () => {
                     placeholder={watch('listingType') === 'rent' ? t('forms.monthlyRent') : t('forms.salePrice')}
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.price ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'
                       }`}
-                    {...register('price', { 
+                    {...register('price', {
                   setValueAs: (value) => value === '' ? undefined : Number(value)
                 })}
                   />
@@ -1422,6 +1452,48 @@ const AddProperty: React.FC = () => {
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
                       {errors.price.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="currency" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('forms.currency')} <span className="text-red-500">*</span>
+                  </Label>
+                  <Controller
+                    name="currency"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.currency ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'}`}>
+                          <SelectValue placeholder={t('forms.selectCurrency')} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
+                          {loadingCurrencies ? (
+                            <SelectItem key="loading" value="loading" disabled className="text-sm py-3 px-4">
+                              {t('common.loading')}
+                            </SelectItem>
+                          ) : (
+                            availableCurrencies.map((currency) => (
+                              <SelectItem
+                                key={currency.id}
+                                value={currency.code}
+                                className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer"
+                              >
+                                <span key={`currency-${currency.id}`}>
+                                  {currency.name}
+                                </span>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.currency && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.currency.message}
                     </p>
                   )}
                 </div>

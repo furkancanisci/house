@@ -45,6 +45,7 @@ import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect
 import VideoUpload, { VideoFile } from '../components/VideoUpload';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import { priceTypeService, PriceType } from '../services/priceTypeService';
+import { currencyService, Currency } from '../services/currencyService';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required'),
@@ -52,6 +53,7 @@ const propertySchema = z.object({
   city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
   state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
   price: z.number().min(1, 'Price must be greater than 0'),
+  currency: z.string().min(1, 'Currency is required').default('TRY'),
   priceType: z.string().min(1, 'Price type is required'),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.enum(['apartment', 'house', 'condo', 'townhouse', 'studio', 'loft', 'villa', 'commercial', 'land']),
@@ -105,6 +107,10 @@ const EditProperty: React.FC = () => {
   const [priceTypes, setPriceTypes] = useState<PriceType[]>([]);
   const [priceTypesLoading, setPriceTypesLoading] = useState(false);
   const [priceTypesError, setPriceTypesError] = useState<string | null>(null);
+
+  // Currencies state
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [currenciesLoading, setCurrenciesLoading] = useState(false);
 
   const {
     register,
@@ -234,6 +240,7 @@ const EditProperty: React.FC = () => {
             city: foundProperty.city || '',
             state: foundProperty.state || '',
             price: Number(foundProperty.price) || 0,
+            currency: foundProperty.currency || 'TRY',
             priceType: foundProperty.priceType || foundProperty.price_type || 'total',
             listingType: foundProperty.listingType || foundProperty.listing_type || 'sale',
             propertyType: foundProperty.propertyType || foundProperty.property_type || 'apartment',
@@ -293,6 +300,21 @@ const EditProperty: React.FC = () => {
     loadDocumentTypes();
   }, []);
 
+  // Fetch currencies from API
+  const fetchCurrencies = async () => {
+    setCurrenciesLoading(true);
+    try {
+      const currenciesData = await currencyService.getAllCurrencies(i18n.language);
+      setCurrencies(currenciesData);
+    } catch (error) {
+      console.error('Failed to load currencies:', error);
+      // Use default currencies as fallback
+      setCurrencies(currencyService['getDefaultCurrencies']());
+    } finally {
+      setCurrenciesLoading(false);
+    }
+  };
+
   // Fetch price types from API
   const fetchPriceTypes = async (listingType?: 'rent' | 'sale') => {
     setPriceTypesLoading(true);
@@ -308,6 +330,11 @@ const EditProperty: React.FC = () => {
       setPriceTypesLoading(false);
     }
   };
+
+  // Load currencies on component mount
+  useEffect(() => {
+    fetchCurrencies();
+  }, []);
 
   // Load price types on component mount and when listing type changes
   useEffect(() => {
@@ -390,6 +417,7 @@ const EditProperty: React.FC = () => {
         city: selectedCity || data.city,
         state: selectedState || data.state,
         price: data.price,
+        currency: data.currency || 'TRY',
         priceType: data.priceType,
         listingType: data.listingType,
         propertyType: data.propertyType,
@@ -576,7 +604,7 @@ const EditProperty: React.FC = () => {
               <CardTitle>Property Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="price">Price *</Label>
                   <div className="relative">
@@ -586,13 +614,48 @@ const EditProperty: React.FC = () => {
                       type="number"
                       placeholder="Monthly rent or sale price"
                       className={`pl-10 ${errors.price ? 'border-red-500' : ''}`}
-                      {...register('price', { 
+                      {...register('price', {
                   setValueAs: (value) => value === '' ? undefined : Number(value)
                 })}
                     />
                   </div>
                   {errors.price && (
                     <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="currency">{t('forms.currency')} *</Label>
+                  <Controller
+                    name="currency"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className={`h-10 text-base border-2 rounded-lg ${errors.currency ? 'border-red-500' : ''}`}>
+                          <SelectValue placeholder={t('forms.selectCurrency')} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
+                          {currenciesLoading ? (
+                            <SelectItem value="loading" disabled className="text-sm py-3 px-4">
+                              {t('common.loading')}
+                            </SelectItem>
+                          ) : (
+                            currencies.map((currency) => (
+                              <SelectItem
+                                key={currency.id}
+                                value={currency.code}
+                                className="text-sm py-3 px-4"
+                              >
+                                {currency.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.currency && (
+                    <p className="text-sm text-red-600 mt-1">{errors.currency.message}</p>
                   )}
                 </div>
 

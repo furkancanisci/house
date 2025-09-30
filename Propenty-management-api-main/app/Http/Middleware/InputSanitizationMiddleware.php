@@ -26,6 +26,7 @@ class InputSanitizationMiddleware
             'api/v1/properties/featured',
             'api/v1/features',
             'api/v1/utilities',
+            'api/v1/currencies',
             'api/v1/cities/states',
             'api/v1/property-document-types',
             'api/v1/property-types/options',
