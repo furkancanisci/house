@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\WindowTypeController;
 use App\Http\Controllers\Api\FloorTypeController;
 use App\Http\Controllers\Api\ViewTypeController;
 use App\Http\Controllers\Api\DirectionController;
+use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\HomeStatController;
 use App\Http\Controllers\Api\PropertyDetailController;
 use App\Http\Controllers\Api\AdvancedDetailsController;
@@ -95,6 +96,10 @@ Route::prefix('v1')->group(function () {
         //     Route::get('/email/verification-status', [AuthController::class, 'getVerificationStatus']);
         // });
     });
+
+    // Currencies API
+    Route::get('/currencies', [CurrencyController::class, 'index']);
+    Route::get('/currencies/{identifier}', [CurrencyController::class, 'show']);
 
     // Property Routes - All made public for now
     Route::prefix('properties')->group(function () {

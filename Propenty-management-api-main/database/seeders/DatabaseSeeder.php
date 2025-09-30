@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
             ViewTypeAndDirectionSeeder::class,
             GovernorateSeeder::class,
             UserSeeder::class,
-            PropertySeeder::class,
             PropertyFavoriteSeeder::class,
             PropertyViewSeeder::class,
             AdvancedFeaturesSeeder::class,

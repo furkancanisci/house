@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\PriceTypeController;
+use App\Http\Controllers\Admin\CurrencyController;
 use App\Http\Controllers\Admin\BuildingTypeController;
 use App\Http\Controllers\Admin\WindowTypeController;
 use App\Http\Controllers\Admin\FloorTypeController;
@@ -95,6 +96,17 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
         Route::patch('/{priceType}', [PriceTypeController::class, 'update'])->middleware('can:edit price types');
         Route::delete('/{priceType}', [PriceTypeController::class, 'destroy'])->name('admin.price-types.destroy')->middleware('can:delete price types');
         Route::post('/{priceType}/toggle-status', [PriceTypeController::class, 'toggleStatus'])->name('admin.price-types.toggle-status')->middleware('can:edit price types');
+    });
+
+    // Currency Management
+    Route::prefix('currencies')->group(function () {
+        Route::get('/', [CurrencyController::class, 'index'])->name('admin.currencies.index');
+        Route::get('/create', [CurrencyController::class, 'create'])->name('admin.currencies.create');
+        Route::post('/', [CurrencyController::class, 'store'])->name('admin.currencies.store');
+        Route::get('/{currency}/edit', [CurrencyController::class, 'edit'])->name('admin.currencies.edit');
+        Route::put('/{currency}', [CurrencyController::class, 'update'])->name('admin.currencies.update');
+        Route::delete('/{currency}', [CurrencyController::class, 'destroy'])->name('admin.currencies.destroy');
+        Route::post('/{currency}/toggle-status', [CurrencyController::class, 'toggleStatus'])->name('admin.currencies.toggle-status');
     });
 
     // Locations Management

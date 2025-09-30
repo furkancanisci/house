@@ -55,6 +55,7 @@ class PropertyController extends Controller
             'imagesToRemove' => 'remove_images',
             'mainImage' => 'main_image',
             'main_image' => 'main_image', // Also accept snake_case
+            'currency' => 'currency', // Currency field
             // New property fields
             'floorNumber' => 'floor_number',
             'totalFloors' => 'total_floors',
