@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\FloorTypeController;
 use App\Http\Controllers\Admin\ViewTypeController;
 use App\Http\Controllers\Admin\DirectionController;
 use App\Http\Controllers\Admin\HomeStatController;
+use App\Http\Controllers\Admin\PropertyDocumentTypeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -201,6 +202,11 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
         Route::delete('/{homeStat}', [HomeStatController::class, 'destroy'])->name('admin.home-stats.destroy');
         Route::patch('/{homeStat}/toggle-status', [HomeStatController::class, 'toggleStatus'])->name('admin.home-stats.toggle-status');
     });
+
+    // Property Document Types
+    Route::resource('property-document-types', PropertyDocumentTypeController::class)->names('admin.property-document-types');
+    Route::post('property-document-types/{propertyDocumentType}/toggle-status', [PropertyDocumentTypeController::class, 'toggleStatus'])->name('admin.property-document-types.toggle-status');
+    Route::post('property-document-types/bulk-action', [PropertyDocumentTypeController::class, 'bulkAction'])->name('admin.property-document-types.bulk-action');
 
     // Users & Agents Management
     Route::resource('users', UserController::class)->names('admin.users');

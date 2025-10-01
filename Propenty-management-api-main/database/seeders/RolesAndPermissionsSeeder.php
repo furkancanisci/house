@@ -60,6 +60,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit features',
             'delete features',
             
+            // Property Document Types
+            'view property document types',
+            'create property document types',
+            'edit property document types',
+            'delete property document types',
+            
             // Utilities
             'view utilities',
             'create utilities',
@@ -148,6 +154,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'create features',
             'edit features',
             'delete features',
+            'view property document types',
+            'create property document types',
+            'edit property document types',
+            'delete property document types',
             'view utilities',
             'create utilities',
             'edit utilities',
@@ -189,6 +199,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view cities',
             'view amenities',
             'view features',
+            'view property document types',
             'view utilities',
             'view users',
             'view leads',
