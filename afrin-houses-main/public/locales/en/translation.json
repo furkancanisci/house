@@ -81,15 +81,6 @@
       "garageParking": "Garage Parking"
     },
     "noPropertiesFound": "No featured properties found",
-    "sections": {
-      "forRent": "Properties for Rent",
-      "forSale": "Properties for Sale",
-      "trending": "Trending Properties",
-      "recommended": "Recommended Properties",
-      "newListings": "New Listings",
-      "popularChoices": "Popular Choices",
-      "featured": "Featured Properties"
-    },
     "browseAll": "Browse All Properties",
     "loading": "Loading...",
     "errorLoading": "Error loading properties",
