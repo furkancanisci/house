@@ -61,7 +61,6 @@ class PropertyResource extends JsonResource
             
             // Pricing - both nested and flat for compatibility
             'price' => $this->price, // Flat price for frontend
-            'currency' => $this->currency ?? 'TRY', // Currency code (TRY, USD, EUR, SYP)
             'priceType' => $this->when($this->relationLoaded('priceType'), function () {
                 return $this->priceType ? [
                     'key' => $this->priceType->key,
@@ -143,7 +142,7 @@ class PropertyResource extends JsonResource
                     if ($mainImage) {
                         return $mainImage->getUrl();
                     }
-
+                    
                     $firstImage = $this->getFirstMedia('images');
                     return $firstImage ? $firstImage->getUrl() : null;
                 }),
@@ -163,42 +162,7 @@ class PropertyResource extends JsonResource
                 }
 
                 $firstImage = $this->getFirstMedia('images');
-                if ($firstImage) {
-                    return $firstImage->getUrl();
-                }
-
-                // Only return placeholder if no images AND no videos exist
-                $hasVideos = $this->getMedia('videos')->count() > 0;
-                return $hasVideos ? null : '/images/placeholder-property.svg';
-            }),
-
-            // Raw media array for frontend image processing
-            'media' => $this->whenLoaded('media', function() {
-                return $this->media->map(function($media) {
-                    return [
-                        'id' => $media->id,
-                        'collection_name' => $media->collection_name,
-                        'file_name' => $media->file_name,
-                        'filename' => $media->file_name,
-                        'mime_type' => $media->mime_type,
-                        'size' => $media->size,
-                        'url' => $media->getUrl(),
-                        'original_url' => $media->getUrl(),
-                    ];
-                })->toArray();
-            }),
-
-            // Videos - similar to images structure
-            'videos' => $this->whenLoaded('media', function() {
-                return $this->getMedia('videos')->map(function($media) {
-                    return [
-                        'id' => $media->id,
-                        'url' => $media->getUrl(),
-                        'name' => $media->name,
-                        'size' => $media->size,
-                        'mime_type' => $media->mime_type,
-                    ];
-                })->toArray();
+                return $firstImage ? $firstImage->getUrl() : '/images/placeholder-property.svg';
             }),
 
             // Phase 1 Enhancement Fields

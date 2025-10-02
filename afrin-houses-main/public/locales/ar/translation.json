@@ -356,11 +356,9 @@
       },
       "businessHoursText": "الاثنين - الجمعة: 9:00 ص - 6:00 م\nالسبت: 10:00 ص - 4:00 م",
       "locationText": "عفرين، حلب\nسوريا"
-    },
-    "videos": "فيديوهات العقار"
+    }
   },
   "forms": {
-    "location": "الموقع",
     "advancedDetailsNote": "ملاحظة: هذه الحقول مطلوبة إذا كان لديك عقار من نوع مختلف من العقارات السكنية.",
     "selectWindowType": "نوع النوافذ",
     "selectBuildingType": "نوع المبنى",
@@ -376,8 +374,6 @@
     "state": "الولاية",
     "postalCode": "الرمز البريدي",
     "price": "السعر",
-    "currency": "العملة",
-    "selectCurrency": "اختر العملة",
     "monthlyRent": "الإيجار الشهري",
     "salePrice": "سعر البيع",
     "propertyDescription": "وصف العقار",
@@ -395,7 +391,6 @@
       "stateRequired": "الولاية مطلوبة",
       "priceRequired": "السعر مطلوب",
       "priceTooHigh": "السعر مرتفع جداً",
-      "currencyRequired": "العملة مطلوبة",
       "bedroomsRequired": "عدد غرف النوم مطلوب",
       "bathroomsRequired": "عدد الحمامات مطلوب",
       "squareFootageRequired": "المساحة بالقدم المربع مطلوبة",
@@ -411,7 +406,6 @@
       "passwordsDontMatch": "كلمات المرور غير متطابقة",
       "validEmailAddress": "يرجى إدخال عنوان بريد إلكتروني صحيح"
     },
-    "propertyType": "نوع العقار",
     "propertyTitlePlaceholder": "مثال: شقة فاخرة في وسط المدينة",
     "addressPlaceholder": "123 الشارع الرئيسي، المدينة، الولاية 12345",
     "cityPlaceholder": "أدخل المدينة",
@@ -546,7 +540,6 @@
   "buttons": {
     "createListing": "إنشاء إعلان",
     "creatingListing": "جاري إنشاء الإعلان...",
-    "uploadingFiles": "جاري رفع الملفات...",
     "updateProperty": "تحديث العقار",
     "updating": "جاري التحديث...",
     "cancel": "إلغاء",
@@ -811,7 +804,6 @@
     "selectStateFirst": "اختر المحافظة أولاً"
   },
   "messages": {
-    "signInToViewContactInfo": "يرجى تسجيل الدخول لعرض معلومات الاتصال",
     "propertyDeletedSuccess": "تم حذف العقار بنجاح",
     "addedToFavorites": "تمت الإضافة إلى المفضلة",
     "removedFromFavorites": "تمت الإزالة من المفضلة",
@@ -1070,53 +1062,14 @@
         "ensureQuality": "تأكد من وضوح الصور وجودتها العالية"
       }
     },
-    "videoUpload": {
-      "uploadVideos": "ارفع حتى فيديو واحد للعقار (حد أقصى 100 ميجابايت لكل فيديو)",
-      "clickToUpload": "اضغط لرفع الفيديوهات",
-      "selectedVideos": "الفيديوهات المختارة",
-      "uploading": "جاري الرفع...",
-      "processing": "جاري المعالجة...",
-      "duration": "المدة",
-      "size": "الحجم",
-      "remove": "إزالة",
-      "play": "تشغيل",
-      "pause": "إيقاف مؤقت",
-      "mute": "كتم الصوت",
-      "unmute": "إلغاء كتم الصوت",
-      "supportedFormats": "التنسيقات المدعومة: MP4, AVI, MOV, WMV, WebM",
-      "maxSize": "الحد الأقصى: 100 ميجابايت لكل فيديو",
-      "maxCount": "الحد الأقصى: فيديو واحد",
-      "tips": {
-        "title": "نصائح لأفضل النتائج",
-        "goodLighting": "استخدم إضاءة جيدة",
-        "steadyCamera": "حافظ على ثبات الكاميرا",
-        "showAllAreas": "اعرض جميع مناطق العقار",
-        "keepShort": "اجعل الفيديوهات قصيرة ومفيدة",
-        "landscapeOrientation": "سجل بالوضع الأفقي للحصول على عرض أفضل"
-      },
-      "errors": {
-        "invalidFormat": "تنسيق الفيديو غير مدعوم",
-        "fileTooLarge": "حجم الفيديو كبير جداً (الحد الأقصى 100 ميجابايت)",
-        "tooManyFiles": "لا يمكن رفع أكثر من فيديو واحد",
-        "uploadFailed": "فشل في رفع الفيديو",
-        "processingFailed": "فشل في معالجة الفيديو"
-      }
-    },
     "progress": {
       "basic": "أساسي",
       "details": "تفاصيل",
       "images": "صور",
       "features": "مميزات",
       "contact": "تواصل",
-      "advanced": "تفاصيل متقدمة"
-    },
-    "addYourNewProperty": "أضف عقارك الجديد بسهولة",
-    "finalStep": {
-      "title": "الخطوة الأخيرة",
-      "description": "مراجعة وتأكيد بيانات العقار",
-      "readyDescription": "عقارك جاهز للنشر",
-      "summary": "ملخص العقار",
-      "readyTitle": "تم إنشاء العقار بنجاح"
+      "advanced": "تفاصيل متقدمة",
+      "addYourNewProperty": "أضف عقارك الجديد بسهولة"
     },
     "selectedUtilities": "المرافق المختارة",
     "utilitiesCount": "{{count}} مرفق"

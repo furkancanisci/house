@@ -120,48 +120,6 @@
             "petFriendly": "Ji bo Heywanên Malê",
             "swimmingPool": "Hewz"
         },
-        "sections": {
-            "featured": "Mîlkên Taybetî",
-            "recommended": "Ji bo Te Pêşniyar",
-            "trending": "Yên Herî Populer",
-            "popularChoices": "Hilbijartinên Populer",
-            "featuredSubtitle": "Mîlkên taybetî yên bi baldarî hatine hilbijartin",
-            "recommendedSubtitle": "Mîlkên li gorî tercîh û dîroka lêgerîna te",
-            "trendingSubtitle": "Mîlkên herî zêde hatine dîtin û pirsîn vê hefteyê",
-            "popularChoicesSubtitle": "Mîlkên herî başhatî nirxandin ku civaka me jê hez dike",
-            "rentalProperties": "Mîlkên bo Kirê",
-            "propertiesForSale": "Mîlkên bo Firotinê",
-            "trendingProperties": "Mîlkên Populer",
-            "viewAll": "Hemûyan Bibîne",
-            "loading": "Mîlk tên barkirin...",
-            "error": "Xelet di barkirina mîlkan de",
-            "noProperties": "Tu mîlk nehat dîtin",
-            "forRent": "Mîlkên bo Kirê",
-            "forSale": "Mîlkên bo Firotinê",
-            "loadingMessage": "Mîlk tên barkirin...",
-            "errorMessage": "Xelet di barkirina mîlkan de"
-        },
-        "sections": {
-            "featured": "Mîlkên Taybetî",
-            "recommended": "Ji bo Te Pêşniyar",
-            "trending": "Yên Herî Populer",
-            "popularChoices": "Hilbijartinên Populer",
-            "featuredSubtitle": "Mîlkên taybetî yên bi baldarî hatine hilbijartin",
-            "recommendedSubtitle": "Mîlkên li gorî tercîh û dîroka lêgerîna te",
-            "trendingSubtitle": "Mîlkên herî zêde hatine dîtin û pirsîn vê hefteyê",
-            "popularChoicesSubtitle": "Mîlkên herî başhatî nirxandin ku civaka me jê hez dike",
-            "rentalProperties": "Mîlkên bo Kirê",
-            "propertiesForSale": "Mîlkên bo Firotinê",
-            "trendingProperties": "Mîlkên Populer",
-            "viewAll": "Hemûyan Bibîne",
-            "loading": "Mîlk tên barkirin...",
-            "error": "Xelet di barkirina mîlkan de",
-            "noProperties": "Tu mîlk nehat dîtin",
-            "forRent": "Ji bo Kirê",
-            "forSale": "Ji bo Firotinê",
-            "newListings": "Lîstikên Nû",
-            "popularChoices": "Hilbijartinên Popular"
-        },
         "browseAll": "Hemû Mîlkan Bibîne",
         "loading": "Tê barkirin...",
         "errorLoading": "Xeletî di barkirina mîlkan de",
@@ -290,8 +248,7 @@
             "phone": "Telefon",
             "email": "Email",
             "owner": "Xwediyê Mîlkê"
-        },
-        "videos": "Vîdyoyên Mîlkê"
+        }
     },
     "auth": {
         "signIn": "Têkeve",
@@ -551,38 +508,6 @@
                 "differentAngles": "Ji aliyên cuda wêneyan bikişîne",
                 "showFeatures": "Taybetmendiyên sereke yên mîlkê nîşan bide",
                 "ensureQuality": "Piştrast bike ku wêne zelal û kalîteya bilind in"
-            }
-        },
-        "videoUpload": {
-            "uploadVideos": "Heta 1 vîdyoyê mîlkê barkirin (herî zêde 100MB ji bo her vîdyoyê)",
-            "clickToUpload": "Ji bo barkirina vîdyoyan bitikîne",
-            "selectedVideos": "Vîdyoyên Hilbijartî",
-            "uploading": "Tê barkirin...",
-            "processing": "Tê pêvajokirin...",
-            "duration": "Dem",
-            "size": "Mezinahî",
-            "remove": "Rake",
-            "play": "Lêde",
-            "pause": "Rawestîne",
-            "mute": "Bêdeng bike",
-            "unmute": "Deng veke",
-            "supportedFormats": "Formatên piştgirî: MP4, AVI, MOV, WMV, WebM",
-            "maxSize": "Herî zêde: 100MB ji bo her vîdyoyê",
-            "maxCount": "Herî zêde: 1 vîdyo",
-            "tips": {
-                "title": "Şêret ji bo Encamên Çêtir",
-                "goodLighting": "Ronayîya baş bikar bîne",
-                "steadyCamera": "Kamerayê sabit bihêle",
-                "showAllAreas": "Hemû qadên mîlkê nîşan bide",
-                "keepShort": "Vîdyoyan kurt û fêdeyî bike",
-                "landscapeOrientation": "Ji bo dîtina çêtir bi awayê berwarî tomar bike"
-            },
-            "errors": {
-                "invalidFormat": "Formata vîdyoyê nayê piştgirîkirin",
-                "fileTooLarge": "Pelê vîdyoyê pir mezin e (herî zêde 100MB)",
-                "tooManyFiles": "Nikare ji 1 vîdyoyê zêdetir barkirin",
-                "uploadFailed": "Barkirina vîdyoyê têk çû",
-                "processingFailed": "Pêvajoya vîdyoyê têk çû"
             }
         },
         "progress": {

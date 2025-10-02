@@ -60,6 +60,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit features',
             'delete features',
             
+            // Property Document Types
+            'view property document types',
+            'create property document types',
+            'edit property document types',
+            'delete property document types',
+            
             // Utilities
             'view utilities',
             'create utilities',
@@ -148,6 +154,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'create features',
             'edit features',
             'delete features',
+            'view property document types',
+            'create property document types',
+            'edit property document types',
+            'delete property document types',
             'view utilities',
             'create utilities',
             'edit utilities',
@@ -189,6 +199,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view cities',
             'view amenities',
             'view features',
+            'view property document types',
             'view utilities',
             'view users',
             'view leads',
@@ -226,5 +237,63 @@ class RolesAndPermissionsSeeder extends Seeder
             'view features',
             'view utilities',
         ]);
+
+        // Create SuperAdmin user if it doesn't exist
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'admin@property.com'],
+            [
+                'first_name' => 'Super',
+                'last_name' => 'Admin',
+                'password' => Hash::make('Admin@123456'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]
+        );
+        $superAdmin->assignRole('SuperAdmin');
+
+        // Create sample Admin user
+        $admin = User::firstOrCreate(
+            ['email' => 'admin2@property.com'],
+            [
+                'first_name' => 'John',
+                'last_name' => 'Admin',
+                'password' => Hash::make('Admin@123456'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]
+        );
+        $admin->assignRole('Admin');
+
+        // Create sample Moderator user
+        $moderator = User::firstOrCreate(
+            ['email' => 'moderator@property.com'],
+            [
+                'first_name' => 'Jane',
+                'last_name' => 'Moderator',
+                'password' => Hash::make('Moderator@123456'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]
+        );
+        $moderator->assignRole('Moderator');
+
+        // Create sample Agent user
+        $agent = User::firstOrCreate(
+            ['email' => 'agent@property.com'],
+            [
+                'first_name' => 'Mike',
+                'last_name' => 'Agent',
+                'password' => Hash::make('Agent@123456'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]
+        );
+        $agent->assignRole('Agent');
+
+        $this->command->info('Roles and permissions created successfully!');
+        $this->command->info('SuperAdmin: admin@property.com / Admin@123456');
+        $this->command->info('Admin: admin2@property.com / Admin@123456');
+        $this->command->info('Moderator: moderator@property.com / Moderator@123456');
+        $this->command->info('Agent: agent@property.com / Agent@123456');
     }
 }

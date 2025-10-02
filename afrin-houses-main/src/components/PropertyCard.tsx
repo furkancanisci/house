@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { ExtendedProperty } from '../types';
 import { useApp } from '../context/AppContext';
@@ -10,8 +10,7 @@ import {
   MapPin,
   Calendar,
   DollarSign,
-  ArrowRight,
-  Play
+  ArrowRight
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardFooter } from './ui/card';
@@ -34,8 +33,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
   const { t, i18n } = useTranslation();
   const isFavorite = state.favorites.includes(property.id.toString());
   const user = state.user;
-  const [videoError, setVideoError] = useState(false);
-  const [videoLoading, setVideoLoading] = useState(true);
 
   // Debug: Log the property data to understand the structure (only in development)
   React.useEffect(() => {
@@ -134,75 +131,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     }
   };
 
-  // Get the first video if available
-  const getMainVideo = () => {
-    if (property.videos && Array.isArray(property.videos) && property.videos.length > 0) {
-      return property.videos[0];
-    }
-    return null;
-  };
-
-  // Always process property images to get the correct main image and gallery
-  const processedImages = processPropertyImages(property, property.propertyType);
+  const processedImages = useGallery ? processPropertyImages(property) : { mainImage: property.mainImage || '/images/placeholder-property.svg', images: [] };
   const images = processedImages.images || [];
-  const mainImage = processedImages.mainImage || '/images/placeholder-property.svg';
-  const mainVideo = getMainVideo();
-
-  // Enhanced debugging for property images
-  console.log('🎯 PropertyCard - Enhanced debugging for property', property.id, ':', {
-    // Raw property data
-    rawPropertyData: {
-      id: property.id,
-      title: property.title,
-      hasMedia: !!property.media,
-      mediaLength: property.media?.length || 0,
-      mediaItems: property.media?.map((item: any) => ({
-        id: item.id,
-        collection: item.collection_name,
-        filename: item.file_name || item.filename,
-        mime_type: item.mime_type,
-        url: item.url,
-        original_url: item.original_url
-      })) || [],
-      hasImages: !!property.images,
-      imagesType: typeof property.images,
-      hasMainImage: !!property.mainImage,
-      hasMainImageUrl: !!property.main_image_url
-    },
-    // Processed results
-    processedResults: {
-      mainImage,
-      imagesCount: images.length,
-      hasMainVideo: !!mainVideo,
-      hasRealImages: mainImage !== '/images/placeholder-property.svg' && 
-                     !mainImage.includes('/images/properties/') && 
-                     !mainImage.includes('placeholder')
-    }
-  });
-
-  // Debug: Check if property.media exists and has items
-  if (property.media && Array.isArray(property.media)) {
-    console.log('🔍 PropertyCard - property.media exists with', property.media.length, 'items');
-    property.media.forEach((item: any, index: number) => {
-      console.log(`📷 PropertyCard - Media item ${index}:`, {
-        id: item.id,
-        collection_name: item.collection_name,
-        file_name: item.file_name,
-        mime_type: item.mime_type,
-        original_url: item.original_url
-      });
-    });
-  } else {
-    console.log('❌ PropertyCard - property.media is missing or not an array:', property.media);
-  }
-
-  console.log('🎯 PropertyCard - Processed images for property', property.id, ':', {
-    mainImage,
-    imagesCount: images.length,
-    hasMainVideo: !!mainVideo,
-    propertyTitle: property.title,
-    hasRealImages: mainImage !== '/images/placeholder-property.svg'
-  });
+  const mainImage = processedImages.mainImage || property.mainImage || '/images/placeholder-property.svg';
 
   const propertySlug = property.slug || `property-${property.id}`;
 
@@ -219,26 +150,26 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     return Number(property.square_feet ?? property.squareFootage ?? property.sqft ?? property.details?.square_feet ?? 0) || 0;
   };
 
-  const formatPrice = (price: number | string | { amount?: number } | undefined, type: string = 'sale', currency?: string) => {
+  const formatPrice = (price: number | string | { amount?: number } | undefined, type: string = 'sale') => {
     const numPrice = typeof price === 'object' && price !== null
       ? (price as any).amount || 0
       : Number(price) || 0;
-
+    
     if (numPrice === 0) return t('property.priceOnRequest');
-
-    // Format the price
-    const formattedNumber = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
+    
+    // Format the price based on the current language
+    const formattedPrice = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
+      style: 'currency',
+      currency: 'SAR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(numPrice);
-
-    const formattedPrice = formattedNumber;
-
+    
     // Add rental period if needed
     if (type === 'rent') {
       return `${formattedPrice}/${t('property.month')}`;
     }
-
+    
     return formattedPrice;
   };
 
@@ -249,51 +180,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     } catch (e) {
       return '';
     }
-  };
-
-  // Video component for property card
-  const VideoPlayer = ({ video, className }: { video: any, className: string }) => {
-    return (
-      <div className={`relative ${className}`}>
-        <video
-          className="w-full h-full object-cover"
-          muted
-          loop
-          playsInline
-          onLoadStart={() => setVideoLoading(true)}
-          onLoadedData={() => setVideoLoading(false)}
-          onError={() => {
-            setVideoError(true);
-            setVideoLoading(false);
-          }}
-          onMouseEnter={(e) => {
-            const video = e.target as HTMLVideoElement;
-            video.play().catch(() => {});
-          }}
-          onMouseLeave={(e) => {
-            const video = e.target as HTMLVideoElement;
-            video.pause();
-            video.currentTime = 0;
-          }}
-        >
-          <source src={video.url} type={video.mime_type || 'video/mp4'} />
-        </video>
-        
-        {/* Play button overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-100 hover:opacity-0 transition-opacity duration-200">
-          <div className="bg-white/90 rounded-full p-3 shadow-lg">
-            <Play className="h-6 w-6 text-gray-800 fill-current" />
-          </div>
-        </div>
-        
-        {/* Loading state */}
-        {videoLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#067977]"></div>
-          </div>
-        )}
-      </div>
-    );
   };
 
   if (view === 'list') {
@@ -481,7 +367,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             />
           ) : (
             <FixedImage
-              src="/placeholder-property.jpg"
+              src={mainImage}
               alt={property.title}
               className="h-48 max-h-48 w-full object-cover"
             />

@@ -97,10 +97,19 @@ class MediaController extends Controller
             }
         }
 
+        // Get conversions
+        $conversions = [];
+        if ($media->hasGeneratedConversion('thumb')) {
+            $conversions['thumb'] = $media->getUrl('thumb');
+        }
+        if ($media->hasGeneratedConversion('preview')) {
+            $conversions['preview'] = $media->getUrl('preview');
+        }
+
         // Get custom properties
         $customProperties = $media->custom_properties ?? [];
 
-        return view('admin.media.show', compact('media', 'model', 'customProperties'));
+        return view('admin.media.show', compact('media', 'model', 'conversions', 'customProperties'));
     }
 
     /**
@@ -161,7 +170,29 @@ class MediaController extends Controller
         }
     }
 
+    /**
+     * Regenerate conversions for media
+     */
+    public function regenerateConversions(Media $media)
+    {
+        $this->authorize('edit media');
 
+        try {
+            // Delete existing conversions
+            $media->deletePreservingOriginal();
+            
+            // Regenerate conversions
+            if ($media->model) {
+                $media->model->registerMediaConversions($media);
+            }
+            
+            return redirect()->route('admin.media.show', $media)
+                ->with('success', 'Media conversions regenerated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.media.show', $media)
+                ->with('error', 'Failed to regenerate conversions: ' . $e->getMessage());
+        }
+    }
 
     /**
      * Upload new media files

@@ -33,8 +33,7 @@ import {
   Car,
   File,
   Eye,
-  Settings,
-  Clock
+  Settings
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -57,7 +56,6 @@ import PropertyLocationMap from '../components/PropertyLocationMap';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import { priceTypeService, PriceType } from '../services/priceTypeService';
-import { currencyService, Currency } from '../services/currencyService';
 import { propertyTypeService, PropertyType } from '../services/propertyTypeService';
 import { buildingTypeService, BuildingType } from '../services/buildingTypeService';
 import { windowTypeService, WindowType } from '../services/windowTypeService';
@@ -68,8 +66,6 @@ import { compressImages, formatFileSize } from '../lib/imageUtils';
 import api from '../services/api';
 import { authService } from '../services/authService';
 import config from '../utils/config';
-import VideoUpload, { VideoFile } from '../components/VideoUpload';
-import EnhancedPropertyService from '../services/enhancedPropertyService';
 
 // Types for features and utilities
 interface Feature {
@@ -111,7 +107,6 @@ const createPropertySchema = (t: any) => z.object({
   city: z.string().min(1, t('validation.cityRequired')).max(100, t('validation.cityMaxLength')),
   state: z.string().min(1, t('validation.stateRequired')).max(100, t('validation.stateMaxLength')),
   price: z.number().min(1, t('validation.priceRequired')).max(99999999.99, t('validation.priceTooHigh')),
-  currency: z.string().min(1, t('validation.currencyRequired')).default('TRY'),
   priceType: z.string().min(1, t('validation.priceTypeRequired')),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.string().min(1, t('validation.propertyTypeRequired')),
@@ -205,12 +200,6 @@ const AddProperty: React.FC = () => {
 
     return urls;
   });
-  
-  // Video state
-  const [selectedVideos, setSelectedVideos] = useState<VideoFile[]>([]);
-  const [videoPreviewUrls, setVideoPreviewUrls] = useState<string[]>([]);
-  
-  // Removed upload progress states - now using direct property creation with all files
 
 
   const [mainImageIndex, setMainImageIndex] = useState<number>(() => {
@@ -305,7 +294,6 @@ const AddProperty: React.FC = () => {
         listingType: 'rent',
         propertyType: '',
         priceType: undefined, // Use undefined for proper Select component behavior
-        currency: 'TRY', // Default to Turkish Lira
         documentTypeId: '', // Required field
         bedrooms: 1,
         bathrooms: 1,
@@ -552,20 +540,11 @@ const AddProperty: React.FC = () => {
     loadDirections();
   }, [i18n.language]);
 
-  // Removed upload queue monitoring - now using direct property creation
-
   // Load features and utilities only when reaching step 2 (Property Details) or language changes
   useEffect(() => {
     if (currentStep >= 2) {
       fetchFeatures();
       fetchUtilities();
-    }
-  }, [currentStep, i18n.language]);
-
-  // Load currencies when reaching step 2 (Property Details)
-  useEffect(() => {
-    if (currentStep >= 2) {
-      fetchCurrencies();
     }
   }, [currentStep, i18n.language]);
 
@@ -590,10 +569,6 @@ const AddProperty: React.FC = () => {
   const [availablePriceTypes, setAvailablePriceTypes] = useState<PriceType[]>([]);
   const [loadingPriceTypes, setLoadingPriceTypes] = useState(false);
   const [priceTypesError, setPriceTypesError] = useState<string | null>(null);
-
-  // State for currencies from API
-  const [availableCurrencies, setAvailableCurrencies] = useState<Currency[]>([]);
-  const [loadingCurrencies, setLoadingCurrencies] = useState(false);
 
   // Fetch features from API
   const fetchFeatures = async () => {
@@ -642,21 +617,6 @@ const AddProperty: React.FC = () => {
       notification.error('Failed to load utilities');
     } finally {
       setLoadingUtilities(false);
-    }
-  };
-
-  // Fetch currencies from API
-  const fetchCurrencies = async () => {
-    setLoadingCurrencies(true);
-    try {
-      const currencies = await currencyService.getAllCurrencies(i18n.language);
-      setAvailableCurrencies(currencies);
-    } catch (error) {
-      console.error('Failed to load currencies:', error);
-      // Use default currencies as fallback
-      setAvailableCurrencies(currencyService['getDefaultCurrencies']());
-    } finally {
-      setLoadingCurrencies(false);
     }
   };
 
@@ -857,24 +817,6 @@ const AddProperty: React.FC = () => {
       return;
     }
 
-    // Check individual file sizes before processing
-    const maxIndividualSize = 50 * 1024 * 1024; // 50MB per file
-    const oversizedFiles = files.filter(file => file.size > maxIndividualSize);
-    if (oversizedFiles.length > 0) {
-      const oversizedNames = oversizedFiles.map(f => `${f.name} (${formatFileSize(f.size)})`).join(', ');
-      notification.error(`The following files are too large (max 50MB each): ${oversizedNames}`);
-      return;
-    }
-
-    // Check total upload size and warn about chunked upload
-    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    const existingSize = selectedImages.reduce((sum, file) => sum + file.size, 0);
-    const combinedSize = totalSize + existingSize;
-    
-    if (combinedSize > 10 * 1024 * 1024) { // 10MB threshold
-      notification.info(`Large files detected (${formatFileSize(combinedSize)} total). Will use chunked upload for better reliability.`);
-    }
-
     // Show initial file sizes for comparison
     const totalOriginalSize = files.reduce((sum, file) => sum + file.size, 0);
     notification.info(`Processing ${files.length} image(s)... Original size: ${formatFileSize(totalOriginalSize)}`);
@@ -1020,9 +962,6 @@ const AddProperty: React.FC = () => {
       return;
     }
 
-    // Reset upload progress states
-    // Removed upload progress state resets - now using direct property creation
-
     // Ensure numeric fields are properly converted
     const formData = {
       ...data,
@@ -1071,7 +1010,6 @@ const AddProperty: React.FC = () => {
         property_type_id: selectedPropertyType?.id, // New foreign key relationship
         listingType: data.listingType,
         price: parseFloat(data.price.toString()),
-        currency: data.currency || 'TRY',
         address: street,
         city: city,
         state: state,
@@ -1102,70 +1040,42 @@ const AddProperty: React.FC = () => {
         annualTax: data.annualTax ? Number(data.annualTax) : undefined,
       };
 
-      // Prepare files for upload
-      const files: { [key: string]: File | File[] } = {};
-      
-      // Add main image
-      if (selectedImages[mainImageIndex]) {
-        files.mainImage = selectedImages[mainImageIndex];
-      }
-      
-      // Add gallery images (excluding the main image)
-      const galleryImages = selectedImages.filter((_, index) => index !== mainImageIndex);
-      if (galleryImages.length > 0) {
-        files.images = galleryImages;
-      }
-      
-      // Helper function to safely check if object is a File
-      const isFile = (obj: any): obj is File => {
-        try {
-          return obj && 
-                 typeof obj === 'object' && 
-                 obj.constructor && 
-                 obj.constructor.name === 'File' &&
-                 typeof obj.size === 'number' &&
-                 typeof obj.name === 'string' &&
-                 typeof obj.type === 'string';
-        } catch (error) {
-          return false;
+      // Create FormData for file uploads
+      const formDataToSend = new FormData();
+
+      // Add all property data fields to FormData
+      Object.keys(propertyData).forEach(key => {
+        const value = propertyData[key];
+        if (value !== null && value !== undefined) {
+          if ((key === 'features' || key === 'utilities') && Array.isArray(value)) {
+            // Handle features and utilities arrays
+            value.forEach((id: number, index: number) => {
+              formDataToSend.append(`${key}[${index}]`, String(id));
+            });
+          } else if (typeof value === 'boolean') {
+            // Handle boolean values
+            formDataToSend.append(key, value ? '1' : '0');
+          } else {
+            // Handle all other values
+            formDataToSend.append(key, String(value));
+          }
         }
-      };
+      });
 
-      // Add videos - filter out any videos with undefined/null file property
-      const videoFiles = selectedVideos
-        .filter(video => video && video.file && isFile(video.file))
-        .map(video => video.file);
-      if (videoFiles.length > 0) {
-        files.videos = videoFiles;
+      // Add images to FormData
+      if (selectedImages[mainImageIndex]) {
+        formDataToSend.append('main_image', selectedImages[mainImageIndex]);
       }
 
-      // Check if we need chunked upload or queue system
-      const allFiles = [
-        ...(files.mainImage ? [files.mainImage] : []),
-        ...(Array.isArray(files.images) ? files.images : []),
-        ...(Array.isArray(files.videos) ? files.videos : [])
-      ];
-      
-      // Use enhanced property service with static methods
-      const enhancedOptions = {
-        chunkThreshold: 10 * 1024 * 1024, // 10MB
-        enableCompression: true,
-        maxImageSize: 50 * 1024 * 1024, // 50MB
-        compressionQuality: 0.8,
-        throttleDelay: 200 // 200ms delay between requests
-      };
+      // Add gallery images (excluding the main image)
+      selectedImages.forEach((image, index) => {
+        if (index !== mainImageIndex) {
+          formDataToSend.append('images[]', image);
+        }
+      });
 
       try {
-        console.log('🚀 About to create property with data:', { ...propertyData, ...files });
-        console.log('📁 Files being sent:', files);
-        console.log('⚙️ Enhanced options:', enhancedOptions);
-        console.log('🔍 Calling EnhancedPropertyService.createProperty...');
-        
-        // Create property with all files using the enhanced service
-        // The backend will handle all file uploads as part of the property creation process
-        const result = await EnhancedPropertyService.createProperty({ ...propertyData, ...files }, enhancedOptions);
-        
-        console.log('✅ Property creation result:', result);
+        const result = await addProperty(formDataToSend);
 
         // Clear localStorage after successful submission
         clearFormDataFromStorage();
@@ -1432,7 +1342,7 @@ const AddProperty: React.FC = () => {
                 <DollarSign className="h-4 w-4 text-emerald-600" />
                 {t('addProperty.sectionTitles.priceAndCost')}
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="price" className="text-sm font-medium text-gray-700 mb-2 block">
                     {t('forms.price')} <span className="text-red-500">*</span>
@@ -1444,7 +1354,7 @@ const AddProperty: React.FC = () => {
                     placeholder={watch('listingType') === 'rent' ? t('forms.monthlyRent') : t('forms.salePrice')}
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.price ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'
                       }`}
-                    {...register('price', {
+                    {...register('price', { 
                   setValueAs: (value) => value === '' ? undefined : Number(value)
                 })}
                   />
@@ -1452,48 +1362,6 @@ const AddProperty: React.FC = () => {
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
                       {errors.price.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="currency" className="text-sm font-medium text-gray-700 mb-2 block">
-                    {t('forms.currency')} <span className="text-red-500">*</span>
-                  </Label>
-                  <Controller
-                    name="currency"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.currency ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'}`}>
-                          <SelectValue placeholder={t('forms.selectCurrency')} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
-                          {loadingCurrencies ? (
-                            <SelectItem key="loading" value="loading" disabled className="text-sm py-3 px-4">
-                              {t('common.loading')}
-                            </SelectItem>
-                          ) : (
-                            availableCurrencies.map((currency) => (
-                              <SelectItem
-                                key={currency.id}
-                                value={currency.code}
-                                className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer"
-                              >
-                                <span key={`currency-${currency.id}`}>
-                                  {currency.name}
-                                </span>
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.currency && (
-                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                      <X className="h-4 w-4" />
-                      {errors.currency.message}
                     </p>
                   )}
                 </div>
@@ -2082,24 +1950,6 @@ const AddProperty: React.FC = () => {
                 </div>
               )}
             </div>
-            
-            {/* Video Upload Section */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 mt-6">
-              <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
-                <FileText className="h-4 w-4 text-blue-600" />
-                {t('addProperty.sectionTitles.propertyVideos')}
-              </h3>
-              <p className="text-sm text-gray-600 mb-6 font-['Cairo',_'Tajawal',_sans-serif]">
-                {t('addProperty.videoUpload.uploadHighQuality')}
-              </p>
-              
-              <VideoUpload
-                selectedVideos={selectedVideos}
-                onVideosChange={setSelectedVideos}
-                maxVideos={1}
-                maxSizePerVideo={100 * 1024 * 1024} // 100MB
-              />
-            </div>
           </div>
         );
 
@@ -2593,8 +2443,6 @@ const AddProperty: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Removed upload queue status UI - now using direct property creation */}
 
         {/* Enhanced Form */}
         <form onSubmit={handleSubmit(onSubmit)}>

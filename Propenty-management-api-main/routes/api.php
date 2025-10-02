@@ -13,16 +13,12 @@ use App\Http\Controllers\Api\WindowTypeController;
 use App\Http\Controllers\Api\FloorTypeController;
 use App\Http\Controllers\Api\ViewTypeController;
 use App\Http\Controllers\Api\DirectionController;
-use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\HomeStatController;
 use App\Http\Controllers\Api\PropertyDetailController;
 use App\Http\Controllers\Api\AdvancedDetailsController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\ImageUploadController;
-use App\Http\Controllers\VideoUploadController;
-use App\Http\Controllers\PropertyMediaController;
-use App\Http\Controllers\Api\ChunkedUploadController;
 use App\Http\Controllers\PropertyStatisticsController;
 use App\Http\Controllers\SavedSearchController;
 use Illuminate\Http\Request;
@@ -97,10 +93,6 @@ Route::prefix('v1')->group(function () {
         // });
     });
 
-    // Currencies API
-    Route::get('/currencies', [CurrencyController::class, 'index']);
-    Route::get('/currencies/{identifier}', [CurrencyController::class, 'show']);
-
     // Property Routes - All made public for now
     Route::prefix('properties')->group(function () {
         Route::get('/', [PropertyController::class, 'index']);
@@ -108,20 +100,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/amenities', [PropertyController::class, 'amenities']);
         Route::get('/price-types', [PropertyController::class, 'priceTypes']);
         Route::get('/test', [PropertyController::class, 'test']);
-        Route::post('/test-video-upload', [PropertyController::class, 'testVideoUpload']);
 
         // More specific routes should come first to avoid conflicts
         Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite']);
         Route::get('/{property}/analytics', [PropertyController::class, 'analytics'])->middleware('auth:sanctum');
         Route::delete('/{property}/images/{mediaId}', [PropertyController::class, 'deleteImage'])->middleware('auth:sanctum');
-        Route::delete('/{property}/media/{mediaId}', [PropertyController::class, 'deleteMedia'])->middleware('auth:sanctum');
-        
-        // Property Media Routes - New endpoints for property-specific media
-        Route::get('/{property}/images', [PropertyMediaController::class, 'getPropertyImages']);
-        Route::get('/{property}/videos', [PropertyMediaController::class, 'getPropertyVideos']);
-        Route::get('/{property}/media', [PropertyMediaController::class, 'getPropertyMedia']);
-        Route::delete('/{property}/media', [PropertyMediaController::class, 'deletePropertyMedia'])->middleware('auth:sanctum');
-        
         Route::get('/{property:slug}/similar', [PropertyController::class, 'similar']);
         Route::get('/{property}/show', [PropertyController::class, 'show']); // Alternative route for ID
         Route::get('/{property:slug}', [PropertyController::class, 'show']);
@@ -325,20 +308,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/upload-base64', [ImageUploadController::class, 'uploadBase64Image']);
         Route::delete('/delete', [ImageUploadController::class, 'deleteImage']);
         Route::get('/info', [ImageUploadController::class, 'getImageInfo']);
-    });
-
-    // Video Upload Routes
-    Route::prefix('videos')->middleware(['auth:sanctum'])->group(function () {
-        Route::post('/upload', [VideoUploadController::class, 'uploadVideo']);
-        Route::post('/upload-multiple', [VideoUploadController::class, 'uploadMultipleVideos']);
-        Route::delete('/delete', [VideoUploadController::class, 'deleteVideo']);
-    });
-
-    // Chunked Upload Routes - For large files
-    Route::prefix('upload')->middleware(['auth:sanctum'])->group(function () {
-        Route::post('/initialize', [ChunkedUploadController::class, 'initiate']);
-        Route::post('/chunk', [ChunkedUploadController::class, 'uploadChunk']);
-        Route::post('/complete', [ChunkedUploadController::class, 'complete']);
     });
 
     // Contact Routes

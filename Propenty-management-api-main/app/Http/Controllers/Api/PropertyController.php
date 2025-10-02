@@ -55,7 +55,6 @@ class PropertyController extends Controller
             'imagesToRemove' => 'remove_images',
             'mainImage' => 'main_image',
             'main_image' => 'main_image', // Also accept snake_case
-            'currency' => 'currency', // Currency field
             // New property fields
             'floorNumber' => 'floor_number',
             'totalFloors' => 'total_floors',
@@ -474,11 +473,10 @@ class PropertyController extends Controller
                 }
             }
             
-            // Remove image and video fields from the database insertion as they should not be stored in the properties table
+            // Remove image fields from the database insertion as they should not be stored in the properties table
             unset($mappedData['main_image']);
             unset($mappedData['images']);
             unset($mappedData['base64_images']);
-            unset($mappedData['videos']); // Videos are handled separately via media library
             
 
             // Convert nearby_places array to JSON for PostgreSQL
@@ -515,41 +513,6 @@ class PropertyController extends Controller
                 'request_method' => $request->method(),
                 'content_type' => $request->header('Content-Type')
             ]);
-            
-            // Debug: Check for array fields that might cause conversion issues
-            $arrayFields = [];
-            $problematicFields = [];
-            foreach ($mappedData as $key => $value) {
-                if (is_array($value)) {
-                    $arrayFields[$key] = [
-                        'type' => gettype($value),
-                        'count' => count($value),
-                        'sample' => array_slice($value, 0, 3)
-                    ];
-                    // Check if this array field should be converted to JSON or handled differently
-                    if (!in_array($key, ['nearby_places']) && $key !== 'features' && $key !== 'utilities') {
-                        $problematicFields[] = $key;
-                    }
-                }
-            }
-            
-            if (!empty($arrayFields)) {
-                \Illuminate\Support\Facades\Log::warning('Array fields detected in property data', [
-                    'array_fields' => $arrayFields,
-                    'problematic_fields' => $problematicFields
-                ]);
-                
-                // Convert problematic array fields to JSON to prevent array-to-string conversion errors
-                foreach ($problematicFields as $fieldName) {
-                    if (isset($mappedData[$fieldName]) && is_array($mappedData[$fieldName])) {
-                        \Illuminate\Support\Facades\Log::info('Converting array field to JSON', [
-                            'field' => $fieldName,
-                            'original_value' => $mappedData[$fieldName]
-                        ]);
-                        $mappedData[$fieldName] = json_encode($mappedData[$fieldName]);
-                    }
-                }
-            }
             
             // Create the property using a PostgreSQL-safe approach
             try {
@@ -1293,147 +1256,5 @@ class PropertyController extends Controller
             ], 500);
         }
     }
-
-    /**
-     * Test video upload endpoint for debugging
-     */
-    public function testVideoUpload(Request $request): JsonResponse
-    {
-        try {
-            \Illuminate\Support\Facades\Log::info('Test video upload endpoint called', [
-                'method' => $request->method(),
-                'content_type' => $request->header('Content-Type'),
-                'has_videos' => $request->hasFile('videos'),
-                'all_files' => array_keys($request->allFiles()),
-                'php_config' => [
-                    'upload_max_filesize' => ini_get('upload_max_filesize'),
-                    'post_max_size' => ini_get('post_max_size'),
-                    'max_execution_time' => ini_get('max_execution_time'),
-                    'memory_limit' => ini_get('memory_limit')
-                ]
-            ]);
-
-            if (!$request->hasFile('videos')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No video files found in request',
-                    'debug' => [
-                        'all_files' => array_keys($request->allFiles()),
-                        'has_videos_input' => $request->has('videos'),
-                        'videos_input' => $request->input('videos')
-                    ]
-                ], 400);
-            }
-
-            $videos = $request->file('videos');
-            $results = [];
-
-            if (is_array($videos)) {
-                foreach ($videos as $index => $video) {
-                    $result = [
-                        'index' => $index,
-                        'original_name' => $video->getClientOriginalName(),
-                        'size' => $video->getSize(),
-                        'mime_type' => $video->getMimeType(),
-                        'is_valid' => $video->isValid(),
-                        'error_code' => $video->getError(),
-                        'error_message' => $video->getErrorMessage(),
-                        'path' => $video->getPathname(),
-                        'temp_name' => $video->getFilename()
-                    ];
-
-                    if ($video->isValid()) {
-                        // Try to move the file to a test location
-                        $testPath = storage_path('app/test_uploads/');
-                        if (!file_exists($testPath)) {
-                            mkdir($testPath, 0755, true);
-                        }
-                        
-                        $fileName = time() . '_test_' . $video->getClientOriginalName();
-                        $fullPath = $testPath . $fileName;
-                        
-                        if ($video->move($testPath, $fileName)) {
-                            $result['upload_success'] = true;
-                            $result['saved_path'] = $fullPath;
-                            $result['file_exists'] = file_exists($fullPath);
-                            $result['saved_size'] = file_exists($fullPath) ? filesize($fullPath) : 0;
-                        } else {
-                            $result['upload_success'] = false;
-                            $result['upload_error'] = 'Failed to move uploaded file';
-                        }
-                    } else {
-                        $result['upload_success'] = false;
-                        $result['validation_error'] = 'File is not valid';
-                    }
-
-                    $results[] = $result;
-                }
-            } else {
-                // Single video
-                $result = [
-                    'original_name' => $videos->getClientOriginalName(),
-                    'size' => $videos->getSize(),
-                    'mime_type' => $videos->getMimeType(),
-                    'is_valid' => $videos->isValid(),
-                    'error_code' => $videos->getError(),
-                    'error_message' => $videos->getErrorMessage(),
-                    'path' => $videos->getPathname(),
-                    'temp_name' => $videos->getFilename()
-                ];
-
-                if ($videos->isValid()) {
-                    $testPath = storage_path('app/test_uploads/');
-                    if (!file_exists($testPath)) {
-                        mkdir($testPath, 0755, true);
-                    }
-                    
-                    $fileName = time() . '_test_' . $videos->getClientOriginalName();
-                    $fullPath = $testPath . $fileName;
-                    
-                    if ($videos->move($testPath, $fileName)) {
-                        $result['upload_success'] = true;
-                        $result['saved_path'] = $fullPath;
-                        $result['file_exists'] = file_exists($fullPath);
-                        $result['saved_size'] = file_exists($fullPath) ? filesize($fullPath) : 0;
-                    } else {
-                        $result['upload_success'] = false;
-                        $result['upload_error'] = 'Failed to move uploaded file';
-                    }
-                } else {
-                    $result['upload_success'] = false;
-                    $result['validation_error'] = 'File is not valid';
-                }
-
-                $results = [$result];
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Video upload test completed',
-                'results' => $results,
-                'php_limits' => [
-                    'upload_max_filesize' => ini_get('upload_max_filesize'),
-                    'post_max_size' => ini_get('post_max_size'),
-                    'max_execution_time' => ini_get('max_execution_time'),
-                    'memory_limit' => ini_get('memory_limit')
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Test video upload failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Test video upload failed',
-                'error' => $e->getMessage(),
-                'trace' => config('app.debug') ? $e->getTraceAsString() : null
-            ], 500);
-        }
-    }
-
-
 
 }
