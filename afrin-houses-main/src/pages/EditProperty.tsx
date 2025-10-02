@@ -91,6 +91,7 @@ const EditProperty: React.FC = () => {
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('');
+  const [mainImageIndex, setMainImageIndex] = useState<number>(0);
   
   // Document types state
   const [documentTypes, setDocumentTypes] = useState<PropertyDocumentType[]>([]);
@@ -316,6 +317,18 @@ const EditProperty: React.FC = () => {
     }
   }, [watch('listingType')]);
 
+  // Function to select main image from existing images
+  const selectMainImageFromExisting = (index: number) => {
+    setMainImageIndex(index);
+  };
+
+  // Function to select main image from new images
+  const selectMainImageFromNew = (index: number) => {
+    // Calculate the index considering existing images
+    const adjustedIndex = existingImages.filter(img => !imagesToRemove.includes(img.id)).length + index;
+    setMainImageIndex(adjustedIndex);
+  };
+
   const handleFeatureToggle = (feature: string) => {
     setSelectedFeatures(prev =>
       prev.includes(feature)
@@ -357,10 +370,33 @@ const EditProperty: React.FC = () => {
   const removeNewImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
     setImagePreviewUrls(prev => prev.filter((_, i) => i !== index));
+    
+    // Adjust main image index if necessary
+    const adjustedIndex = existingImages.filter(img => !imagesToRemove.includes(img.id)).length + index;
+    if (adjustedIndex === mainImageIndex) {
+      // If removing the main image, set the first remaining image as main
+      setMainImageIndex(0);
+    } else if (adjustedIndex < mainImageIndex) {
+      // If removing an image before the main image, adjust the index
+      setMainImageIndex(prev => prev - 1);
+    }
   };
 
   const removeExistingImage = (imageId: string) => {
     setImagesToRemove(prev => [...prev, imageId]);
+    
+    // Find the index of the removed image
+    const removedIndex = existingImages.findIndex(img => img.id === imageId);
+    if (removedIndex === mainImageIndex) {
+      // If removing the main image, set the first remaining image as main
+      const remainingImages = existingImages.filter(img => !imagesToRemove.includes(img.id) && img.id !== imageId);
+      if (remainingImages.length > 0 || selectedImages.length > 0) {
+        setMainImageIndex(0);
+      }
+    } else if (removedIndex < mainImageIndex) {
+      // If removing an image before the main image, adjust the index
+      setMainImageIndex(prev => prev - 1);
+    }
   };
 
   const restoreExistingImage = (imageId: string) => {
@@ -371,6 +407,37 @@ const EditProperty: React.FC = () => {
     if (!property) return;
 
     try {
+      // Prepare files for upload
+      const files: { [key: string]: File | File[] } = {};
+      
+      // Determine which image should be the main image
+      const remainingExistingImages = existingImages.filter(img => !imagesToRemove.includes(img.id));
+      const totalImages = [...remainingExistingImages, ...selectedImages];
+      
+      if (totalImages.length > 0) {
+        // If mainImageIndex points to an existing image
+        if (mainImageIndex < remainingExistingImages.length) {
+          // Main image is from existing images - we'll handle this in the backend
+          // by not removing it from the main_image collection
+        } else {
+          // Main image is from new images
+          const newImageIndex = mainImageIndex - remainingExistingImages.length;
+          if (newImageIndex >= 0 && newImageIndex < selectedImages.length) {
+            files.mainImage = selectedImages[newImageIndex];
+            // Remove the main image from the regular images array
+            const galleryImages = selectedImages.filter((_, index) => index !== newImageIndex);
+            if (galleryImages.length > 0) {
+              files.images = galleryImages;
+            }
+          }
+        }
+      }
+      
+      // If no main image was set from new images, add all new images as gallery images
+      if (!files.mainImage && selectedImages.length > 0) {
+        files.images = selectedImages;
+      }
+
       const updatedProperty: any = {
         title: data.title,
         address: data.address,
@@ -397,8 +464,13 @@ const EditProperty: React.FC = () => {
         contactPhone: data.contactPhone,
         contactEmail: data.contactEmail,
         // Image handling
-        images: selectedImages, // New images to upload
         imagesToRemove: imagesToRemove, // Existing images to remove
+        mainImageIndex: mainImageIndex, // Index of the main image
+        // Video handling
+        videos: selectedVideos.map(video => video.file), // New videos to upload
+        videosToRemove: videosToRemove, // Existing videos to remove
+        // Add files to the property data
+        ...files
       };
 
       // Update the property using the API service
@@ -900,13 +972,18 @@ const EditProperty: React.FC = () => {
                       New Images ({selectedImages.length})
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {imagePreviewUrls.map((url, index) => (
+                      {imagePreviewUrls.map((url, index) => {
+                        const isMainImage = mainImageIndex === index + existingImages.length;
+                        return (
                         <div key={index} className="relative group">
                           <FixedImage
                             src={url}
                             alt={`New image ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg border shadow-sm"
+                            className={`w-full h-32 object-cover rounded-lg border shadow-sm cursor-pointer ${
+                              isMainImage ? 'ring-4 ring-[#067977]' : ''
+                            }`}
                             showLoadingSpinner={true}
+                            onClick={() => selectMainImageFromNew(index)}
                           />
                           <button
                             type="button"
@@ -915,8 +992,21 @@ const EditProperty: React.FC = () => {
                           >
                             <X className="h-4 w-4" />
                           </button>
+                          {isMainImage && (
+                            <div className="absolute bottom-2 left-2 bg-[#067977] text-white text-xs px-2 py-1 rounded">
+                              Main Photo
+                            </div>
+                          )}
+                          {!isMainImage && (
+                            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-gray-800 text-xs px-2 py-1 rounded shadow-lg">
+                                Click to set as main
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

@@ -35,12 +35,23 @@ class PropertyResource extends JsonResource
             'title' => $this->ensureUtf8($this->title),
             'description' => $this->ensureUtf8($this->description),
             'slug' => $this->ensureUtf8($this->slug),
-            'property_type' => $this->ensureUtf8($this->getAttributeValue('property_type')),
+            'property_type' => $this->ensureUtf8($this->property_type_name),
             'listing_type' => $this->ensureUtf8($this->listing_type),
             
             // Property details - flat structure for frontend compatibility
-            'propertyType' => $this->getAttributeValue('property_type'), // Frontend expects camelCase
+            'propertyType' => $this->when($this->relationLoaded('propertyType'), function () {
+                return $this->propertyType ? [
+                    'id' => $this->propertyType->id,
+                    'name' => $this->propertyType->name,
+                    'name_ar' => $this->propertyType->name_ar,
+                    'name_en' => $this->propertyType->name,
+                    'name_ku' => $this->propertyType->name_ku,
+                    'slug' => $this->propertyType->slug,
+                    'localized_name' => $this->propertyType->getLocalizedName(request()->get('lang', 'ar')),
+                ] : null;
+            }, $this->getAttributeValue('property_type')), // Fallback to string value
             'listingType' => $this->listing_type, // Frontend expects camelCase
+            'property_type_id' => $this->property_type_id,
             'bedrooms' => (int) ($this->bedrooms ?? 0),
             'bathrooms' => (float) ($this->bathrooms ?? 0),
             'square_feet' => (int) ($this->square_feet ?? 0),
@@ -63,7 +74,7 @@ class PropertyResource extends JsonResource
                 'amount' => $this->price,
                 'formatted' => $this->buildFormattedPrice(),
                 'type' => $this->ensureUtf8($this->price_type ?? 'total'),
-                'currency' => 'USD',
+                'currency' => $this->currency ?? 'TRY',
             ],
             
             // Location - both nested and flat for compatibility
@@ -90,8 +101,8 @@ class PropertyResource extends JsonResource
             ],
             
             // Features - ensure always returns array
-            'features' => $this->when($this->relationLoaded('features'), function () {
-                return $this->features->map(function ($feature) {
+            'features' => $this->relationLoaded('features') ? 
+                $this->features->map(function ($feature) {
                     return [
                         'id' => $feature->id,
                         'name_ar' => $feature->name_ar,
@@ -100,10 +111,9 @@ class PropertyResource extends JsonResource
                         'icon' => $feature->icon,
                         'category' => $feature->category,
                     ];
-                })->toArray();
-            }),
-            'utilities' => $this->when($this->relationLoaded('utilities'), function () {
-                return $this->utilities->map(function ($utility) {
+                })->toArray() : [],
+            'utilities' => $this->relationLoaded('utilities') ? 
+                $this->utilities->map(function ($utility) {
                     return [
                         'id' => $utility->id,
                         'name_ar' => $utility->name_ar,
@@ -112,8 +122,7 @@ class PropertyResource extends JsonResource
                         'icon' => $utility->icon,
                         'category' => $utility->category,
                     ];
-                })->toArray();
-            }),
+                })->toArray() : [],
             'nearby_places' => is_array($this->nearby_places) ? $this->nearby_places : 
                             (is_string($this->nearby_places) ? json_decode($this->nearby_places, true) : []),
             
@@ -238,7 +247,8 @@ class PropertyResource extends JsonResource
      */
     private function buildFormattedPrice()
     {
-        $price = '$' . number_format($this->price);
+        $currencySymbol = $this->getCurrencySymbol();
+        $price = $currencySymbol . number_format($this->price);
         
         if ($this->listing_type === 'rent') {
             switch ($this->price_type) {
@@ -252,6 +262,21 @@ class PropertyResource extends JsonResource
         }
 
         return $price;
+    }
+
+    /**
+     * Get currency symbol based on currency code.
+     */
+    private function getCurrencySymbol(): string
+    {
+        $currencySymbols = [
+            'USD' => '$',
+            'EUR' => '€',
+            'TRY' => '₺',
+            'SYP' => 'ل.س',
+        ];
+
+        return $currencySymbols[$this->currency] ?? '$';
     }
 
 }

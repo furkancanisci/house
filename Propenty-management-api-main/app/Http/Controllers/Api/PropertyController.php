@@ -374,7 +374,7 @@ class PropertyController extends Controller
         ]);
 
         // Load relationships
-        $query->with(['documentType', 'features', 'utilities', 'priceType']);
+        $query->with(['documentType', 'features', 'utilities', 'priceType', 'media']);
 
         // Add debug logging before pagination
         \Illuminate\Support\Facades\Log::info('Query before pagination:', [
@@ -573,83 +573,68 @@ class PropertyController extends Controller
             $mainImageFile = $request->file('main_image') ?? $request->file('mainImage');
             if ($mainImageFile) {
                 try {
+                    // Clear any existing main image first
+                    $property->clearMediaCollection('main_image');
+                    
                     \Illuminate\Support\Facades\Log::info('Attempting to upload main image', [
                         'filename' => $mainImageFile->getClientOriginalName(),
                         'size' => $mainImageFile->getSize(),
-                        'mime' => $mainImageFile->getMimeType()
+                        'mime' => $mainImageFile->getMimeType(),
+                        'property_id' => $property->id
                     ]);
                     
                     $media = $property->addMedia($mainImageFile)
-                        ->usingName($mainImageFile->getClientOriginalName())
+                        ->usingName('Main Property Image')
                         ->usingFileName(time() . '_main_' . $mainImageFile->getClientOriginalName())
                         ->toMediaCollection('main_image');
                     
                     \Illuminate\Support\Facades\Log::info('Main image uploaded successfully', [
                         'media_id' => $media->id,
                         'url' => $media->getUrl(),
-                        'collection' => 'main_image'
+                        'collection' => 'main_image',
+                        'property_id' => $property->id
                     ]);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to upload main image', [
                         'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'trace' => $e->getTraceAsString(),
+                        'property_id' => $property->id
                     ]);
+                    // Don't throw exception, just log the error and continue
                 }
             } else {
-                \Illuminate\Support\Facades\Log::warning('No main image file found in request', [
+                \Illuminate\Support\Facades\Log::info('No main image file found in request', [
                     'has_main_image' => $request->hasFile('main_image'),
                     'has_mainImage' => $request->hasFile('mainImage'),
-                    'all_files' => array_keys($request->allFiles())
+                    'all_files' => array_keys($request->allFiles()),
+                    'property_id' => $property->id
                 ]);
             }
-            
-            // Handle multiple image uploads
-            if ($request->hasFile('images')) {
-                try {
-                    $images = $request->file('images');
-                    $uploadedCount = 0;
-                    
-                    if (is_array($images)) {
-                        foreach ($images as $index => $image) {
-                            $media = $property->addMedia($image)
-                                ->usingName($image->getClientOriginalName())
-                                ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
-                                ->toMediaCollection('images');
-                            $uploadedCount++;
-                            
-                            \Illuminate\Support\Facades\Log::info('Gallery image uploaded', [
-                                'index' => $index,
-                                'media_id' => $media->id,
-                                'url' => $media->getUrl()
-                            ]);
-                        }
-                    } else {
-                        // Single image file
-                        $media = $property->addMedia($images)
-                            ->usingName($images->getClientOriginalName())
-                            ->usingFileName(time() . '_single_' . $images->getClientOriginalName())
-                            ->toMediaCollection('images');
-                        $uploadedCount = 1;
-                        
-                        \Illuminate\Support\Facades\Log::info('Single gallery image uploaded', [
-                            'media_id' => $media->id,
-                            'url' => $media->getUrl()
-                        ]);
+
+            // Remove specific images if specified
+            if ($request->has('remove_images')) {
+                $removeImages = is_array($request->remove_images) 
+                    ? $request->remove_images 
+                    : [$request->remove_images];
+                
+                foreach ($removeImages as $mediaId) {
+                    $media = $property->media()->find($mediaId);
+                    if ($media) {
+                        $media->delete();
                     }
-                    
-                    \Illuminate\Support\Facades\Log::info('Gallery images uploaded successfully', [
-                        'count' => $uploadedCount
-                    ]);
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Failed to upload gallery images', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
                 }
-            } else {
-                \Illuminate\Support\Facades\Log::info('No gallery images in request');
             }
-            
+
+            // Handle new image uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+                    $property->addMedia($image)
+                        ->usingName($image->getClientOriginalName())
+                        ->usingFileName(time() . '_' . $index . '_' . $image->getClientOriginalName())
+                        ->toMediaCollection('images');
+                }
+            }
+
             // Handle base64 image uploads if present
             if ($request->has('base64_images')) {
                 foreach ($request->base64_images as $index => $base64Image) {
@@ -678,27 +663,92 @@ class PropertyController extends Controller
                     }
                 }
             }
-            
-            // Load the property with its relationships
-            $property->load(['user', 'media', 'documentType', 'features', 'utilities']);
-            
-            // Sync features and utilities relationships
+
+            // Handle video uploads
+            if ($request->hasFile('videos')) {
+                try {
+                    \Illuminate\Support\Facades\Log::info('Processing video uploads', [
+                        'video_count' => count($request->file('videos')),
+                        'property_id' => $property->id
+                    ]);
+                    
+                    foreach ($request->file('videos') as $index => $video) {
+                        try {
+                            \Illuminate\Support\Facades\Log::info('Attempting to upload video', [
+                                'index' => $index,
+                                'filename' => $video->getClientOriginalName(),
+                                'size' => $video->getSize(),
+                                'mime' => $video->getMimeType(),
+                                'is_valid' => $video->isValid(),
+                                'property_id' => $property->id
+                            ]);
+                            
+                            if ($video->isValid()) {
+                                $media = $property->addMedia($video)
+                                    ->usingName('Property Video ' . ($index + 1))
+                                    ->usingFileName(time() . '_video_' . $index . '_' . $video->getClientOriginalName())
+                                    ->toMediaCollection('videos');
+                                
+                                \Illuminate\Support\Facades\Log::info('Video uploaded successfully', [
+                                    'media_id' => $media->id,
+                                    'url' => $media->getUrl(),
+                                    'collection' => 'videos',
+                                    'property_id' => $property->id,
+                                    'index' => $index
+                                ]);
+                            } else {
+                                \Illuminate\Support\Facades\Log::warning('Invalid video file', [
+                                    'index' => $index,
+                                    'filename' => $video->getClientOriginalName(),
+                                    'error_code' => $video->getError(),
+                                    'error_message' => $video->getErrorMessage(),
+                                    'property_id' => $property->id
+                                ]);
+                            }
+                        } catch (\Exception $videoException) {
+                            \Illuminate\Support\Facades\Log::error('Failed to upload individual video', [
+                                'index' => $index,
+                                'filename' => $video->getClientOriginalName(),
+                                'error' => $videoException->getMessage(),
+                                'trace' => $videoException->getTraceAsString(),
+                                'property_id' => $property->id
+                            ]);
+                            // Continue with other videos even if one fails
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to process video uploads', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'property_id' => $property->id
+                    ]);
+                    // Don't throw exception, just log the error and continue
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::info('No video files found in request', [
+                    'has_videos' => $request->hasFile('videos'),
+                    'all_files' => array_keys($request->allFiles()),
+                    'property_id' => $property->id
+                ]);
+            }
+
+            // Sync features and utilities relationships if provided
             if (!empty($features)) {
                 $property->features()->sync($features);
             }
             if (!empty($utilities)) {
                 $property->utilities()->sync($utilities);
             }
-            
-            // Invalidate search results cache since we added a new property
-            $this->cacheService->invalidateSearchResults();
-            
-            // Return the response
+
+            // Load relationships for the updated property
+            $property->load(['user', 'media', 'favoritedByUsers', 'documentType', 'features', 'utilities']);
+
+            // Clear cache for this property and related caches
+            $this->cacheService->clearPropertyCache($property->id);
+
             return response()->json([
-                'message' => 'Property created successfully and is pending admin approval',
-                'property' => new PropertyResource($property->fresh()->load(['user', 'media', 'documentType', 'features', 'utilities'])),
-                'status' => 'pending',
-                'note' => 'Your property has been submitted for review and will be published after admin approval.'
+                'message' => 'Property created successfully.',
+                'property' => new PropertyResource($property),
             ], 201);
             
         } catch (\Exception $e) {
@@ -773,7 +823,18 @@ class PropertyController extends Controller
         ]);
 
         // Load relationships for the property detail view
-        $property->load(['user', 'media', 'favoritedByUsers', 'documentType', 'features', 'utilities']);
+        $property->load(['user', 'media', 'favoritedByUsers', 'documentType', 'features', 'utilities', 'propertyType', 'priceType']);
+
+        // Debug logging for features and utilities
+        \Illuminate\Support\Facades\Log::info('Property features and utilities loaded', [
+            'property_id' => $property->id,
+            'features_count' => $property->features->count(),
+            'utilities_count' => $property->utilities->count(),
+            'features_loaded' => $property->relationLoaded('features'),
+            'utilities_loaded' => $property->relationLoaded('utilities'),
+            'features_data' => $property->features->map(function($f) { return ['id' => $f->id, 'name_ar' => $f->name_ar]; }),
+            'utilities_data' => $property->utilities->map(function($u) { return ['id' => $u->id, 'name_ar' => $u->name_ar]; })
+        ]);
 
         return response()->json([
             'property' => new PropertyResource($property),

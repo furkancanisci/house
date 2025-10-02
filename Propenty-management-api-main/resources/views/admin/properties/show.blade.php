@@ -33,7 +33,7 @@
                                 <div class="carousel-inner">
                                     @foreach($property->getMedia('images') as $index => $media)
                                     <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                                        <img src="{{ $media->getUrl('large') }}" class="d-block w-100" alt="Property Image" style="height: 400px; object-fit: cover;">
+                                        <img src="{{ $media->getUrl() }}" class="d-block w-100" alt="Property Image" style="height: 400px; object-fit: cover;">
                                     </div>
                                     @endforeach
                                 </div>

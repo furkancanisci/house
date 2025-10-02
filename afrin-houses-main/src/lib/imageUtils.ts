@@ -134,14 +134,95 @@ export const processPropertyImages = (
   let mainImage = '';
   let images: string[] = [];
 
-  // Check if images is an object with main and gallery (API v2 structure)
-  if (property.images && typeof property.images === 'object' && !Array.isArray(property.images)) {
-    // Handle nested structure from API
-    if (property.images.main) {
-      mainImage = fixImageUrl(property.images.main);
+  // 1. PRIORITY: Check property.media array for real uploaded images
+  if (property.media && Array.isArray(property.media) && property.media.length > 0) {
+    console.log('🎯 Processing property.media with', property.media.length, 'items');
+    
+    const mainImageCandidates: Array<{url: string, priority: number, source: string}> = [];
+    const regularImages: string[] = [];
+    
+    property.media.forEach((mediaItem: any) => {
+      console.log('📷 Processing media item:', {
+        id: mediaItem.id,
+        collection_name: mediaItem.collection_name,
+        file_name: mediaItem.file_name,
+        mime_type: mediaItem.mime_type,
+        original_url: mediaItem.original_url,
+        url: mediaItem.url
+      });
+      
+      // Only process image files
+      if (mediaItem.mime_type && mediaItem.mime_type.startsWith('image/')) {
+        let imageUrl = '';
+        
+        // Use original URL or url field directly (no conversions)
+        imageUrl = mediaItem.original_url || mediaItem.url || '';
+        
+        if (imageUrl) {
+          const fixedUrl = fixImageUrl(imageUrl);
+          
+          // Check for main image indicators - PRIORITIZE collection_name
+          const fileName = mediaItem.file_name || mediaItem.filename || mediaItem.name || '';
+          const isMainImageByCollection = mediaItem.collection_name === 'main_image' || 
+                                        mediaItem.collection_name === 'main';
+          const isMainImageByFilename = fileName.toLowerCase().includes('main');
+          const isFeaturedImage = fileName.toLowerCase().includes('featured');
+          
+          console.log('🔍 Image analysis:', {
+            fileName,
+            isMainImageByFilename,
+            isMainImageByCollection,
+            isFeaturedImage,
+            fixedUrl,
+            collection: mediaItem.collection_name
+          });
+          
+          // Categorize images by priority - MAIN_IMAGE COLLECTION HAS HIGHEST PRIORITY
+          if (isMainImageByCollection) {
+            mainImageCandidates.push({ url: fixedUrl, priority: 1, source: 'collection_main_image' });
+            console.log('✅ Found MAIN image by collection name (main_image):', fixedUrl);
+          } else if (isMainImageByFilename) {
+            mainImageCandidates.push({ url: fixedUrl, priority: 2, source: 'filename_main' });
+            console.log('✅ Found MAIN image by filename (contains "main"):', fixedUrl);
+          } else if (isFeaturedImage) {
+            mainImageCandidates.push({ url: fixedUrl, priority: 3, source: 'featured' });
+            console.log('✅ Found featured image:', fixedUrl);
+          } else {
+            // Only add to regular images if it's not in main_image collection
+            if (mediaItem.collection_name !== 'main_image' && mediaItem.collection_name !== 'main') {
+              regularImages.push(fixedUrl);
+              console.log('📷 Added regular image:', fixedUrl);
+            }
+          }
+          
+          // Add to general images array only if not main image
+          if (!isMainImageByCollection) {
+            images.push(fixedUrl);
+          }
+        }
+      }
+    });
+    
+    // Select the best main image candidate
+    if (mainImageCandidates.length > 0) {
+      // Sort by priority (lower number = higher priority)
+      mainImageCandidates.sort((a, b) => a.priority - b.priority);
+      mainImage = mainImageCandidates[0].url;
+      foundMainImage = true;
+      hasRealImages = true; // Mark that we found real images
+      console.log('✅ Selected main image:', mainImage, 'from source:', mainImageCandidates[0].source);
+    } else if (regularImages.length > 0) {
+      // Use first regular image as fallback
+      mainImage = regularImages[0];
+      foundMainImage = true;
+      hasRealImages = true; // Mark that we found real images
+      console.log('✅ Using first regular image as main image fallback:', mainImage);
     }
-    if (property.images.gallery && Array.isArray(property.images.gallery)) {
-      images = property.images.gallery.map((url: string) => fixImageUrl(url)).filter(Boolean);
+    
+    // If we found any images from media, mark as having real images
+    if (images.length > 0 || mainImageCandidates.length > 0) {
+      hasRealImages = true;
+      console.log('✅ Found', images.length + mainImageCandidates.length, 'real images from property.media');
     }
   }
 

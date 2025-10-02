@@ -177,6 +177,8 @@
       "commercial": "تجاري",
       "retail": "متجر",
       "land": "أرض",
+      "factory": "مصنع",
+      "industrial-land": "أرض صناعية",
       "description": "الوصف",
       "perMonth": "شهر",
       "more": "المزيد",

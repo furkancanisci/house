@@ -820,14 +820,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           });
         }
         
-        // Then try to refresh the session
-        if (token) {
+        // Prioritize user data loading - run in parallel with properties
+        const userPromise = token ? (async () => {
           try {
-
             const user = await authService.getCurrentUser();
             
             if (user) {
-
               // Transform API response to frontend user format
               const frontendUser: User = {
                 id: user.id?.toString() || '',
@@ -850,36 +848,28 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 created_at: user.created_at || new Date().toISOString()
               };
               
-
               dispatch({ type: 'SET_USER', payload: frontendUser });
               
-              // Load user's favorites in parallel
-
-              await Promise.all([
-                loadUserFavorites()
-              ]);
+              // Load user's favorites after setting user
+              await loadUserFavorites();
             } else {
-
               authService.clearAuthData();
               dispatch({ type: 'SET_USER', payload: null });
             }
           } catch (error) {
-
             // If we get a 401, clear the invalid token
             if ((error as any)?.response?.status === 401) {
-
               authService.clearAuthData();
               dispatch({ type: 'SET_USER', payload: null });
             }
           }
-        } else {
-
-          dispatch({ type: 'SET_USER', payload: null });
-        }
+        })() : Promise.resolve();
         
-        // Load properties regardless of authentication status
-
-        await loadProperties();
+        // Load properties and user data in parallel for better performance
+        await Promise.all([
+          loadProperties(),
+          userPromise
+        ]);
 
       } catch (error) {
 

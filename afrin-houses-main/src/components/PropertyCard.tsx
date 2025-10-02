@@ -186,13 +186,26 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     return (
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-[#067977] lg:min-h-[200px] rounded-lg">
         <div className="flex flex-col lg:flex-row lg:items-center lg:h-full">
-          {/* Image Section */}
-          <div className="relative lg:flex-shrink-0 lg:self-center lg:m-2">
-            <FixedImage
-              className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
-              src={mainImage}
-              alt={property.title}
-            />
+          {/* Image/Video Section */}
+          <div className="relative lg:flex-shrink-0 lg:self-center lg:m-2 lg:max-w-64">
+            {mainImage ? (
+              <FixedImage
+                className="h-48 w-full lg:w-64 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
+                src={mainImage}
+                alt={property.title}
+              />
+            ) : mainVideo && !videoError ? (
+              <VideoPlayer 
+                video={mainVideo}
+                className="h-48 w-full lg:w-64 rounded-t-lg lg:rounded-lg shadow-sm"
+              />
+            ) : (
+              <FixedImage
+                className="h-48 w-full lg:w-64 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
+                src="/placeholder-property.jpg"
+                alt={property.title}
+              />
+            )}
             {/* Listing Type Badge */}
             <Badge
               className={`absolute top-1.5 left-1.5 ${property.listingType === 'rent' ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-to-r from-[#067977] to-[#067977]/80'
@@ -330,21 +343,33 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-[#067977] rounded-lg">
       <Link to={`/property/${propertySlug}`}>
         <div className="relative">
-          {useGallery && images && images.length > 1 ? (
-            <PropertyImageGallery
-              images={images}
-              alt={property.title}
-              containerClassName="h-32 sm:h-36"
-              className="w-full h-full object-cover"
-              showThumbnails={false}
-              enableZoom={false}
-              propertyId={property.id}
+          {mainImage ? (
+            useGallery && images && images.length > 1 ? (
+              <PropertyImageGallery
+                images={images}
+                alt={property.title}
+                containerClassName="h-48 max-h-48"
+                className="w-full h-full object-cover"
+                showThumbnails={false}
+                enableZoom={false}
+              />
+            ) : (
+              <FixedImage
+                src={mainImage}
+                alt={property.title}
+                className="h-48 max-h-48 w-full object-cover"
+              />
+            )
+          ) : mainVideo && !videoError ? (
+            <VideoPlayer 
+              video={mainVideo}
+              className="h-48 max-h-48 w-full"
             />
           ) : (
             <FixedImage
               src={mainImage}
               alt={property.title}
-              className="h-32 sm:h-36 w-full object-cover"
+              className="h-48 max-h-48 w-full object-cover"
             />
           )}
           <Badge

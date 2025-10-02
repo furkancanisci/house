@@ -155,7 +155,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function getAvatarThumbnailUrlAttribute(): ?string
     {
         $media = $this->getFirstMedia('avatar');
-        return $media ? ($media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : $media->getUrl()) : null;
+        return $media ? $media->getUrl() : null;
     }
 
     /**
