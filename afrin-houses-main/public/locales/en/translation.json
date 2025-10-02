@@ -308,6 +308,7 @@
       "land": "Land",
       "retail": "Retail",
       "factory": "Factory",
+      "industrial-land": "Industrial Land",
       "description": "Description"
     },
     "listingTypes": {

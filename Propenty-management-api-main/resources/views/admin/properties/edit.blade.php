@@ -661,7 +661,7 @@
                             @foreach($property->media as $media)
                             <div class="col-md-3 mb-3">
                                 <div class="position-relative image-container">
-                                    <img src="{{ $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl() }}" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">
+                                    <img src="{{ $media->getUrl() }}" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">
                                     <div class="custom-control custom-checkbox position-absolute" style="top: 5px; right: 5px; background: rgba(255,255,255,0.9); border-radius: 3px; padding: 3px 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                         <input type="checkbox" name="remove_images[]" value="{{ $media->id }}" class="custom-control-input" id="remove_{{ $media->id }}">
                                         <label class="custom-control-label text-danger" for="remove_{{ $media->id }}" style="font-size: 11px; font-weight: bold; margin-bottom: 0;">

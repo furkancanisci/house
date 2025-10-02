@@ -131,6 +131,22 @@ class PropertyType extends Model
     }
 
     /**
+     * Get localized name based on language parameter
+     */
+    public function getLocalizedName(string $lang = 'ar'): string
+    {
+        switch ($lang) {
+            case 'ar':
+                return $this->name_ar ?: $this->name;
+            case 'ku':
+                return $this->name_ku ?: $this->name_ar ?: $this->name;
+            case 'en':
+            default:
+                return $this->name;
+        }
+    }
+
+    /**
      * Get full category path with preferred names.
      */
     public function getFullPathAttribute(): string

@@ -180,11 +180,11 @@ export const processPropertyImages = (
         if (imageUrl) {
           const fixedUrl = fixImageUrl(imageUrl);
           
-          // Check for main image indicators in filename or name
+          // Check for main image indicators - PRIORITIZE collection_name
           const fileName = mediaItem.file_name || mediaItem.filename || mediaItem.name || '';
-          const isMainImageByFilename = fileName.toLowerCase().includes('main');
           const isMainImageByCollection = mediaItem.collection_name === 'main_image' || 
                                         mediaItem.collection_name === 'main';
+          const isMainImageByFilename = fileName.toLowerCase().includes('main');
           const isFeaturedImage = fileName.toLowerCase().includes('featured');
           
           console.log('🔍 Image analysis:', {
@@ -196,7 +196,7 @@ export const processPropertyImages = (
             collection: mediaItem.collection_name
           });
           
-          // Categorize images by priority
+          // Categorize images by priority - MAIN_IMAGE COLLECTION HAS HIGHEST PRIORITY
           if (isMainImageByCollection) {
             mainImageCandidates.push({ url: fixedUrl, priority: 1, source: 'collection_main_image' });
             console.log('✅ Found MAIN image by collection name (main_image):', fixedUrl);
@@ -207,12 +207,17 @@ export const processPropertyImages = (
             mainImageCandidates.push({ url: fixedUrl, priority: 3, source: 'featured' });
             console.log('✅ Found featured image:', fixedUrl);
           } else {
-            regularImages.push(fixedUrl);
-            console.log('📷 Added regular image:', fixedUrl);
+            // Only add to regular images if it's not in main_image collection
+            if (mediaItem.collection_name !== 'main_image' && mediaItem.collection_name !== 'main') {
+              regularImages.push(fixedUrl);
+              console.log('📷 Added regular image:', fixedUrl);
+            }
           }
           
-          // Add to general images array
-          images.push(fixedUrl);
+          // Add to general images array only if not main image
+          if (!isMainImageByCollection) {
+            images.push(fixedUrl);
+          }
         }
       }
     });
@@ -234,9 +239,9 @@ export const processPropertyImages = (
     }
     
     // If we found any images from media, mark as having real images
-    if (images.length > 0) {
+    if (images.length > 0 || mainImageCandidates.length > 0) {
       hasRealImages = true;
-      console.log('✅ Found', images.length, 'real images from property.media');
+      console.log('✅ Found', images.length + mainImageCandidates.length, 'real images from property.media');
     }
   }
 

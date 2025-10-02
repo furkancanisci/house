@@ -301,21 +301,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-[#067977] lg:min-h-[200px] rounded-lg">
         <div className="flex flex-col lg:flex-row lg:items-center lg:h-full">
           {/* Image/Video Section */}
-          <div className="relative lg:flex-shrink-0 lg:self-center lg:m-2">
+          <div className="relative lg:flex-shrink-0 lg:self-center lg:m-2 lg:max-w-64">
             {mainImage ? (
               <FixedImage
-                className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
+                className="h-48 w-full lg:w-64 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
                 src={mainImage}
                 alt={property.title}
               />
             ) : mainVideo && !videoError ? (
               <VideoPlayer 
                 video={mainVideo}
-                className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 rounded-t-lg lg:rounded-lg shadow-sm"
+                className="h-48 w-full lg:w-64 rounded-t-lg lg:rounded-lg shadow-sm"
               />
             ) : (
               <FixedImage
-                className="h-32 sm:h-40 lg:h-36 w-full lg:w-48 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
+                className="h-48 w-full lg:w-64 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
                 src="/placeholder-property.jpg"
                 alt={property.title}
               />
@@ -462,7 +462,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
               <PropertyImageGallery
                 images={images}
                 alt={property.title}
-                containerClassName="h-32 sm:h-36"
+                containerClassName="h-48 max-h-48"
                 className="w-full h-full object-cover"
                 showThumbnails={false}
                 enableZoom={false}
@@ -471,19 +471,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
               <FixedImage
                 src={mainImage}
                 alt={property.title}
-                className="h-32 sm:h-36 w-full object-cover"
+                className="h-48 max-h-48 w-full object-cover"
               />
             )
           ) : mainVideo && !videoError ? (
             <VideoPlayer 
               video={mainVideo}
-              className="h-32 sm:h-36 w-full"
+              className="h-48 max-h-48 w-full"
             />
           ) : (
             <FixedImage
               src="/placeholder-property.jpg"
               alt={property.title}
-              className="h-32 sm:h-36 w-full object-cover"
+              className="h-48 max-h-48 w-full object-cover"
             />
           )}
           <Badge

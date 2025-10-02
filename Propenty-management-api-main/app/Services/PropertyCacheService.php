@@ -20,7 +20,7 @@ class PropertyCacheService
         
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($propertyId) {
             Log::info("Fetching property {$propertyId} from database");
-            return Property::with(['media', 'user', 'priceType'])->find($propertyId);
+            return Property::with(['media', 'user', 'priceType', 'features', 'utilities'])->find($propertyId);
         });
     }
     

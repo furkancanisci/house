@@ -105,7 +105,10 @@ const PropertyDetails: React.FC = () => {
         }
 
 
-        
+        console.log('PropertyDetails - Raw propertyData:', propertyData);
+        console.log('PropertyDetails - propertyData.features:', propertyData.features);
+        console.log('PropertyDetails - propertyData.utilities:', propertyData.utilities);
+
         // Transform the property data to match the expected format
         const transformedProperty: Property = {
           id: propertyData.id?.toString() || '',
@@ -118,7 +121,7 @@ const PropertyDetails: React.FC = () => {
           zip_code: propertyData.zip_code || propertyData.zipCode || '',
           price: typeof propertyData.price === 'string' ? parseFloat(propertyData.price) : (propertyData.price || 0),
           listingType: propertyData.listing_type === 'rent' ? 'rent' : 'sale',
-          propertyType: propertyData.property_type || 'apartment',
+          propertyType: propertyData.propertyType || propertyData.property_type || 'apartment',
           bedrooms: propertyData.bedrooms ? parseInt(propertyData.bedrooms, 10) : 0,
           bathrooms: propertyData.bathrooms ? parseFloat(propertyData.bathrooms) : 0,
           squareFootage: propertyData.square_feet || propertyData.squareFootage || Number(propertyData.details?.square_feet) || 0,
@@ -296,6 +299,9 @@ const PropertyDetails: React.FC = () => {
 
         
         console.log('Property data from API:', propertyData);
+        console.log('Raw features from API:', propertyData.features);
+        console.log('Raw utilities from API:', propertyData.utilities);
+        console.log('Raw amenities from API:', propertyData.amenities);
         console.log('Transformed property:', transformedProperty);
         console.log('Property images:', transformedProperty.images);
         console.log('Property videos:', transformedProperty.videos);
@@ -494,7 +500,7 @@ const PropertyDetails: React.FC = () => {
   const propertyId = String(property.id);
   const isFavorite = favorites.includes(propertyId);
 
-  const formatPrice = (price: any, listingType: string) => {
+  const formatPrice = (price: any, listingType: string, currency?: string) => {
     try {
       // If price is null/undefined, return price on request
       if (price === null || price === undefined || price === '') {
@@ -503,12 +509,14 @@ const PropertyDetails: React.FC = () => {
       
       // Handle different price formats
       let numPrice = 0;
+      let currencyCode = currency || 'USD';
       
       // Handle object with amount property
       if (typeof price === 'object' && price !== null) {
         // Check for common price object structures
         if (typeof price.amount !== 'undefined') {
           numPrice = Number(price.amount) || 0;
+          currencyCode = price.currency || currency || 'USD';
         } else if (typeof price.price !== 'undefined') {
           numPrice = Number(price.price) || 0;
         } else if (typeof price.formatted !== 'undefined') {
@@ -529,7 +537,7 @@ const PropertyDetails: React.FC = () => {
           // Try to parse as JSON first
           const parsed = JSON.parse(price);
           if (typeof parsed === 'object' && parsed !== null) {
-            return formatPrice(parsed, listingType); // Recursively handle the parsed object
+            return formatPrice(parsed, listingType, currency); // Recursively handle the parsed object
           }
           numPrice = Number(price) || 0;
         } catch (e) {
@@ -547,13 +555,20 @@ const PropertyDetails: React.FC = () => {
         return t('property.priceOnRequest');
       }
       
-      // Format the price with currency
-      const formattedPrice = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(numPrice);
+      // Get currency symbol based on currency code
+      const getCurrencySymbol = (code: string) => {
+        const symbols: { [key: string]: string } = {
+          'USD': '$',
+          'EUR': '€',
+          'TRY': '₺',
+          'SYP': 'ل.س',
+        };
+        return symbols[code] || '$';
+      };
+      
+      // Format the price with the correct currency symbol
+      const currencySymbol = getCurrencySymbol(currencyCode);
+      const formattedPrice = `${currencySymbol}${numPrice.toLocaleString()}`;
       
       // Add /month for rent listings
       return listingType === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
@@ -704,7 +719,7 @@ const PropertyDetails: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-3xl font-bold text-[#067977]">
-                      {formatPrice(property.price, property.listingType)}
+                      {formatPrice(property.price, property.listingType, property.currency)}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
                       {property.priceType ? (
@@ -754,6 +769,13 @@ const PropertyDetails: React.FC = () => {
             </Card>
 
             {/* Enhanced Features and Utilities Section */}
+            {console.log('PropertyDetails - Before passing to FeaturesAndUtilities:')}
+            {console.log('features:', features)}
+            {console.log('utilities:', utilities)}
+            {console.log('property.features:', property.features)}
+            {console.log('property.utilities:', property.utilities)}
+            {console.log('loadingFeatures:', loadingFeatures)}
+            {console.log('loadingUtilities:', loadingUtilities)}
             <FeaturesAndUtilities 
               features={features}
               utilities={utilities}
@@ -772,7 +794,13 @@ const PropertyDetails: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-600">{t('filters.propertyType')}</span>
-                      <span className="capitalize">{t(`property.types.${property.propertyType}`)}</span>
+                      <span className="capitalize">
+                        {property.propertyType && typeof property.propertyType === 'object' ? (
+                          i18n.language === 'ar' ? property.propertyType.name_ar :
+                          i18n.language === 'ku' ? property.propertyType.name_ku :
+                          property.propertyType.name_en || property.propertyType.name
+                        ) : t(`property.types.${property.propertyType}`)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">{t('property.details.yearBuilt')}</span>
@@ -1071,7 +1099,13 @@ const PropertyDetails: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('filters.propertyType')}</span>
-                  <span className="capitalize">{t(`property.types.${property.propertyType}`)}</span>
+                  <span className="capitalize">
+                    {property.propertyType && typeof property.propertyType === 'object' ? (
+                      i18n.language === 'ar' ? property.propertyType.name_ar :
+                      i18n.language === 'ku' ? property.propertyType.name_ku :
+                      property.propertyType.name_en || property.propertyType.name
+                    ) : t(`property.types.${property.propertyType}`)}
+                  </span>
                 </div>
                 {(property.document_type_id || documentType || loadingDocumentType) && (
                   <div className="flex justify-between">
@@ -1110,7 +1144,7 @@ const PropertyDetails: React.FC = () => {
                   <span className="text-gray-600 font-semibold">{t('forms.price')}</span>
                   <div className="text-right">
                     <span className="text-xl font-bold text-[#067977]">
-                      {formatPrice(property.price, property.listingType)}
+                      {formatPrice(property.price, property.listingType, property.currency)}
                     </span>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {property.priceType ? (

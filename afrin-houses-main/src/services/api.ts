@@ -61,6 +61,15 @@ const processQueue = (error: any, token: string | null = null) => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    console.log('🌐 API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+      params: config.params,
+      headers: config.headers
+    });
+    
     const token = authService.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -68,13 +77,24 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('🚨 API Request Error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for handling errors, token refresh, and retries
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API Response:', {
+      status: response.status,
+      url: response.config.url,
+      dataType: typeof response.data,
+      dataKeys: response.data && typeof response.data === 'object' ? Object.keys(response.data) : null,
+      hasData: !!response.data?.data,
+      dataLength: Array.isArray(response.data?.data) ? response.data.data.length : null
+    });
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
     const retryConfig = { ...defaultRetryConfig, ...originalRequest.retryConfig };

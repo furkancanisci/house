@@ -153,144 +153,130 @@ export interface PropertyFilters {
   searchQuery?: string;
 }
 
-export const getProperties = async (filters: PropertyFilters = {}) => {
+export const getProperties = async (params: PropertyFilters = {}) => {
   try {
+    console.log('🚀 API Request params:', params);
+    
     // Map frontend filters to backend API parameters
-    const params: Record<string, any> = {};
+    const apiParams: any = {};
     
-    // Handle search query - use multiple parameter names for compatibility
-    const searchQuery = filters.searchQuery || filters.search;
-    if (searchQuery) {
-  
-      params.searchQuery = searchQuery;
-      params.search = searchQuery;
-      params.q = searchQuery;
+    // Search query
+    if (params.search) {
+      apiParams.search = params.search;
     }
     
-    // Basic filters
-    if (filters.listingType && filters.listingType !== 'all' && filters.listingType !== 'any') {
-      params.listingType = filters.listingType;
+    // Listing type (rent/sale)
+    if (params.listingType) {
+      apiParams.listing_type = params.listingType;
     }
     
-    if (filters.propertyType && filters.propertyType !== 'all' && filters.propertyType !== 'any') {
-      params.propertyType = filters.propertyType;
+    // Property type
+    if (params.propertyType) {
+      apiParams.property_type = params.propertyType;
     }
     
-    if (filters.priceType && filters.priceType !== 'all' && filters.priceType !== 'any') {
-      params.priceType = filters.priceType;
+    // Price range
+    if (params.minPrice !== undefined) {
+      apiParams.min_price = params.minPrice;
+    }
+    if (params.maxPrice !== undefined) {
+      apiParams.max_price = params.maxPrice;
     }
     
-    if (filters.location) {
-      params.location = filters.location;
+    // Bedrooms
+    if (params.bedrooms !== undefined) {
+      apiParams.bedrooms = params.bedrooms;
     }
     
-    // City and state filters
-    if (filters.city) {
-      params.city = filters.city;
+    // Bathrooms
+    if (params.bathrooms !== undefined) {
+      apiParams.bathrooms = params.bathrooms;
     }
     
-    if (filters.state) {
-      params.state = filters.state;
+    // Square footage
+    if (params.minSquareFootage !== undefined) {
+      apiParams.min_square_footage = params.minSquareFootage;
+    }
+    if (params.maxSquareFootage !== undefined) {
+      apiParams.max_square_footage = params.maxSquareFootage;
     }
     
-    // Price range - only send if values are greater than 0
-    if (filters.minPrice !== undefined && filters.minPrice > 0) {
-      params.minPrice = filters.minPrice;
+    // Features
+    if (params.features && params.features.length > 0) {
+      apiParams.features = params.features;
     }
     
-    if (filters.maxPrice !== undefined && filters.maxPrice > 0) {
-      params.maxPrice = filters.maxPrice;
-    }
-    
-    // Bedrooms - handle 'any' values and numeric values
-    if (filters.minBeds !== undefined && filters.minBeds !== 'any' && filters.minBeds !== '') {
-      params.bedrooms = Number(filters.minBeds);
-    }
-    
-    if (filters.maxBeds !== undefined && filters.maxBeds !== 'any' && filters.maxBeds !== '') {
-      params.maxBedrooms = Number(filters.maxBeds);
-    }
-    
-    // Bathrooms - handle 'any' values and numeric values
-    if (filters.minBaths !== undefined && filters.minBaths !== 'any' && filters.minBaths !== '') {
-      params.bathrooms = Number(filters.minBaths);
-    }
-    
-    if (filters.maxBaths !== undefined && filters.maxBaths !== 'any' && filters.maxBaths !== '') {
-      params.maxBathrooms = Number(filters.maxBaths);
-    }
-    
-    // Square footage - only send if values are greater than 0
-    if (filters.minSquareFeet !== undefined && filters.minSquareFeet > 0) {
-      params.minSquareFootage = filters.minSquareFeet;
-    }
-    
-    if (filters.maxSquareFeet !== undefined && filters.maxSquareFeet > 0) {
-      params.maxSquareFootage = filters.maxSquareFeet;
-    }
-    
-    // Features/amenities - send as array for better backend processing
-    if (filters.features && filters.features.length > 0) {
-      params.features = filters.features;
-      params.amenities = filters.features; // Also send as amenities for backward compatibility
-    }
-    
-    // Radius for location search
-    if (filters.radius) {
-      params.radius = filters.radius;
-    }
-    
-    // Pagination
-    if (filters.page) {
-      params.page = filters.page;
-    }
-    
-    if (filters.limit) {
-      params.limit = filters.limit;
-    }
-    
-    // Sorting
-    if (filters.sortBy) {
-      params.sortBy = filters.sortBy;
-      if (filters.sortOrder) {
-        params.sortOrder = filters.sortOrder;
+    // Location and radius
+    if (params.latitude && params.longitude) {
+      apiParams.latitude = params.latitude;
+      apiParams.longitude = params.longitude;
+      if (params.radius) {
+        apiParams.radius = params.radius;
       }
     }
     
-
-    const response = await api.get('/properties', { params });
-    
-    // Log the full response for debugging
-
-    
-    // Ensure we always return a consistent response structure
-    if (!response || !response.data) {
-
-      return [];
+    // Pagination
+    if (params.page) {
+      apiParams.page = params.page;
+    }
+    if (params.perPage) {
+      apiParams.per_page = params.perPage;
     }
     
-    // Handle different response structures and fix image URLs
+    // Sorting
+    if (params.sortBy) {
+      // Map frontend sort options to backend
+      const sortMapping: { [key: string]: string } = {
+        'price_asc': 'price',
+        'price_desc': 'price',
+        'date_desc': 'created_at',
+        'date_asc': 'created_at',
+        'title_asc': 'title',
+        'title_desc': 'title'
+      };
+      
+      const sortField = sortMapping[params.sortBy] || 'created_at';
+      const sortDirection = params.sortBy.includes('_desc') ? 'desc' : 'asc';
+      
+      apiParams.sort_by = sortField;
+      apiParams.sort_direction = sortDirection;
+    }
+    
+    const response = await api.get('/properties', { params: apiParams });
+    
+    console.log('📥 Raw API Response:', response.data);
+    console.log('📊 Response structure:', {
+      hasData: !!response.data.data,
+      dataType: typeof response.data.data,
+      isDataArray: Array.isArray(response.data.data),
+      dataLength: response.data.data?.length,
+      hasProperties: !!response.data.properties,
+      propertiesType: typeof response.data.properties,
+      isPropertiesArray: Array.isArray(response.data.properties)
+    });
+    
+    // Handle different response structures
     let properties = [];
     
-    // Check if the response has a data property that contains the array of properties
     if (response.data.data && Array.isArray(response.data.data)) {
-      // Handle paginated response (Laravel default)
-
       properties = response.data.data;
-    } else if (Array.isArray(response.data)) {
-      // Handle direct array response
-
-      properties = response.data;
     } else if (response.data.properties && Array.isArray(response.data.properties)) {
-      // Handle response with properties key (alternative format)
-
       properties = response.data.properties;
-    } else {
-
-      return [];
+    } else if (Array.isArray(response.data)) {
+      properties = response.data;
     }
     
-
+    console.log('🏠 Properties found:', properties.length);
+    if (properties.length > 0) {
+      console.log('🔍 All properties media info:', properties.map(p => ({
+        id: p.id,
+        title: p.title,
+        hasMedia: !!p.media,
+        mediaLength: p.media?.length || 0,
+        hasImages: !!p.images,
+        imagesKeys: p.images ? Object.keys(p.images) : []
+      })));
+    }
     
     // Fix image URLs in all properties
     const processedProperties = properties.map((property: any) => {
@@ -310,6 +296,18 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
         property.images = fixedImages;
       }
       
+      // Fix video URLs in the property
+      if (property.videos) {
+        const fixedVideos = { ...property.videos };
+        
+        // Fix video gallery URLs
+        if (fixedVideos.gallery && Array.isArray(fixedVideos.gallery)) {
+          fixedVideos.gallery = fixedVideos.gallery.map(fixVideoObject);
+        }
+        
+        property.videos = fixedVideos;
+      }
+      
       return property;
     });
     
@@ -321,7 +319,7 @@ export const getProperties = async (filters: PropertyFilters = {}) => {
       filters: response.data.filters || {}
     };
   } catch (error: any) {
-
+    console.error('❌ API Error:', error);
     
     // Return fallback data instead of throwing
     return {

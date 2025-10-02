@@ -150,13 +150,17 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
     }
   };
 
-  const handlePrevMedia = () => {
+  const handlePrevMedia = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
     setCurrentMediaIndex((prev) => 
       prev === 0 ? finalMedia.length - 1 : prev - 1
     );
   };
 
-  const handleNextMedia = () => {
+  const handleNextMedia = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
     setCurrentMediaIndex((prev) => 
       prev === finalMedia.length - 1 ? 0 : prev + 1
     );
@@ -198,7 +202,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   return (
     <div className={`relative ${containerClassName}`}>
       {/* Main Media */}
-      <div className="relative group overflow-hidden rounded-lg shadow-md border border-gray-200 w-full h-96 min-h-96 max-h-96">
+      <div className="relative group overflow-hidden rounded-lg shadow-md border border-gray-200 w-full h-full">
         {/* Loading Spinner */}
         {currentMediaState.loading && showLoadingSpinner && (
           <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
@@ -272,8 +276,8 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
           />
         )}
 
-        {/* Navigation Arrows (only show if multiple media items) */}
-        {finalMedia.length > 1 && (
+        {/* Navigation Arrows (only show if multiple media items and not in fullscreen) */}
+        {finalMedia.length > 1 && !isVideoFullscreen && (
           <>
             <button
               onClick={handlePrevMedia}
