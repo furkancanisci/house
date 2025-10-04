@@ -14,80 +14,63 @@ class PriceTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        // Clear existing data
-        DB::table('price_types')->truncate();
-        
-        $priceTypes = [
-            [
-                'name_ar' => 'قابل للتفاوض',
-                'name_en' => 'Negotiable',
-                'name_ku' => 'Danûstandinî',
-                'key' => 'negotiable',
-                'listing_type' => 'both',
-                'is_active' => true,
-            ],
-            [
-                'name_ar' => 'سعر نهائي',
-                'name_en' => 'Final Price',
-                'name_ku' => 'Nirxa Dawîn',
-                'key' => 'final_price',
-                'listing_type' => 'both',
-                'is_active' => true,
-            ],
-            [
-                'name_ar' => 'مثل شعبي (فوقو سكرا)',
-                'name_en' => 'Popular Saying (Above Sugar)',
-                'name_ku' => 'Gotina Gel (Li ser Şekir)',
-                'key' => 'popular_saying',
-                'listing_type' => 'both',
-                'is_active' => true,
-            ],
-            [
-                'name_ar' => 'سعر من الآخر',
-                'name_en' => 'Price From Last',
-                'name_ku' => 'Nirx ji Dawîyê',
-                'key' => 'price_from_last',
-                'listing_type' => 'both',
-                'is_active' => true,
-            ],
-            [
-                'name_ar' => 'شهري',
-                'name_en' => 'Monthly',
-                'name_ku' => 'Mehane',
-                'key' => 'monthly',
-                'listing_type' => 'rent',
-                'is_active' => true,
-            ],
-            [
-                'name_ar' => 'سنوي',
-                'name_en' => 'Yearly',
-                'name_ku' => 'Salane',
-                'key' => 'yearly',
-                'listing_type' => 'rent',
-                'is_active' => true,
-            ],
-            [
-                'name_ar' => 'السعر الإجمالي',
-                'name_en' => 'Total Price',
-                'name_ku' => 'Nirxa Giştî',
-                'key' => 'total',
-                'listing_type' => 'sale',
-                'is_active' => true,
-            ],
-            [
-                'name_ar' => 'سعر ثابت',
-                'name_en' => 'Fixed Price',
-                'name_ku' => 'Nirxa Sabît',
-                'key' => 'fixed',
-                'listing_type' => 'both',
-                'is_active' => true,
-            ],
-        ];
-        
-        foreach ($priceTypes as $priceType) {
-            PriceType::create($priceType);
+        try {
+            // Clear existing data
+            DB::table('price_types')->truncate();
+            
+            $now = now();
+            
+            $priceTypes = [
+                [
+                    'name_ar' => 'سنوي',
+                    'name_en' => 'Yearly',
+                    'name_ku' => 'Salane',
+                    'key' => 'yearly',
+                    'listing_type' => 'both',
+                    'is_active' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+                [
+                    'name_ar' => 'شهري',
+                    'name_en' => 'Monthly',
+                    'name_ku' => 'Mehane',
+                    'key' => 'monthly',
+                    'listing_type' => 'both',
+                    'is_active' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+                [
+                    'name_ar' => 'يومي',
+                    'name_en' => 'Daily',
+                    'name_ku' => 'Rojane',
+                    'key' => 'daily',
+                    'listing_type' => 'both',
+                    'is_active' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+                [
+                    'name_ar' => 'أسبوعي',
+                    'name_en' => 'Weekly',
+                    'name_ku' => 'Heftane',
+                    'key' => 'weekly',
+                    'listing_type' => 'both',
+                    'is_active' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+            ];
+            
+            // Use bulk insert for better performance
+            DB::table('price_types')->insert($priceTypes);
+            
+            $this->command->info('Price types seeded successfully!');
+            
+        } catch (\Exception $e) {
+            $this->command->error('Failed to seed price types: ' . $e->getMessage());
+            throw $e;
         }
-        
-        $this->command->info('Price types seeded successfully!');
     }
 }

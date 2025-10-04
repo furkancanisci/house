@@ -107,6 +107,14 @@
                 </li>
                 @endcan
 
+                <!-- Currencies -->
+                <li class="nav-item">
+                    <a href="{{ route('admin.currencies.index') }}" class="nav-link {{ request()->routeIs('admin.currencies*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-coins"></i>
+                        <p>{{ __('admin.currencies') }}</p>
+                    </a>
+                </li>
+
                 <!-- Locations -->
                 @canany(['view cities', 'manage neighborhoods'])
                 <li class="nav-item {{ request()->routeIs('admin.cities*') ? 'menu-open' : '' }}">

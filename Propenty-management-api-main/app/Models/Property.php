@@ -89,6 +89,7 @@ class Property extends Model implements HasMedia
         'property_type_id',
         'listing_type',
         'price',
+        'currency',
         'price_type',
         'street_address',
         'city',
@@ -360,6 +361,80 @@ class Property extends Model implements HasMedia
     }
 
     /**
+     * Currency relationship.
+     */
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'currency', 'code');
+    }
+
+    /**
+     * Get property images from storage.
+     * Returns array of image information including URLs.
+     */
+    public function getPropertyImages()
+    {
+        $imagePath = "properties/{$this->id}/images";
+        $images = [];
+        
+        if (\Storage::disk('public')->exists($imagePath)) {
+            $files = \Storage::disk('public')->files($imagePath);
+            
+            foreach ($files as $file) {
+                $filename = basename($file);
+                $images[] = [
+                    'filename' => $filename,
+                    'path' => $file,
+                    'url' => \Storage::disk('public')->url($file),
+                    'size' => \Storage::disk('public')->size($file),
+                    'last_modified' => \Storage::disk('public')->lastModified($file),
+                ];
+            }
+        }
+        
+        return $images;
+    }
+
+    /**
+     * Get property videos from storage.
+     * Returns array of video information including URLs.
+     */
+    public function getPropertyVideos()
+    {
+        $videoPath = "properties/{$this->id}/videos";
+        $videos = [];
+        
+        if (\Storage::disk('public')->exists($videoPath)) {
+            $files = \Storage::disk('public')->files($videoPath);
+            
+            foreach ($files as $file) {
+                $filename = basename($file);
+                $videos[] = [
+                    'filename' => $filename,
+                    'path' => $file,
+                    'url' => \Storage::disk('public')->url($file),
+                    'size' => \Storage::disk('public')->size($file),
+                    'last_modified' => \Storage::disk('public')->lastModified($file),
+                ];
+            }
+        }
+        
+        return $videos;
+    }
+
+    /**
+     * Get all property media (images and videos).
+     * Returns array with separate images and videos arrays.
+     */
+    public function getPropertyMedia()
+    {
+        return [
+            'images' => $this->getPropertyImages(),
+            'videos' => $this->getPropertyVideos(),
+        ];
+    }
+
+    /**
      * Get the property's full address.
      */
     public function getFullAddressAttribute(): string
@@ -378,8 +453,8 @@ class Property extends Model implements HasMedia
      */
     public function getFormattedPriceAttribute(): string
     {
-        $currencySymbol = $this->getCurrencySymbol();
-        $price = $currencySymbol . number_format($this->price);
+        $currency = $this->currency ?? 'TRY';
+        $price = number_format($this->price) . ' ' . $currency;
         
         if ($this->listing_type === 'rent') {
             switch ($this->price_type) {

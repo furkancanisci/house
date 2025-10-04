@@ -64,6 +64,10 @@ const PropertyDetails: React.FC = () => {
 
   const [showMap, setShowMap] = useState(false);
 
+  // Calculate if current property is in favorites
+  const propertyId = property?.id?.toString() || slug || '';
+  const isFavorite = state.favorites.includes(propertyId);
+
   // Helper function to normalize location fields that might be objects
   const normalizeName = (val: any): string => {
     if (!val) return '';
@@ -224,10 +228,88 @@ const PropertyDetails: React.FC = () => {
           building: propertyData.details?.building_name,
           // Document type information
           document_type_id: propertyData.document_type_id,
-          documentType: propertyData.document_type
+          documentType: propertyData.document_type,
+          // Currency information
+          currency: propertyData.currency || propertyData.pricing?.currency || 'TRY',
+          // Price type information
+          priceType: propertyData.priceType || propertyData.price_type
         };
         
-        setProperty(transformedProperty);
+
+        // Transform property data to match frontend expectations
+        const finalTransformedProperty = {
+          ...transformedProperty,
+          id: propertyData.id,
+          title: propertyData.title,
+          description: propertyData.description,
+          price: propertyData.price,
+          currency: propertyData.currency,
+          listingType: propertyData.listingType || propertyData.listing_type,
+          propertyType: propertyData.propertyType || propertyData.property_type,
+          bedrooms: propertyData.bedrooms,
+          bathrooms: propertyData.bathrooms,
+          squareFootage: propertyData.squareFootage || propertyData.square_feet,
+          yearBuilt: propertyData.yearBuilt || propertyData.year_built,
+          address: propertyData.address || propertyData.street_address,
+          city: propertyData.city,
+          state: propertyData.state,
+          country: propertyData.country,
+          latitude: propertyData.latitude,
+          longitude: propertyData.longitude,
+          status: propertyData.status,
+          isFeatured: propertyData.isFeatured || propertyData.is_featured,
+          isAvailable: propertyData.isAvailable || propertyData.is_available,
+          createdAt: propertyData.createdAt || propertyData.created_at,
+          updatedAt: propertyData.updatedAt || propertyData.updated_at,
+          publishedAt: propertyData.publishedAt || propertyData.published_at,
+          viewsCount: propertyData.viewsCount || propertyData.views_count,
+          rating: propertyData.rating,
+          reviewsCount: propertyData.reviewsCount || propertyData.reviews_count,
+          features: propertyData.features || [],
+          utilities: propertyData.utilities || [],
+          nearbyPlaces: propertyData.nearbyPlaces || propertyData.nearby_places || [],
+          user: propertyData.user,
+          media: propertyData.media || [],
+          priceType: propertyData.priceType || propertyData.price_type,
+        };
+        
+        setProperty(finalTransformedProperty);
+        
+        // Fetch property-specific media from new API
+        try {
+          const mediaData = await propertyMediaService.getPropertyMedia(transformedProperty.id);
+          console.log('Property media from new API:', mediaData);
+          
+          // Update property images and videos with new API data if available
+          if (mediaData.images.length > 0) {
+            setPropertyImages(mediaData.images);
+            // Update property object with new images
+            finalTransformedProperty.images = mediaData.images.map(img => img.url);
+            finalTransformedProperty.mainImage = mediaData.images[0]?.url || finalTransformedProperty.mainImage;
+          }
+          
+          if (mediaData.videos.length > 0) {
+            setPropertyVideos(mediaData.videos);
+            // Update property object with new videos
+            finalTransformedProperty.videos = mediaData.videos.map((video, index) => ({
+              id: index + 1,
+              url: video.url,
+              original_url: video.url,
+              thumbnail_url: undefined,
+              duration: undefined,
+              size: video.size,
+              mime_type: undefined
+            }));
+          }
+          
+          // Update property state with media data
+          setProperty({ ...finalTransformedProperty });
+        } catch (mediaError) {
+          console.error('Error fetching property media:', mediaError);
+          // Continue with existing media data if new API fails
+        } finally {
+          setLoadingMedia(false);
+        }
       } catch (err: any) {
 
         
@@ -382,11 +464,9 @@ const PropertyDetails: React.FC = () => {
   }
 
   // Ensure property.id is treated as a string for favorites comparison
-  const propertyId = String(property.id);
-  const isFavorite = favorites.includes(propertyId);
-
-  const formatPrice = (price: any, listingType: string, currency?: string) => {
+  const formatPrice = (price: any, listingType: string, currency?: string, priceType?: any) => {
     try {
+      
       // If price is null/undefined, return price on request
       if (price === null || price === undefined || price === '') {
         return t('property.priceOnRequest');
@@ -405,24 +485,22 @@ const PropertyDetails: React.FC = () => {
         } else if (typeof price.price !== 'undefined') {
           numPrice = Number(price.price) || 0;
         } else if (typeof price.formatted !== 'undefined') {
-          // If there's already a formatted price, return it directly
-          return price.formatted;
+          // Handle formatted price strings
+          const cleanPrice = price.formatted.replace(/[^\d.-]/g, '');
+          numPrice = Number(cleanPrice) || 0;
         } else {
-          // Try to get the first numeric value from the object
-          const numericValue = Object.values(price).find((val: any) => {
-            const num = Number(val);
-            return !isNaN(num) && isFinite(num);
-          });
-          numPrice = numericValue ? Number(numericValue) : 0;
+          // Try to get the first numeric property
+          const numericValue = Object.values(price).find(val => !isNaN(Number(val)));
+          numPrice = Number(numericValue) || 0;
         }
       } 
-      // Handle string price (could be number string or JSON string)
+      // Handle string (might be JSON or plain number)
       else if (typeof price === 'string') {
+        // Try to parse as JSON first
         try {
-          // Try to parse as JSON first
           const parsed = JSON.parse(price);
           if (typeof parsed === 'object' && parsed !== null) {
-            return formatPrice(parsed, listingType, currency); // Recursively handle the parsed object
+            return formatPrice(parsed, listingType, currency, priceType); // Recursively handle the parsed object
           }
           numPrice = Number(price) || 0;
         } catch (e) {
@@ -440,25 +518,31 @@ const PropertyDetails: React.FC = () => {
         return t('property.priceOnRequest');
       }
       
-      // Get currency symbol based on currency code
-      const getCurrencySymbol = (code: string) => {
-        const symbols: { [key: string]: string } = {
-          'USD': '$',
-          'EUR': '€',
-          'TRY': '₺',
-          'SYP': 'ل.س',
-        };
-        return symbols[code] || '$';
-      };
-      
-      // Format the price with the correct currency symbol
-      const currencySymbol = getCurrencySymbol(currencyCode);
-      const formattedPrice = `${currencySymbol}${numPrice.toLocaleString()}`;
-      
-      // Add /month for rent listings
-      return listingType === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
-    } catch (error) {
+      // Format the price
+      const formattedNumber = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(numPrice);
 
+      // Add currency symbol
+      const currencyCode = currency || property.currency || 'TRY';
+      const formattedPrice = `${formattedNumber} ${currencyCode}`;
+      
+      // Get price type text from database
+      if (priceType && typeof priceType === 'object') {
+        const priceTypeText = i18n.language === 'ar' ? priceType.name_ar :
+                             i18n.language === 'ku' ? priceType.name_ku :
+                             priceType.name_en;
+        
+        // Return formatted price with price type from database
+        if (priceTypeText) {
+          return `${formattedPrice} / ${priceTypeText}`;
+        }
+      }
+      // If no priceType provided, return just the price
+      return formattedPrice;
+    } catch (error) {
+      console.error('Error in formatPrice:', error);
       return t('property.priceOnRequest');
     }
   };
@@ -644,17 +728,9 @@ const PropertyDetails: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-3xl font-bold text-[#067977]">
-                      {formatPrice(property.price, property.listingType, property.currency)}
+                      {formatPrice(property.price, property.listingType, property.currency, property.priceType)}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {property.priceType ? (
-                        typeof property.priceType === 'object' ? (
-                          i18n.language === 'ar' ? property.priceType.name_ar :
-                          i18n.language === 'ku' ? property.priceType.name_ku :
-                          property.priceType.name_en
-                        ) : t(`property.priceTypes.${property.priceType}`)
-                      ) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
-                    </p>
+
                   </div>
                 </div>
               </CardHeader>
@@ -693,14 +769,7 @@ const PropertyDetails: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Enhanced Features and Utilities Section */}
-            {console.log('PropertyDetails - Before passing to FeaturesAndUtilities:')}
-            {console.log('features:', features)}
-            {console.log('utilities:', utilities)}
-            {console.log('property.features:', property.features)}
-            {console.log('property.utilities:', property.utilities)}
-            {console.log('loadingFeatures:', loadingFeatures)}
-            {console.log('loadingUtilities:', loadingUtilities)}
+        
             <FeaturesAndUtilities 
               features={features}
               utilities={utilities}
@@ -720,11 +789,12 @@ const PropertyDetails: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">{t('filters.propertyType')}</span>
                       <span className="capitalize">
-                        {property.propertyType && typeof property.propertyType === 'object' ? (
-                          i18n.language === 'ar' ? property.propertyType.name_ar :
-                          i18n.language === 'ku' ? property.propertyType.name_ku :
-                          property.propertyType.name_en || property.propertyType.name
-                        ) : t(`property.types.${property.propertyType}`)}
+                        {property.propertyType && typeof property.propertyType === 'object' 
+                          ? (i18n.language === 'ar' ? property.propertyType.name_ar :
+                             i18n.language === 'ku' ? property.propertyType.name_ku :
+                             property.propertyType.name_en || property.propertyType.name)
+                          : property.propertyType || t('property.typeNotAvailable')
+                        }
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -1025,11 +1095,12 @@ const PropertyDetails: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('filters.propertyType')}</span>
                   <span className="capitalize">
-                    {property.propertyType && typeof property.propertyType === 'object' ? (
-                      i18n.language === 'ar' ? property.propertyType.name_ar :
-                      i18n.language === 'ku' ? property.propertyType.name_ku :
-                      property.propertyType.name_en || property.propertyType.name
-                    ) : t(`property.types.${property.propertyType}`)}
+                    {property.propertyType && typeof property.propertyType === 'object' 
+                      ? (i18n.language === 'ar' ? property.propertyType.name_ar :
+                         i18n.language === 'ku' ? property.propertyType.name_ku :
+                         property.propertyType.name_en || property.propertyType.name)
+                      : property.propertyType || t('property.typeNotAvailable')
+                    }
                   </span>
                 </div>
                 {(property.document_type_id || documentType || loadingDocumentType) && (
@@ -1069,17 +1140,9 @@ const PropertyDetails: React.FC = () => {
                   <span className="text-gray-600 font-semibold">{t('forms.price')}</span>
                   <div className="text-right">
                     <span className="text-xl font-bold text-[#067977]">
-                      {formatPrice(property.price, property.listingType, property.currency)}
+                      {formatPrice(property.price, property.listingType, property.currency, property.priceType)}
                     </span>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {property.priceType ? (
-                        typeof property.priceType === 'object' ? (
-                          i18n.language === 'ar' ? property.priceType.name_ar :
-                          i18n.language === 'ku' ? property.priceType.name_ku :
-                          property.priceType.name_en
-                        ) : t(`property.priceTypes.${property.priceType}`)
-                      ) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
-                    </p>
+
                   </div>
                 </div>
               </CardContent>

@@ -226,6 +226,11 @@ const Search: React.FC = () => {
       filters.listingType = params.listingType as 'rent' | 'sale' | 'all';
     }
     
+    // Handle currency filter
+    if (params.currency) {
+      filters.currency = params.currency;
+    }
+    
     // Convert string numbers to actual numbers
     if (params.minPrice) {
       const minPrice = Number(params.minPrice);
@@ -386,6 +391,13 @@ const Search: React.FC = () => {
       // Listing type filter
       if (filters.listingType && filters.listingType !== 'all') {
         if (property.listingType !== filters.listingType) {
+          return false;
+        }
+      }
+
+      // Currency filter
+      if (filters.currency && filters.currency !== 'all') {
+        if (property.currency !== filters.currency) {
           return false;
         }
       }

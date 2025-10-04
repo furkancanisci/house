@@ -370,7 +370,9 @@ class PropertyController extends Controller
             'floor_number', 'total_floors', 'balcony_count', 'orientation', 'view_type',
             // Phase 2 advanced fields
             'building_age', 'building_type', 'floor_type', 'window_type',
-            'maintenance_fee', 'deposit_amount', 'annual_tax'
+            'maintenance_fee', 'deposit_amount', 'annual_tax',
+            // Currency field
+            'currency'
         ]);
 
         // Load relationships

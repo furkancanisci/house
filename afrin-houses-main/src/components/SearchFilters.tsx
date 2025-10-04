@@ -65,6 +65,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
     location: initialFilters?.location || '',
     state: initialFilters?.state || '',
     city: initialFilters?.city || '',
+    currency: initialFilters?.currency || '',
     minPrice: initialFilters?.minPrice !== undefined ? Number(initialFilters.minPrice) : undefined,
     maxPrice: initialFilters?.maxPrice !== undefined ? Number(initialFilters.maxPrice) : undefined,
     bedrooms: initialFilters?.bedrooms !== undefined ? Number(initialFilters.bedrooms) : undefined,
@@ -409,6 +410,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
       listingType: 'all',
       propertyType: '',
       priceType: undefined,
+      currency: '',
       minPrice: undefined,
       maxPrice: undefined,
       bedrooms: undefined,
@@ -584,6 +586,33 @@ const SearchFilters: React.FC<SearchFiltersProps> = (props) => {
               <SelectItem key="yearly" value="yearly">{t('property.priceTypes.yearly')}</SelectItem>
               <SelectItem key="total" value="total">{t('property.priceTypes.total')}</SelectItem>
               <SelectItem key="fixed" value="fixed">{t('property.priceTypes.fixed')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Currency */}
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+            {t('filters.currency')}
+          </label>
+          <Select
+            value={formValues.currency || 'all'}
+            onValueChange={(value) => handleFilterChange('currency', value)}
+          >
+            <SelectTrigger className="bg-gray-50 border-gray-300">
+              <SelectValue placeholder={t('filters.selectCurrency')}>
+                {formValues.currency && formValues.currency !== 'all' ? 
+                  formValues.currency : 
+                  t('filters.allCurrencies')}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem key="all" value="all">{t('filters.allCurrencies')}</SelectItem>
+              <SelectItem key="TRY" value="TRY">TRY - Turkish Lira</SelectItem>
+              <SelectItem key="USD" value="USD">USD - US Dollar</SelectItem>
+              <SelectItem key="EUR" value="EUR">EUR - Euro</SelectItem>
+              <SelectItem key="SYP" value="SYP">SYP - Syrian Pound</SelectItem>
             </SelectContent>
           </Select>
         </div>
