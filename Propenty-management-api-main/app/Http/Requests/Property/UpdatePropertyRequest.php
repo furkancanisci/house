@@ -43,6 +43,7 @@ class UpdatePropertyRequest extends FormRequest
             
             // Pricing
             'price' => 'sometimes|required|numeric|min:0|max:99999999.99',
+            'currency' => 'sometimes|nullable|string|size:3|exists:currencies,code',
             'price_type' => 'sometimes|nullable|in:negotiable,final_price,popular_saying,price_from_last,monthly,yearly,total,fixed',
             
             // Location
@@ -264,6 +265,11 @@ class UpdatePropertyRequest extends FormRequest
 
         if ($this->has('is_available')) {
             $this->merge(['is_available' => $this->boolean('is_available')]);
+        }
+
+        // Handle currency field
+        if ($this->has('currency')) {
+            $this->merge(['currency' => $this->input('currency')]);
         }
 
         // Set default price_type based on listing_type if not provided

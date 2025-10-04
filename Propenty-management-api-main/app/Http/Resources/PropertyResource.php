@@ -64,7 +64,7 @@ class PropertyResource extends JsonResource
                 'amount' => $this->price,
                 'formatted' => $this->buildFormattedPrice(),
                 'type' => $this->ensureUtf8($this->price_type ?? 'total'),
-                'currency' => 'USD',
+                'currency' => $this->currency ?? 'TRY',
             ],
             
             // Location - both nested and flat for compatibility
@@ -274,7 +274,8 @@ class PropertyResource extends JsonResource
      */
     private function buildFormattedPrice()
     {
-        $price = '$' . number_format($this->price);
+        $currency = $this->currency ?? 'TRY';
+        $price = number_format($this->price) . ' ' . $currency;
         
         if ($this->listing_type === 'rent') {
             switch ($this->price_type) {

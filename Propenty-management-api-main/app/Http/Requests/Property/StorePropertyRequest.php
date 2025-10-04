@@ -29,6 +29,7 @@ class StorePropertyRequest extends FormRequest
             'property_type_id' => 'nullable|integer|exists:property_types,id', // Foreign key validation
             'listingType' => 'required|string|in:rent,sale',
             'price' => 'required|numeric|min:0',
+            'currency' => 'nullable|string|size:3|exists:currencies,code',
             'price_type' => 'nullable|string|in:negotiable,final_price,popular_saying,price_from_last,monthly,yearly,total,fixed',
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
@@ -133,6 +134,9 @@ class StorePropertyRequest extends FormRequest
         }
         if ($this->has('price')) {
             $data['price'] = $this->input('price');
+        }
+        if ($this->has('currency')) {
+            $data['currency'] = $this->input('currency');
         }
         if ($this->has('price_type') || $this->has('priceType')) {
             $data['price_type'] = $this->input('price_type') ?? $this->input('priceType') ?? 'monthly';

@@ -89,6 +89,7 @@ class Property extends Model implements HasMedia
         'property_type_id',
         'listing_type',
         'price',
+        'currency',
         'price_type',
         'street_address',
         'city',
@@ -356,6 +357,14 @@ class Property extends Model implements HasMedia
     }
 
     /**
+     * Currency relationship.
+     */
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'currency', 'code');
+    }
+
+    /**
      * Get property images from storage.
      * Returns array of image information including URLs.
      */
@@ -440,7 +449,8 @@ class Property extends Model implements HasMedia
      */
     public function getFormattedPriceAttribute(): string
     {
-        $price = '$' . number_format($this->price);
+        $currency = $this->currency ?? 'TRY';
+        $price = number_format($this->price) . ' ' . $currency;
         
         if ($this->listing_type === 'rent') {
             switch ($this->price_type) {

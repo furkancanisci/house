@@ -190,6 +190,7 @@ export interface SearchFilters {
   listingType?: 'rent' | 'sale' | 'all';
   propertyType?: string;
   priceType?: 'monthly' | 'yearly' | 'total' | 'fixed' | 'negotiable' | 'finalPrice' | 'folkSaying' | 'lastPrice' | 'all';
+  currency?: string; // Added for currency filtering
   minPrice?: number;
   maxPrice?: number;
   bedrooms?: number;

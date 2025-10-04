@@ -290,7 +290,9 @@ const PropertyDetails: React.FC = () => {
           building: propertyData.details?.building_name,
           // Document type information
           document_type_id: propertyData.document_type_id,
-          documentType: propertyData.document_type
+          documentType: propertyData.document_type,
+          // Currency information
+          currency: propertyData.currency || propertyData.pricing?.currency || 'TRY'
         };
         
 
@@ -494,7 +496,7 @@ const PropertyDetails: React.FC = () => {
   const propertyId = String(property.id);
   const isFavorite = favorites.includes(propertyId);
 
-  const formatPrice = (price: any, listingType: string) => {
+  const formatPrice = (price: any, listingType: string, currency?: string) => {
     try {
       // If price is null/undefined, return price on request
       if (price === null || price === undefined || price === '') {
@@ -529,7 +531,7 @@ const PropertyDetails: React.FC = () => {
           // Try to parse as JSON first
           const parsed = JSON.parse(price);
           if (typeof parsed === 'object' && parsed !== null) {
-            return formatPrice(parsed, listingType); // Recursively handle the parsed object
+            return formatPrice(parsed, listingType, currency); // Recursively handle the parsed object
           }
           numPrice = Number(price) || 0;
         } catch (e) {
@@ -547,13 +549,15 @@ const PropertyDetails: React.FC = () => {
         return t('property.priceOnRequest');
       }
       
-      // Format the price with currency
-      const formattedPrice = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
+      // Format the price
+      const formattedNumber = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        maximumFractionDigits: 0
       }).format(numPrice);
+
+      // Add currency symbol
+      const currencyCode = currency || property.currency || 'TRY';
+      const formattedPrice = `${formattedNumber} ${currencyCode}`;
       
       // Add /month for rent listings
       return listingType === 'rent' ? `${formattedPrice}/${t('property.month')}` : formattedPrice;
@@ -704,7 +708,7 @@ const PropertyDetails: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-3xl font-bold text-[#067977]">
-                      {formatPrice(property.price, property.listingType)}
+                      {formatPrice(property.price, property.listingType, property.currency)}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
                       {property.priceType ? (
@@ -1110,7 +1114,7 @@ const PropertyDetails: React.FC = () => {
                   <span className="text-gray-600 font-semibold">{t('forms.price')}</span>
                   <div className="text-right">
                     <span className="text-xl font-bold text-[#067977]">
-                      {formatPrice(property.price, property.listingType)}
+                      {formatPrice(property.price, property.listingType, property.currency)}
                     </span>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {property.priceType ? (

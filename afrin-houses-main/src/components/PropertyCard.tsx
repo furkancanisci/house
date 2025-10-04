@@ -232,7 +232,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
       maximumFractionDigits: 0
     }).format(numPrice);
 
-    const formattedPrice = formattedNumber;
+    // Add currency symbol
+    const currencyCode = currency || property.currency || 'TRY';
+    const formattedPrice = `${formattedNumber} ${currencyCode}`;
 
     // Add rental period if needed
     if (type === 'rent') {
@@ -361,7 +363,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                 </div>
                 <div className="text-left lg:text-right lg:ml-3 flex-shrink-0">
                   <p className="text-lg lg:text-xl font-bold text-[#067977]">
-                    {formatPrice(property.price, property.listingType)}
+                    {formatPrice(property.price, property.listingType, property.currency)}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {property.priceType ? (
@@ -514,7 +516,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             </Link>
           </h3>
           <p className="text-base sm:text-lg font-bold text-[#067977]">
-            {formatPrice(property.price, property.listingType)}
+            {formatPrice(property.price, property.listingType, property.currency)}
           </p>
           <p className="text-xs text-gray-500 mt-0.5">
             {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
