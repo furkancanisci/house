@@ -16,9 +16,6 @@ RUN apt-get update && apt-get install -y \
     libexif-dev \
     && docker-php-ext-install pdo pdo_pgsql zip exif
 
-# Copy custom PHP configuration
-COPY php.ini /usr/local/etc/php/php.ini
-
 # Apache için rewrite modu
 RUN a2enmod rewrite
 

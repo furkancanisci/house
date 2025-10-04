@@ -21,13 +21,13 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\PriceTypeController;
-use App\Http\Controllers\Admin\CurrencyController;
 use App\Http\Controllers\Admin\BuildingTypeController;
 use App\Http\Controllers\Admin\WindowTypeController;
 use App\Http\Controllers\Admin\FloorTypeController;
 use App\Http\Controllers\Admin\ViewTypeController;
 use App\Http\Controllers\Admin\DirectionController;
 use App\Http\Controllers\Admin\HomeStatController;
+use App\Http\Controllers\Admin\PropertyDocumentTypeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -96,17 +96,6 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
         Route::patch('/{priceType}', [PriceTypeController::class, 'update'])->middleware('can:edit price types');
         Route::delete('/{priceType}', [PriceTypeController::class, 'destroy'])->name('admin.price-types.destroy')->middleware('can:delete price types');
         Route::post('/{priceType}/toggle-status', [PriceTypeController::class, 'toggleStatus'])->name('admin.price-types.toggle-status')->middleware('can:edit price types');
-    });
-
-    // Currency Management
-    Route::prefix('currencies')->group(function () {
-        Route::get('/', [CurrencyController::class, 'index'])->name('admin.currencies.index');
-        Route::get('/create', [CurrencyController::class, 'create'])->name('admin.currencies.create');
-        Route::post('/', [CurrencyController::class, 'store'])->name('admin.currencies.store');
-        Route::get('/{currency}/edit', [CurrencyController::class, 'edit'])->name('admin.currencies.edit');
-        Route::put('/{currency}', [CurrencyController::class, 'update'])->name('admin.currencies.update');
-        Route::delete('/{currency}', [CurrencyController::class, 'destroy'])->name('admin.currencies.destroy');
-        Route::post('/{currency}/toggle-status', [CurrencyController::class, 'toggleStatus'])->name('admin.currencies.toggle-status');
     });
 
     // Locations Management
@@ -214,6 +203,11 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
         Route::patch('/{homeStat}/toggle-status', [HomeStatController::class, 'toggleStatus'])->name('admin.home-stats.toggle-status');
     });
 
+    // Property Document Types
+    Route::resource('property-document-types', PropertyDocumentTypeController::class)->names('admin.property-document-types');
+    Route::post('property-document-types/{propertyDocumentType}/toggle-status', [PropertyDocumentTypeController::class, 'toggleStatus'])->name('admin.property-document-types.toggle-status');
+    Route::post('property-document-types/bulk-action', [PropertyDocumentTypeController::class, 'bulkAction'])->name('admin.property-document-types.bulk-action');
+
     // Users & Agents Management
     Route::resource('users', UserController::class)->names('admin.users');
     Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('admin.users.toggle-status');
@@ -251,7 +245,7 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
     Route::post('media/bulk-delete', [MediaController::class, 'bulkDelete'])->name('admin.media.bulk-delete');
     Route::get('media/download/{media}', [MediaController::class, 'download'])->name('admin.media.download');
     Route::post('media/upload', [MediaController::class, 'upload'])->name('admin.media.upload');
-
+    Route::post('media/{media}/regenerate', [MediaController::class, 'regenerateConversions'])->name('admin.media.regenerate');
     Route::get('media/cleanup', [MediaController::class, 'cleanup'])->name('admin.media.cleanup');
 
     // Moderation Queue

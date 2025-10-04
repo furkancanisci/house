@@ -81,15 +81,6 @@
       "garageParking": "Garage Parking"
     },
     "noPropertiesFound": "No featured properties found",
-    "sections": {
-      "forRent": "Properties for Rent",
-      "forSale": "Properties for Sale",
-      "trending": "Trending Properties",
-      "recommended": "Recommended Properties",
-      "newListings": "New Listings",
-      "popularChoices": "Popular Choices",
-      "featured": "Featured Properties"
-    },
     "browseAll": "Browse All Properties",
     "loading": "Loading...",
     "errorLoading": "Error loading properties",
@@ -162,6 +153,14 @@
       "oldest": "Oldest First"
     },
     
+    "messages": {
+      "noPropertiesInLocation": "No properties currently available in {{location}}",
+      "noPropertiesInCityState": "No properties currently available in {{city}}, {{state}}",
+      "tryDifferentLocation": "Try searching in a different governorate or adjust your search criteria",
+      "clearLocationFilter": "Clear Location Filter",
+      "clearAllFilters": "Clear All Filters",
+      "signInToViewContactInfo": "Sign in to view contact information"
+    },
     "view": {
       "grid": "Grid View",
       "list": "List View"
@@ -308,6 +307,7 @@
       "land": "Land",
       "retail": "Retail",
       "factory": "Factory",
+      "industrial-land": "Industrial Land",
       "description": "Description"
     },
     "listingTypes": {
@@ -440,8 +440,7 @@
       "phone": "Phone",
       "email": "Email",
       "owner": "Property Owner"
-    },
-    "videos": "Property Videos"
+    }
   },
   "privacyPolicy": {
     "title": "Privacy Policy",
@@ -697,12 +696,6 @@
     "selectStateFirst": "Select State First"
   },
   "messages": {
-    "noPropertiesInLocation": "No properties currently available in {{location}}",
-    "noPropertiesInCityState": "No properties currently available in {{city}}, {{state}}",
-    "tryDifferentLocation": "Try searching in a different governorate or adjust your search criteria",
-    "clearLocationFilter": "Clear Location Filter",
-    "clearAllFilters": "Clear All Filters",
-    "signInToViewContactInfo": "Please sign in to view contact information",
     "propertyDeletedSuccess": "Property deleted successfully",
     "addedToFavorites": "Added to favorites",
     "removedFromFavorites": "Removed from favorites",
@@ -776,8 +769,6 @@
     "state": "State",
     "postalCode": "Postal Code",
     "price": "Price",
-    "currency": "Currency",
-    "selectCurrency": "Select Currency",
     "monthlyRent": "Monthly Rent",
     "salePrice": "Sale Price",
     "propertyDescription": "Property Description",
@@ -798,7 +789,6 @@
       "priceRequired": "Price must be at least 1",
       "priceTooHigh": "Price cannot exceed 99,999,999.99",
       "priceTypeRequired": "Price type is required",
-      "currencyRequired": "Currency is required",
       "bedroomsRequired": "At least 1 bedroom is required",
       "bedroomsMaxLimit": "Cannot exceed 20 bedrooms",
       "bathroomsRequired": "At least 1 bathroom is required",
@@ -862,7 +852,6 @@
   "buttons": {
     "createListing": "Create Listing",
     "creatingListing": "Creating listing...",
-    "uploadingFiles": "Uploading files...",
     "updateProperty": "Update Property",
     "updating": "Updating...",
     "cancel": "Cancel",
@@ -1070,38 +1059,6 @@
         "ensureQuality": "Ensure photos are clear and high quality"
       }
     },
-    "videoUpload": {
-      "uploadVideos": "Upload up to 1 property video (max 100MB per video)",
-      "clickToUpload": "Click to upload videos",
-      "selectedVideos": "Selected Videos",
-      "uploading": "Uploading...",
-      "processing": "Processing...",
-      "duration": "Duration",
-      "size": "Size",
-      "remove": "Remove",
-      "play": "Play",
-      "pause": "Pause",
-      "mute": "Mute",
-      "unmute": "Unmute",
-      "supportedFormats": "Supported formats: MP4, AVI, MOV, WMV, WebM",
-      "maxSize": "Max size: 100MB per video",
-      "maxCount": "Max count: 1 video",
-      "tips": {
-          "title": "Tips for Best Results",
-          "goodLighting": "Use good lighting for clear visibility",
-          "steadyCamera": "Keep the camera steady while recording",
-          "showAllAreas": "Show all important areas of the property",
-          "keepShort": "Keep videos short and focused (30-60 seconds)",
-          "landscapeOrientation": "Record in landscape orientation for better viewing"
-        },
-      "errors": {
-        "invalidFormat": "Video format not supported",
-        "fileTooLarge": "Video file too large (max 100MB)",
-        "tooManyFiles": "Cannot upload more than 1 video",
-        "uploadFailed": "Failed to upload video",
-        "processingFailed": "Failed to process video"
-      }
-    },
     "progress": {
       "basic": "Basic",
       "details": "Details",
@@ -1110,18 +1067,8 @@
       "contact": "Contact",
       "addYourNewProperty": "Add your new property easily"
     },
-    "finalStep": {
-      "title": "Final Step",
-      "description": "Review and submit your property listing",
-      "readyDescription": "Your property listing is ready to be published",
-      "summary": "Property Summary",
-      "readyTitle": "Ready to Publish"
-    },
     "selectedUtilities": "Selected utilities",
     "utilitiesCount": "{{count}} utilities"
-  },
-  "forms": {
-    "propertyType": "Property Type"
   },
   "housesForSale": {
     "title": "Houses for Sale",

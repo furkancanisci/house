@@ -4,11 +4,10 @@ import { useApp } from '../context/AppContext';
 export interface AuthCheckResult {
   isAuthenticated: boolean;
   isEmailVerified: boolean;
+  isCheckingAuth: boolean;
   showAuthModal: boolean;
   showActivationModal: boolean;
-  openAuthModal: () => void;
   closeAuthModal: () => void;
-  openActivationModal: () => void;
   closeActivationModal: () => void;
   requireAuth: (action: () => void) => void;
   requireVerifiedEmail: (action: () => void) => void;
@@ -19,6 +18,7 @@ export const useAuthCheck = (): AuthCheckResult => {
   const { user } = state;
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showActivationModal, setShowActivationModal] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
   const isAuthenticated = !!user;
   // Fix: Handle both boolean and undefined/null values properly
@@ -52,31 +52,35 @@ export const useAuthCheck = (): AuthCheckResult => {
   };
 
   const requireVerifiedEmail = (action: () => void) => {
-
+    // Prevent multiple simultaneous checks
+    if (isCheckingAuth) return;
     
-    if (!isAuthenticated) {
-
-      openAuthModal();
-    } else if (!isEmailVerified) {
-
-      openActivationModal();
-    } else {
-
-      action();
+    setIsCheckingAuth(true);
+    
+    try {
+      if (!isAuthenticated) {
+        openAuthModal();
+      } else if (!isEmailVerified) {
+        openActivationModal();
+      } else {
+        action();
+      }
+    } finally {
+      // Reset checking state after a short delay to prevent rapid clicks
+      setTimeout(() => setIsCheckingAuth(false), 500);
     }
   };
 
   return {
     isAuthenticated,
     isEmailVerified,
-    showAuthModal,
-    showActivationModal,
-    openAuthModal,
-    closeAuthModal,
-    openActivationModal,
-    closeActivationModal,
+    isCheckingAuth,
     requireAuth,
     requireVerifiedEmail,
+    showAuthModal,
+    showActivationModal,
+    closeAuthModal,
+    closeActivationModal,
   };
 };
 

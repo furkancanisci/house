@@ -35,7 +35,7 @@ class PropertyResource extends JsonResource
             'title' => $this->ensureUtf8($this->title),
             'description' => $this->ensureUtf8($this->description),
             'slug' => $this->ensureUtf8($this->slug),
-            'property_type' => $this->ensureUtf8($this->getAttributeValue('property_type')),
+            'property_type' => $this->ensureUtf8($this->property_type_name),
             'listing_type' => $this->ensureUtf8($this->listing_type),
             
             // Property details - flat structure for frontend compatibility
@@ -44,12 +44,14 @@ class PropertyResource extends JsonResource
                     'id' => $this->propertyType->id,
                     'name' => $this->propertyType->name,
                     'name_ar' => $this->propertyType->name_ar,
-                    'name_en' => $this->propertyType->name_en,
+                    'name_en' => $this->propertyType->name,
                     'name_ku' => $this->propertyType->name_ku,
                     'slug' => $this->propertyType->slug,
-                ] : $this->getAttributeValue('property_type');
-            }, $this->getAttributeValue('property_type')), // Frontend expects camelCase
+                    'localized_name' => $this->propertyType->getLocalizedName(request()->get('lang', 'ar')),
+                ] : null;
+            }, $this->getAttributeValue('property_type')), // Fallback to string value
             'listingType' => $this->listing_type, // Frontend expects camelCase
+            'property_type_id' => $this->property_type_id,
             'bedrooms' => (int) ($this->bedrooms ?? 0),
             'bathrooms' => (float) ($this->bathrooms ?? 0),
             'square_feet' => (int) ($this->square_feet ?? 0),
@@ -59,7 +61,6 @@ class PropertyResource extends JsonResource
             
             // Pricing - both nested and flat for compatibility
             'price' => $this->price, // Flat price for frontend
-            'currency' => $this->currency ?? 'TRY', // Currency code (TRY, USD, EUR, SYP)
             'priceType' => $this->when($this->relationLoaded('priceType'), function () {
                 return $this->priceType ? [
                     'key' => $this->priceType->key,
@@ -100,8 +101,8 @@ class PropertyResource extends JsonResource
             ],
             
             // Features - ensure always returns array
-            'features' => $this->when($this->relationLoaded('features'), function () {
-                return $this->features->map(function ($feature) {
+            'features' => $this->relationLoaded('features') ? 
+                $this->features->map(function ($feature) {
                     return [
                         'id' => $feature->id,
                         'name_ar' => $feature->name_ar,
@@ -110,10 +111,9 @@ class PropertyResource extends JsonResource
                         'icon' => $feature->icon,
                         'category' => $feature->category,
                     ];
-                })->toArray();
-            }),
-            'utilities' => $this->when($this->relationLoaded('utilities'), function () {
-                return $this->utilities->map(function ($utility) {
+                })->toArray() : [],
+            'utilities' => $this->relationLoaded('utilities') ? 
+                $this->utilities->map(function ($utility) {
                     return [
                         'id' => $utility->id,
                         'name_ar' => $utility->name_ar,
@@ -122,8 +122,7 @@ class PropertyResource extends JsonResource
                         'icon' => $utility->icon,
                         'category' => $utility->category,
                     ];
-                })->toArray();
-            }),
+                })->toArray() : [],
             'nearby_places' => is_array($this->nearby_places) ? $this->nearby_places : 
                             (is_string($this->nearby_places) ? json_decode($this->nearby_places, true) : []),
             
@@ -143,7 +142,7 @@ class PropertyResource extends JsonResource
                     if ($mainImage) {
                         return $mainImage->getUrl();
                     }
-
+                    
                     $firstImage = $this->getFirstMedia('images');
                     return $firstImage ? $firstImage->getUrl() : null;
                 }),
@@ -163,42 +162,7 @@ class PropertyResource extends JsonResource
                 }
 
                 $firstImage = $this->getFirstMedia('images');
-                if ($firstImage) {
-                    return $firstImage->getUrl();
-                }
-
-                // Only return placeholder if no images AND no videos exist
-                $hasVideos = $this->getMedia('videos')->count() > 0;
-                return $hasVideos ? null : '/images/placeholder-property.svg';
-            }),
-
-            // Raw media array for frontend image processing
-            'media' => $this->whenLoaded('media', function() {
-                return $this->media->map(function($media) {
-                    return [
-                        'id' => $media->id,
-                        'collection_name' => $media->collection_name,
-                        'file_name' => $media->file_name,
-                        'filename' => $media->file_name,
-                        'mime_type' => $media->mime_type,
-                        'size' => $media->size,
-                        'url' => $media->getUrl(),
-                        'original_url' => $media->getUrl(),
-                    ];
-                })->toArray();
-            }),
-
-            // Videos - similar to images structure
-            'videos' => $this->whenLoaded('media', function() {
-                return $this->getMedia('videos')->map(function($media) {
-                    return [
-                        'id' => $media->id,
-                        'url' => $media->getUrl(),
-                        'name' => $media->name,
-                        'size' => $media->size,
-                        'mime_type' => $media->mime_type,
-                    ];
-                })->toArray();
+                return $firstImage ? $firstImage->getUrl() : '/images/placeholder-property.svg';
             }),
 
             // Phase 1 Enhancement Fields
@@ -283,8 +247,8 @@ class PropertyResource extends JsonResource
      */
     private function buildFormattedPrice()
     {
-        $currency = $this->currency ?? 'TRY';
-        $price = number_format($this->price) . ' ' . $currency;
+        $currencySymbol = $this->getCurrencySymbol();
+        $price = $currencySymbol . number_format($this->price);
         
         if ($this->listing_type === 'rent') {
             switch ($this->price_type) {
@@ -298,6 +262,21 @@ class PropertyResource extends JsonResource
         }
 
         return $price;
+    }
+
+    /**
+     * Get currency symbol based on currency code.
+     */
+    private function getCurrencySymbol(): string
+    {
+        $currencySymbols = [
+            'USD' => '$',
+            'EUR' => '€',
+            'TRY' => '₺',
+            'SYP' => 'ل.س',
+        ];
+
+        return $currencySymbols[$this->currency] ?? '$';
     }
 
 }

@@ -221,17 +221,21 @@ class Property extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('images')
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
 
         $this->addMediaCollection('main_image')
             ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
-
-        $this->addMediaCollection('videos')
-            ->acceptsMimeTypes(['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/webm']);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
     }
 
-
+    /**
+     * Define media conversions - DISABLED to avoid read operations on Bunny Storage
+     */
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        // Conversions disabled because Bunny Storage adapter doesn't support reading files
+        // This prevents the media library from trying to process images
+    }
 
     /**
      * The property owner.
@@ -467,6 +471,21 @@ class Property extends Model implements HasMedia
     }
 
     /**
+     * Get currency symbol based on currency code.
+     */
+    public function getCurrencySymbol(): string
+    {
+        $currencySymbols = [
+            'USD' => '$',
+            'EUR' => '€',
+            'TRY' => '₺',
+            'SYP' => 'ل.س',
+        ];
+
+        return $currencySymbols[$this->currency] ?? '$';
+    }
+
+    /**
      * Get the main image URL.
      */
     public function getMainImageUrlAttribute(): ?string
@@ -489,11 +508,11 @@ class Property extends Model implements HasMedia
             return [
                 'id' => $media->id,
                 'original' => $media->getUrl(),
-                'full' => $media->hasGeneratedConversion('full') ? $media->getUrl('full') : $media->getUrl(),
-                'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
-                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
-                'thumbnail' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
-                'small' => $media->hasGeneratedConversion('small') ? $media->getUrl('small') : $media->getUrl(),
+                'full' => $media->getUrl(),
+                'large' => $media->getUrl(),
+                'medium' => $media->getUrl(),
+                'thumbnail' => $media->getUrl(),
+                'small' => $media->getUrl(),
                 'alt_text' => $media->name ?? 'Property Image',
                 'file_size' => $media->size,
                 'mime_type' => $media->mime_type,
@@ -601,28 +620,28 @@ class Property extends Model implements HasMedia
      * Get the property type name from the related property type model
      * Fixed to prevent infinite recursion
      */
-    public function getPropertyTypeAttribute()
+    public function getPropertyTypeNameAttribute()
     {
         // Check if we're already in the middle of accessing this attribute
-        if (isset($this->accessingPropertyType)) {
+        if (isset($this->accessingPropertyTypeName)) {
             return $this->attributes['property_type'] ?? null;
         }
         
-        $this->accessingPropertyType = true;
+        $this->accessingPropertyTypeName = true;
         
         try {
             if ($this->relationLoaded('propertyType') && $this->getRelation('propertyType')) {
                 $result = $this->getRelation('propertyType')->getLocalizedName(request()->get('lang', 'ar'));
-                unset($this->accessingPropertyType);
+                unset($this->accessingPropertyTypeName);
                 return $result;
             }
             
             // Fallback to database value if relation not loaded
             $result = $this->attributes['property_type'] ?? null;
-            unset($this->accessingPropertyType);
+            unset($this->accessingPropertyTypeName);
             return $result;
         } catch (\Exception $e) {
-            unset($this->accessingPropertyType);
+            unset($this->accessingPropertyTypeName);
             return $this->attributes['property_type'] ?? null;
         }
     }

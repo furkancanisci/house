@@ -34,11 +34,9 @@ import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { notification, notificationMessages } from '../services/notificationService';
 import { getProperty } from '../services/propertyService';
-import { propertyMediaService } from '../services/propertyMediaService';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import FixedImage from '../components/FixedImage';
 import PropertyImageGallery from '../components/PropertyImageGallery';
-
 import { processPropertyImages } from '../lib/imageUtils';
 import FeaturesAndUtilities from '../components/FeaturesAndUtilities';
 import { FeatureService } from '../services/featureService';
@@ -63,9 +61,6 @@ const PropertyDetails: React.FC = () => {
   const [loadingFeatures, setLoadingFeatures] = useState(false);
   const [loadingUtilities, setLoadingUtilities] = useState(false);
   const [minLoadingTime, setMinLoadingTime] = useState(true);
-  const [propertyImages, setPropertyImages] = useState<any[]>([]);
-  const [propertyVideos, setPropertyVideos] = useState<any[]>([]);
-  const [loadingMedia, setLoadingMedia] = useState(false);
 
   const [showMap, setShowMap] = useState(false);
 
@@ -100,7 +95,6 @@ const PropertyDetails: React.FC = () => {
       
       try {
         setLoading(true);
-        setLoadingMedia(true);
 
         const propertyData = await getProperty(slug);
         
@@ -109,7 +103,10 @@ const PropertyDetails: React.FC = () => {
         }
 
 
-        
+        console.log('PropertyDetails - Raw propertyData:', propertyData);
+        console.log('PropertyDetails - propertyData.features:', propertyData.features);
+        console.log('PropertyDetails - propertyData.utilities:', propertyData.utilities);
+
         // Transform the property data to match the expected format
         const transformedProperty: Property = {
           id: propertyData.id?.toString() || '',
@@ -122,7 +119,7 @@ const PropertyDetails: React.FC = () => {
           zip_code: propertyData.zip_code || propertyData.zipCode || '',
           price: typeof propertyData.price === 'string' ? parseFloat(propertyData.price) : (propertyData.price || 0),
           listingType: propertyData.listing_type === 'rent' ? 'rent' : 'sale',
-          propertyType: propertyData.property_type || 'apartment',
+          propertyType: propertyData.propertyType || propertyData.property_type || 'apartment',
           bedrooms: propertyData.bedrooms ? parseInt(propertyData.bedrooms, 10) : 0,
           bathrooms: propertyData.bathrooms ? parseFloat(propertyData.bathrooms) : 0,
           squareFootage: propertyData.square_feet || propertyData.squareFootage || Number(propertyData.details?.square_feet) || 0,
@@ -200,74 +197,11 @@ const PropertyDetails: React.FC = () => {
             
             return galleryImages.length > 0 ? galleryImages : [];
           })(),
-          // Process videos from both direct videos array and media collection
-          videos: (() => {
-            // Process videos from API response
-            
-            // First check if property has videos directly in the response
-            if (propertyData.videos) {
-              let videosArray = [];
-              
-              // Handle both array and object formats
-              if (Array.isArray(propertyData.videos)) {
-                videosArray = propertyData.videos;
-              } else if (typeof propertyData.videos === 'object') {
-                // Convert object to array (handle cases where API returns {0: video, 1: video})
-                videosArray = Object.values(propertyData.videos);
-              }
-              
-              if (videosArray.length > 0) {
-                const processedVideos = videosArray.map((video: any) => ({
-                  id: video.id || Math.random().toString(36).substr(2, 9),
-                  url: video.url || video.original_url,
-                  original_url: video.original_url || video.url,
-                  thumbnail_url: video.thumbnail_url,
-                  duration: video.custom_properties?.duration || video.duration,
-                  size: video.size,
-                  mime_type: video.mime_type || video.type
-                }));
-                
-                return processedVideos;
-              }
-            }
-            // Fallback: Check if property has videos in media collection
-            if (propertyData.media && Array.isArray(propertyData.media)) {
-              const mediaVideos = propertyData.media
-                .filter((item: any) => item.collection_name === 'videos' || item.type?.startsWith('video/'))
-                .map((video: any) => ({
-                  id: video.id || Math.random().toString(36).substr(2, 9),
-                  url: video.url || video.original_url,
-                  original_url: video.original_url,
-                  thumbnail_url: video.thumbnail_url,
-                  duration: video.custom_properties?.duration,
-                  size: video.size,
-                  mime_type: video.mime_type || video.type
-                }));
-              return mediaVideos;
-             }
-            return [];
-          })(),
           // Process images once for both images and mainImage
           ...(() => {
-            // Check if videos exist
-            const hasVideos = (() => {
-              if (propertyData.videos) {
-                if (Array.isArray(propertyData.videos)) {
-                  return propertyData.videos.length > 0;
-                } else if (typeof propertyData.videos === 'object') {
-                  return Object.keys(propertyData.videos).length > 0;
-                }
-              }
-              // Check media collection for videos
-              if (propertyData.media && Array.isArray(propertyData.media)) {
-                return propertyData.media.some((item: any) => 
-                  item.collection_name === 'videos' || item.type?.startsWith('video/')
-                );
-              }
-              return false;
-            })();
+            const processedImages = processPropertyImages(propertyData);
             
-            const processedImages = processPropertyImages(propertyData, propertyData.type, hasVideos);
+
             
             return {
               images: processedImages.images,
@@ -302,15 +236,6 @@ const PropertyDetails: React.FC = () => {
         };
         
 
-        
-        console.log('Property data from API:', propertyData);
-        console.log('Property priceType from API:', propertyData.priceType);
-        console.log('Property price_type from API:', propertyData.price_type);
-        console.log('Transformed property:', transformedProperty);
-        console.log('Transformed property priceType:', transformedProperty.priceType);
-        console.log('Property images:', transformedProperty.images);
-        console.log('Property videos:', transformedProperty.videos);
-        
         // Transform property data to match frontend expectations
         const finalTransformedProperty = {
           ...transformedProperty,
@@ -549,12 +474,14 @@ const PropertyDetails: React.FC = () => {
       
       // Handle different price formats
       let numPrice = 0;
+      let currencyCode = currency || 'USD';
       
       // Handle object with amount property
       if (typeof price === 'object' && price !== null) {
         // Check for common price object structures
         if (typeof price.amount !== 'undefined') {
           numPrice = Number(price.amount) || 0;
+          currencyCode = price.currency || currency || 'USD';
         } else if (typeof price.price !== 'undefined') {
           numPrice = Number(price.price) || 0;
         } else if (typeof price.formatted !== 'undefined') {
@@ -721,32 +648,72 @@ const PropertyDetails: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {/* Property Image Gallery - Only show if there are images */}
-            {loadingMedia ? (
-              <Card className="overflow-hidden">
-                <div className="flex justify-center items-center h-96 bg-gray-100 rounded-lg">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                    <p className="text-gray-600">جاري تحميل الصور والفيديوهات...</p>
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              ((property.images && property.images.length > 0) || (property.videos && property.videos.length > 0)) && (
-                <Card className="overflow-hidden">
-                  <div className="relative">
-                    <PropertyImageGallery
-                      images={property.images || []}
-                      videos={property.videos || []}
+            {/* Image Gallery */}
+            <Card className="overflow-hidden">
+              <div className="relative">
+                {property.images && property.images.length > 1 ? (
+                  <PropertyImageGallery
+                    images={property.images}
+                    alt={property.title}
+                    className="w-full h-96"
+                    propertyId={property.id}
+                  />
+                ) : property.mainImage ? (
+                  <div className="relative w-full h-96">
+                    <img 
+                      src={property.mainImage}
                       alt={property.title}
-                      className="w-full h-96"
+                      className="w-full h-96 object-cover"
+
                     />
                   </div>
-                </Card>
-              )
-            )}
+                ) : (
+                  <div className="relative w-full h-96 bg-gray-100 flex items-center justify-center">
+                    <img 
+                      src="/images/placeholder-property.svg"
+                      alt={t('property.noImagesAvailable', 'لا توجد صور متاحة')}
+                      className="w-full h-96 object-contain opacity-60"
+                    />
+                    <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded text-sm">
+                      {t('property.noImagesAvailable', 'لا توجد صور متاحة')}
+                    </div>
+                  </div>
+                )}
 
+                {/* Badges */}
+                <Badge 
+                  className={`absolute top-4 left-4 ${
+                    property.listingType === 'rent' ? 'bg-green-500' : 'bg-[#067977]'
+                  }`}
+                >
+                  {property.listingType === 'rent' ? t('property.listingTypes.forRent') : t('property.listingTypes.forSale')}
+                </Badge>
 
+                {/* Action Buttons */}
+                <div className="absolute top-4 right-4 flex space-x-2">
+                  {user && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleToggleFavorite}
+                      className={`${
+                        isFavorite ? 'text-red-500' : 'text-white'
+                      } bg-black bg-opacity-50 hover:bg-opacity-70`}
+                    >
+                      <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShare}
+                    className="text-white bg-black bg-opacity-50 hover:bg-opacity-70"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
 
             {/* Property Overview */}
             <Card>
@@ -802,7 +769,7 @@ const PropertyDetails: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Enhanced Features and Utilities Section */}
+        
             <FeaturesAndUtilities 
               features={features}
               utilities={utilities}

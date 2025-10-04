@@ -43,7 +43,8 @@ const Header: React.FC = () => {
     closeAuthModal, 
     closeActivationModal, 
     requireAuth, 
-    requireVerifiedEmail 
+    requireVerifiedEmail,
+    isCheckingAuth
   } = useAuthCheck();
 
   const handleLogout = () => {
@@ -156,17 +157,17 @@ const Header: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={async () => {
-                await refreshUser();
+              onClick={() => {
                 requireVerifiedEmail(() => {
                   navigate('/add-property');
                 });
               }}
-              className="flex items-center space-x-1 text-[#067977] border-[#067977] hover:bg-[#067977] hover:text-white transition-all duration-200 transform hover:scale-105 px-2 lg:px-3 text-xs lg:text-sm font-medium shadow-sm hover:shadow-md"
+              disabled={isCheckingAuth}
+              className="flex items-center space-x-1 text-[#067977] border-[#067977] hover:bg-[#067977] hover:text-white transition-all duration-200 transform hover:scale-105 px-2 lg:px-3 text-xs lg:text-sm font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
-              <span className="hidden lg:block">{t('navigation.listProperty')}</span>
-              <span className="lg:hidden">List</span>
+              <span className="hidden lg:block">{isCheckingAuth ? t('common.loading') : t('navigation.listProperty')}</span>
+              <span className="lg:hidden">{isCheckingAuth ? '...' : 'List'}</span>
             </Button>
 
             {user ? (
@@ -238,17 +239,17 @@ const Header: React.FC = () => {
               
               {/* List Property Button - Mobile */}
               <button
-                onClick={async () => {
-                  await refreshUser();
+                onClick={() => {
                   requireVerifiedEmail(() => {
                     navigate('/add-property');
                   });
                   setMobileMenuOpen(false);
                 }}
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#067977] hover:bg-gray-50 w-full text-left"
+                disabled={isCheckingAuth}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#067977] hover:bg-gray-50 w-full text-left disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="h-4 w-4" />
-                <span>{t('navigation.listProperty')}</span>
+                <span>{isCheckingAuth ? t('common.loading') : t('navigation.listProperty')}</span>
               </button>
               
               {/* Language Selection in Mobile */}

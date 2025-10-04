@@ -63,6 +63,7 @@ const Home: React.FC = () => {
     const fetchPropertiesByCategory = async () => {
       try {
         setLoading(true);
+        console.log('🚀 Home - Starting to fetch properties...');
 
         // Fetch home statistics
         await fetchHomeStats();
@@ -76,27 +77,47 @@ const Home: React.FC = () => {
           setSearchQuery(searchQuery);
         }
         
+        console.log('🔍 Home - About to call getProperties with params:', {
+          perPage: 50,
+          sortBy: 'date_desc'
+        });
+        
         // Fetch all properties in a single request with higher limit
         const response = await getProperties({
-          limit: 50, // Get more properties for the grid
-          sortBy: 'createdAt',
-          sortOrder: 'desc'
+          perPage: 50, // Get more properties for the grid
+          sortBy: 'date_desc'
         });
+        
+        console.log('📥 Home - Raw API response received:', response);
+        console.log('📊 Home - Response type:', typeof response);
+        console.log('📊 Home - Response is array:', Array.isArray(response));
         
         // Fetch featured properties
         const featuredResponse = await getFeaturedProperties({
           limit: 10
         });
         
-
+        console.log('🌟 Home - Featured properties response:', featuredResponse);
 
         
         // Handle the response structure - getProperties might return an array or an object with data
         const allProps = Array.isArray(response) ? response : (response?.data || []);
         const featuredProps = Array.isArray(featuredResponse) ? featuredResponse : (featuredResponse?.data || []);
         
+        console.log('🏠 Home - Processed properties:', {
+          allPropsCount: allProps.length,
+          featuredPropsCount: featuredProps.length,
+          firstProperty: allProps[0] ? {
+            id: allProps[0].id,
+            title: allProps[0].title,
+            hasMedia: !!allProps[0].media,
+            mediaLength: allProps[0].media?.length || 0,
+            mediaItems: allProps[0].media?.slice(0, 2) || []
+          } : null
+        });
+        
         if (!Array.isArray(allProps)) {
-
+          console.error('❌ Home - allProps is not an array:', allProps);
           return;
         }
         

@@ -150,7 +150,7 @@
                     
                     @if(str_starts_with($item->mime_type, 'image/'))
                         <a href="{{ route('admin.media.show', $item) }}">
-                            <img src="{{ $item->getUrl('thumb') ?? $item->getUrl() }}" 
+                            <img src="{{ $item->getUrl() }}" 
                                  class="img-fluid rounded" 
                                  alt="{{ $item->name }}"
                                  style="height: 150px; width: 100%; object-fit: cover;">

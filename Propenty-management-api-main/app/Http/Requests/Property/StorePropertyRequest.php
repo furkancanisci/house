@@ -58,14 +58,12 @@ class StorePropertyRequest extends FormRequest
             'contactEmail' => 'nullable|email|max:100',
             'documentTypeId' => 'nullable|integer|exists:property_document_types,id',
             'document_type_id' => 'nullable|integer|exists:property_document_types,id', // Also accept snake_case
-            'mainImage' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:51200', // 50MB max, no dimension restrictions
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:51200', // Also accept snake_case
+            'mainImage' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max, no dimension restrictions
+            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // Also accept snake_case
             'images' => 'nullable|array|max:20', // Maximum 20 images
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:51200', // 50MB max per image, no dimension restrictions
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max per image, no dimension restrictions
             'base64_images' => 'nullable|array|max:20', // Maximum 20 base64 images
             'base64_images.*' => 'string|regex:/^data:image\/(jpeg|jpg|png|webp);base64,/', // Valid base64 image format
-            'videos' => 'nullable|array|max:1', // Maximum 1 video per property
-            'videos.*' => 'file|mimes:mp4,avi,mov,wmv,webm|max:512000', // 500MB max per video
             
             // Features and Utilities
             'features' => 'nullable|array',
@@ -199,42 +197,6 @@ class StorePropertyRequest extends FormRequest
         // Handle multiple images array
         if ($this->hasFile('images')) {
             $data['images'] = $this->file('images');
-        }
-        
-        // Handle videos - filter out empty files
-        if ($this->hasFile('videos')) {
-            $videos = $this->file('videos');
-            if (is_array($videos)) {
-                // Filter out empty or invalid video files
-                $validVideos = array_filter($videos, function($video) {
-                    return $video && $video->isValid() && $video->getSize() > 0;
-                });
-                // Re-index the array to avoid gaps
-                $validVideos = array_values($validVideos);
-                
-                // Replace the videos in the request files directly
-                $files = $this->allFiles();
-                if (empty($validVideos)) {
-                    // Remove videos key entirely if no valid videos
-                    unset($files['videos']);
-                } else {
-                    $files['videos'] = $validVideos;
-                }
-                $this->files->replace($files);
-            } else {
-                // Single video file
-                if ($videos && $videos->isValid() && $videos->getSize() > 0) {
-                    // Keep the single valid video
-                    $files = $this->allFiles();
-                    $files['videos'] = [$videos];
-                    $this->files->replace($files);
-                } else {
-                    // Remove invalid single video
-                    $files = $this->allFiles();
-                    unset($files['videos']);
-                    $this->files->replace($files);
-                }
-            }
         }
         
         // Handle features - check if it's coming as array indices from FormData

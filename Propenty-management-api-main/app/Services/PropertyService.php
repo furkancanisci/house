@@ -270,7 +270,7 @@ class PropertyService
                 $uploadedImages['images'][] = [
                     'id' => $media->id,
                     'url' => $media->getUrl(),
-                    'thumb' => $media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : $media->getUrl(),
+                    'thumb' => $media->getUrl(),
                 ];
             }
         }

@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'public'),
+    'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
     |--------------------------------------------------------------------------
@@ -53,14 +53,6 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-        ],
-
-        'properties' => [
-            'driver' => 'local',
-            'root' => storage_path('app/public/properties'),
-            'url' => env('APP_URL').'/storage/properties',
-            'visibility' => 'public',
             'throw' => false,
         ],
 

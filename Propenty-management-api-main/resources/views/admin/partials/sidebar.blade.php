@@ -213,6 +213,16 @@
                 </li>
                 @endcanany
 
+                <!-- Property Document Types -->
+                @can('view property document types')
+                <li class="nav-item">
+                    <a href="{{ route('admin.property-document-types.index') }}" class="nav-link {{ request()->routeIs('admin.property-document-types*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-file-contract"></i>
+                        <p>{{ __('Property Document Types') }}</p>
+                    </a>
+                </li>
+                @endcan
+
                 <!-- User Management -->
                 @canany(['view users', 'view leads'])
                 <li class="nav-header">{{ strtoupper(__('admin.user_management')) }}</li>

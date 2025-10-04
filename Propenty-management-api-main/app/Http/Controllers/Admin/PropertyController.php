@@ -173,9 +173,7 @@ class PropertyController extends Controller
             'contact_email' => 'nullable|email|max:100',
             'user_id' => 'required|exists:users,id',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:51200', // 50MB max
-            'videos' => 'nullable|array|max:1', // Maximum 1 video per property
-            'videos.*' => 'file|mimes:mp4,avi,mov,wmv,webm|max:512000', // 500MB max per video
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
 
             // Advanced fields with camelCase from frontend
             'floorNumber' => 'nullable|integer|min:0|max:200',
@@ -305,14 +303,6 @@ class PropertyController extends Controller
                 if (isset($request->file('images')[$mainIndex])) {
                     $property->addMediaFromRequest("images.{$mainIndex}")
                         ->toMediaCollection('main_image');
-                }
-            }
-
-            // Handle video uploads
-            if ($request->hasFile('videos')) {
-                foreach ($request->file('videos') as $index => $video) {
-                    $property->addMediaFromRequest("videos.{$index}")
-                        ->toMediaCollection('videos');
                 }
             }
 
@@ -451,10 +441,6 @@ class PropertyController extends Controller
             'new_images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'remove_images' => 'nullable|array',
             'remove_images.*' => 'integer',
-            'new_videos' => 'nullable|array|max:1', // Maximum 1 video per property
-            'new_videos.*' => 'file|mimes:mp4,avi,mov,wmv,webm|max:102400', // 100MB max per video
-            'remove_videos' => 'nullable|array',
-            'remove_videos.*' => 'integer',
 
             // Advanced fields with camelCase from frontend
             'floorNumber' => 'nullable|integer|min:0|max:200',
@@ -584,29 +570,11 @@ class PropertyController extends Controller
                 }
             }
 
-            // Remove selected videos
-            if ($request->has('remove_videos')) {
-                foreach ($request->remove_videos as $mediaId) {
-                    $media = $property->media()->find($mediaId);
-                    if ($media) {
-                        $media->delete();
-                    }
-                }
-            }
-
             // Add new images
             if ($request->hasFile('new_images')) {
                 foreach ($request->file('new_images') as $index => $image) {
                     $property->addMediaFromRequest("new_images.{$index}")
                         ->toMediaCollection('images');
-                }
-            }
-
-            // Add new videos
-            if ($request->hasFile('new_videos')) {
-                foreach ($request->file('new_videos') as $index => $video) {
-                    $property->addMediaFromRequest("new_videos.{$index}")
-                        ->toMediaCollection('videos');
                 }
             }
 
@@ -1048,77 +1016,5 @@ class PropertyController extends Controller
             });
         
         return response()->json($neighborhoods);
-    }
-
-    /**
-     * Delete specific media from property
-     */
-    public function deleteMedia(Request $request, Property $property, $mediaId)
-    {
-        $this->authorize('edit properties');
-
-        try {
-            $media = $property->media()->find($mediaId);
-            
-            if (!$media) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Media not found'
-                ], 404);
-            }
-
-            $media->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Media deleted successfully'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error deleting media: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Get property media by collection
-     */
-    public function getMedia(Property $property, $collection = null)
-    {
-        $this->authorize('view properties');
-
-        try {
-            $query = $property->media();
-            
-            if ($collection) {
-                $query->where('collection_name', $collection);
-            }
-
-            $media = $query->get()->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'file_name' => $item->file_name,
-                    'mime_type' => $item->mime_type,
-                    'size' => $item->size,
-                    'collection_name' => $item->collection_name,
-                    'url' => $item->getUrl(),
-                    'created_at' => $item->created_at->toISOString(),
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'media' => $media
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error retrieving media: ' . $e->getMessage()
-            ], 500);
-        }
     }
 }
