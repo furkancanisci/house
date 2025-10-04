@@ -943,7 +943,7 @@ class PropertyController extends Controller
         ]);
 
         // Load relationships for the property detail view
-        $property->load(['user', 'media', 'favoritedByUsers', 'documentType', 'features', 'utilities']);
+        $property->load(['user', 'media', 'favoritedByUsers', 'documentType', 'features', 'utilities', 'priceType', 'propertyType']);
 
         return response()->json([
             'property' => new PropertyResource($property),

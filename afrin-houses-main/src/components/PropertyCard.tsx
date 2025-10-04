@@ -219,7 +219,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     return Number(property.square_feet ?? property.squareFootage ?? property.sqft ?? property.details?.square_feet ?? 0) || 0;
   };
 
-  const formatPrice = (price: number | string | { amount?: number } | undefined, type: string = 'sale', currency?: string) => {
+  const formatPrice = (price: number | string | { amount?: number } | undefined, type: string = 'sale', currency?: string, priceType?: any) => {
     const numPrice = typeof price === 'object' && price !== null
       ? (price as any).amount || 0
       : Number(price) || 0;
@@ -236,11 +236,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     const currencyCode = currency || property.currency || 'TRY';
     const formattedPrice = `${formattedNumber} ${currencyCode}`;
 
-    // Add rental period if needed
-    if (type === 'rent') {
-      return `${formattedPrice}/${t('property.month')}`;
+    // Get price type text from database
+    if (priceType && typeof priceType === 'object') {
+      const priceTypeText = i18n.language === 'ar' ? priceType.name_ar :
+                           i18n.language === 'ku' ? priceType.name_ku :
+                           priceType.name_en;
+      
+      // Return formatted price with price type from database
+      return `${formattedPrice} / ${priceTypeText}`;
     }
 
+    // If no priceType provided, return just the price
     return formattedPrice;
   };
 
@@ -363,17 +369,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                 </div>
                 <div className="text-left lg:text-right lg:ml-3 flex-shrink-0">
                   <p className="text-lg lg:text-xl font-bold text-[#067977]">
-                    {formatPrice(property.price, property.listingType, property.currency)}
+                    {formatPrice(property.price, property.listingType, property.currency, property.priceType)}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {property.priceType ? (
-                      typeof property.priceType === 'object' ? (
-                        i18n.language === 'ar' ? property.priceType.name_ar :
-                        i18n.language === 'ku' ? property.priceType.name_ku :
-                        property.priceType.name_en
-                      ) : t(`property.priceTypes.${property.priceType}`)
-                    ) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
-                  </p>
+
                 </div>
               </div>
 
@@ -516,11 +514,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
             </Link>
           </h3>
           <p className="text-base sm:text-lg font-bold text-[#067977]">
-            {formatPrice(property.price, property.listingType, property.currency)}
+            {formatPrice(property.price, property.listingType, property.currency, property.priceType)}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {property.priceType ? t(`property.priceTypes.${property.priceType}`) : (property.listingType === 'rent' ? t('property.perMonth') : t('property.totalPrice'))}
-          </p>
+
         </div>
 
         <p className="text-gray-600 mb-2 flex items-center text-xs sm:text-sm">

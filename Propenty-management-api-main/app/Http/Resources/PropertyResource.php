@@ -39,7 +39,16 @@ class PropertyResource extends JsonResource
             'listing_type' => $this->ensureUtf8($this->listing_type),
             
             // Property details - flat structure for frontend compatibility
-            'propertyType' => $this->getAttributeValue('property_type'), // Frontend expects camelCase
+            'propertyType' => $this->when($this->relationLoaded('propertyType'), function () {
+                return $this->propertyType ? [
+                    'id' => $this->propertyType->id,
+                    'name' => $this->propertyType->name,
+                    'name_ar' => $this->propertyType->name_ar,
+                    'name_en' => $this->propertyType->name_en,
+                    'name_ku' => $this->propertyType->name_ku,
+                    'slug' => $this->propertyType->slug,
+                ] : $this->getAttributeValue('property_type');
+            }, $this->getAttributeValue('property_type')), // Frontend expects camelCase
             'listingType' => $this->listing_type, // Frontend expects camelCase
             'bedrooms' => (int) ($this->bedrooms ?? 0),
             'bathrooms' => (float) ($this->bathrooms ?? 0),
