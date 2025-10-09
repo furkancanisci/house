@@ -62,6 +62,7 @@ import { windowTypeService, WindowType } from '../services/windowTypeService';
 import { floorTypeService, FloorType } from '../services/floorTypeService';
 import { viewTypeService, ViewType } from '../services/viewTypeService';
 import { directionService, Direction } from '../services/directionService';
+import { currencyService, CurrencyOption } from '../services/currencyService';
 import { compressImages, formatFileSize } from '../lib/imageUtils';
 import api from '../services/api';
 import { authService } from '../services/authService';
@@ -107,6 +108,7 @@ const createPropertySchema = (t: any) => z.object({
   city: z.string().min(1, t('validation.cityRequired')).max(100, t('validation.cityMaxLength')),
   state: z.string().min(1, t('validation.stateRequired')).max(100, t('validation.stateMaxLength')),
   price: z.number().min(1, t('validation.priceRequired')).max(99999999.99, t('validation.priceTooHigh')),
+  currency: z.string().min(1, 'Currency is required').default('TRY'),
   priceType: z.string().min(1, t('validation.priceTypeRequired')),
   listingType: z.enum(['rent', 'sale']),
   propertyType: z.string().min(1, t('validation.propertyTypeRequired')),
@@ -207,6 +209,11 @@ const AddProperty: React.FC = () => {
     const savedMainImageIndex = localStorage.getItem('addProperty_mainImageIndex');
     return savedMainImageIndex ? parseInt(savedMainImageIndex, 10) : 0;
   });
+
+  // Video upload state
+  const [selectedVideos, setSelectedVideos] = useState<File[]>([]);
+  const [videoPreviewUrls, setVideoPreviewUrls] = useState<string[]>([]);
+
   const [currentStep, setCurrentStep] = useState(() => {
     // Restore current step from localStorage on page refresh
     const savedStep = localStorage.getItem('addProperty_currentStep');
@@ -300,6 +307,7 @@ const AddProperty: React.FC = () => {
         squareFootage: 500,
         yearBuilt: new Date().getFullYear(),
         price: 1, // Changed from 0 to 1 since price must be greater than 0
+        currency: 'TRY', // Default currency
         description: '',
         parking: 'none',
         lotSize: 1000, // Default lot size value since it's now mandatory
@@ -540,11 +548,12 @@ const AddProperty: React.FC = () => {
     loadDirections();
   }, [i18n.language]);
 
-  // Load features and utilities only when reaching step 2 (Property Details) or language changes
+  // Load features, utilities, and currencies only when reaching step 2 (Property Details) or language changes
   useEffect(() => {
     if (currentStep >= 2) {
       fetchFeatures();
       fetchUtilities();
+      fetchCurrencies();
     }
   }, [currentStep, i18n.language]);
 
@@ -569,6 +578,10 @@ const AddProperty: React.FC = () => {
   const [availablePriceTypes, setAvailablePriceTypes] = useState<PriceType[]>([]);
   const [loadingPriceTypes, setLoadingPriceTypes] = useState(false);
   const [priceTypesError, setPriceTypesError] = useState<string | null>(null);
+
+  // State for currencies from API
+  const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyOption[]>([]);
+  const [loadingCurrencies, setLoadingCurrencies] = useState(false);
 
   // Fetch features from API
   const fetchFeatures = async () => {
@@ -655,6 +668,20 @@ const AddProperty: React.FC = () => {
       notification.error('Failed to load price types');
     } finally {
       setLoadingPriceTypes(false);
+    }
+  };
+
+  // Fetch currencies from API
+  const fetchCurrencies = async () => {
+    setLoadingCurrencies(true);
+    try {
+      const currencies = await currencyService.getCurrencyOptions();
+      setAvailableCurrencies(currencies);
+    } catch (error) {
+      console.error('Error fetching currencies:', error);
+      notification.error('Failed to load currencies');
+    } finally {
+      setLoadingCurrencies(false);
     }
   };
 
@@ -932,6 +959,59 @@ const AddProperty: React.FC = () => {
     setMainImageIndex(index);
   };
 
+  // Video upload handler
+  const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    // Validate file types
+    const validTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    if (invalidFiles.length > 0) {
+      notification.error('Only MP4, MPEG, MOV, AVI, and WebM videos are allowed');
+      return;
+    }
+
+    // Check total file count limit
+    if (files.length + selectedVideos.length > 5) {
+      notification.error('Maximum 5 videos allowed');
+      return;
+    }
+
+    // Check file size (max 50MB per video)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    if (oversizedFiles.length > 0) {
+      notification.error('Video files must be less than 50MB each');
+      return;
+    }
+
+    const newVideos = [...selectedVideos, ...files];
+    setSelectedVideos(newVideos);
+
+    // Create preview URLs
+    const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+    setVideoPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+
+    notification.success(`Successfully added ${files.length} video(s)`);
+
+    // Clear the input value
+    event.target.value = '';
+  };
+
+  const removeVideo = (index: number) => {
+    // Revoke the object URL to free memory
+    if (videoPreviewUrls[index]) {
+      URL.revokeObjectURL(videoPreviewUrls[index]);
+    }
+
+    setSelectedVideos(prev => prev.filter((_, i) => i !== index));
+    setVideoPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   const getFieldsForStep = (step: number) => {
     switch (step) {
       case 1:
@@ -1010,6 +1090,8 @@ const AddProperty: React.FC = () => {
         property_type_id: selectedPropertyType?.id, // New foreign key relationship
         listingType: data.listingType,
         price: parseFloat(data.price.toString()),
+        currency: data.currency || 'TRY',
+        priceType: data.priceType,
         address: street,
         city: city,
         state: state,
@@ -1072,6 +1154,11 @@ const AddProperty: React.FC = () => {
         if (index !== mainImageIndex) {
           formDataToSend.append('images[]', image);
         }
+      });
+
+      // Add videos to FormData
+      selectedVideos.forEach((video, index) => {
+        formDataToSend.append('videos[]', video);
       });
 
       try {
@@ -1342,7 +1429,7 @@ const AddProperty: React.FC = () => {
                 <DollarSign className="h-4 w-4 text-emerald-600" />
                 {t('addProperty.sectionTitles.priceAndCost')}
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="price" className="text-sm font-medium text-gray-700 mb-2 block">
                     {t('forms.price')} <span className="text-red-500">*</span>
@@ -1354,7 +1441,7 @@ const AddProperty: React.FC = () => {
                     placeholder={watch('listingType') === 'rent' ? t('forms.monthlyRent') : t('forms.salePrice')}
                     className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.price ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'
                       }`}
-                    {...register('price', { 
+                    {...register('price', {
                   setValueAs: (value) => value === '' ? undefined : Number(value)
                 })}
                   />
@@ -1362,6 +1449,46 @@ const AddProperty: React.FC = () => {
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                       <X className="h-4 w-4" />
                       {errors.price.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="currency" className="text-sm font-medium text-gray-700 mb-2 block">
+                    {t('property.currency', 'Currency')} <span className="text-red-500">*</span>
+                  </Label>
+                  <Controller
+                    name="currency"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value} disabled={loadingCurrencies}>
+                        <SelectTrigger className={`h-10 text-base border-2 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-emerald-100 hover:border-emerald-300 ${errors.currency ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-emerald-500'}`}>
+                          <SelectValue placeholder={t('property.selectCurrency', 'Select Currency')} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-2 border-gray-100 rounded-xl shadow-lg">
+                          {loadingCurrencies ? (
+                            <SelectItem key="loading" value="loading" disabled className="text-sm py-3 px-4">
+                              {t('common.loading')}
+                            </SelectItem>
+                          ) : (
+                            availableCurrencies.map((currency) => (
+                              <SelectItem
+                                key={currency.value}
+                                value={currency.value}
+                                className="text-sm py-3 px-4 hover:bg-emerald-50 focus:bg-emerald-100 transition-colors duration-150 cursor-pointer"
+                              >
+                                {currency.label}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.currency && (
+                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {errors.currency.message}
                     </p>
                   )}
                 </div>
@@ -1946,6 +2073,93 @@ const AddProperty: React.FC = () => {
                       <li>• {t('addProperty.imageUpload.tips.showFeatures')}</li>
                       <li>• {t('addProperty.imageUpload.tips.ensureQuality')}</li>
                     </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Video Upload Section */}
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-100">
+              <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                <svg className="h-4 w-4 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Property Videos (Optional)
+              </h3>
+              <p className="text-sm text-gray-600 mb-6 font-['Cairo',_'Tajawal',_sans-serif]">
+                Upload videos to showcase your property (Optional)
+              </p>
+
+              <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 bg-white/50">
+                <input
+                  type="file"
+                  multiple
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  className="hidden"
+                  id="video-upload"
+                />
+                <label htmlFor="video-upload" className="cursor-pointer block">
+                  <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 hover:bg-blue-200 transition-colors">
+                    <svg className="h-8 w-8 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <p className="text-base font-semibold text-gray-900 mb-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                    Click to upload videos
+                  </p>
+                  <p className="text-sm text-gray-500 font-['Cairo',_'Tajawal',_sans-serif]">
+                    MP4, MOV, AVI up to 50MB each (max 5 videos)
+                  </p>
+                </label>
+              </div>
+
+              {selectedVideos.length > 0 && (
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-base font-semibold text-gray-900 flex items-center gap-2 font-['Cairo',_'Tajawal',_sans-serif]">
+                      <svg className="h-4 w-4 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                      </svg>
+                      Selected Videos ({selectedVideos.length}/5)
+                    </h4>
+                    <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                      {selectedVideos.length} of 5
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {videoPreviewUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md">
+                          <video
+                            src={url}
+                            className="w-full h-40 object-cover bg-black"
+                            controls
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeVideo(index)}
+                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-10"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                          <div className="absolute top-2 left-2 bg-white/90 text-gray-700 text-xs px-2 py-1 rounded-full font-medium">
+                            {index + 1}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {selectedVideos.length < 5 && (
+                      <div className="relative">
+                        <label htmlFor="video-upload" className="cursor-pointer block">
+                          <div className="w-full h-40 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
+                            <Plus className="h-6 w-6 text-gray-400 mb-2" />
+                            <span className="text-xs text-gray-500 font-medium">Add more videos</span>
+                          </div>
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

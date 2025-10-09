@@ -11,11 +11,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(\App\Services\ImageProcessingService::class, function ($app) {
-            return new \App\Services\ImageProcessingService(
-                $app->make(\App\Services\BunnyStorageService::class)
-            );
-        });
+        // ImageProcessingService no longer needs BunnyStorageService
     }
 
     /**

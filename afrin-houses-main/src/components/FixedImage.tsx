@@ -78,14 +78,25 @@ const FixedImage: React.FC<FixedImageProps> = ({
     }
   }, [src, hasError, propertyId]);
 
-  const handleError = () => {
+  // Timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        setIsLoading(false);
+        setImageLoaded(true); // Show image anyway
+      }
+    }, 3000); // 3 second timeout
 
+    return () => clearTimeout(timeout);
+  }, [isLoading, currentSrc]);
+
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     if (!hasError) {
       setHasError(true);
       // Use placeholder image when original fails to load
       setCurrentSrc('/images/placeholder-property.svg');
       setImageLoaded(false);
-      setIsLoading(true);
+      setIsLoading(false); // Stop loading when error occurs
     }
   };
 
@@ -132,7 +143,7 @@ const FixedImage: React.FC<FixedImageProps> = ({
         {...props}
         src={currentSrc}
         alt={alt}
-        className={`${className} object-center transition-all duration-300 ${isZoomable ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : ''} ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`${className} object-center transition-all duration-300 ${isZoomable ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : ''} ${isLoading && showLoadingSpinner ? 'opacity-0' : 'opacity-100'}`}
         onError={handleError}
         onLoad={handleLoad}
         onClick={handleImageClick}

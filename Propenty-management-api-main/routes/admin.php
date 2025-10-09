@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\ViewTypeController;
 use App\Http\Controllers\Admin\DirectionController;
 use App\Http\Controllers\Admin\HomeStatController;
 use App\Http\Controllers\Admin\PropertyDocumentTypeController;
+use App\Http\Controllers\Admin\CurrencyController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -97,6 +98,10 @@ Route::middleware(['auth', 'can:view dashboard'])->group(function () {
         Route::delete('/{priceType}', [PriceTypeController::class, 'destroy'])->name('admin.price-types.destroy')->middleware('can:delete price types');
         Route::post('/{priceType}/toggle-status', [PriceTypeController::class, 'toggleStatus'])->name('admin.price-types.toggle-status')->middleware('can:edit price types');
     });
+
+    // Currencies Management
+    Route::resource('currencies', CurrencyController::class)->names('admin.currencies');
+    Route::post('currencies/{currency}/toggle-status', [CurrencyController::class, 'toggleStatus'])->name('admin.currencies.toggle-status');
 
     // Locations Management
     // Governorates
