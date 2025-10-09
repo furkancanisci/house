@@ -180,14 +180,14 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
         {finalMedia.length > 1 && !isVideoFullscreen && (
           <>
             <button
-              onClick={handlePrevImage}
+              onClick={handlePrevMedia}
               className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100"
               aria-label="Previous image"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
-              onClick={handleNextImage}
+              onClick={handleNextMedia}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100"
               aria-label="Next image"
             >

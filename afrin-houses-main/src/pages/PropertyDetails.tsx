@@ -266,10 +266,9 @@ const PropertyDetails: React.FC = () => {
           user: propertyData.user,
           media: propertyData.media || [],
           priceType: propertyData.priceType || propertyData.price_type,
+          videos: propertyData.videos || [],
         };
-        
-        setProperty(finalTransformedProperty);
-        
+
         // Process videos from property data (already included in the API response)
         if (propertyData.videos && Array.isArray(propertyData.videos)) {
           const videos = propertyData.videos.map((video: any, index: number) => ({
@@ -287,7 +286,7 @@ const PropertyDetails: React.FC = () => {
         }
 
         // Update property state with final data
-        setProperty({ ...finalTransformedProperty });
+        setProperty(finalTransformedProperty);
         setLoadingMedia(false);
       } catch (err: any) {
         console.error('Error loading property:', err);
@@ -816,11 +815,11 @@ const PropertyDetails: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">{t('filters.propertyType')}</span>
                       <span className="capitalize">
-                        {property.propertyType && typeof property.propertyType === 'object' 
-                          ? (i18n.language === 'ar' ? property.propertyType.name_ar :
-                             i18n.language === 'ku' ? property.propertyType.name_ku :
-                             property.propertyType.name_en || property.propertyType.name)
-                          : property.propertyType || t('property.typeNotAvailable')
+                        {property.propertyType && typeof property.propertyType === 'object'
+                          ? (i18n.language === 'ar' ? property.propertyType?.name_ar :
+                             i18n.language === 'ku' ? property.propertyType?.name_ku :
+                             property.propertyType?.name_en || property.propertyType?.name)
+                          : (property.propertyType || t('property.typeNotAvailable'))
                         }
                       </span>
                     </div>
