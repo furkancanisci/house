@@ -133,6 +133,8 @@ export const processPropertyImages = (
 ): PropertyImageData => {
   let mainImage = '';
   let images: string[] = [];
+  let foundMainImage = false;
+  let hasRealImages = false;
 
   // 1. PRIORITY: Check property.media array for real uploaded images
   if (property.media && Array.isArray(property.media) && property.media.length > 0) {
