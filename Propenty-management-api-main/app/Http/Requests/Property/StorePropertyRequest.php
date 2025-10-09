@@ -30,7 +30,8 @@ class StorePropertyRequest extends FormRequest
             'listingType' => 'required|string|in:rent,sale',
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3|exists:currencies,code',
-            'price_type' => 'nullable|string|in:negotiable,final_price,popular_saying,price_from_last,monthly,yearly,total,fixed',
+            'priceType' => 'nullable|string|exists:price_types,key', // Frontend sends camelCase
+            'price_type' => 'nullable|string|exists:price_types,key', // Backend uses snake_case
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
@@ -64,7 +65,9 @@ class StorePropertyRequest extends FormRequest
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max per image, no dimension restrictions
             'base64_images' => 'nullable|array|max:20', // Maximum 20 base64 images
             'base64_images.*' => 'string|regex:/^data:image\/(jpeg|jpg|png|webp);base64,/', // Valid base64 image format
-            
+            'videos' => 'nullable|array|max:5', // Maximum 5 videos
+            'videos.*' => 'nullable|file|max:51200', // 50MB max per video - removed mime check temporarily
+
             // Features and Utilities
             'features' => 'nullable|array',
             'features.*' => 'integer|exists:features,id',
@@ -198,7 +201,33 @@ class StorePropertyRequest extends FormRequest
         if ($this->hasFile('images')) {
             $data['images'] = $this->file('images');
         }
-        
+
+        // Handle multiple videos array
+        if ($this->hasFile('videos')) {
+            $videos = $this->file('videos');
+            $data['videos'] = $videos;
+
+            // Log video file details for debugging
+            \Illuminate\Support\Facades\Log::info('Videos detected in request', [
+                'count' => count($videos),
+                'videos_debug' => array_map(function($video) {
+                    return [
+                        'name' => $video->getClientOriginalName(),
+                        'size' => $video->getSize(),
+                        'mime' => $video->getMimeType(),
+                        'error' => $video->getError(),
+                        'is_valid' => $video->isValid(),
+                        'error_message' => $video->getErrorMessage(),
+                    ];
+                }, $videos)
+            ]);
+        } else {
+            \Illuminate\Support\Facades\Log::info('No videos found in request', [
+                'has_videos' => $this->hasFile('videos'),
+                'all_files' => array_keys($this->allFiles())
+            ]);
+        }
+
         // Handle features - check if it's coming as array indices from FormData
         $features = [];
         $index = 0;

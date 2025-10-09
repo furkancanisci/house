@@ -182,7 +182,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        App\Providers\BunnyFilesystemServiceProvider::class,
+        // App\Providers\BunnyFilesystemServiceProvider::class, // Disabled: Using local storage instead
         // App\Providers\NeonDatabaseServiceProvider::class,
     ])->toArray(),
 

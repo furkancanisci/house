@@ -18,6 +18,7 @@ class InputSanitizationMiddleware
     {
         // Skip sanitization for authentication and property endpoints to allow proper validation
         $skipPaths = [
+            // v1 routes
             'api/v1/auth/login',
             'api/v1/auth/register',
             'api/v1/auth/me',
@@ -36,12 +37,25 @@ class InputSanitizationMiddleware
             'api/v1/directions/options',
             'api/home-stats',
             'api/v1/home-stats',
-            'admin/home-stats'
+            'admin/home-stats',
+            // Backward compatibility routes (without v1 prefix)
+            'api/auth/login',
+            'api/auth/register',
+            'api/auth/me',
+            'api/auth/logout',
+            'api/properties',
+            'api/properties/featured',
+            'api/features',
+            'api/utilities',
+            'api/locations/states',
+            'api/locations/cities',
+            'api/property-types/options',
         ];
         $currentPath = trim($request->path(), '/');
 
         // Also skip if path starts with api/v1/properties/ (for specific property endpoints)
-        $isPropertyEndpoint = str_starts_with($currentPath, 'api/v1/properties/');
+        $isPropertyEndpoint = str_starts_with($currentPath, 'api/v1/properties/') ||
+                              str_starts_with($currentPath, 'api/properties/');
 
         // Also skip if path starts with api/v1/cities/state/ (for state-specific city endpoints)
         $isCityStateEndpoint = str_starts_with($currentPath, 'api/v1/cities/state/');
@@ -199,8 +213,9 @@ class InputSanitizationMiddleware
         ];
         
         // Command injection patterns
+        // Note: Removed & from pattern as it's part of normal query strings
         $commandInjectionPatterns = [
-            '/[;&|`$(){}\[\]]/i',
+            '/[;|`$()]/i',
             '/\b(cat|ls|pwd|whoami|id|uname|wget|curl|nc|netcat)\b/i',
         ];
         

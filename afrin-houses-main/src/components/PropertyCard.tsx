@@ -131,9 +131,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     }
   };
 
-  const processedImages = useGallery ? processPropertyImages(property) : { mainImage: property.mainImage || '/images/placeholder-property.svg', images: [] };
+  // Get main image - prioritize property.mainImage from API
+  const rawMainImage = property.mainImage && property.mainImage !== '/images/placeholder-property.svg'
+    ? property.mainImage
+    : null;
+
+  const processedImages = useGallery ? processPropertyImages(property) : { mainImage: rawMainImage || '/images/placeholder-property.svg', images: [] };
   const images = processedImages.images || [];
-  const mainImage = processedImages.mainImage || property.mainImage || '/images/placeholder-property.svg';
+  const mainImage = rawMainImage || (processedImages.mainImage !== '/images/placeholder-property.svg' ? processedImages.mainImage : null);
+
+  // Get first video if exists
+  const firstVideo = property.videos && Array.isArray(property.videos) && property.videos.length > 0
+    ? property.videos[0]
+    : null;
 
   const propertySlug = property.slug || `property-${property.id}`;
 
@@ -157,10 +167,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     
     if (numPrice === 0) return t('property.priceOnRequest');
     
-    // Format the price based on the current language
-    const formattedPrice = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
-      style: 'currency',
-      currency: 'SAR',
+    // Format the number based on the current language
+    const formattedNumber = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(numPrice);
@@ -198,22 +206,33 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
         <div className="flex flex-col lg:flex-row lg:items-center lg:h-full">
           {/* Image/Video Section */}
           <div className="relative lg:flex-shrink-0 lg:self-center lg:m-2 lg:max-w-64">
-            {mainImage ? (
+            {firstVideo ? (
+              <div className="relative h-48 w-full lg:w-64 rounded-t-lg lg:rounded-lg shadow-sm overflow-hidden bg-black">
+                <video
+                  src={firstVideo.url}
+                  className="h-48 w-full lg:w-64 object-cover"
+                  preload="metadata"
+                  muted
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                  <svg className="h-12 w-12 text-white opacity-90" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                </div>
+              </div>
+            ) : mainImage ? (
               <FixedImage
                 className="h-48 w-full lg:w-64 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
                 src={mainImage}
                 alt={property.title}
-              />
-            ) : mainVideo && !videoError ? (
-              <VideoPlayer 
-                video={mainVideo}
-                className="h-48 w-full lg:w-64 rounded-t-lg lg:rounded-lg shadow-sm"
+                showLoadingSpinner={false}
               />
             ) : (
               <FixedImage
                 className="h-48 w-full lg:w-64 object-cover rounded-t-lg lg:rounded-lg shadow-sm"
                 src="/placeholder-property.jpg"
                 alt={property.title}
+                showLoadingSpinner={false}
               />
             )}
             {/* Listing Type Badge */}
@@ -345,7 +364,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white border border-gray-200 hover:border-[#067977] rounded-lg">
       <Link to={`/property/${propertySlug}`}>
         <div className="relative">
-          {mainImage ? (
+          {firstVideo ? (
+            <div className="relative h-48 max-h-48 w-full overflow-hidden bg-black">
+              <video
+                src={firstVideo.url}
+                className="h-48 max-h-48 w-full object-cover"
+                preload="metadata"
+                muted
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                <svg className="h-12 w-12 text-white opacity-90" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                </svg>
+              </div>
+            </div>
+          ) : mainImage ? (
             useGallery && images && images.length > 1 ? (
               <PropertyImageGallery
                 images={images}
@@ -360,18 +393,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, view = 'grid', us
                 src={mainImage}
                 alt={property.title}
                 className="h-48 max-h-48 w-full object-cover"
+                showLoadingSpinner={false}
               />
             )
-          ) : mainVideo && !videoError ? (
-            <VideoPlayer 
-              video={mainVideo}
-              className="h-48 max-h-48 w-full"
-            />
           ) : (
             <FixedImage
-              src={mainImage}
+              src="/placeholder-property.jpg"
               alt={property.title}
               className="h-48 max-h-48 w-full object-cover"
+              showLoadingSpinner={false}
             />
           )}
           <Badge

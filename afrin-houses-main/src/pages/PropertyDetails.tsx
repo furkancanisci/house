@@ -61,6 +61,9 @@ const PropertyDetails: React.FC = () => {
   const [loadingFeatures, setLoadingFeatures] = useState(false);
   const [loadingUtilities, setLoadingUtilities] = useState(false);
   const [minLoadingTime, setMinLoadingTime] = useState(true);
+  const [propertyImages, setPropertyImages] = useState<any[]>([]);
+  const [propertyVideos, setPropertyVideos] = useState<any[]>([]);
+  const [loadingMedia, setLoadingMedia] = useState(false);
 
   const [showMap, setShowMap] = useState(false);
 
@@ -197,17 +200,9 @@ const PropertyDetails: React.FC = () => {
             
             return galleryImages.length > 0 ? galleryImages : [];
           })(),
-          // Process images once for both images and mainImage
-          ...(() => {
-            const processedImages = processPropertyImages(propertyData);
-            
-
-            
-            return {
-              images: processedImages.images,
-              mainImage: processedImages.mainImage
-            };
-          })(),
+          // Use mainImage and images directly from API
+          mainImage: propertyData.mainImage || '/images/placeholder-property.svg',
+          images: Array.isArray(propertyData.images?.gallery) ? propertyData.images.gallery : (Array.isArray(propertyData.images) ? propertyData.images : []),
           yearBuilt: Number(propertyData.details?.year_built) || new Date().getFullYear(),
           coordinates: {
             lat: Number(propertyData.location.coordinates?.latitude) || 0,
@@ -275,44 +270,34 @@ const PropertyDetails: React.FC = () => {
         
         setProperty(finalTransformedProperty);
         
-        // Fetch property-specific media from new API
-        try {
-          const mediaData = await propertyMediaService.getPropertyMedia(transformedProperty.id);
-          console.log('Property media from new API:', mediaData);
-          
-          // Update property images and videos with new API data if available
-          if (mediaData.images.length > 0) {
-            setPropertyImages(mediaData.images);
-            // Update property object with new images
-            finalTransformedProperty.images = mediaData.images.map(img => img.url);
-            finalTransformedProperty.mainImage = mediaData.images[0]?.url || finalTransformedProperty.mainImage;
-          }
-          
-          if (mediaData.videos.length > 0) {
-            setPropertyVideos(mediaData.videos);
-            // Update property object with new videos
-            finalTransformedProperty.videos = mediaData.videos.map((video, index) => ({
-              id: index + 1,
-              url: video.url,
-              original_url: video.url,
-              thumbnail_url: undefined,
-              duration: undefined,
-              size: video.size,
-              mime_type: undefined
-            }));
-          }
-          
-          // Update property state with media data
-          setProperty({ ...finalTransformedProperty });
-        } catch (mediaError) {
-          console.error('Error fetching property media:', mediaError);
-          // Continue with existing media data if new API fails
-        } finally {
-          setLoadingMedia(false);
+        // Process videos from property data (already included in the API response)
+        if (propertyData.videos && Array.isArray(propertyData.videos)) {
+          const videos = propertyData.videos.map((video: any, index: number) => ({
+            id: video.id || index + 1,
+            url: video.url,
+            original_url: video.url,
+            thumbnail_url: undefined,
+            duration: undefined,
+            size: video.size,
+            mime_type: video.mime_type,
+            file_name: video.file_name
+          }));
+          setPropertyVideos(videos);
+          finalTransformedProperty.videos = videos;
         }
-      } catch (err: any) {
 
-        
+        // Update property state with final data
+        setProperty({ ...finalTransformedProperty });
+        setLoadingMedia(false);
+      } catch (err: any) {
+        console.error('Error loading property:', err);
+        console.error('Error details:', {
+          message: err.message,
+          response: err.response,
+          status: err.response?.status,
+          data: err.response?.data
+        });
+
         // Handle specific error types
         if (err.response?.status === 404) {
           setError('Property not found. This property may have been removed or the URL is incorrect.');
@@ -322,7 +307,7 @@ const PropertyDetails: React.FC = () => {
           notification.error('Server error occurred');
         } else {
           setError('Failed to load property details. Please check your connection and try again.');
-          notification.error('Failed to load property details');
+          notification.error(`Failed to load property details: ${err.message || 'Unknown error'}`);
         }
       } finally {
         setLoading(false);
@@ -474,7 +459,7 @@ const PropertyDetails: React.FC = () => {
       
       // Handle different price formats
       let numPrice = 0;
-      let currencyCode = currency || 'USD';
+      let currencyCode = currency || property.currency || 'TRY';
       
       // Handle object with amount property
       if (typeof price === 'object' && price !== null) {
@@ -525,7 +510,6 @@ const PropertyDetails: React.FC = () => {
       }).format(numPrice);
 
       // Add currency symbol
-      const currencyCode = currency || property.currency || 'TRY';
       const formattedPrice = `${formattedNumber} ${currencyCode}`;
       
       // Get price type text from database
@@ -648,28 +632,37 @@ const PropertyDetails: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {/* Image Gallery */}
+            {/* Media Gallery (Videos & Images) */}
             <Card className="overflow-hidden">
               <div className="relative">
-                {property.images && property.images.length > 1 ? (
+                {/* Main media display */}
+                {propertyVideos && propertyVideos.length > 0 ? (
+                  <div className="relative w-full h-96 bg-black">
+                    <video
+                      src={propertyVideos[0].url}
+                      controls
+                      className="w-full h-96 object-contain bg-black"
+                      preload="metadata"
+                    />
+                  </div>
+                ) : property.images && property.images.length > 1 ? (
                   <PropertyImageGallery
                     images={property.images}
                     alt={property.title}
                     className="w-full h-96"
                     propertyId={property.id}
                   />
-                ) : property.mainImage ? (
+                ) : property.mainImage && property.mainImage !== '/images/placeholder-property.svg' ? (
                   <div className="relative w-full h-96">
-                    <img 
+                    <img
                       src={property.mainImage}
                       alt={property.title}
                       className="w-full h-96 object-cover"
-
                     />
                   </div>
                 ) : (
                   <div className="relative w-full h-96 bg-gray-100 flex items-center justify-center">
-                    <img 
+                    <img
                       src="/images/placeholder-property.svg"
                       alt={t('property.noImagesAvailable', 'لا توجد صور متاحة')}
                       className="w-full h-96 object-contain opacity-60"
@@ -681,7 +674,7 @@ const PropertyDetails: React.FC = () => {
                 )}
 
                 {/* Badges */}
-                <Badge 
+                <Badge
                   className={`absolute top-4 left-4 ${
                     property.listingType === 'rent' ? 'bg-green-500' : 'bg-[#067977]'
                   }`}
@@ -713,6 +706,40 @@ const PropertyDetails: React.FC = () => {
                   </Button>
                 </div>
               </div>
+
+              {/* Additional Media Grid (remaining videos + images) */}
+              {((propertyVideos && propertyVideos.length > 1) || (property.images && property.images.length > 0)) && (
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {/* Remaining videos (skip first one shown above) */}
+                    {propertyVideos && propertyVideos.slice(1).map((video, index) => (
+                      <div key={`video-${index}`} className="relative rounded-lg overflow-hidden border border-gray-200 group cursor-pointer">
+                        <video
+                          src={video.url}
+                          className="w-full h-24 object-cover bg-black"
+                          preload="metadata"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                          <svg className="h-8 w-8 text-white opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Property images */}
+                    {property.images && property.images.map((image, index) => (
+                      <div key={`image-${index}`} className="relative rounded-lg overflow-hidden border border-gray-200 group cursor-pointer">
+                        <img
+                          src={image}
+                          alt={`${property.title} - ${index + 1}`}
+                          className="w-full h-24 object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
             </Card>
 
             {/* Property Overview */}

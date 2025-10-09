@@ -39,6 +39,7 @@ class PropertyController extends Controller
             'propertyType' => 'property_type',
             'propertyTypeId' => 'property_type_id',
             'listingType' => 'listing_type',
+            'priceType' => 'price_type',
             'address' => 'street_address',
             'squareFootage' => 'square_feet',
             'lotSize' => 'lot_size',
@@ -475,11 +476,11 @@ class PropertyController extends Controller
                 }
             }
             
-            // Remove image fields from the database insertion as they should not be stored in the properties table
+            // Remove image and video fields from the database insertion as they should not be stored in the properties table
             unset($mappedData['main_image']);
             unset($mappedData['images']);
             unset($mappedData['base64_images']);
-            
+            unset($mappedData['videos']);
 
             // Convert nearby_places array to JSON for PostgreSQL
             if (isset($mappedData['nearby_places']) && is_array($mappedData['nearby_places'])) {
@@ -666,15 +667,16 @@ class PropertyController extends Controller
                 }
             }
 
-            // Handle video uploads
-            if ($request->hasFile('videos')) {
+            // Handle video uploads (support both 'videos' and 'videos[]' from FormData)
+            $videoFiles = $request->file('videos') ?? $request->file('videos[]') ?? [];
+            if (!empty($videoFiles)) {
                 try {
                     \Illuminate\Support\Facades\Log::info('Processing video uploads', [
-                        'video_count' => count($request->file('videos')),
+                        'video_count' => count($videoFiles),
                         'property_id' => $property->id
                     ]);
-                    
-                    foreach ($request->file('videos') as $index => $video) {
+
+                    foreach ($videoFiles as $index => $video) {
                         try {
                             \Illuminate\Support\Facades\Log::info('Attempting to upload video', [
                                 'index' => $index,
@@ -729,6 +731,7 @@ class PropertyController extends Controller
             } else {
                 \Illuminate\Support\Facades\Log::info('No video files found in request', [
                     'has_videos' => $request->hasFile('videos'),
+                    'has_videos_array' => $request->hasFile('videos[]'),
                     'all_files' => array_keys($request->allFiles()),
                     'property_id' => $property->id
                 ]);

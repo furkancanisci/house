@@ -6,12 +6,9 @@ use Illuminate\Http\UploadedFile;
 use Intervention\Image\ImageManagerStatic as Image;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Services\BunnyStorageService;
 
 class ImageProcessingService
 {
-    protected $bunnyStorage;
-
     // Get quality settings from config
     private function getQualitySettings(): array
     {
@@ -29,16 +26,15 @@ class ImageProcessingService
     {
         return config('images.upload.allowed_extensions', ['jpeg', 'jpg', 'png', 'webp']);
     }
-    
+
     // Get maximum file size from config
     private function getMaxFileSize(): int
     {
         return config('images.upload.max_file_size', 5 * 1024 * 1024);
     }
 
-    public function __construct(BunnyStorageService $bunnyStorage)
+    public function __construct()
     {
-        $this->bunnyStorage = $bunnyStorage;
         // Configure Intervention Image to use GD driver
         Image::configure(['driver' => 'gd']);
     }
@@ -323,14 +319,14 @@ class ImageProcessingService
     {
         $deleted = true;
         $qualitySettings = $this->getQualitySettings();
-        
+
         foreach (array_keys($qualitySettings) as $sizeName) {
             $filePath = "properties/{$propertySlug}/{$baseFileName}_{$sizeName}.webp";
-            if ($this->bunnyStorage->fileExists($filePath)) {
-                $deleted = $this->bunnyStorage->deleteFile($filePath) && $deleted;
+            if (Storage::disk('public')->exists($filePath)) {
+                $deleted = Storage::disk('public')->delete($filePath) && $deleted;
             }
         }
-        
+
         return $deleted;
     }
 
@@ -341,18 +337,18 @@ class ImageProcessingService
     {
         $variants = [];
         $qualitySettings = $this->getQualitySettings();
-        
+
         foreach ($qualitySettings as $sizeName => $settings) {
             $filePath = "properties/{$propertySlug}/{$baseFileName}_{$sizeName}.webp";
-            if ($this->bunnyStorage->fileExists($filePath)) {
+            if (Storage::disk('public')->exists($filePath)) {
                 $variants[$sizeName] = [
                     'path' => $filePath,
-                    'url' => $this->bunnyStorage->getCdnUrl($filePath),
+                    'url' => Storage::url($filePath),
                     'size' => $settings
                 ];
             }
         }
-        
+
         return $variants;
     }
 
@@ -362,14 +358,13 @@ class ImageProcessingService
     public function cleanupPropertyImages(string $propertySlug): bool
     {
         $directory = "properties/{$propertySlug}";
-        
-        // Note: Bunny Storage doesn't have directory deletion, so we need to delete files individually
-        // This is a simplified implementation - you might want to track files in database
+
         try {
-            // You would typically get file list from your database here
-            // For now, this is a placeholder that returns true
+            if (Storage::disk('public')->exists($directory)) {
+                return Storage::disk('public')->deleteDirectory($directory);
+            }
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
     }

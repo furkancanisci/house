@@ -187,9 +187,11 @@ const Home: React.FC = () => {
     const squareFeet = Number(propertyAny.square_feet || details.square_feet || propertyAny.squareFootage || 0);
     const yearBuilt = Number(propertyAny.year_built || details.year_built || new Date().getFullYear());
     
-    // Process images to ensure we have proper images
-    const { mainImage, images } = processPropertyImages(propertyAny, propertyAny.property_type || 'apartment');
-    
+    // Use mainImage directly from API response (already includes full URL)
+    const mainImage = propertyAny.mainImage || '/images/placeholder-property.svg';
+    const images = propertyAny.images || [];
+    const videos = propertyAny.videos || [];
+
     // Create the extended property object with all required fields
     return {
       ...propertyAny,

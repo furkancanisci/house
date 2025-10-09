@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\DirectionController;
 use App\Http\Controllers\Api\HomeStatController;
 use App\Http\Controllers\Api\PropertyDetailController;
 use App\Http\Controllers\Api\AdvancedDetailsController;
+use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\ImageUploadController;
@@ -267,6 +268,12 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    // Currencies Routes
+    Route::prefix('currencies')->group(function () {
+        Route::get('/', [CurrencyController::class, 'index']);
+        Route::get('/options', [CurrencyController::class, 'options']);
+    });
+
     // Statistics and Analytics Routes
     Route::prefix('stats')->group(function () {
         Route::get('/overview', [StatsController::class, 'overview']);
@@ -325,6 +332,57 @@ Route::prefix('v1')->group(function () {
             Route::delete('/messages/{contactMessage}', [ContactController::class, 'destroy']);
         });
     });
+});
+
+// Backward compatibility routes (without v1 prefix) for existing frontend
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register'])->middleware('rate.limit:5:15');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('rate.limit:10:15');
+    Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])->middleware('rate.limit:3:60');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('rate.limit:5:60');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+});
+
+Route::prefix('properties')->group(function () {
+    Route::get('/', [PropertyController::class, 'index']);
+    Route::get('/featured', [PropertyController::class, 'featured']);
+    Route::get('/price-types', [PropertyController::class, 'priceTypes']);
+    Route::get('/{property:slug}', [PropertyController::class, 'show']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [PropertyController::class, 'store'])->middleware(['validate.image', 'rate.limit:10:60']);
+        Route::put('/{property}', [PropertyController::class, 'update'])->middleware(['validate.image', 'rate.limit:30:60']);
+        Route::delete('/{property}', [PropertyController::class, 'destroy'])->middleware('rate.limit:5:60');
+        Route::post('/{property}/favorite', [PropertyController::class, 'toggleFavorite']);
+    });
+});
+
+Route::prefix('property-types')->group(function () {
+    Route::get('/', [PropertyTypeController::class, 'index']);
+    Route::get('/options', [PropertyTypeController::class, 'options']);
+});
+
+Route::prefix('features')->group(function () {
+    Route::get('/', [FeatureController::class, 'index']);
+});
+
+Route::prefix('utilities')->group(function () {
+    Route::get('/', [UtilityController::class, 'index']);
+});
+
+Route::prefix('currencies')->group(function () {
+    Route::get('/', [CurrencyController::class, 'index']);
+    Route::get('/options', [CurrencyController::class, 'options']);
+});
+
+Route::prefix('locations')->group(function () {
+    Route::get('/states', 'App\Http\Controllers\Api\LocationController@getStates');
+    Route::get('/cities', 'App\Http\Controllers\Api\LocationController@getCities');
+    Route::get('/neighborhoods', 'App\Http\Controllers\Api\LocationController@getNeighborhoods');
 });
 
 // Fallback route for API
