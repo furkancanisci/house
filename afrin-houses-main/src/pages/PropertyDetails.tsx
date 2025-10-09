@@ -815,15 +815,12 @@ const PropertyDetails: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">{t('filters.propertyType')}</span>
                       <span className="capitalize">
-                        {(() => {
-                          const propType = property.propertyType;
-                          if (propType && typeof propType === 'object') {
-                            return i18n.language === 'ar' ? propType.name_ar :
-                                   i18n.language === 'ku' ? propType.name_ku :
-                                   propType.name_en || propType.name;
-                          }
-                          return propType || t('property.typeNotAvailable');
-                        })()}
+                        {property.propertyType && typeof property.propertyType === 'object'
+                          ? (i18n.language === 'ar' ? (property.propertyType as any).name_ar :
+                             i18n.language === 'ku' ? (property.propertyType as any).name_ku :
+                             (property.propertyType as any).name_en || (property.propertyType as any).name)
+                          : (property.propertyType || t('property.typeNotAvailable'))
+                        }
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -1124,15 +1121,12 @@ const PropertyDetails: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('filters.propertyType')}</span>
                   <span className="capitalize">
-                    {(() => {
-                      const propType = property.propertyType;
-                      if (propType && typeof propType === 'object') {
-                        return i18n.language === 'ar' ? propType.name_ar :
-                               i18n.language === 'ku' ? propType.name_ku :
-                               propType.name_en || propType.name;
-                      }
-                      return propType || t('property.typeNotAvailable');
-                    })()}
+                    {property.propertyType && typeof property.propertyType === 'object'
+                      ? (i18n.language === 'ar' ? (property.propertyType as any).name_ar :
+                         i18n.language === 'ku' ? (property.propertyType as any).name_ku :
+                         (property.propertyType as any).name_en || (property.propertyType as any).name)
+                      : (property.propertyType || t('property.typeNotAvailable'))
+                    }
                   </span>
                 </div>
                 {(property.document_type_id || documentType || loadingDocumentType) && (
