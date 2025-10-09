@@ -1121,10 +1121,10 @@ const PropertyDetails: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('filters.propertyType')}</span>
                   <span className="capitalize">
-                    {property.propertyType && typeof property.propertyType === 'object' 
-                      ? (i18n.language === 'ar' ? property.propertyType.name_ar :
-                         i18n.language === 'ku' ? property.propertyType.name_ku :
-                         property.propertyType.name_en || property.propertyType.name)
+                    {property.propertyType && typeof property.propertyType === 'object'
+                      ? (i18n.language === 'ar' ? property.propertyType?.name_ar :
+                         i18n.language === 'ku' ? property.propertyType?.name_ku :
+                         property.propertyType?.name_en || property.propertyType?.name)
                       : property.propertyType || t('property.typeNotAvailable')
                     }
                   </span>

@@ -7,6 +7,7 @@ export interface AuthCheckResult {
   isCheckingAuth: boolean;
   showAuthModal: boolean;
   showActivationModal: boolean;
+  openAuthModal: () => void;
   closeAuthModal: () => void;
   closeActivationModal: () => void;
   requireAuth: (action: () => void) => void;
@@ -79,6 +80,7 @@ export const useAuthCheck = (): AuthCheckResult => {
     requireVerifiedEmail,
     showAuthModal,
     showActivationModal,
+    openAuthModal,
     closeAuthModal,
     closeActivationModal,
   };

@@ -89,6 +89,7 @@ const EditProperty: React.FC = () => {
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<any[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
+  const [selectedVideos, setSelectedVideos] = useState<any[]>([]);
   const [videosToRemove, setVideosToRemove] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('');
