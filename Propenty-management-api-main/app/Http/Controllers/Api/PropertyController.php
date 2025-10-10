@@ -404,8 +404,32 @@ class PropertyController extends Controller
         
         return $collection;
         
+        } catch (\InvalidArgumentException $e) {
+            // Handle filesystem driver errors specifically
+            if (strpos($e->getMessage(), 'Driver') !== false) {
+                \Illuminate\Support\Facades\Log::error('Filesystem driver error: ' . $e->getMessage(), [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+                
+                // Return properties without media if there's a filesystem issue
+                return new PropertyCollection($properties);
+            }
+            
+            // Log other InvalidArgumentException errors
+            \Illuminate\Support\Facades\Log::error('Invalid argument error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'message' => 'An error occurred with the request parameters. Please check your input and try again.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Invalid Request'
+            ], 400);
+            
         } catch (\Exception $e) {
-            // Log the error for debugging
+            // Log general errors for debugging
             \Illuminate\Support\Facades\Log::error('Error in properties index method: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
