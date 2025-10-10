@@ -148,25 +148,26 @@ class PropertyController extends Controller
     /**
      * Display a listing of properties with filtering and searching.
      */
-    public function index(Request $request): PropertyCollection
+    public function index(Request $request)
     {
-        // Get the filters from the request
-        $filters = $request->all();
-        
-        // Ensure proper UTF-8 encoding for all string inputs
-        array_walk_recursive($filters, function(&$value) {
-            if (is_string($value)) {
-                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
-            }
-        });
-        
-        // Try to get cached search results first - TEMPORARILY DISABLED FOR DEBUGGING
-        // $cachedResults = $this->cacheService->getSearchResults($filters);
-        // if ($cachedResults) {
-        //     \Illuminate\Support\Facades\Log::info('Returning cached search results');
-        //     return new PropertyCollection($cachedResults);
-        // }
-        \Illuminate\Support\Facades\Log::info('Cache disabled for debugging - executing fresh query');
+        try {
+            // Get the filters from the request
+            $filters = $request->all();
+            
+            // Ensure proper UTF-8 encoding for all string inputs
+            array_walk_recursive($filters, function(&$value) {
+                if (is_string($value)) {
+                    $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                }
+            });
+            
+            // Try to get cached search results first - TEMPORARILY DISABLED FOR DEBUGGING
+            // $cachedResults = $this->cacheService->getSearchResults($filters);
+            // if ($cachedResults) {
+            //     \Illuminate\Support\Facades\Log::info('Returning cached search results');
+            //     return new PropertyCollection($cachedResults);
+            // }
+            \Illuminate\Support\Facades\Log::info('Cache disabled for debugging - executing fresh query');
         
         // Log the received filters for debugging
         \Illuminate\Support\Facades\Log::info('Received request with filters:', [
@@ -401,6 +402,21 @@ class PropertyController extends Controller
         // $this->cacheService->cacheSearchResults($searchKey, $collection);
         
         return $collection;
+        
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Illuminate\Support\Facades\Log::error('Error in properties index method: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return a user-friendly error response
+            return response()->json([
+                'message' => 'An error occurred while retrieving properties. Please try again later.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Server Error'
+            ], 500);
+        }
     }
 
     /**
