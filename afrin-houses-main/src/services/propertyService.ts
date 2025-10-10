@@ -103,16 +103,23 @@ export interface PropertyFilters {
   maxBeds?: number | string;
   minBaths?: number | string;
   maxBaths?: number | string;
+  bedrooms?: number;
+  bathrooms?: number;
   minSquareFeet?: number;
   maxSquareFeet?: number;
+  minSquareFootage?: number;
+  maxSquareFootage?: number;
   features?: string[];
   location?: string;
   city?: string;
   state?: string;
+  latitude?: number;
+  longitude?: number;
   radius?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   page?: number;
+  perPage?: number;
   limit?: number;
   search?: string;
   searchQuery?: string;
@@ -245,34 +252,59 @@ export const getProperties = async (params: PropertyFilters = {}) => {
     
     // Fix image URLs in all properties
     const processedProperties = properties.map((property: any) => {
+      console.log('🔧 Processing property:', {
+        id: property.id,
+        title: property.title,
+        originalMainImage: property.mainImage,
+        imagesObject: property.images
+      });
+
+      // Fix top-level mainImage field (MOST IMPORTANT)
+      if (property.mainImage && property.mainImage !== '/images/placeholder-property.svg') {
+        property.mainImage = fixImageUrl(property.mainImage);
+        console.log('✅ Fixed mainImage:', property.mainImage);
+      }
+
       if (property.images) {
         const fixedImages = { ...property.images };
-        
+
         // Fix main image URL
-        if (fixedImages.main) {
+        if (fixedImages.main && fixedImages.main !== '/images/placeholder-property.svg') {
           fixedImages.main = fixImageUrl(fixedImages.main);
+          // Also set top-level mainImage if not already set
+          if (!property.mainImage || property.mainImage === '/images/placeholder-property.svg') {
+            property.mainImage = fixedImages.main;
+            console.log('✅ Set mainImage from images.main:', property.mainImage);
+          }
         }
-        
+
         // Fix gallery image URLs
         if (fixedImages.gallery && Array.isArray(fixedImages.gallery)) {
           fixedImages.gallery = fixedImages.gallery.map(fixImageObject);
         }
-        
+
         property.images = fixedImages;
       }
-      
+
       // Fix video URLs in the property
-      if (property.videos) {
-        const fixedVideos = { ...property.videos };
-        
-        // Fix video gallery URLs
-        if (fixedVideos.gallery && Array.isArray(fixedVideos.gallery)) {
-          fixedVideos.gallery = fixedVideos.gallery.map(fixVideoObject);
-        }
-        
-        property.videos = fixedVideos;
+      if (property.videos && Array.isArray(property.videos)) {
+        property.videos = property.videos.map((video: any) => {
+          if (video && typeof video === 'object' && video.url) {
+            return {
+              ...video,
+              url: fixImageUrl(video.url)
+            };
+          }
+          return video;
+        });
       }
-      
+
+      console.log('✅ Final processed property:', {
+        id: property.id,
+        title: property.title,
+        mainImage: property.mainImage
+      });
+
       return property;
     });
     

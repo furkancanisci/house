@@ -5,6 +5,19 @@
 
     RewriteEngine On
 
+    # PHP Upload Settings
+    php_value upload_max_filesize 50M
+    php_value post_max_size 100M
+    php_value max_execution_time 300
+    php_value memory_limit 256M
+
+    # CORS Headers for static files (images/videos)
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|webm)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type"
+    </FilesMatch>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

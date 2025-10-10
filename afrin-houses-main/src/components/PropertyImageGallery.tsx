@@ -100,16 +100,16 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   const handlePrevMedia = (event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
-    setCurrentMediaIndex((prev) => 
-      prev === 0 ? finalMedia.length - 1 : prev - 1
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? finalImages.length - 1 : prev - 1
     );
   };
 
   const handleNextMedia = (event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
-    setCurrentMediaIndex((prev) => 
-      prev === finalMedia.length - 1 ? 0 : prev + 1
+    setCurrentImageIndex((prev) =>
+      prev === finalImages.length - 1 ? 0 : prev + 1
     );
   };
 
@@ -176,18 +176,18 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
           onClick={handleImageClick}
         />
 
-        {/* Navigation Arrows (only show if multiple media items and not in fullscreen) */}
-        {finalMedia.length > 1 && !isVideoFullscreen && (
+        {/* Navigation Arrows (only show if multiple images) */}
+        {finalImages.length > 1 && (
           <>
             <button
-              onClick={handlePrevImage}
+              onClick={handlePrevMedia}
               className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100"
               aria-label="Previous image"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
-              onClick={handleNextImage}
+              onClick={handleNextMedia}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100"
               aria-label="Next image"
             >

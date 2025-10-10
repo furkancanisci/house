@@ -100,11 +100,18 @@ const Search: React.FC = () => {
   // Convert Property to ExtendedProperty - stable function to prevent re-renders
   const toExtendedProperty = useMemo(() => {
     return (property: Property | ExtendedProperty): ExtendedProperty => {
+      console.log('🔄 toExtendedProperty - Input:', {
+        id: property.id,
+        title: property.title,
+        mainImage: (property as any).mainImage,
+        images: (property as any).images
+      });
+
       // If it's already an ExtendedProperty, return it as is
       if ('formattedPrice' in property) {
         return property as ExtendedProperty;
       }
-      
+
       // Otherwise, convert Property to ExtendedProperty
       const details = property.details || {};
     const price = typeof property.price === 'string' ? parseFloat(property.price) || 0 : Number(property.price) || 0;
@@ -167,7 +174,7 @@ const Search: React.FC = () => {
         : 'N/A',
       isFavorite: false, // Will be updated by the parent component
       features: property.features || [],
-      images: Array.isArray(property.media) 
+      images: Array.isArray(property.media)
         ? property.media.map(m => typeof m === 'string' ? m : m?.url || '').filter(Boolean)
         : [],
       details: {
@@ -176,10 +183,20 @@ const Search: React.FC = () => {
         squareFootage: details.square_footage || 0,
         yearBuilt: details.year_built
       },
-      mainImage: property.media?.find((m: any) => typeof m === 'object' && m.is_featured)?.url || 
-                (Array.isArray(property.media) && property.media[0]?.url) || 
-                '/images/placeholder-property.svg'
+      // FIXED: Use property.mainImage from API first, then fallback to other sources
+      mainImage: (property as any).mainImage && (property as any).mainImage !== '/images/placeholder-property.svg'
+                ? (property as any).mainImage
+                : (property as any).images?.main ||
+                  property.media?.find((m: any) => typeof m === 'object' && m.is_featured)?.url ||
+                  (Array.isArray(property.media) && property.media[0]?.url) ||
+                  '/images/placeholder-property.svg'
     };
+
+    console.log('✅ toExtendedProperty - Output:', {
+      id: extendedProperty.id,
+      title: extendedProperty.title,
+      mainImage: extendedProperty.mainImage
+    });
 
       return extendedProperty;
     };
@@ -861,9 +878,22 @@ const Search: React.FC = () => {
                     (property as any).details?.square_footage || 
                     0;
 
-                  // Process images to ensure we have proper images
-                  const images = processPropertyImages(property);
-                  const mainImage = images.length > 0 ? images[0] : '';
+                  // Use mainImage directly from API response (already includes full URL)
+                  // Check both property.mainImage and property.images.main
+                  const mainImage = property.mainImage ||
+                                    (property.images && typeof property.images === 'object' && (property.images as any).main) ||
+                                    '/images/placeholder-property.svg';
+                  const images = Array.isArray(property.images) ? property.images :
+                                 (property.images && typeof property.images === 'object' && Array.isArray((property.images as any).gallery) ? (property.images as any).gallery : []);
+                  const videos = property.videos || [];
+
+                  console.log('Search page - Property mapping:', {
+                    id: property.id,
+                    title: property.title,
+                    originalMainImage: property.mainImage,
+                    imagesObject: property.images,
+                    computedMainImage: mainImage
+                  });
 
                   // Ensure unique ID for React keys
                   const uniqueId = property.id || `property-${index}-${Date.now()}`;
@@ -888,7 +918,8 @@ const Search: React.FC = () => {
                     squareFootage: squareFootage,
                     yearBuilt: (property as any).year_built || new Date().getFullYear(),
                     mainImage: mainImage,
-                    images: images,
+                    images: Array.isArray(images) ? images : [],
+                    videos: Array.isArray(videos) ? videos : [],
                     features: (property as any).features || [],
                     address: (property as any).address || `${normalizeName(property.city) || ''} ${normalizeName(property.state) || ''}`.trim(),
                     coordinates: {
@@ -922,7 +953,7 @@ const Search: React.FC = () => {
                       key={`${uniqueId}-${index}`}
                       property={mappedProperty}
                       view={viewMode}
-                      useGallery={true}
+                      useGallery={false}
                     />
                   );
                 })}

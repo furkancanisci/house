@@ -61,6 +61,7 @@ class PropertyResource extends JsonResource
             
             // Pricing - both nested and flat for compatibility
             'price' => $this->price, // Flat price for frontend
+            'currency' => $this->currency ?? 'TRY', // Flat currency for frontend
             'priceType' => $this->when($this->relationLoaded('priceType'), function () {
                 return $this->priceType ? [
                     'key' => $this->priceType->key,
@@ -163,6 +164,16 @@ class PropertyResource extends JsonResource
 
                 $firstImage = $this->getFirstMedia('images');
                 return $firstImage ? $firstImage->getUrl() : '/images/placeholder-property.svg';
+            }),
+            'videos' => $this->whenLoaded('media', function() {
+                return $this->getMedia('videos')->map(function($media) {
+                    return [
+                        'id' => $media->id,
+                        'url' => $media->getUrl(),
+                        'size' => $media->size,
+                        'file_name' => $media->file_name,
+                    ];
+                })->toArray();
             }),
 
             // Phase 1 Enhancement Fields

@@ -291,7 +291,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       }
       
       const properties = responseData.map((property: any) => {
+        console.log('AppContext - Raw property from API:', {
+          id: property.id,
+          title: property.title,
+          mainImage: property.mainImage,
+          images: property.images,
+          videos: property.videos
+        });
+
         return {
+          // Spread all original fields first
+          ...(property as any),
+
+          // Then override with normalized fields
           id: property.id?.toString() || Math.random().toString(),
           title: property.title || 'Untitled Property',
           description: property.description || '',
@@ -307,23 +319,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           listingType: property.listing_type || property.listingType || 'sale',
           yearBuilt: property.year_built || new Date().getFullYear(),
           datePosted: property.created_at || property.published_at || new Date().toISOString(),
-          
-          // Media handling
-          media: Array.isArray(property.media) ? property.media.map((img: any, index: number) => ({
-            id: img.id || index,
-            url: img.url || img,
-            type: 'image',
-            is_featured: img.is_featured || false
-          })) : [],
-          
+
           // Additional fields
           slug: property.slug || `property-${property.id}`,
           features: property.amenities || property.features || [],
           latitude: property.location?.coordinates?.latitude || property.latitude,
           longitude: property.location?.coordinates?.longitude || property.longitude,
-          
-          // Extended fields
-          ...(property as any)
         } as Property;
 
       });

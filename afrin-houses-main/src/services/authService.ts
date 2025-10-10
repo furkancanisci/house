@@ -29,6 +29,7 @@ interface AuthService {
   isAuthenticated(): boolean;
   getToken(): string | null;
   getCurrentUser(): Promise<User | null>;
+  getCurrentUserWithRetry(maxRetries?: number): Promise<User | null>;
   getStoredUser(): User | null;
   clearAuthData(): void;
   forgotPassword(email: string): Promise<{ message: string }>;
