@@ -56,7 +56,13 @@ return [
             'throw' => false,
         ],
 
-        // Bunny configuration removed
+        'properties' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/properties'),
+            'url' => env('APP_URL').'/storage/properties',
+            'visibility' => 'public',
+            'throw' => false,
+        ],
 
     ],
 

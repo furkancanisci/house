@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\BunnyStorageService;
 use App\Services\ImageProcessingService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Exception;
 
 class ImageUploadController extends Controller
 {
-    protected $bunnyStorage;
     protected $imageProcessor;
 
-    public function __construct(BunnyStorageService $bunnyStorage, ImageProcessingService $imageProcessor)
+    public function __construct(ImageProcessingService $imageProcessor)
     {
-        $this->bunnyStorage = $bunnyStorage;
         $this->imageProcessor = $imageProcessor;
     }
 
@@ -61,8 +59,8 @@ class ImageUploadController extends Controller
                 $quality
             );
 
-            // Upload to Bunny Storage
-            $uploadResult = $this->bunnyStorage->uploadFile($path, $processedImage);
+            // Upload to Storage
+            $uploadResult = Storage::put($path, $processedImage);
 
             if (!$uploadResult) {
                 return response()->json([
@@ -71,8 +69,8 @@ class ImageUploadController extends Controller
                 ], 500);
             }
 
-            // Get CDN URL
-            $cdnUrl = $this->bunnyStorage->getCdnUrl($path);
+            // Get URL
+            $url = Storage::url($path);
 
             return response()->json([
                 'success' => true,
@@ -80,7 +78,7 @@ class ImageUploadController extends Controller
                 'data' => [
                     'filename' => $filename,
                     'path' => $path,
-                    'url' => $cdnUrl,
+                    'url' => $url,
                     'size' => strlen($processedImage)
                 ]
             ]);
@@ -139,14 +137,14 @@ class ImageUploadController extends Controller
                         $quality
                     );
 
-                    // Upload to Bunny Storage
-                    $uploadResult = $this->bunnyStorage->uploadFile($path, $processedImage);
+                    // Upload to Storage
+                    $uploadResult = Storage::put($path, $processedImage);
 
                     if ($uploadResult) {
                         $uploadedImages[] = [
                             'filename' => $filename,
                             'path' => $path,
-                            'url' => $this->bunnyStorage->getCdnUrl($path),
+                            'url' => Storage::url($path),
                             'size' => strlen($processedImage)
                         ];
                     } else {
@@ -227,8 +225,8 @@ class ImageUploadController extends Controller
             $processedImage = $result['image_data'];
             $path = $folder . '/' . $filename;
 
-            // Upload to Bunny Storage
-            $uploadResult = $this->bunnyStorage->uploadFile($path, $processedImage);
+            // Upload to Storage
+            $uploadResult = Storage::put($path, $processedImage);
 
             if (!$uploadResult) {
                 return response()->json([
@@ -243,7 +241,7 @@ class ImageUploadController extends Controller
                 'data' => [
                     'filename' => $filename,
                     'path' => $path,
-                    'url' => $this->bunnyStorage->getCdnUrl($path),
+                    'url' => Storage::url($path),
                     'size' => strlen($processedImage)
                 ]
             ]);
@@ -277,15 +275,15 @@ class ImageUploadController extends Controller
             $path = $request->input('path');
 
             // Check if file exists
-            if (!$this->bunnyStorage->fileExists($path)) {
+            if (!Storage::exists($path)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File not found'
                 ], 404);
             }
 
-            // Delete from Bunny Storage
-            $deleteResult = $this->bunnyStorage->deleteFile($path);
+            // Delete from Storage
+            $deleteResult = Storage::delete($path);
 
             if (!$deleteResult) {
                 return response()->json([
@@ -328,7 +326,7 @@ class ImageUploadController extends Controller
             $path = $request->input('path');
 
             // Check if file exists
-            if (!$this->bunnyStorage->fileExists($path)) {
+            if (!Storage::exists($path)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File not found'
@@ -339,7 +337,7 @@ class ImageUploadController extends Controller
                 'success' => true,
                 'data' => [
                     'path' => $path,
-                    'url' => $this->bunnyStorage->getCdnUrl($path),
+                    'url' => Storage::url($path),
                     'exists' => true
                 ]
             ]);
