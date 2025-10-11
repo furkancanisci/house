@@ -64,6 +64,17 @@ return [
             'throw' => false,
         ],
 
+        // Backwards-compatible alias for media records that still reference
+        // the old Bunny disk. Points to the same local properties storage so
+        // Storage::disk('bunny') calls won't fail in production.
+        'bunny' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/properties'),
+            'url' => env('APP_URL').'/storage/properties',
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+
     ],
 
     /*

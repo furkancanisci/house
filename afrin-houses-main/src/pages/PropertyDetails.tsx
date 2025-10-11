@@ -27,6 +27,7 @@ import {
   Zap,
   TreePine,
   File
+  , ZoomIn, ZoomOut, X
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -64,6 +65,11 @@ const PropertyDetails: React.FC = () => {
   const [propertyImages, setPropertyImages] = useState<any[]>([]);
   const [propertyVideos, setPropertyVideos] = useState<any[]>([]);
   const [loadingMedia, setLoadingMedia] = useState(false);
+  const [combinedMedia, setCombinedMedia] = useState<Array<{type: 'image' | 'video'; url: string; id?: string}>>([]);
+  const [mediaIndex, setMediaIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxZoom, setLightboxZoom] = useState(1);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const [showMap, setShowMap] = useState(false);
 
@@ -402,6 +408,35 @@ const PropertyDetails: React.FC = () => {
     fetchFeaturesAndUtilities();
   }, [i18n.language]);
 
+  // Build combined media array when property changes
+  useEffect(() => {
+    if (!property) return;
+
+    const imgs: Array<{type: 'image'|'video'; url: string; id?: string}> = [];
+    // Put videos first (user preference) so the main media will show a video if available
+    if (Array.isArray(property.videos)) {
+      property.videos.forEach((v: any, idx: number) => {
+        if (!v) return;
+        imgs.push({ type: 'video', url: v.url || v.original_url || v.path || v.file, id: v.id || `vid-${idx}` });
+      });
+    }
+
+    if (Array.isArray(property.images)) {
+      property.images.forEach((img: any, idx: number) => {
+        if (!img) return;
+        imgs.push({ type: 'image', url: typeof img === 'string' ? img : img.url || img.path || img.cdn_url || img.file, id: img.id || `img-${idx}` });
+      });
+    }
+
+    // If no combined found but mainImage exists, add it
+    if (imgs.length === 0 && property.mainImage) {
+      imgs.push({ type: 'image', url: property.mainImage, id: 'main' });
+    }
+
+    setCombinedMedia(imgs);
+    setMediaIndex(0);
+  }, [property]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -635,29 +670,54 @@ const PropertyDetails: React.FC = () => {
             <Card className="overflow-hidden">
               <div className="relative">
                 {/* Main media display */}
-                {propertyVideos && propertyVideos.length > 0 ? (
+                {combinedMedia && combinedMedia.length > 0 ? (
                   <div className="relative w-full h-96 bg-black">
-                    <video
-                      src={propertyVideos[0].url}
-                      controls
-                      className="w-full h-96 object-contain bg-black"
-                      preload="metadata"
-                    />
-                  </div>
-                ) : property.images && property.images.length > 1 ? (
-                  <PropertyImageGallery
-                    images={property.images}
-                    alt={property.title}
-                    className="w-full h-96"
-                    propertyId={property.id}
-                  />
-                ) : property.mainImage && property.mainImage !== '/images/placeholder-property.svg' ? (
-                  <div className="relative w-full h-96">
-                    <img
-                      src={property.mainImage}
-                      alt={property.title}
-                      className="w-full h-96 object-cover"
-                    />
+                    {/* Prev button */}
+                    {combinedMedia.length > 1 && (
+                      <button
+                        onClick={() => setMediaIndex((mediaIndex - 1 + combinedMedia.length) % combinedMedia.length)}
+                        aria-label="Previous media"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black bg-opacity-40 hover:bg-opacity-60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                      >
+                        &lt;
+                      </button>
+                    )}
+
+                    {/* Enlarge / open lightbox */}
+                    <button
+                      onClick={() => { setLightboxIndex(mediaIndex); setLightboxZoom(1); setLightboxOpen(true); }}
+                      aria-label="Open fullscreen"
+                      className="absolute top-2 right-12 z-30 bg-black bg-opacity-40 hover:bg-opacity-60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </button>
+
+                    {/* Media */}
+                    {combinedMedia[mediaIndex].type === 'video' ? (
+                      <video
+                        src={combinedMedia[mediaIndex].url}
+                        controls
+                        className="w-full h-96 object-contain bg-black"
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img
+                        src={combinedMedia[mediaIndex].url}
+                        alt={property.title}
+                        className="w-full h-96 object-cover"
+                      />
+                    )}
+
+                    {/* Next button */}
+                    {combinedMedia.length > 1 && (
+                      <button
+                        onClick={() => setMediaIndex((mediaIndex + 1) % combinedMedia.length)}
+                        aria-label="Next media"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black bg-opacity-40 hover:bg-opacity-60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                      >
+                        &gt;
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="relative w-full h-96 bg-gray-100 flex items-center justify-center">
@@ -711,13 +771,17 @@ const PropertyDetails: React.FC = () => {
                 <CardContent className="pt-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {/* Remaining videos (skip first one shown above) */}
-                    {propertyVideos && propertyVideos.slice(1).map((video, index) => (
-                      <div key={`video-${index}`} className="relative rounded-lg overflow-hidden border border-gray-200 group cursor-pointer">
-                        <video
-                          src={video.url}
-                          className="w-full h-24 object-cover bg-black"
-                          preload="metadata"
-                        />
+                    {combinedMedia && combinedMedia.slice(0).map((item, index) => (
+                      <div key={`media-${index}`} className="relative rounded-lg overflow-hidden border border-gray-200 group cursor-pointer" onClick={() => setMediaIndex(index)} role="button" aria-label={`Show media ${index + 1}`}>
+                        {item.type === 'video' ? (
+                          <video
+                            src={item.url}
+                            className="w-full h-24 object-cover bg-black"
+                            preload="metadata"
+                          />
+                        ) : (
+                          <img src={item.url} alt={`${property.title} - ${index + 1}`} className="w-full h-24 object-cover" />
+                        )}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
                           <svg className="h-8 w-8 text-white opacity-80" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
@@ -1189,6 +1253,48 @@ const PropertyDetails: React.FC = () => {
           notification.success(t('auth.requireAuth.loginSuccess'));
         }}
       />
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
+          <div className="relative max-w-6xl w-full mx-4">
+            <button
+              onClick={() => setLightboxOpen(false)}
+              aria-label="Close fullscreen"
+              className="absolute top-3 right-3 z-40 bg-white bg-opacity-10 hover:bg-opacity-20 text-white rounded-full w-10 h-10 flex items-center justify-center"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center justify-center">
+              <button
+                onClick={() => setLightboxIndex((lightboxIndex - 1 + combinedMedia.length) % combinedMedia.length)}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-10 hover:bg-opacity-20 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                aria-label="Previous"
+              >&lt;</button>
+
+              <div className="bg-black rounded overflow-hidden max-h-[80vh] flex items-center justify-center">
+                {combinedMedia[lightboxIndex].type === 'video' ? (
+                  <video src={combinedMedia[lightboxIndex].url} controls className="max-h-[80vh]" />
+                ) : (
+                  <img src={combinedMedia[lightboxIndex].url} alt={`Fullscreen ${lightboxIndex+1}`} style={{ transform: `scale(${lightboxZoom})` }} className="max-h-[80vh] max-w-full" />
+                )}
+              </div>
+
+              <button
+                onClick={() => setLightboxIndex((lightboxIndex + 1) % combinedMedia.length)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-10 hover:bg-opacity-20 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                aria-label="Next"
+              >&gt;</button>
+            </div>
+
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
+              <button onClick={() => setLightboxZoom(z => Math.max(0.5, +(z - 0.25).toFixed(2)))} className="bg-white bg-opacity-10 hover:bg-opacity-20 text-white rounded-full w-10 h-10 flex items-center justify-center" aria-label="Zoom out"><ZoomOut className="h-4 w-4"/></button>
+              <div className="text-white text-sm">{Math.round(lightboxZoom * 100)}%</div>
+              <button onClick={() => setLightboxZoom(z => Math.min(3, +(z + 0.25).toFixed(2)))} className="bg-white bg-opacity-10 hover:bg-opacity-20 text-white rounded-full w-10 h-10 flex items-center justify-center" aria-label="Zoom in"><ZoomIn className="h-4 w-4"/></button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Email Activation Modal */}
       <EmailActivationModal
