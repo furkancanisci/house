@@ -416,8 +416,10 @@ const AddProperty: React.FC = () => {
 
   // Note: Removed beforeunload warning since data is now automatically saved to localStorage
 
-  // Load property document types
+  // Load property document types - only when user reaches step 1
   React.useEffect(() => {
+    if (currentStep < 1) return;
+
     const loadDocumentTypes = async () => {
       setLoadingDocumentTypes(true);
       try {
@@ -426,7 +428,6 @@ const AddProperty: React.FC = () => {
         });
         setDocumentTypes(types);
       } catch (error) {
-
         // Use fallback data if API fails
         const fallbackTypes = propertyDocumentTypeService.getFallbackDocumentTypes(i18n.language);
         setDocumentTypes(fallbackTypes);
@@ -436,37 +437,38 @@ const AddProperty: React.FC = () => {
     };
 
     loadDocumentTypes();
-  }, [i18n.language]);
+  }, [i18n.language, currentStep]);
 
-  // Load property types
+  // Load property types - only when user reaches step 1
   React.useEffect(() => {
+    if (currentStep < 1) return;
+
     const loadPropertyTypes = async () => {
       setLoadingPropertyTypes(true);
       try {
         const types = await propertyTypeService.getPropertyTypeOptions(true, true);
         setPropertyTypes(types);
       } catch (error) {
-
         // Use fallback empty array if API fails
         setPropertyTypes([]);
       } finally {
         setLoadingPropertyTypes(false);
-
       }
     };
 
     loadPropertyTypes();
-  }, [i18n.language]);
+  }, [i18n.language, currentStep]);
 
-  // Load building types
+  // Load building types - only when user reaches advanced details (step 4)
   React.useEffect(() => {
+    if (currentStep < 4) return;
+
     const loadBuildingTypes = async () => {
       setLoadingBuildingTypes(true);
       try {
         const types = await buildingTypeService.getBuildingTypeOptions();
         setBuildingTypes(types);
       } catch (error) {
-
         setBuildingTypes([]);
       } finally {
         setLoadingBuildingTypes(false);
@@ -474,17 +476,18 @@ const AddProperty: React.FC = () => {
     };
 
     loadBuildingTypes();
-  }, [i18n.language]);
+  }, [i18n.language, currentStep]);
 
-  // Load window types
+  // Load window types - only when user reaches advanced details (step 4)
   React.useEffect(() => {
+    if (currentStep < 4) return;
+
     const loadWindowTypes = async () => {
       setLoadingWindowTypes(true);
       try {
         const types = await windowTypeService.getWindowTypeOptions();
         setWindowTypes(types);
       } catch (error) {
-
         setWindowTypes([]);
       } finally {
         setLoadingWindowTypes(false);
@@ -492,17 +495,18 @@ const AddProperty: React.FC = () => {
     };
 
     loadWindowTypes();
-  }, [i18n.language]);
+  }, [i18n.language, currentStep]);
 
-  // Load floor types
+  // Load floor types - only when user reaches advanced details (step 4)
   React.useEffect(() => {
+    if (currentStep < 4) return;
+
     const loadFloorTypes = async () => {
       setLoadingFloorTypes(true);
       try {
         const types = await floorTypeService.getFloorTypeOptions();
         setFloorTypes(types);
       } catch (error) {
-
         setFloorTypes([]);
       } finally {
         setLoadingFloorTypes(false);
@@ -510,17 +514,18 @@ const AddProperty: React.FC = () => {
     };
 
     loadFloorTypes();
-  }, [i18n.language]);
+  }, [i18n.language, currentStep]);
 
-  // Load view types
+  // Load view types - only when user reaches advanced details (step 4)
   React.useEffect(() => {
+    if (currentStep < 4) return;
+
     const loadViewTypes = async () => {
       setLoadingViewTypes(true);
       try {
         const types = await viewTypeService.getViewTypeOptions();
         setViewTypes(types);
       } catch (error) {
-
         setViewTypes([]);
       } finally {
         setLoadingViewTypes(false);
@@ -528,17 +533,18 @@ const AddProperty: React.FC = () => {
     };
 
     loadViewTypes();
-  }, [i18n.language]);
+  }, [i18n.language, currentStep]);
 
-  // Load directions
+  // Load directions - only when user reaches advanced details (step 4)
   React.useEffect(() => {
+    if (currentStep < 4) return;
+
     const loadDirections = async () => {
       setLoadingDirections(true);
       try {
         const directions = await directionService.getDirectionOptions();
         setDirections(directions);
       } catch (error) {
-
         setDirections([]);
       } finally {
         setLoadingDirections(false);
@@ -546,7 +552,7 @@ const AddProperty: React.FC = () => {
     };
 
     loadDirections();
-  }, [i18n.language]);
+  }, [i18n.language, currentStep]);
 
   // Load features, utilities, and currencies only when reaching step 2 (Property Details) or language changes
   useEffect(() => {
@@ -558,12 +564,13 @@ const AddProperty: React.FC = () => {
   }, [currentStep, i18n.language]);
 
   // Load price types only when in step 2 (Property Details) and listing type is selected
+  const watchedListingType = watch('listingType');
   useEffect(() => {
-    const listingType = watch('listingType');
-    if (currentStep === 2 && listingType) {
-      fetchPriceTypes(listingType);
+    if (currentStep === 2 && watchedListingType) {
+      fetchPriceTypes(watchedListingType as any);
     }
-  }, [currentStep, watch('listingType')]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, watchedListingType]);
   
 
   // State for features and utilities from API

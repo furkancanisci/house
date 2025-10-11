@@ -215,14 +215,7 @@ const Auth: React.FC = () => {
             </ul>
           </div>
 
-          <div className="bg-[#067977]/10 rounded-lg p-6 border border-[#067977]/20">
-            <h4 className="font-semibold text-[#067977] mb-2">
-              {t('auth.welcome.demoAccount.title')}
-            </h4>
-            <p className="text-[#067977]/80 text-sm">
-              {t('auth.welcome.demoAccount.description')}
-            </p>
-          </div>
+          
         </div>
 
         {/* Auth Forms */}

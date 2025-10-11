@@ -411,26 +411,79 @@ const PropertyDetails: React.FC = () => {
   // Build combined media array when property changes
   useEffect(() => {
     if (!property) return;
+    const normalizeUrl = (item: any): string | null => {
+      if (!item) return null;
+      if (typeof item === 'string') return item;
+      // Common url fields to check
+      const candidates = [
+        'url', 'original_url', 'cdn_url', 'path', 'file', 'file_name', 'thumbnail_url'
+      ];
+      for (const key of candidates) {
+        if (item[key]) return item[key];
+      }
+      // Some video objects include a nested attributes object
+      if (item.attributes && typeof item.attributes === 'object') {
+        for (const key of candidates) {
+          if (item.attributes[key]) return item.attributes[key];
+        }
+      }
+      // Fallback: try to stringify a 'source' or 'src'
+      if (item.source) return item.source;
+      if (item.src) return item.src;
+      return null;
+    };
 
     const imgs: Array<{type: 'image'|'video'; url: string; id?: string}> = [];
-    // Put videos first (user preference) so the main media will show a video if available
-    if (Array.isArray(property.videos)) {
+
+    // Collect videos first (user preference)
+    if (Array.isArray(property.videos) && property.videos.length > 0) {
       property.videos.forEach((v: any, idx: number) => {
-        if (!v) return;
-        imgs.push({ type: 'video', url: v.url || v.original_url || v.path || v.file, id: v.id || `vid-${idx}` });
+        const url = normalizeUrl(v) || v.url || v.original_url;
+        if (!url) return;
+        imgs.push({ type: 'video', url, id: v.id || `vid-${idx}` });
       });
     }
 
+    // Collect images from multiple possible sources: property.media, property.images, property.mainImage
+    const seen = new Set<string>();
+
+    // property.media entries (common new format)
+    if (Array.isArray(property.media)) {
+      property.media.forEach((m: any, idx: number) => {
+        if (!m) return;
+        if ((m.type && m.type === 'video')) return; // skip videos here
+        const url = normalizeUrl(m) || (m.type === 'image' && m.url) || null;
+        if (!url) return;
+        if (seen.has(url)) return;
+        seen.add(url);
+        imgs.push({ type: 'image', url, id: m.id || `media-img-${idx}` });
+      });
+    }
+
+    // property.images fallback (could be array of strings or objects)
     if (Array.isArray(property.images)) {
       property.images.forEach((img: any, idx: number) => {
-        if (!img) return;
-        imgs.push({ type: 'image', url: typeof img === 'string' ? img : img.url || img.path || img.cdn_url || img.file, id: img.id || `img-${idx}` });
+        const url = normalizeUrl(img) || (typeof img === 'string' ? img : null);
+        if (!url) return;
+        if (seen.has(url)) return;
+        seen.add(url);
+        imgs.push({ type: 'image', url, id: (img && img.id) || `img-${idx}` });
       });
     }
 
-    // If no combined found but mainImage exists, add it
+    // mainImage fallback
+    if (property.mainImage) {
+      const url = typeof property.mainImage === 'string' ? property.mainImage : normalizeUrl(property.mainImage);
+      if (url && !seen.has(url)) {
+        seen.add(url);
+        imgs.unshift({ type: 'image', url, id: 'main' }); // prefer main image at front of images
+      }
+    }
+
+    // If no combined found but we have some images via mainImage or others, ensure we still show them
     if (imgs.length === 0 && property.mainImage) {
-      imgs.push({ type: 'image', url: property.mainImage, id: 'main' });
+      const url = typeof property.mainImage === 'string' ? property.mainImage : normalizeUrl(property.mainImage);
+      if (url) imgs.push({ type: 'image', url, id: 'main' });
     }
 
     setCombinedMedia(imgs);
@@ -766,13 +819,12 @@ const PropertyDetails: React.FC = () => {
                 </div>
               </div>
 
-              {/* Additional Media Grid (remaining videos + images) */}
-              {((propertyVideos && propertyVideos.length > 1) || (property.images && property.images.length > 0)) && (
+              {/* Additional Media Grid (thumbnails) - render from combinedMedia */}
+              {combinedMedia && combinedMedia.length > 1 && (
                 <CardContent className="pt-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {/* Remaining videos (skip first one shown above) */}
-                    {combinedMedia && combinedMedia.slice(0).map((item, index) => (
-                      <div key={`media-${index}`} className="relative rounded-lg overflow-hidden border border-gray-200 group cursor-pointer" onClick={() => setMediaIndex(index)} role="button" aria-label={`Show media ${index + 1}`}>
+                    {combinedMedia.map((item, index) => (
+                      <div key={item.id || `media-${index}`} className="relative rounded-lg overflow-hidden border border-gray-200 group cursor-pointer" onClick={() => { setMediaIndex(index); }} role="button" aria-label={`Show media ${index + 1}`}>
                         {item.type === 'video' ? (
                           <video
                             src={item.url}
@@ -783,21 +835,12 @@ const PropertyDetails: React.FC = () => {
                           <img src={item.url} alt={`${property.title} - ${index + 1}`} className="w-full h-24 object-cover" />
                         )}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
-                          <svg className="h-8 w-8 text-white opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                          </svg>
+                          {item.type === 'video' ? (
+                            <svg className="h-8 w-8 text-white opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                            </svg>
+                          ) : null}
                         </div>
-                      </div>
-                    ))}
-
-                    {/* Property images */}
-                    {property.images && property.images.map((image, index) => (
-                      <div key={`image-${index}`} className="relative rounded-lg overflow-hidden border border-gray-200 group cursor-pointer">
-                        <img
-                          src={image}
-                          alt={`${property.title} - ${index + 1}`}
-                          className="w-full h-24 object-cover"
-                        />
                       </div>
                     ))}
                   </div>

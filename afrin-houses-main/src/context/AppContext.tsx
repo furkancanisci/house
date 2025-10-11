@@ -593,14 +593,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       
 
       dispatch({ type: 'SET_USER', payload: user });
-      
-      // Load user's properties and favorites
 
+      // Refresh user data from API to ensure we have the latest profile (avatar, name, favorites)
+      try {
+        await refreshUser();
+      } catch (e) {
+        // ignore refresh errors here - we already set user from response
+      }
+
+      // Load user's properties and favorites
       await loadProperties();
-      
       await loadUserFavorites();
-      
-      
+
       return true;
     } catch (error: any) {
 
@@ -735,6 +739,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         } as User;
         
         dispatch({ type: 'SET_USER', payload: user });
+
+        // After registration, fetch the canonical user profile from the API
+        try {
+          await refreshUser();
+        } catch (e) {
+          // ignore - user is already set from registration response
+        }
+
         return true;
       }
       
