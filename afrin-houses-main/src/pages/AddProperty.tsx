@@ -2011,7 +2011,7 @@ const AddProperty: React.FC = () => {
                             <FixedImage
                               src={url}
                               alt={`Preview ${index + 1}`}
-                              className="w-full h-32 object-cover"
+                              className="w-full h-32 object-contain object-center bg-black"
                               showLoadingSpinner={true}
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200"></div>

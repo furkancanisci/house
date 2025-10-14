@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Property } from '../types';
+import { Property, Feature, Utility } from '../types';
 import { updateProperty as updatePropertyAPI, getProperty } from '../services/propertyService';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,6 +44,8 @@ import LocationSelector from '../components/LocationSelector';
 import EnhancedDocumentTypeSelect from '../components/EnhancedDocumentTypeSelect';
 import { propertyDocumentTypeService, PropertyDocumentType } from '../services/propertyDocumentTypeService';
 import { priceTypeService, PriceType } from '../services/priceTypeService';
+import featureService from '../services/featureService';
+import { utilityService } from '../services/utilityService';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Property title is required'),
@@ -84,7 +86,7 @@ const EditProperty: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [property, setProperty] = useState<Property | null>(null);
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [selectedFeatures, setSelectedFeatures] = useState<number[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<any[]>([]);
@@ -103,6 +105,12 @@ const EditProperty: React.FC = () => {
   const [priceTypes, setPriceTypes] = useState<PriceType[]>([]);
   const [priceTypesLoading, setPriceTypesLoading] = useState(false);
   const [priceTypesError, setPriceTypesError] = useState<string | null>(null);
+  
+  // Features and utilities state
+  const [availableFeatures, setAvailableFeatures] = useState<Feature[]>([]);
+  const [availableUtilities, setAvailableUtilities] = useState<Utility[]>([]);
+  const [loadingFeatures, setLoadingFeatures] = useState(false);
+  const [loadingUtilities, setLoadingUtilities] = useState(false);
 
   const {
     register,
@@ -115,50 +123,67 @@ const EditProperty: React.FC = () => {
     resolver: zodResolver(propertySchema),
   });
 
-  const availableFeatures = [
-    'Parking',
-    'Pool',
-    'Gym',
-    'Pet Friendly',
-    'Balcony',
-    'Garden',
-    'Fireplace',
-    'Dishwasher',
-    'Air Conditioning',
-    'Laundry in Unit',
-    'Elevator',
-    'Garage',
-    'Hardwood Floors',
-    'Walk-in Closets',
-    'Patio',
-    'Storage',
-    'High Ceilings',
-    'Updated Kitchen',
-    'Updated Bathroom',
-    'Close to Transit',
-    'Ocean View',
-    'City View',
-    'Private Elevator',
-    'Concierge',
-    'Spa',
-    'Wine Cellar',
-    'Smart Home',
-    'Historic Details',
-    'Bay Windows',
-    'Crown Molding',
-    'Community Pool',
-    'Playground',
-    'Washer/Dryer',
-    'In-Unit Laundry',
-    'Rooftop Deck',
-    'Fitness Center',
-    'Outdoor Kitchen',
-    'Single Story',
-    'Large Backyard',
-    'Master Suite',
-    'Desert Landscaping',
-    'Tile Floors',
-  ];
+  // Helper function to get localized feature name
+  const getFeatureName = (feature: Feature): string => {
+    const currentLanguage = i18n.language;
+    switch (currentLanguage) {
+      case 'ar':
+        return feature.name_ar || feature.name_en || feature.name_ku;
+      case 'ku':
+        return feature.name_ku || feature.name_en || feature.name_ar;
+      case 'en':
+      default:
+        return feature.name_en || feature.name_ar || feature.name_ku;
+    }
+  };
+
+  // Helper function to get localized utility name
+  const getUtilityName = (utility: Utility): string => {
+    const currentLanguage = i18n.language;
+    switch (currentLanguage) {
+      case 'ar':
+        return utility.name_ar || utility.name_en || utility.name_ku;
+      case 'ku':
+        return utility.name_ku || utility.name_en || utility.name_ar;
+      case 'en':
+      default:
+        return utility.name_en || utility.name_ar || utility.name_ku;
+    }
+  };
+
+  // Load features and utilities from API
+  useEffect(() => {
+    const loadFeatures = async () => {
+      setLoadingFeatures(true);
+      try {
+        const features = await featureService.getFeatures();
+        if (Array.isArray(features)) {
+          setAvailableFeatures(features);
+        }
+      } catch (error) {
+        console.error('Failed to load features:', error);
+      } finally {
+        setLoadingFeatures(false);
+      }
+    };
+
+    const loadUtilities = async () => {
+      setLoadingUtilities(true);
+      try {
+        const utilities = await utilityService.getUtilities();
+        if (Array.isArray(utilities)) {
+          setAvailableUtilities(utilities);
+        }
+      } catch (error) {
+        console.error('Failed to load utilities:', error);
+      } finally {
+        setLoadingUtilities(false);
+      }
+    };
+
+    loadFeatures();
+    loadUtilities();
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -204,7 +229,11 @@ const EditProperty: React.FC = () => {
           }
 
           setProperty(foundProperty);
-          setSelectedFeatures(foundProperty.features || []);
+          // Convert feature IDs to numbers if they're strings
+          const featureIds = (foundProperty.features || []).map((f: any) => 
+            typeof f === 'object' ? f.id : typeof f === 'string' ? parseInt(f) : f
+          ).filter((id: any) => !isNaN(id));
+          setSelectedFeatures(featureIds);
           setSelectedCity(foundProperty.city || '');
           setSelectedState(foundProperty.state || '');
           
@@ -331,11 +360,11 @@ const EditProperty: React.FC = () => {
     setMainImageIndex(adjustedIndex);
   };
 
-  const handleFeatureToggle = (feature: string) => {
+  const handleFeatureToggle = (featureId: number) => {
     setSelectedFeatures(prev =>
-      prev.includes(feature)
-        ? prev.filter(f => f !== feature)
-        : [...prev, feature]
+      prev.includes(featureId)
+        ? prev.filter(f => f !== featureId)
+        : [...prev, featureId]
     );
   };
 
@@ -851,18 +880,22 @@ const EditProperty: React.FC = () => {
                   Select all features that apply to your property
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4">
-                  {availableFeatures.map((feature) => (
-                    <div key={feature} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={feature}
-                        checked={selectedFeatures.includes(feature)}
-                        onCheckedChange={() => handleFeatureToggle(feature)}
-                      />
-                      <Label htmlFor={feature} className="text-sm">
-                        {feature}
-                      </Label>
-                    </div>
-                  ))}
+                  {loadingFeatures ? (
+                    <div className="col-span-full text-center py-4">Loading features...</div>
+                  ) : (
+                    availableFeatures.map((feature) => (
+                      <div key={feature.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`feature-${feature.id}`}
+                          checked={selectedFeatures.includes(feature.id)}
+                          onCheckedChange={() => handleFeatureToggle(feature.id)}
+                        />
+                        <Label htmlFor={`feature-${feature.id}`} className="text-sm">
+                          {getFeatureName(feature)}
+                        </Label>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
                   Selected: {selectedFeatures.length} features
@@ -907,7 +940,7 @@ const EditProperty: React.FC = () => {
                         <FixedImage
                           src={image.url || image.original_url}
                           alt={`Property image ${index + 1}`}
-                          className={`w-full h-32 object-cover rounded-lg border shadow-sm ${
+                          className={`w-full h-32 object-contain object-center bg-black rounded-lg border shadow-sm ${
                             imagesToRemove.includes(image.id) ? 'opacity-50 grayscale' : ''
                           }`}
                           showLoadingSpinner={true}
@@ -981,7 +1014,7 @@ const EditProperty: React.FC = () => {
                           <FixedImage
                             src={url}
                             alt={`New image ${index + 1}`}
-                            className={`w-full h-32 object-cover rounded-lg border shadow-sm cursor-pointer ${
+                            className={`w-full h-32 object-contain object-center bg-black rounded-lg border shadow-sm cursor-pointer ${
                               isMainImage ? 'ring-4 ring-[#067977]' : ''
                             }`}
                             showLoadingSpinner={true}

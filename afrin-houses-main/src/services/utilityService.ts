@@ -148,9 +148,12 @@ export class UtilityService {
 // Export default instance for convenience
 export default UtilityService;
 
-// Export individual methods for direct import
+// Export individual methods for convenience
 export const getUtilities = UtilityService.getUtilities;
 export const getUtilityById = UtilityService.getUtilityById;
 export const getUtilitiesByCategory = UtilityService.getUtilitiesByCategory;
 export const searchUtilities = UtilityService.searchUtilities;
 export const getLocalizedName = UtilityService.getLocalizedName;
+
+// Export instance for backward compatibility
+export const utilityService = UtilityService;

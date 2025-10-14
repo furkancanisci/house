@@ -147,9 +147,12 @@ export class FeatureService {
 // Export default instance for convenience
 export default FeatureService;
 
-// Export individual methods for direct import
+// Export individual methods for convenience
 export const getFeatures = FeatureService.getFeatures;
 export const getFeatureById = FeatureService.getFeatureById;
 export const getFeaturesByCategory = FeatureService.getFeaturesByCategory;
 export const searchFeatures = FeatureService.searchFeatures;
 export const getLocalizedName = FeatureService.getLocalizedName;
+
+// Export instance for backward compatibility
+export const featureService = FeatureService;

@@ -66,6 +66,7 @@ const PropertyDetails: React.FC = () => {
   const [propertyVideos, setPropertyVideos] = useState<any[]>([]);
   const [loadingMedia, setLoadingMedia] = useState(false);
   const [combinedMedia, setCombinedMedia] = useState<Array<{type: 'image' | 'video'; url: string; id?: string}>>([]);
+  const [mediaOrientations, setMediaOrientations] = useState<Record<number, 'portrait' | 'landscape' | 'square'>>({});
   const [mediaIndex, setMediaIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxZoom, setLightboxZoom] = useState(1);
@@ -433,21 +434,21 @@ const PropertyDetails: React.FC = () => {
       return null;
     };
 
-    const imgs: Array<{type: 'image'|'video'; url: string; id?: string}> = [];
+    const videoItems: Array<{type: 'video'; url: string; id?: string}> = [];
+    const imageItems: Array<{type: 'image'; url: string; id?: string}> = [];
 
-    // Collect videos first (user preference)
+    // Collect videos
     if (Array.isArray(property.videos) && property.videos.length > 0) {
       property.videos.forEach((v: any, idx: number) => {
-        const url = normalizeUrl(v) || v.url || v.original_url;
+        const url = normalizeUrl(v) || v.url || v.original_url || v.source || v.src;
         if (!url) return;
-        imgs.push({ type: 'video', url, id: v.id || `vid-${idx}` });
+        videoItems.push({ type: 'video', url, id: v.id || `vid-${idx}` });
       });
     }
 
     // Collect images from multiple possible sources: property.media, property.images, property.mainImage
     const seen = new Set<string>();
 
-    // property.media entries (common new format)
     if (Array.isArray(property.media)) {
       property.media.forEach((m: any, idx: number) => {
         if (!m) return;
@@ -456,37 +457,38 @@ const PropertyDetails: React.FC = () => {
         if (!url) return;
         if (seen.has(url)) return;
         seen.add(url);
-        imgs.push({ type: 'image', url, id: m.id || `media-img-${idx}` });
+        imageItems.push({ type: 'image', url, id: m.id || `media-img-${idx}` });
       });
     }
 
-    // property.images fallback (could be array of strings or objects)
     if (Array.isArray(property.images)) {
       property.images.forEach((img: any, idx: number) => {
         const url = normalizeUrl(img) || (typeof img === 'string' ? img : null);
         if (!url) return;
         if (seen.has(url)) return;
         seen.add(url);
-        imgs.push({ type: 'image', url, id: (img && img.id) || `img-${idx}` });
+        imageItems.push({ type: 'image', url, id: (img && img.id) || `img-${idx}` });
       });
     }
 
-    // mainImage fallback
+    // mainImage fallback: prefer it among images but after videos
     if (property.mainImage) {
       const url = typeof property.mainImage === 'string' ? property.mainImage : normalizeUrl(property.mainImage);
       if (url && !seen.has(url)) {
         seen.add(url);
-        imgs.unshift({ type: 'image', url, id: 'main' }); // prefer main image at front of images
+        // place main image at the front of the images list
+        imageItems.unshift({ type: 'image', url, id: 'main' });
       }
     }
 
     // If no combined found but we have some images via mainImage or others, ensure we still show them
-    if (imgs.length === 0 && property.mainImage) {
+    const combined = [...videoItems, ...imageItems];
+    if (combined.length === 0 && property.mainImage) {
       const url = typeof property.mainImage === 'string' ? property.mainImage : normalizeUrl(property.mainImage);
-      if (url) imgs.push({ type: 'image', url, id: 'main' });
+      if (url) combined.push({ type: 'image', url, id: 'main' });
     }
 
-    setCombinedMedia(imgs);
+    setCombinedMedia(combined);
     setMediaIndex(0);
   }, [property]);
 
@@ -757,7 +759,18 @@ const PropertyDetails: React.FC = () => {
                       <img
                         src={combinedMedia[mediaIndex].url}
                         alt={property.title}
-                        className="w-full h-96 object-cover"
+                        onLoad={(e) => {
+                          try {
+                            const img = e.currentTarget as HTMLImageElement;
+                            const w = img.naturalWidth;
+                            const h = img.naturalHeight;
+                            const orient = w > h ? 'landscape' : (h > w ? 'portrait' : 'square');
+                            setMediaOrientations(prev => ({ ...prev, [mediaIndex]: orient }));
+                          } catch (err) {}
+                        }}
+                        className={`w-full h-96 object-center transition-all duration-200 ${
+                          mediaOrientations[mediaIndex] === 'portrait' ? 'object-contain bg-black' : 'object-cover'
+                        }`}
                       />
                     )}
 
@@ -832,7 +845,22 @@ const PropertyDetails: React.FC = () => {
                             preload="metadata"
                           />
                         ) : (
-                          <img src={item.url} alt={`${property.title} - ${index + 1}`} className="w-full h-24 object-cover" />
+                          <img
+                            src={item.url}
+                            alt={`${property.title} - ${index + 1}`}
+                            className={`w-full h-24 transition-all duration-200 ${
+                              mediaOrientations[index] === 'portrait' ? 'object-contain object-center bg-black' : 'object-cover object-center'
+                            }`}
+                            onLoad={(e) => {
+                              try {
+                                const img = e.currentTarget as HTMLImageElement;
+                                const w = img.naturalWidth;
+                                const h = img.naturalHeight;
+                                const orient = w > h ? 'landscape' : (h > w ? 'portrait' : 'square');
+                                setMediaOrientations(prev => ({ ...prev, [index]: orient }));
+                              } catch (err) {}
+                            }}
+                          />
                         )}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
                           {item.type === 'video' ? (
@@ -955,13 +983,13 @@ const PropertyDetails: React.FC = () => {
                     {property.orientation && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.orientation')}</span>
-                        <span className="capitalize">{property.orientation}</span>
+                        <span className="capitalize">{normalizeName(property.orientation)}</span>
                       </div>
                     )}
                     {property.view_type && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.viewType')}</span>
-                        <span className="capitalize">{property.view_type}</span>
+                        <span className="capitalize">{normalizeName(property.view_type)}</span>
                       </div>
                     )}
                     {property.lotSize && (
@@ -973,7 +1001,7 @@ const PropertyDetails: React.FC = () => {
                     {property.parking && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.parking')}</span>
-                        <span>{property.parking}</span>
+                        <span>{normalizeName(property.parking)}</span>
                       </div>
                     )}
                   </div>
@@ -987,19 +1015,19 @@ const PropertyDetails: React.FC = () => {
                     {property.building_type && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.buildingType')}</span>
-                        <span className="capitalize">{property.building_type}</span>
+                        <span className="capitalize">{normalizeName(property.building_type)}</span>
                       </div>
                     )}
                     {property.floor_type && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.floorType')}</span>
-                        <span className="capitalize">{property.floor_type}</span>
+                        <span className="capitalize">{normalizeName(property.floor_type)}</span>
                       </div>
                     )}
                     {property.window_type && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.windowType')}</span>
-                        <span className="capitalize">{property.window_type}</span>
+                        <span className="capitalize">{normalizeName(property.window_type)}</span>
                       </div>
                     )}
                     {property.maintenance_fee && (
@@ -1035,7 +1063,7 @@ const PropertyDetails: React.FC = () => {
                     {property.utilities && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">{t('property.details.utilities')}</span>
-                        <span>{property.utilities}</span>
+                        <span>{normalizeName(property.utilities)}</span>
                       </div>
                     )}
                     <div className="flex justify-between">

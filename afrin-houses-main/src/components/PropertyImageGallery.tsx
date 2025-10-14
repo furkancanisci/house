@@ -61,6 +61,7 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [imageLoadStates, setImageLoadStates] = useState<Record<number, { loaded: boolean; error: boolean; loading: boolean }>>({});
+  const [imageOrientations, setImageOrientations] = useState<Record<number, 'portrait' | 'landscape' | 'square'>>({});
 
   // Process images to ensure they're valid - handle undefined/null images
   const processedImages = (images && Array.isArray(images) && images.length > 0) 
@@ -113,11 +114,29 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
     );
   };
 
-  const handleImageLoad = (index: number) => {
+  const handleImageLoad = (index: number, ev?: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    // mark loaded
     setImageLoadStates(prev => ({
       ...prev,
       [index]: { loaded: true, error: false, loading: false }
     }));
+
+    // determine orientation from natural size when available
+    try {
+      let w: number | undefined;
+      let h: number | undefined;
+      if (ev && ev.currentTarget) {
+        w = (ev.currentTarget as HTMLImageElement).naturalWidth;
+        h = (ev.currentTarget as HTMLImageElement).naturalHeight;
+      }
+
+      if (w && h) {
+        const orientation = w > h ? 'landscape' : (h > w ? 'portrait' : 'square');
+        setImageOrientations(prev => ({ ...prev, [index]: orientation }));
+      }
+    } catch (err) {
+      // ignore—orientation detection is best-effort
+    }
   };
 
   const handleImageError = (index: number) => {
@@ -168,10 +187,12 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
         <img
           src={currentImage}
           alt={alt}
-          className={`w-full h-full object-cover transition-all duration-300 ${
+          className={`w-full h-full transition-all duration-300 ${
             enableZoom ? 'cursor-pointer hover:scale-105' : ''
-          } ${currentImageState.loading ? 'opacity-0' : 'opacity-100'} ${className}`}
-          onLoad={() => handleImageLoad(currentImageIndex)}
+          } ${currentImageState.loading ? 'opacity-0' : 'opacity-100'} ${className} ${
+            imageOrientations[currentImageIndex] === 'portrait' ? 'object-contain object-center bg-black' : 'object-cover object-center'
+          }`}
+          onLoad={(e) => handleImageLoad(currentImageIndex, e)}
           onError={() => handleImageError(currentImageIndex)}
           onClick={handleImageClick}
         />
@@ -233,10 +254,10 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({
                   <img
                     src={image}
                     alt={`${alt} thumbnail ${index + 1}`}
-                    className={`w-full h-full object-cover transition-opacity duration-200 ${
+                    className={`w-full h-full transition-opacity duration-200 ${
                       thumbnailState.loading ? 'opacity-0' : 'opacity-100'
-                    }`}
-                    onLoad={() => handleImageLoad(index)}
+                    } ${imageOrientations[index] === 'portrait' ? 'object-contain object-center' : 'object-cover object-center'}`}
+                    onLoad={(e) => handleImageLoad(index, e)}
                     onError={() => handleImageError(index)}
                   />
                 </div>
