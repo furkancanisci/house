@@ -488,7 +488,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Include all other properties from the response for backward compatibility
         ...(response.property as any),
         contact: {
-          name: response.property.owner?.full_name || 'Agent',
+          name: response.property.contact.owner?.full_name || 'Agent',
           phone: response.property.owner?.phone || '',
           email: response.property.owner?.email || ''
         },

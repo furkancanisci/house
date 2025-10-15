@@ -1133,7 +1133,7 @@ const PropertyDetails: React.FC = () => {
                       </div>
                       <div>
                         <p className="font-semibold text-lg">{property.contact.name}</p>
-                        <p className="text-sm text-gray-500">{t('property.owner')}</p>
+                        <p className="text-sm text-gray-500">{t('property.contact.owner')}</p>
                       </div>
                     </div>
                     
